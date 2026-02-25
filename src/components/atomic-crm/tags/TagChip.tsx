@@ -30,6 +30,7 @@ export function TagChip({ tag, onUnlink }: TagChipProps) {
       >
         {tag.name}
         <button
+          aria-label={`Remove tag ${tag.name}`}
           onClick={(e) => {
             e.stopPropagation();
             onUnlink();
