@@ -73,7 +73,12 @@ const CompanyContactInputs = () => {
   return (
     <div className="flex flex-col gap-4">
       <h6 className="text-lg font-semibold">Contatto</h6>
-      <TextInput source="website" label="Sito web" helperText={false} validate={isUrl} />
+      <TextInput
+        source="website"
+        label="Sito web"
+        helperText={false}
+        validate={isUrl}
+      />
       <TextInput
         source="linkedin_url"
         label="URL LinkedIn"
@@ -98,9 +103,18 @@ const CompanyContextInputs = () => {
         optionValue="value"
         helperText={false}
       />
-      <SelectInput source="size" label="Dimensione" choices={sizes} helperText={false} />
+      <SelectInput
+        source="size"
+        label="Dimensione"
+        choices={sizes}
+        helperText={false}
+      />
       <TextInput source="revenue" label="Fatturato" helperText={false} />
-      <TextInput source="tax_identifier" label="P.IVA / C.F." helperText={false} />
+      <TextInput
+        source="tax_identifier"
+        label="P.IVA / C.F."
+        helperText={false}
+      />
     </div>
   );
 };
@@ -122,7 +136,12 @@ const CompanyAdditionalInformationInputs = () => {
   return (
     <div className="flex flex-col gap-4">
       <h6 className="text-lg font-semibold">Info aggiuntive</h6>
-      <TextInput source="description" label="Descrizione" multiline helperText={false} />
+      <TextInput
+        source="description"
+        label="Descrizione"
+        multiline
+        helperText={false}
+      />
       <ArrayInput source="context_links" label="Link utili" helperText={false}>
         <SimpleFormIterator disableReordering fullWidth getItemLabel={false}>
           <TextInput

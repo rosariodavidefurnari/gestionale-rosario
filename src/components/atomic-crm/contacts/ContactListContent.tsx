@@ -135,9 +135,7 @@ const ContactItemContent = ({
                   <TextField source="name" />
                 </ReferenceField>
               )}
-              {contact.nb_tasks
-                ? ` - ${contact.nb_tasks} attività`
-                : ""}
+              {contact.nb_tasks ? ` - ${contact.nb_tasks} attività` : ""}
               &nbsp;&nbsp;
               <TagsList />
             </div>
@@ -258,11 +256,7 @@ const ContactItemContentMobile = ({ contact }: { contact: Contact }) => (
                 </ReferenceField>
               )}
             </span>
-            {contact.nb_tasks ? (
-              <span>
-                {contact.nb_tasks} attività
-              </span>
-            ) : null}
+            {contact.nb_tasks ? <span>{contact.nb_tasks} attività</span> : null}
           </div>
         </div>
       </div>

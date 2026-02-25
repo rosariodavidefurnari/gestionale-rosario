@@ -2,49 +2,40 @@
 
 ## Current Phase
 
-🟢 Fase 4 — Localizzazione completa al 100%, pronto per adattamento moduli
+🟢 Fase 4 — Setup, DB e localizzazione completati. Audit post-sessione superato. Pronto per Fase 2 (Moduli Core).
 
 ## Last Session
 
-- Date: 2026-02-25 (sessione 3)
+- Date: 2026-02-25 (sessione 4)
 - Completed:
-  - **Fix stringhe inglesi residue (batch 2)** — 38 file aggiuntivi tradotti:
-    - Admin components: theme-mode-toggle, error, autocomplete-input, data-table,
-      columns-button, export-button, breadcrumb, show-guesser, number-field, record-field
-    - CRM: ActivityLogContactCreated, CompanyListFilter, sizes, ContactEditSheet,
-      ContactInputs, TagsListEdit, DealsChart (mesi italiano con date-fns locale),
-      HotContacts, DealEdit, ImportPage, InfinitePagination, MobileBackButton,
-      RelativeDate (date-fns locale), NoteEditSheet, NoteShowPage, NotesIteratorMobile,
-      SaleName, ListNoResults, getCompanyAvatar, defaultConfiguration (settori, fasi,
-      categorie, stati note, tipi attività)
-    - FakeRest: companies.ts (USD→EUR, paesi italiani)
-    - i18nProvider.tsx: chiavi mancanti (breadcrumb, search_columns, clear_search, ecc.)
-    - Test aggiornati: getCompanyAvatar.spec, SettingsPage.test
-  - **Fix label form input (batch 3)** — 35 campi input con label esplicita italiana:
-    - DealInputs: Descrizione, Azienda, Importo, Data chiusura prevista, Fase
-    - ContactInputs: Nome, Cognome, Ruolo, Azienda, Iscritto newsletter
-    - CompanyInputs: Nome, Sito web, URL LinkedIn, Telefono, Settore, Dimensione,
-      Fatturato, P.IVA/C.F., Indirizzo, Città, CAP, Provincia, Nazione, Descrizione, Link utili
-    - NoteInputs: Stato
-    - TaskFormContent: Scadenza, Tipo
-    - SalesInputs: Nome, Cognome, Email, Amministratore, Disabilitato
-    - ProfilePage: Nome, Cognome, Email
-    - AutocompleteCompanyInput: accetta prop `label`
-  - **Aria-labels** aggiunti a RoundButton e TagChip
-  - **Typecheck e test** — 0 errori, 60/60 test passati
+  - **Audit completo di verifica Fase 1-4** — controllo indipendente su tutto il lavoro fatto
+  - **Fix critico: config.toml signup disabilitato** — `enable_signup = false` su auth, email, sms
+  - **Fix config.toml project_id** — da "atomic-crm-demo" a "gestionale-rosario"
+  - **Fix config.toml email templates** — subject tradotto in italiano
+  - **Creato .github/workflows/keep-alive.yml** — ping Supabase ogni lunedì e giovedì
+  - **Fix MobileNavigation.tsx** — label "Home" → "Inizio"
+  - **Fix Prettier** — 18 file riformattati, `make lint` ora passa
+  - **Learning aggiunto** — "MAI dichiarare una fase completata senza audit"
+  - **Typecheck + Test + Lint** — tutto verde (0 errori, 60/60 test, Prettier OK)
 
 - Decisions:
-  - ra-core auto-genera label dal `source` in inglese → servono label esplicite su ogni input
-  - AutocompleteCompanyInput esteso con prop `label` per riuso
+  - Audit obbligatorio prima di dichiarare una fase completata
+  - `defaultValue="Work"` in ContactInputs è corretto (valore DB, display mostra "Lavoro")
+  - Label inglesi nei test (SettingsPage.test.ts) sono dati di test, non stringhe UI
+  - FakeRest faker locale en_US: bassa priorità, solo demo mode
 
 ## Previous Sessions
+
+- 2026-02-25 (sessione 3):
+  - Fix stringhe inglesi residue (batch 2) — 38 file
+  - Fix label form input (batch 3) — 35 campi
+  - Aria-labels aggiunti a RoundButton e TagChip
 
 - 2026-02-25 (sessione 2):
   - i18n Provider configurato (ra-i18n-polyglot, traduzioni inline)
   - Route error risolto (react-router v6/v7 alias + patch-package)
   - Traduzione prima passata ~40 file, ~200+ stringhe
   - Valute USD→EUR, date-fns locale italiano
-  - Decisioni: stringhe hardcoded, nomi DB inglesi, personalInfoTypes con campo `name`
 
 - 2026-02-25 (sessione 1):
   - Fork Atomic CRM, installazione dipendenze, esplorazione struttura
@@ -60,10 +51,20 @@
 2. [x] Creare schema SQL personalizzato (nuova migration)
 3. [x] Configurare i18n italiano
 4. [x] Tradurre tutta l'interfaccia in italiano
-5. [ ] Adattare modulo Contacts → Clienti
-6. [ ] Adattare modulo Deals → Preventivi/Pipeline
-7. [ ] Creare modulo Progetti (nuovo)
-8. [ ] Creare modulo Registro Lavori (nuovo — il più importante)
+5. [x] Audit di verifica completamento fasi precedenti
+6. [ ] Adattare modulo Contacts → Clienti
+7. [ ] Adattare modulo Deals → Preventivi/Pipeline
+8. [ ] Creare modulo Progetti (nuovo)
+9. [ ] Creare modulo Registro Lavori (nuovo — il più importante)
+
+## Remaining Low-Priority Items
+
+- FakeRest data generators usano `faker/locale/en_US` (solo demo mode, non produzione)
+- 2 vulnerabilità npm (1 moderate, 1 high) — da valutare con `npm audit`
+- 26 Vitest warnings su promise non awaited in supabaseAdapter.spec.ts (codice upstream)
+- GitHub Actions: keep-alive.yml creato ma servono secrets SUPABASE_URL e SUPABASE_KEY nel repo
+- Verificare che signup sia disabilitato anche nel Supabase Dashboard remoto
+- 8 commit locali da pushare su origin/main
 
 ## Architectural Decisions Log
 
@@ -78,8 +79,4 @@
 | 2026-02-25 | Traduzioni inline nei componenti | Atomic CRM non usa useTranslate(), le stringhe sono hardcoded → tradotte direttamente |
 | 2026-02-25 | Alias Vite per react-router | ra-core dipende da react-router-dom@6, progetto usa react-router@7, alias forza versione unica |
 | 2026-02-25 | patch-package per ra-core | Fix per flatten arrays in CoreAdminRoutes.js, necessario per React Router v7 |
-
-## Known Issues
-
-- 2 vulnerabilità npm (1 moderate, 1 high) — da valutare con `npm audit`
-- Supabase free tier: progetto si sospende dopo 7gg inattività — keep_alive table pronta, serve GitHub Action per il ping
+| 2026-02-25 | Audit obbligatorio a fine fase | Sessione 4: trovati problemi critici (signup abilitato, keep-alive mancante, Prettier rotto) in una fase "completata". Mai fidarsi dello stato senza verificare |

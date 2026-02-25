@@ -217,7 +217,9 @@ const TextRender = ({
   isEditMode: boolean;
 }) => {
   if (isEditMode) {
-    return <TextInput source={source} label={labelMap[source]} helperText={false} />;
+    return (
+      <TextInput source={source} label={labelMap[source]} helperText={false} />
+    );
   }
   return (
     <div className="m-2">

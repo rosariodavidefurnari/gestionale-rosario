@@ -213,8 +213,8 @@ const ContactMergeDialog = ({ open, onClose }: ContactMergeDialogProps) => {
                   {loserContact.email_jsonb?.length > 0 && (
                     <li>
                       • {loserContact.email_jsonb.length} indirizzo email
-                      {loserContact.email_jsonb.length !== 1 ? "i" : ""} verranno
-                      aggiunti
+                      {loserContact.email_jsonb.length !== 1 ? "i" : ""}{" "}
+                      verranno aggiunti
                     </li>
                   )}
                   {loserContact.phone_jsonb?.length > 0 && (

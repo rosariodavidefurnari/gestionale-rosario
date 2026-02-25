@@ -77,7 +77,10 @@ export const DashboardStepper = ({
                       </Button>
                     ) : (
                       <>
-                        <CreateButton label="Nuovo Contatto" resource="contacts" />
+                        <CreateButton
+                          label="Nuovo Contatto"
+                          resource="contacts"
+                        />
                         <ContactImportButton />
                       </>
                     )}
@@ -100,7 +103,9 @@ export const DashboardStepper = ({
                     </Button>
                   ) : (
                     <Button asChild disabled={step < 2} className="w-[120px]">
-                      <Link to={`/contacts/${contactId}/show`}>Aggiungi nota</Link>
+                      <Link to={`/contacts/${contactId}/show`}>
+                        Aggiungi nota
+                      </Link>
                     </Button>
                   )}
                 </div>

@@ -17,6 +17,8 @@ export const TasksListEmpty = () => {
   if (total) return null;
 
   return (
-    <p className="text-sm">Le attività assegnate ai tuoi contatti appariranno qui.</p>
+    <p className="text-sm">
+      Le attività assegnate ai tuoi contatti appariranno qui.
+    </p>
   );
 };

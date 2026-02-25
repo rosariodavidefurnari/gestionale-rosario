@@ -37,7 +37,13 @@ const DealInfoInputs = () => {
         validate={required()}
         helperText={false}
       />
-      <TextInput source="description" label="Descrizione" multiline rows={3} helperText={false} />
+      <TextInput
+        source="description"
+        label="Descrizione"
+        multiline
+        rows={3}
+        helperText={false}
+      />
     </div>
   );
 };

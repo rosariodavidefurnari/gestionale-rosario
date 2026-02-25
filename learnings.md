@@ -78,3 +78,10 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   2) Stringhe hardcoded nel JSX (titoli, testi, messaggi notify)
   3) Label degli input via prop `label` (altrimenti auto-generati in inglese dal source)
   Il livello 3 è facile da dimenticare perché i campi "funzionano" senza label esplicita.
+
+- [2026-02-25] **MAI dichiarare una fase completata senza audit** — Il progress.md
+  diceva "Fase 4 completata" ma un audit reale ha trovato: signup pubblico abilitato
+  (critico), keep-alive workflow mancante, 18 file con Prettier rotto, residui i18n,
+  commit non pushati. Regola: prima di marcare una fase come completata, eseguire
+  SEMPRE una verifica indipendente (typecheck + test + lint + review config + review
+  specifica). Non fidarsi mai dello stato scritto senza controllare.

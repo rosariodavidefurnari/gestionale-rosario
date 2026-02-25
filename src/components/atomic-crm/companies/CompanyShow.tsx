@@ -218,7 +218,8 @@ const ContactsIterator = () => {
               {contact.last_seen && (
                 <div className="text-right">
                   <div className="text-sm text-muted-foreground">
-                    ultima attività {formatDistance(contact.last_seen, now, { locale: it })} fa{" "}
+                    ultima attività{" "}
+                    {formatDistance(contact.last_seen, now, { locale: it })} fa{" "}
                     <Status status={contact.status} />
                   </div>
                 </div>
@@ -280,7 +281,8 @@ const DealsIterator = () => {
               </div>
               <div className="text-right">
                 <div className="text-sm text-muted-foreground">
-                  ultima attività {formatDistance(deal.updated_at, now, { locale: it })} fa{" "}
+                  ultima attività{" "}
+                  {formatDistance(deal.updated_at, now, { locale: it })} fa{" "}
                 </div>
               </div>
             </RouterLink>

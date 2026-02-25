@@ -70,7 +70,7 @@ export const MobileNavigation = () => {
           <NavigationButton
             href="/"
             Icon={Home}
-            label="Home"
+            label="Inizio"
             isActive={currentPath === "/"}
           />
           <NavigationButton

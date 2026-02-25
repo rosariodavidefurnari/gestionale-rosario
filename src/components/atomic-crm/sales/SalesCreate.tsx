@@ -25,9 +25,13 @@ export function SalesCreate() {
       redirect("/sales");
     },
     onError: (error) => {
-      notify(error.message || "Si è verificato un errore durante la creazione dell'utente.", {
-        type: "error",
-      });
+      notify(
+        error.message ||
+          "Si è verificato un errore durante la creazione dell'utente.",
+        {
+          type: "error",
+        },
+      );
     },
   });
   const onSubmit: SubmitHandler<SalesFormData> = async (data) => {

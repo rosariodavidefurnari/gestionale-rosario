@@ -103,7 +103,9 @@ export const SettingsPage = () => {
           notify("Configurazione salvata con successo");
         },
         onError: () => {
-          notify("Errore nel salvataggio della configurazione", { type: "error" });
+          notify("Errore nel salvataggio della configurazione", {
+            type: "error",
+          });
         },
       }}
     >
@@ -200,7 +202,9 @@ const SettingsFormFields = () => {
             <TextInput source="title" label="Titolo App" />
             <div className="flex gap-8">
               <div className="flex flex-col items-center gap-1">
-                <p className="text-sm text-muted-foreground">Logo Modalità Chiara</p>
+                <p className="text-sm text-muted-foreground">
+                  Logo Modalità Chiara
+                </p>
                 <ImageEditorField
                   source="lightModeLogo"
                   width={100}
@@ -210,7 +214,9 @@ const SettingsFormFields = () => {
                 />
               </div>
               <div className="flex flex-col items-center gap-1">
-                <p className="text-sm text-muted-foreground">Logo Modalità Scura</p>
+                <p className="text-sm text-muted-foreground">
+                  Logo Modalità Scura
+                </p>
                 <ImageEditorField
                   source="darkModeLogo"
                   width={100}
@@ -250,9 +256,7 @@ const SettingsFormFields = () => {
             <h2 className="text-xl font-semibold text-muted-foreground">
               Trattative
             </h2>
-            <h3 className="text-lg font-medium text-muted-foreground">
-              Fasi
-            </h3>
+            <h3 className="text-lg font-medium text-muted-foreground">Fasi</h3>
             <ArrayInput
               source="dealStages"
               label={false}
@@ -270,7 +274,8 @@ const SettingsFormFields = () => {
               Stati Pipeline
             </h3>
             <p className="text-sm text-muted-foreground">
-              Seleziona quali fasi delle trattative contano come &quot;pipeline&quot; (completate).
+              Seleziona quali fasi delle trattative contano come
+              &quot;pipeline&quot; (completate).
             </p>
             <div className="flex flex-wrap gap-2">
               {dealStages?.map(
@@ -329,9 +334,7 @@ const SettingsFormFields = () => {
             <h2 className="text-xl font-semibold text-muted-foreground">
               Note
             </h2>
-            <h3 className="text-lg font-medium text-muted-foreground">
-              Stati
-            </h3>
+            <h3 className="text-lg font-medium text-muted-foreground">Stati</h3>
             <ArrayInput source="noteStatuses" label={false} helperText={false}>
               <SimpleFormIterator inline disableReordering disableClear>
                 <TextInput source="label" label={false} className="flex-1" />

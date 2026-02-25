@@ -139,8 +139,8 @@ export function ContactImportDialog({
             {importer.state === "error" && (
               <Alert variant="destructive">
                 <AlertDescription>
-                  Impossibile importare questo file, assicurati di aver fornito un
-                  file CSV valido.
+                  Impossibile importare questo file, assicurati di aver fornito
+                  un file CSV valido.
                 </AlertDescription>
               </Alert>
             )}
@@ -148,8 +148,9 @@ export function ContactImportDialog({
             {importer.state === "complete" && (
               <Alert>
                 <AlertDescription>
-                  Importazione contatti completata. Importati {importer.importCount}{" "}
-                  contatti, con {importer.errorCount} errori
+                  Importazione contatti completata. Importati{" "}
+                  {importer.importCount} contatti, con {importer.errorCount}{" "}
+                  errori
                 </AlertDescription>
               </Alert>
             )}

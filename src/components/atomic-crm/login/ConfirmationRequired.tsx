@@ -19,8 +19,8 @@ export const ConfirmationRequired = () => {
         <div className="max-w-sm mx-auto h-full flex flex-col justify-center gap-4">
           <h1 className="text-2xl font-bold mb-4">Benvenuto nel Gestionale</h1>
           <p className="text-base mb-4">
-            Segui il link che ti abbiamo appena inviato via email per confermare il
-            tuo account.
+            Segui il link che ti abbiamo appena inviato via email per confermare
+            il tuo account.
           </p>
         </div>
       </div>

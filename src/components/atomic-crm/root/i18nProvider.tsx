@@ -97,14 +97,12 @@ const italianMessages = {
         "Si è verificato un errore durante la validazione del token di autenticazione.",
       bulk_delete_content:
         "Sei sicuro di voler eliminare questo %{name}? |||| Sei sicuro di voler eliminare questi %{smart_count} elementi?",
-      bulk_delete_title:
-        "Elimina %{name} |||| Elimina %{smart_count} %{name}",
+      bulk_delete_title: "Elimina %{name} |||| Elimina %{smart_count} %{name}",
       bulk_update_content:
         "Sei sicuro di voler aggiornare questo %{name}? |||| Sei sicuro di voler aggiornare questi %{smart_count} elementi?",
       bulk_update_title:
         "Aggiorna %{name} |||| Aggiorna %{smart_count} %{name}",
-      clear_array_input:
-        "Sei sicuro di voler cancellare l'intera lista?",
+      clear_array_input: "Sei sicuro di voler cancellare l'intera lista?",
       delete_content: "Sei sicuro di voler eliminare questo elemento?",
       delete_title: "Elimina %{name} #%{id}",
       details: "Dettagli",
@@ -114,8 +112,7 @@ const italianMessages = {
         "Il modulo non è valido. Si prega di controllare gli errori",
       loading: "Attendere prego",
       no: "No",
-      not_found:
-        "O hai digitato un URL errato, o hai seguito un link errato.",
+      not_found: "O hai digitato un URL errato, o hai seguito un link errato.",
       yes: "Sì",
       unsaved_changes:
         "Alcune delle tue modifiche non sono state salvate. Sei sicuro di voler proseguire?",
@@ -124,8 +121,7 @@ const italianMessages = {
       no_results: "Nessun risultato trovato",
       no_more_results:
         "La pagina %{page} è fuori dai limiti. Prova la pagina precedente.",
-      page_out_of_boundaries:
-        "Il numero di pagina %{page} è fuori dai limiti",
+      page_out_of_boundaries: "Il numero di pagina %{page} è fuori dai limiti",
       page_out_from_end: "Non puoi andare oltre l'ultima pagina",
       page_out_from_begin: "Non puoi andare prima della pagina 1",
       page_range_info: "%{offsetBegin}-%{offsetEnd} di %{total}",
@@ -139,8 +135,7 @@ const italianMessages = {
       previous: "Vai alla pagina precedente",
       page_rows_per_page: "Righe per pagina:",
       skip_nav: "Salta al contenuto",
-      no_filtered_results:
-        "Nessun risultato con i filtri correnti.",
+      no_filtered_results: "Nessun risultato con i filtri correnti.",
       clear_filters: "Rimuovi filtri",
       breadcrumb_drawer_title: "Naviga a",
       breadcrumb_drawer_instructions: "Seleziona una pagina.",
@@ -160,11 +155,9 @@ const italianMessages = {
       logout: "Esci",
     },
     notification: {
-      updated:
-        "Elemento aggiornato |||| %{smart_count} elementi aggiornati",
+      updated: "Elemento aggiornato |||| %{smart_count} elementi aggiornati",
       created: "Elemento creato",
-      deleted:
-        "Elemento eliminato |||| %{smart_count} elementi eliminati",
+      deleted: "Elemento eliminato |||| %{smart_count} elementi eliminati",
       bad_item: "Elemento non corretto",
       item_doesnt_exist: "L'elemento non esiste",
       http_error: "Errore di comunicazione con il server",
@@ -173,8 +166,7 @@ const italianMessages = {
       i18n_error:
         "Impossibile caricare le traduzioni per la lingua specificata",
       canceled: "Azione annullata",
-      logged_out:
-        "La tua sessione è terminata, effettua nuovamente l'accesso.",
+      logged_out: "La tua sessione è terminata, effettua nuovamente l'accesso.",
       not_authorized: "Non sei autorizzato ad accedere a questa risorsa.",
       application_update_available: "È disponibile una nuova versione.",
     },

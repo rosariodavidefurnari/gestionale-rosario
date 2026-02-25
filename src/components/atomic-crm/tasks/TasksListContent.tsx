@@ -10,7 +10,10 @@ export const TasksListContent = () => {
       <TasksListFilter title="Oggi" filter={taskFilters.today} />
       <TasksListFilter title="Domani" filter={taskFilters.tomorrow} />
       {isBeforeFriday && (
-        <TasksListFilter title="Questa settimana" filter={taskFilters.thisWeek} />
+        <TasksListFilter
+          title="Questa settimana"
+          filter={taskFilters.thisWeek}
+        />
       )}
       <TasksListFilter title="Più avanti" filter={taskFilters.later} />
     </div>

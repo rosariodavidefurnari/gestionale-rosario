@@ -56,8 +56,18 @@ const ContactIdentityInputs = () => {
         optionValue="value"
         defaultValue={contactGender[0].value}
       />
-      <TextInput source="first_name" label="Nome" validate={required()} helperText={false} />
-      <TextInput source="last_name" label="Cognome" validate={required()} helperText={false} />
+      <TextInput
+        source="first_name"
+        label="Nome"
+        validate={required()}
+        helperText={false}
+      />
+      <TextInput
+        source="last_name"
+        label="Cognome"
+        validate={required()}
+        helperText={false}
+      />
     </div>
   );
 };
@@ -138,7 +148,11 @@ const ContactPersonalInformationInputs = () => {
           />
         </SimpleFormIterator>
       </ArrayInput>
-      <ArrayInput source="phone_jsonb" label="Numeri di telefono" helperText={false}>
+      <ArrayInput
+        source="phone_jsonb"
+        label="Numeri di telefono"
+        helperText={false}
+      >
         <SimpleFormIterator
           inline
           disableReordering
@@ -173,7 +187,11 @@ const ContactPersonalInformationInputs = () => {
   );
 };
 
-const personalInfoTypes = [{ id: "Work", name: "Lavoro" }, { id: "Home", name: "Casa" }, { id: "Other", name: "Altro" }];
+const personalInfoTypes = [
+  { id: "Work", name: "Lavoro" },
+  { id: "Home", name: "Casa" },
+  { id: "Other", name: "Altro" },
+];
 
 const ContactMiscInputs = () => {
   return (
@@ -185,7 +203,11 @@ const ContactMiscInputs = () => {
         multiline
         helperText={false}
       />
-      <BooleanInput source="has_newsletter" label="Iscritto newsletter" helperText={false} />
+      <BooleanInput
+        source="has_newsletter"
+        label="Iscritto newsletter"
+        helperText={false}
+      />
       <ReferenceInput
         reference="sales"
         source="sales_id"
