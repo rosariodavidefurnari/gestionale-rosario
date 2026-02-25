@@ -1,0 +1,16 @@
+diff --git a/node_modules/ra-core/dist/core/CoreAdminRoutes.js b/node_modules/ra-core/dist/core/CoreAdminRoutes.js
+index 3a0512d..8eec1e2 100644
+--- a/node_modules/ra-core/dist/core/CoreAdminRoutes.js
++++ b/node_modules/ra-core/dist/core/CoreAdminRoutes.js
+@@ -8,7 +8,10 @@ import { NavigateToFirstResource } from "./NavigateToFirstResource.js";
+ export const CoreAdminRoutes = (props) => {
+     useScrollToTop();
+     const { Route, Routes } = useRouterProvider();
+-    const { customRoutesWithLayout, customRoutesWithoutLayout, status, resources, } = useConfigureAdminRouterFromChildren(props.children);
++    const { customRoutesWithLayout: rawCustomRoutesWithLayout, customRoutesWithoutLayout: rawCustomRoutesWithoutLayout, status, resources, } = useConfigureAdminRouterFromChildren(props.children);
++    // Flatten nested arrays to satisfy React Router v7 strict child validation
++    const customRoutesWithLayout = rawCustomRoutesWithLayout.flat(Infinity);
++    const customRoutesWithoutLayout = rawCustomRoutesWithoutLayout.flat(Infinity);
+     const { layout: Layout, catchAll: CatchAll, dashboard, loading: LoadingPage, requireAuth, ready: Ready, authenticationError: AuthenticationError = Noop, accessDenied: AccessDenied = Noop, } = props;
+     const { authenticated, isPending: isPendingAuthenticated } = useAuthState(undefined, 
+     // do not log the user out on failure to allow access to custom routes with no layout

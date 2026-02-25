@@ -18,6 +18,7 @@
     "registry:gen": "node ./scripts/generate-registry.mjs",
     "ghpages:deploy": "node ./scripts/ghpages-deploy.mjs",
     "supabase:remote:init": "node ./scripts/supabase-remote-init.mjs",
+    "postinstall": "npx patch-package",
     "prepare": "husky"
   },
   "dependencies": {
