@@ -62,9 +62,16 @@
 - FakeRest data generators usano `faker/locale/en_US` (solo demo mode, non produzione)
 - 2 vulnerabilità npm (1 moderate, 1 high) — da valutare con `npm audit`
 - 26 Vitest warnings su promise non awaited in supabaseAdapter.spec.ts (codice upstream)
-- GitHub Actions: keep-alive.yml creato ma servono secrets SUPABASE_URL e SUPABASE_KEY nel repo
-- Verificare che signup sia disabilitato anche nel Supabase Dashboard remoto
-- 8 commit locali da pushare su origin/main
+- Verificare che signup sia disabilitato anche nel **Supabase Dashboard remoto**
+
+## Certezze (sessione 4)
+
+- [x] GitHub secrets SUPABASE_URL + SUPABASE_KEY configurati nel repo
+- [x] Keep-alive workflow testato manualmente: HTTP 200, risposta `[{"id":1,"name":"heartbeat",...}]`
+- [x] Tutti i commit pushati su origin/main
+- [x] config.toml: signup disabilitato (auth + email + sms), project_id corretto
+- [x] Typecheck 0 errori, 60/60 test, Prettier + ESLint OK
+- [x] Schema DB conforme alla specifica (tutte le colonne, CHECK, FK, views verificati)
 
 ## Architectural Decisions Log
 

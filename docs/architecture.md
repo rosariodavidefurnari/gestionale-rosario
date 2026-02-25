@@ -5,24 +5,39 @@
 Fork di Atomic CRM personalizzato per gestire l'attività professionale
 di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
-## Stato Localizzazione
+## Stato Infrastruttura (verificato sessione 4)
 
-L'interfaccia è **completamente tradotta in italiano**. Tre livelli di localizzazione:
+### Certezze — Audit superato
 
-1. **i18nProvider** (`src/components/atomic-crm/root/i18nProvider.tsx`) — gestisce le
-   stringhe framework di ra-core (bottoni, validazione, paginazione, ecc.) tramite
-   ra-i18n-polyglot con traduzioni inline.
+| Componente | Stato | Verificato |
+|------------|-------|------------|
+| Schema DB (8 tabelle + 2 views) | Deployed e conforme alla specifica | typecheck + migration review |
+| RLS policies | Attive su tutte le tabelle | audit manuale |
+| Signup pubblico | DISABILITATO (config.toml) | sessione 4 |
+| Keep-alive workflow | Attivo, testato con successo (HTTP 200) | `gh workflow run` |
+| GitHub secrets | SUPABASE_URL + SUPABASE_KEY configurati | `gh secret list` |
+| Localizzazione IT | Completa su ~70 file, 3 livelli | audit sessione 4 |
+| Typecheck | 0 errori | `make typecheck` |
+| Test | 60/60 passati | `make test` |
+| Lint + Prettier | 0 errori | `make lint` |
+| Commit pushati | Tutto su origin/main | `git push` |
 
-2. **Stringhe hardcoded** — ~70 file componente hanno le stringhe UI direttamente in
-   italiano nel JSX (Atomic CRM non usa useTranslate() nei componenti).
+### Cose ancora da verificare manualmente
 
-3. **Label form input** — Tutti gli input (TextInput, SelectInput, DateInput, ecc.)
-   hanno `label="..."` esplicita in italiano. Senza label, ra-core auto-genera dal
-   `source` in inglese (es. `expected_closing_date` → "Expected Closing Date").
+- Signup disabilitato nel **Supabase Dashboard remoto** (non solo config.toml locale)
+- npm audit: 2 vulnerabilità (1 moderate, 1 high) — da valutare
 
-### File i18n chiave
-- `src/components/atomic-crm/root/i18nProvider.tsx` — Provider con traduzioni inline
-- `patches/ra-core+5.14.2.patch` — Fix per React Router v7 compatibility
+## Localizzazione
+
+L'interfaccia è **completamente tradotta in italiano**. Tre livelli:
+
+1. **i18nProvider** (`src/components/atomic-crm/root/i18nProvider.tsx`) — stringhe
+   framework ra-core (bottoni, validazione, paginazione) tramite ra-i18n-polyglot
+   con traduzioni inline.
+
+2. **Stringhe hardcoded** — ~70 file componente con stringhe UI in italiano nel JSX.
+
+3. **Label form input** — Tutti gli input hanno `label="..."` esplicita in italiano.
 
 ### Convenzioni di traduzione
 - Valori DB in inglese (Work/Home/Other, hot/warm/cold, ecc.)
@@ -31,29 +46,41 @@ L'interfaccia è **completamente tradotta in italiano**. Tre livelli di localizz
 - Date: date-fns con locale `it`
 - Ogni nuovo input DEVE avere `label` esplicita in italiano
 
+### Bassa priorità (non bloccanti)
+- FakeRest data generators usano `faker/locale/en_US` (solo demo mode)
+- 26 Vitest warnings su promise non awaited (codice upstream Atomic CRM)
+
 ## Database Schema
 
-### Tabelle nuove (da specifica)
+### Tabelle custom (da specifica)
 
-| Tabella | Scopo | RLS |
-|---------|-------|-----|
-| clients | Anagrafica clienti | auth.uid() IS NOT NULL |
-| projects | Progetti/programmi (contenitori logici) | auth.uid() IS NOT NULL |
-| services | Registro lavori (cuore del gestionale) | auth.uid() IS NOT NULL |
-| quotes | Preventivi + pipeline vendita | auth.uid() IS NOT NULL |
-| payments | Tracking pagamenti | auth.uid() IS NOT NULL |
-| expenses | Spese e km | auth.uid() IS NOT NULL |
-| settings | Configurazione (tariffa km, ecc.) | auth.uid() IS NOT NULL |
-| keep_alive | Heartbeat per evitare sospensione free tier | SELECT public |
+| Tabella | Scopo | RLS | Colonne verificate |
+|---------|-------|-----|-------------------|
+| clients | Anagrafica clienti | auth.uid() IS NOT NULL | 11 colonne, 2 CHECK |
+| projects | Progetti/programmi | auth.uid() IS NOT NULL | 12 colonne, 3 CHECK |
+| services | Registro lavori (cuore) | auth.uid() IS NOT NULL | 13 colonne, 1 CHECK |
+| quotes | Preventivi + pipeline | auth.uid() IS NOT NULL | 12 colonne, 1 CHECK (10 stati) |
+| payments | Tracking pagamenti | auth.uid() IS NOT NULL | 12 colonne, 3 CHECK |
+| expenses | Spese e km | auth.uid() IS NOT NULL | 11 colonne, 1 CHECK |
+| settings | Configurazione | auth.uid() IS NOT NULL | 3 colonne (key-value) |
+| keep_alive | Heartbeat free tier | SELECT public | 3 colonne |
+
+### Dati iniziali (settings)
+- `default_km_rate`: 0.19
+- `default_fee_shooting`: 187
+- `default_fee_editing_standard`: 249
+- `default_fee_editing_spot`: 250
+- `default_fee_editing_short`: 125
+- `currency`: EUR
 
 ### Views
 
 | View | Scopo |
 |------|-------|
-| project_financials | Riepilogo finanziario per progetto |
+| project_financials | Riepilogo finanziario per progetto (fees, km, paid, balance) |
 | monthly_revenue | Fatturato mensile per categoria |
 
-### Tabelle Atomic CRM esistenti (da valutare)
+### Tabelle Atomic CRM esistenti (da mappare in Fase 2)
 
 | Tabella | Mapping | Azione |
 |---------|---------|--------|
@@ -65,13 +92,22 @@ L'interfaccia è **completamente tradotta in italiano**. Tre livelli di localizz
 | tags | — | Mantenere per categorizzazione |
 | configuration | — | Mantenere per config CRM |
 
+Migration: `supabase/migrations/20260225180000_gestionale_schema.sql`
+
 ## Authentication
 
 - Method: Supabase Auth, email/password
 - User: rosariodavide.furnari@gmail.com (unico)
-- Signup pubblico: DISABILITATO
+- Signup pubblico: DISABILITATO in config.toml (auth + email + sms)
 - Protected routes: tutto tranne /login
-- API Keys: VITE_SB_PUBLISHABLE_KEY (nuovo formato sb_publishable_...)
+- API Keys: VITE_SB_PUBLISHABLE_KEY (formato sb_publishable_...)
+
+## Supabase Config
+
+- Project ID locale: `gestionale-rosario`
+- Progetto remoto: `qvdmzhyzpyaveniirsmo.supabase.co`
+- Keep-alive: GitHub Actions, lunedì e giovedì 08:00 UTC
+- GitHub secrets: SUPABASE_URL + SUPABASE_KEY configurati
 
 ## Routing & React Router
 
@@ -84,7 +120,7 @@ L'interfaccia è **completamente tradotta in italiano**. Tre livelli di localizz
 - Patch-package (`patches/ra-core+5.14.2.patch`): flatten arrays in CoreAdminRoutes.js
 - Script postinstall in package.json: `npx patch-package`
 
-## Pages Map
+## Pages Map (target)
 
 ```
 /login          → Login (unica pagina pubblica)
@@ -122,80 +158,12 @@ App.tsx
     └── settings/ (adattato)
 ```
 
-## File tradotti (localizzazione IT)
+## CI/CD
 
-### Dashboard
-- Welcome.tsx, DashboardStepper.tsx, LatestNotes.tsx, HotContacts.tsx
-- DealsChart.tsx, TasksList.tsx, DashboardActivityLog.tsx, DealsPipeline.tsx
-- TasksListEmpty.tsx
+### GitHub Actions
+- `.github/workflows/check.yml` — Lint, test, build su push/PR
+- `.github/workflows/deploy.yml` — Deploy docs, demo, Supabase migrations
+- `.github/workflows/keep-alive.yml` — Ping Supabase lunedì e giovedì
 
-### Contacts
-- ContactShow.tsx, ContactAside.tsx, ContactInputs.tsx, ContactListFilter.tsx
-- ContactBackgroundInfo.tsx, ContactPersonalInfo.tsx, ContactEmpty.tsx
-- ContactMergeButton.tsx, ContactImportButton.tsx, ExportVCardButton.tsx
-- TagsListEdit.tsx, ContactListContent.tsx
-
-### Deals
-- DealShow.tsx, DealArchivedList.tsx, DealEmpty.tsx, DealInputs.tsx
-- DealList.tsx, OnlyMineInput.tsx, ContactList.tsx
-
-### Companies
-- CompanyShow.tsx, CompanyAside.tsx, CompanyInputs.tsx, CompanyEmpty.tsx
-- CompanyList.tsx, CompanyListFilter.tsx
-
-### Notes
-- Note.tsx, NoteCreate.tsx, NoteCreateSheet.tsx, NoteInputs.tsx
-
-### Tasks
-- AddTask.tsx, TaskEdit.tsx, TaskFormContent.tsx
-
-### Tags
-- TagDialog.tsx, TagCreateModal.tsx, TagEditModal.tsx
-
-### Settings & Profile
-- SettingsPage.tsx, ProfilePage.tsx
-
-### Sales (utenti)
-- SalesList.tsx, SalesCreate.tsx, SalesEdit.tsx
-
-### Login
-- LoginPage.tsx, SignupPage.tsx, ConfirmationRequired.tsx
-
-### Import / Misc
-- ImportPage.tsx, ImportFromJsonButton.tsx, ImageEditorField.tsx
-- ContactOption.tsx, CreateSheet.tsx, ListNoResults.tsx
-
-### Activity Log
-- ActivityLogContactCreated.tsx, ActivityLogDealCreated.tsx
-- ActivityLogCompanyCreated.tsx, ActivityLogContactNoteCreated.tsx
-- ActivityLogDealNoteCreated.tsx
-
-### Layout
-- Header.tsx, MobileNavigation.tsx
-
-## Server Actions / Data Provider
-
-| Risorsa | Operazioni | Note |
-|---------|-----------|------|
-| clients | CRUD + filtri per tipo | Eredita pattern contacts |
-| projects | CRUD + filtri per categoria/stato | Nuovo modulo |
-| services | CRUD + inserimento rapido + duplica | Cuore del sistema |
-| quotes | CRUD + Kanban drag-drop | Eredita pattern deals |
-| payments | CRUD + riepilogo dovuto/ricevuto | Nuovo modulo |
-| expenses | CRUD + calcolo rimborso km | Nuovo modulo |
-
-## Supabase Tables (stato attuale)
-
-| Table | RLS | Policies | Status |
-|-------|-----|----------|--------|
-| clients | Enabled | auth.uid() IS NOT NULL (ALL) | Deployed |
-| projects | Enabled | auth.uid() IS NOT NULL (ALL) | Deployed |
-| services | Enabled | auth.uid() IS NOT NULL (ALL) | Deployed |
-| quotes | Enabled | auth.uid() IS NOT NULL (ALL) | Deployed |
-| payments | Enabled | auth.uid() IS NOT NULL (ALL) | Deployed |
-| expenses | Enabled | auth.uid() IS NOT NULL (ALL) | Deployed |
-| settings | Enabled | auth.uid() IS NOT NULL (ALL) | Deployed |
-| keep_alive | Enabled | SELECT public (true) | Deployed |
-
-Migration: `supabase/migrations/20260225180000_gestionale_schema.sql`
-Progetto remoto: `qvdmzhyzpyaveniirsmo.supabase.co`
+### Git Hooks
+- Pre-commit: `make registry-gen` (auto-regenera registry.json)
