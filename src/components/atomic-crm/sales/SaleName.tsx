@@ -8,6 +8,6 @@ export const SaleName = ({ sale }: { sale?: Sale }) => {
   const finalSale = sale || saleFromContext;
   if (isPending || !finalSale) return null;
   return finalSale.id === identity?.id
-    ? "You"
+    ? "Tu"
     : `${finalSale.first_name} ${finalSale.last_name}`;
 };

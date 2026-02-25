@@ -33,7 +33,7 @@ export function ActivityLogContactCreated({
               {activity.company_id != null && (
                 <>
                   {" "}
-                  to{" "}
+                  a{" "}
                   <ReferenceField
                     source="company_id"
                     reference="companies"

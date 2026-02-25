@@ -44,7 +44,7 @@ export const Task = ({
     redirect: false,
     mutationOptions: {
       onSuccess() {
-        notify("Task deleted successfully", { undoable: true });
+        notify("Attività eliminata", { undoable: true });
       },
     },
   });
@@ -106,7 +106,7 @@ export const Task = ({
               {task.text}
             </div>
             <div className="text-sm text-muted-foreground">
-              due&nbsp;
+              scadenza&nbsp;
               <DateField source="due_date" record={task} />
               {showContact && (
                 <ReferenceField<TData, Contact>
@@ -120,7 +120,7 @@ export const Task = ({
                     return (
                       <>
                         {" "}
-                        (Re:&nbsp;
+                        (Rif:&nbsp;
                         {referenceRecord?.first_name}{" "}
                         {referenceRecord?.last_name})
                       </>
@@ -138,7 +138,7 @@ export const Task = ({
               variant="ghost"
               size="icon"
               className="h-5 pr-0! size-8 cursor-pointer"
-              aria-label="task actions"
+              aria-label="azioni attività"
             >
               <MoreVertical className="size-5 md:size-4" />
             </Button>
@@ -158,7 +158,7 @@ export const Task = ({
                 });
               }}
             >
-              Postpone to tomorrow
+              Rimanda a domani
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer h-12 md:h-8 px-4 md:px-2 text-base md:text-sm"
@@ -174,19 +174,19 @@ export const Task = ({
                 });
               }}
             >
-              Postpone to next week
+              Rimanda alla prossima settimana
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer h-12 md:h-8 px-4 md:px-2 text-base md:text-sm"
               onClick={handleEdit}
             >
-              Edit
+              Modifica
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer h-12 md:h-8 px-4 md:px-2 text-base md:text-sm"
               onClick={handleDelete}
             >
-              Delete
+              Elimina
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

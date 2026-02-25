@@ -35,7 +35,7 @@ import { TextField } from "@/components/admin/text-field";
  *       <RecordField source="price">
  *         <NumberField source="price" options={
  *           style: 'currency',
- *           currency: 'USD',
+ *           currency: 'EUR',
  *         }/>
  *       <RecordField source="status" variant="inline" />
  *     </div>

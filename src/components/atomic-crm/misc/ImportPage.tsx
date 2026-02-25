@@ -199,34 +199,34 @@ const ImportStats = ({
 }) => {
   const data = [
     {
-      entity: "sales",
+      entity: "Utenti",
       imported: stats.sales,
       failed: failedImports.sales.length,
     },
     {
-      entity: "companies",
+      entity: "Aziende",
       imported: stats.companies,
       failed: failedImports.companies.length,
     },
     {
-      entity: "contacts",
+      entity: "Contatti",
       imported: stats.contacts,
       failed: failedImports.contacts.length,
     },
     {
-      entity: "notes",
+      entity: "Note",
       imported: stats.notes,
       failed: failedImports.notes.length,
     },
     {
-      entity: "tasks",
+      entity: "Attività",
       imported: stats.tasks,
       failed: failedImports.tasks.length,
     },
   ];
   return (
     <Table>
-      <TableCaption className="sr-only">Import status</TableCaption>
+      <TableCaption className="sr-only">Stato importazione</TableCaption>
       <TableHeader>
         <TableRow>
           <TableHead className="w-25"></TableHead>

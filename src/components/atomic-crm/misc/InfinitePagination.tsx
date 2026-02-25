@@ -92,7 +92,7 @@ export const InfinitePagination = ({
             <Spinner />
           </ItemMedia>
           <ItemContent>
-            <ItemTitle className="line-clamp-1">Loading...</ItemTitle>
+            <ItemTitle className="line-clamp-1">Caricamento...</ItemTitle>
           </ItemContent>
         </Item>
       ) : (

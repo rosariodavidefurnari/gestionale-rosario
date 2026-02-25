@@ -16,6 +16,6 @@ export async function getCompanyAvatar(record: Partial<Company>): Promise<{
     .replace(/\/$/, "");
   return {
     src: `https://favicon.show/${websiteUrlWithoutScheme}`,
-    title: "Company favicon",
+    title: "Favicon azienda",
   };
 }

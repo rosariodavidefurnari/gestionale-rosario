@@ -44,9 +44,9 @@ export const generateCompanies = (db: Db, size = 55): Required<Company>[] => {
       sales_id: datatype.number(2) === 0 ? 0 : random.arrayElement(db.sales).id,
       created_at: randomDate().toISOString(),
       description: lorem.paragraph(),
-      revenue: random.arrayElement(["$1M", "$10M", "$100M", "$1B"]),
+      revenue: random.arrayElement(["€1M", "€10M", "€100M", "€1B"]),
       tax_identifier: random.alphaNumeric(10),
-      country: random.arrayElement(["USA", "France", "UK"]),
+      country: random.arrayElement(["Italia", "Francia", "Germania"]),
       context_links: [],
     };
   });

@@ -44,6 +44,8 @@ const italianMessages = {
       open: "Apri",
       toggle_theme: "Attiva/disattiva modalità chiara/scura",
       select_columns: "Colonne",
+      search_columns: "Cerca colonne",
+      clear_search: "Cancella ricerca",
       update_application: "Ricarica applicazione",
     },
     boolean: {
@@ -137,6 +139,11 @@ const italianMessages = {
       previous: "Vai alla pagina precedente",
       page_rows_per_page: "Righe per pagina:",
       skip_nav: "Salta al contenuto",
+      no_filtered_results:
+        "Nessun risultato con i filtri correnti.",
+      clear_filters: "Rimuovi filtri",
+      breadcrumb_drawer_title: "Naviga a",
+      breadcrumb_drawer_instructions: "Seleziona una pagina.",
     },
     sort: {
       sort_by: "Ordina per %{field} %{order}",

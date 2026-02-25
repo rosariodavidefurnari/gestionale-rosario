@@ -165,7 +165,7 @@ const ContactPersonalInformationInputs = () => {
       </ArrayInput>
       <TextInput
         source="linkedin_url"
-        label="Linkedin URL"
+        label="URL LinkedIn"
         helperText={false}
         validate={isLinkedinUrl}
       />

@@ -180,11 +180,11 @@ ${children
     component: (props: any) => (
       <RecordField
         source={props.source}
-        render={(record) => (record[props.source] ? "Yes" : "No")}
+        render={(record) => (record[props.source] ? "Sì" : "No")}
       />
     ),
     representation: (props: any) =>
-      `<RecordField source="${props.source}" render={record => record[${props.source}] ? 'Yes' : 'No'} />`,
+      `<RecordField source="${props.source}" render={record => record[${props.source}] ? 'Sì' : 'No'} />`,
   },
   date: {
     component: (props: any) => (

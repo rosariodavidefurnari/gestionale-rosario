@@ -1,5 +1,6 @@
 import { ResponsiveBar } from "@nivo/bar";
 import { format, startOfMonth } from "date-fns";
+import { it as itLocale } from "date-fns/locale";
 import { DollarSign } from "lucide-react";
 import { useGetList } from "ra-core";
 import { memo, useMemo } from "react";
@@ -48,7 +49,7 @@ export const DealsChart = memo(() => {
 
     const amountByMonth = Object.keys(dealsByMonth).map((month) => {
       return {
-        date: format(month, "MMM"),
+        date: format(month, "MMM", { locale: itLocale }),
         won: dealsByMonth[month]
           .filter((deal: Deal) => deal.stage === "won")
           .reduce((acc: number, deal: Deal) => {
@@ -177,7 +178,7 @@ export const DealsChart = memo(() => {
                 value: 0,
                 lineStyle: { strokeOpacity: 0 },
                 textStyle: { fill: "#2ebca6" },
-                legend: "Won",
+                legend: "Vinte",
                 legendPosition: "top-left",
                 legendOrientation: "vertical",
               },
@@ -189,7 +190,7 @@ export const DealsChart = memo(() => {
                   strokeWidth: 1,
                 },
                 textStyle: { fill: "#e25c3b" },
-                legend: "Lost",
+                legend: "Perse",
                 legendPosition: "bottom-left",
                 legendOrientation: "vertical",
               },

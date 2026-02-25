@@ -30,7 +30,7 @@ export const ListNoResults = (props: ListNoResultsProps) => {
               onClick={() => setFilters({}, [])}
             >
               {translate("ra.navigation.clear_filters", {
-                _: "Clear filters",
+                _: "Rimuovi filtri",
               })}
             </Button>
           </>

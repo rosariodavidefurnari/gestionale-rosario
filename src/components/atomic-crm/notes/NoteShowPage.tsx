@@ -41,7 +41,7 @@ export const NoteShowPage = () => {
         <div className="flex flex-1 min-w-0">
           <Link to={`/contacts/${contactId}/show`} className="flex-1 min-w-0">
             <h1 className="truncate text-xl font-semibold">
-              Note for{" "}
+              Nota per{" "}
               <ReferenceField
                 record={note}
                 resource="contact_notes"
@@ -62,14 +62,14 @@ export const NoteShowPage = () => {
           onClick={() => setEditOpen(true)}
         >
           <Pencil className="size-5" />
-          <span className="sr-only">Edit note</span>
+          <span className="sr-only">Modifica nota</span>
         </Button>
       </MobileHeader>
       <MobileContent>
         <div className="mb-4">
           <div className="flex items-center space-x-2 w-full text-sm text-muted-foreground">
             <span>
-              By{" "}
+              Di{" "}
               <ReferenceField
                 record={note}
                 resource="contact_notes"

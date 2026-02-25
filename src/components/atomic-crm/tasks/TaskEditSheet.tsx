@@ -27,7 +27,7 @@ export const TaskEditSheet = ({
               Modifica attività
               {referenceRecord ? (
                 <>
-                  {" for "}
+                  {" per "}
                   <RecordRepresentation
                     record={referenceRecord}
                     resource="contacts"

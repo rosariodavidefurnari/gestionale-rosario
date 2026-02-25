@@ -48,7 +48,7 @@ export const TaskCreateSheet = ({
       data: { last_seen: new Date().toISOString() },
       previousData: contact,
     });
-    notify("Task added");
+    notify("Attività aggiunta");
     // No redirect, only close the sheet
     onOpenChange(false);
   };

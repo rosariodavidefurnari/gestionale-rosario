@@ -76,7 +76,7 @@ export const ExportButton = (props: ExportButtonProps) => {
         )
         .catch((error) => {
           console.error(error);
-          notify("HTTP Error", { type: "error" });
+          notify("Errore HTTP", { type: "error" });
         });
       if (typeof onClick === "function") {
         onClick(event);

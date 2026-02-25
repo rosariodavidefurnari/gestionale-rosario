@@ -31,7 +31,7 @@ export const Error = (props: InternalErrorProps & {}) => {
       ? (error.message ?? "")
       : typeof error === "string"
         ? error
-        : String(error ?? "Unknown error");
+        : String(error ?? "Errore sconosciuto");
 
   return (
     <div className="flex flex-col items-center md:p-16 gap-5" {...rest}>
@@ -59,31 +59,31 @@ export const Error = (props: InternalErrorProps & {}) => {
           </Accordion>
 
           <p className="text-center ">
-            Need help with this error? Try the following:
+            Hai bisogno di aiuto con questo errore? Prova quanto segue:
           </p>
           <div>
             <ul className="list-disc">
               <li>
-                Check the{" "}
+                Consulta la{" "}
                 <a
                   className="text-primary underline-offset-4 hover:underline"
                   href="https://marmelab.com/shadcn-admin-kit/docs"
                 >
-                  shadcn-admin-kit documentation
+                  documentazione shadcn-admin-kit
                 </a>
               </li>
               <li>
-                Search on{" "}
+                Cerca su{" "}
                 <a
                   className="text-primary underline-offset-4 hover:underline"
                   href="https://stackoverflow.com/questions/tagged/shadcn-admin-kit"
                 >
                   StackOverflow
                 </a>{" "}
-                for community answers
+                risposte della community
               </li>
               <li>
-                Get help from the core team via{" "}
+                Ottieni aiuto dal team core tramite{" "}
                 <a
                   className="text-primary underline-offset-4 hover:underline"
                   href="https://marmelab.com/shadcn-admin-kit/"

@@ -42,7 +42,7 @@ export const NoteEditSheet = ({
               Modifica nota
               {referenceRecord ? (
                 <>
-                  {" for "}
+                  {" per "}
                   <RecordRepresentation
                     record={referenceRecord}
                     resource="contacts"

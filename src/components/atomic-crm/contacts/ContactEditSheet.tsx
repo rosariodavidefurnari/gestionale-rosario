@@ -19,7 +19,7 @@ export const ContactEditSheet = ({
       id={contactId}
       title={
         <h1 className="text-xl font-semibold truncate pr-10">
-          Edit <RecordRepresentation />
+          Modifica <RecordRepresentation />
         </h1>
       }
       open={open}

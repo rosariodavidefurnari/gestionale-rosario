@@ -77,7 +77,7 @@ export const HotContacts = () => {
           empty={
             <div className="p-4">
               <p className="text-sm mb-4">
-                I contatti con stato "hot" appariranno qui.
+                I contatti con stato "caldo" appariranno qui.
               </p>
               <p className="text-sm">
                 Cambia lo stato di un contatto aggiungendo una nota e cliccando

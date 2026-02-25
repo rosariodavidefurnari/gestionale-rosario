@@ -20,7 +20,7 @@ import type { FieldProps } from "@/lib/field.type";
  *     <div className="flex flex-col gap-4">
  *       <RecordField source="reference" />
  *       <RecordField source="price">
- *         <NumberField source="price" options={{ style: 'currency', currency: 'USD' }} />
+ *         <NumberField source="price" options={{ style: 'currency', currency: 'EUR' }} />
  *       </RecordField>
  *     </div>
  *   </Show>

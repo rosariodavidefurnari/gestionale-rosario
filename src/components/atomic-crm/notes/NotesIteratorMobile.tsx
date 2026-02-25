@@ -43,7 +43,7 @@ export const NotesIteratorMobile = ({
     return (
       <div className="p-4">
         <div className="text-center text-muted-foreground mb-4">
-          Error loading notes
+          Errore nel caricamento delle note
         </div>
         <div className="text-center mt-2">
           <Button
@@ -52,7 +52,7 @@ export const NotesIteratorMobile = ({
             }}
           >
             <RotateCcw />
-            Retry
+            Riprova
           </Button>
         </div>
       </div>
@@ -88,7 +88,7 @@ export const NoteMobile = ({
   >
     <div className="flex items-center space-x-2 w-full">
       <div className="inline-flex h-full items-center text-sm text-muted-foreground">
-        By{" "}
+        Di{" "}
         <ReferenceField
           record={note}
           resource="contact_notes"
