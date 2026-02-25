@@ -17,8 +17,8 @@ const threeMonthsAgo = new Date(
   new Date().setMonth(new Date().getMonth() - 6),
 ).toISOString();
 
-const DEFAULT_LOCALE = "en-US";
-const CURRENCY = "USD";
+const DEFAULT_LOCALE = "it-IT";
+const CURRENCY = "EUR";
 
 export const DealsChart = memo(() => {
   const acceptedLanguages = navigator

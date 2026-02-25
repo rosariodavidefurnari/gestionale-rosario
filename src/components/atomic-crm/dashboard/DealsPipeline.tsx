@@ -64,10 +64,10 @@ export const DealsPipeline = () => {
           isPending={isPending}
           primaryText={(deal) => deal.name}
           secondaryText={(deal) =>
-            `${deal.amount.toLocaleString("en-US", {
+            `${deal.amount.toLocaleString("it-IT", {
               notation: "compact",
               style: "currency",
-              currency: "USD",
+              currency: "EUR",
               currencyDisplay: "narrowSymbol",
               minimumSignificantDigits: 3,
             })} , ${findDealLabel(dealStages, deal.stage)}`

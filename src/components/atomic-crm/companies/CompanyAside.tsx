@@ -112,17 +112,17 @@ export const ContextInfo = ({ record }: { record: Company }) => {
       {sectorLabel && <span>Settore: {sectorLabel}</span>}
       {record.size && (
         <span>
-          Size: <SelectField source="size" choices={sizes} />
+          Dimensione: <SelectField source="size" choices={sizes} />
         </span>
       )}
       {record.revenue && (
         <span>
-          Revenue: <TextField source="revenue" />
+          Ricavi: <TextField source="revenue" />
         </span>
       )}
       {record.tax_identifier && (
         <span>
-          Tax Identifier: <TextField source="tax_identifier" />
+          P.IVA / CF: <TextField source="tax_identifier" />
         </span>
       )}
     </AsideSection>

@@ -86,7 +86,7 @@ const DealShowContent = () => {
           <div className="flex gap-8 m-4">
             <div className="flex flex-col mr-10">
               <span className="text-xs text-muted-foreground tracking-wide">
-                Expected closing date
+                Data di chiusura prevista
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-sm">
@@ -105,7 +105,7 @@ const DealShowContent = () => {
                 Budget
               </span>
               <span className="text-sm">
-                {record.amount.toLocaleString("en-US", {
+                {record.amount.toLocaleString("it-IT", {
                   notation: "compact",
                   style: "currency",
                   currency: "EUR",
@@ -118,7 +118,7 @@ const DealShowContent = () => {
             {record.category && (
               <div className="flex flex-col mr-10">
                 <span className="text-xs text-muted-foreground tracking-wide">
-                  Category
+                  Categoria
                 </span>
                 <span className="text-sm">
                   {dealCategories.find((c) => c.value === record.category)
@@ -129,7 +129,7 @@ const DealShowContent = () => {
 
             <div className="flex flex-col mr-10">
               <span className="text-xs text-muted-foreground tracking-wide">
-                Stage
+                Fase
               </span>
               <span className="text-sm">
                 {findDealLabel(dealStages, record.stage)}
@@ -141,7 +141,7 @@ const DealShowContent = () => {
             <div className="m-4">
               <div className="flex flex-col min-h-12 mr-10">
                 <span className="text-xs text-muted-foreground tracking-wide">
-                  Contacts
+                  Contatti
                 </span>
                 <ReferenceArrayField
                   source="contact_ids"
@@ -156,7 +156,7 @@ const DealShowContent = () => {
           {record.description && (
             <div className="m-4 whitespace-pre-line">
               <span className="text-xs text-muted-foreground tracking-wide">
-                Description
+                Descrizione
               </span>
               <p className="text-sm leading-6">{record.description}</p>
             </div>
@@ -219,7 +219,7 @@ const ArchiveButton = ({ record }: { record: Deal }) => {
       className="flex items-center gap-2 h-9"
     >
       <Archive className="w-4 h-4" />
-      Archive
+      Archivia
     </Button>
   );
 };
@@ -257,7 +257,7 @@ const UnarchiveButton = ({ record }: { record: Deal }) => {
       className="flex items-center gap-2 h-9"
     >
       <ArchiveRestore className="w-4 h-4" />
-      Send back to the board
+      Ripristina sulla bacheca
     </Button>
   );
 };

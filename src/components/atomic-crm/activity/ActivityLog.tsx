@@ -47,7 +47,7 @@ export function ActivityLog({
     return (
       <div className="p-4">
         <div className="text-center text-muted-foreground mb-4">
-          Error loading latest activity
+          Errore durante il caricamento dell'attività recente
         </div>
         <div className="text-center mt-2">
           <Button
@@ -56,7 +56,7 @@ export function ActivityLog({
             }}
           >
             <RotateCcw />
-            Retry
+            Riprova
           </Button>
         </div>
       </div>

@@ -66,10 +66,10 @@ export const DealCardContent = ({
           <div className="ml-3">
             <p className="text-sm font-medium mb-2">{deal.name}</p>
             <p className="text-xs text-muted-foreground">
-              {deal.amount.toLocaleString("en-US", {
+              {deal.amount.toLocaleString("it-IT", {
                 notation: "compact",
                 style: "currency",
-                currency: "USD",
+                currency: "EUR",
                 currencyDisplay: "narrowSymbol",
                 minimumSignificantDigits: 3,
               })}

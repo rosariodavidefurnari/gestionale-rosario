@@ -51,9 +51,9 @@ export const CompanyCard = (props: { record?: Company }) => {
               <span className="text-xs text-muted-foreground">
                 {record.nb_deals
                   ? record.nb_deals > 1
-                    ? "deals"
-                    : "deal"
-                  : "deal"}
+                    ? "trattative"
+                    : "trattativa"
+                  : "trattativa"}
               </span>
             </div>
           ) : null}

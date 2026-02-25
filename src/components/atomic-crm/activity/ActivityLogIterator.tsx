@@ -48,7 +48,7 @@ export function ActivityLogIterator({
           }}
           className="flex w-full justify-center text-sm underline hover:no-underline"
         >
-          Load more activity
+          Carica altre attività
         </a>
       )}
     </div>

@@ -136,7 +136,7 @@ const ContactItemContent = ({
                 </ReferenceField>
               )}
               {contact.nb_tasks
-                ? ` - ${contact.nb_tasks} task${contact.nb_tasks > 1 ? "s" : ""}`
+                ? ` - ${contact.nb_tasks} attività`
                 : ""}
               &nbsp;&nbsp;
               <TagsList />
@@ -149,7 +149,7 @@ const ContactItemContent = ({
               className="text-sm text-muted-foreground"
               title={contact.last_seen}
             >
-              {"last activity "}
+              {"ultima attività "}
               {formatRelative(contact.last_seen, now)}{" "}
               <Status status={contact.status} />
             </div>
@@ -197,7 +197,7 @@ export const ContactListContentMobile = () => {
     return (
       <div className="p-4">
         <div className="text-center text-muted-foreground mb-4">
-          Error loading contacts
+          Errore durante il caricamento dei contatti
         </div>
         <div className="text-center mt-2">
           <Button
@@ -206,7 +206,7 @@ export const ContactListContentMobile = () => {
             }}
           >
             <RotateCcw />
-            Retry
+            Riprova
           </Button>
         </div>
       </div>
@@ -260,7 +260,7 @@ const ContactItemContentMobile = ({ contact }: { contact: Contact }) => (
             </span>
             {contact.nb_tasks ? (
               <span>
-                {contact.nb_tasks} task{contact.nb_tasks > 1 ? "s" : ""}
+                {contact.nb_tasks} attività
               </span>
             ) : null}
           </div>

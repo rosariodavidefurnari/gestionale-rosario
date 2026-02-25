@@ -22,10 +22,10 @@ export const DealColumn = ({
           {findDealLabel(dealStages, stage)}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {totalAmount.toLocaleString("en-US", {
+          {totalAmount.toLocaleString("it-IT", {
             notation: "compact",
             style: "currency",
-            currency: "USD",
+            currency: "EUR",
             currencyDisplay: "narrowSymbol",
             minimumSignificantDigits: 3,
           })}

@@ -105,7 +105,7 @@ const NoteCreateButton = ({
           onSuccess: handleSuccess,
         }}
       >
-        Add this note
+        Aggiungi nota
       </SaveButton>
     </div>
   );
