@@ -2,29 +2,33 @@
 
 ## Current Phase
 
-🟢 Fase 4 — Setup, DB e localizzazione completati. Audit post-sessione superato. Pronto per Fase 2 (Moduli Core).
+🟢 Fase completamento infrastruttura — Deploy Vercel + Edge Functions funzionanti. Pronto per Fase 2 (Moduli Core).
 
 ## Last Session
 
-- Date: 2026-02-25 (sessione 4)
+- Date: 2026-02-25 (sessione 5)
 - Completed:
-  - **Audit completo di verifica Fase 1-4** — controllo indipendente su tutto il lavoro fatto
-  - **Fix critico: config.toml signup disabilitato** — `enable_signup = false` su auth, email, sms
-  - **Fix config.toml project_id** — da "atomic-crm-demo" a "gestionale-rosario"
-  - **Fix config.toml email templates** — subject tradotto in italiano
-  - **Creato .github/workflows/keep-alive.yml** — ping Supabase ogni lunedì e giovedì
-  - **Fix MobileNavigation.tsx** — label "Home" → "Inizio"
-  - **Fix Prettier** — 18 file riformattati, `make lint` ora passa
-  - **Learning aggiunto** — "MAI dichiarare una fase completata senza audit"
-  - **Typecheck + Test + Lint** — tutto verde (0 errori, 60/60 test, Prettier OK)
+  - **Deploy su Vercel** — gestionale-rosario.vercel.app funzionante
+  - **Fix deploy.yml** — disabilitato trigger automatico (era per GitHub Pages, non Vercel)
+  - **Fix utente auth** — inserito record sales + metadata per utente creato manualmente
+  - **Deploy Edge Functions** — users, update_password, merge_contacts, postmark deployate su remoto
+  - **Fix CORS Edge Functions** — impostato secret `SB_SECRET_KEY` (service role key) mancante
+  - **Verifica CORS** — OPTIONS 204 su users, update_password, merge_contacts (postmark richiede secrets Postmark)
 
 - Decisions:
-  - Audit obbligatorio prima di dichiarare una fase completata
-  - `defaultValue="Work"` in ContactInputs è corretto (valore DB, display mostra "Lavoro")
-  - Label inglesi nei test (SettingsPage.test.ts) sono dati di test, non stringhe UI
-  - FakeRest faker locale en_US: bassa priorità, solo demo mode
+  - deploy.yml impostato su `workflow_dispatch` (manual only) — non serve per Vercel
+  - Vercel auto-deploya su push al repo GitHub (collegato)
+  - Edge Function `postmark` non prioritaria (webhook email, richiede secrets Postmark)
+  - Edge Function `merge_contacts` utile in futuro per deduplicare clienti
 
 ## Previous Sessions
+
+- 2026-02-25 (sessione 4):
+  - Audit completo di verifica Fase 1-4
+  - Fix critico: config.toml signup disabilitato
+  - Creato .github/workflows/keep-alive.yml
+  - Fix Prettier (18 file), Fix MobileNavigation "Home" → "Inizio"
+  - Typecheck + Test + Lint tutto verde
 
 - 2026-02-25 (sessione 3):
   - Fix stringhe inglesi residue (batch 2) — 38 file
@@ -63,15 +67,20 @@
 - 2 vulnerabilità npm (1 moderate, 1 high) — da valutare con `npm audit`
 - 26 Vitest warnings su promise non awaited in supabaseAdapter.spec.ts (codice upstream)
 - Verificare che signup sia disabilitato anche nel **Supabase Dashboard remoto**
+- Edge Function `postmark` crasha (manca POSTMARK_WEBHOOK_USER/PASSWORD/AUTHORIZED_IPS) — non prioritaria
 
-## Certezze (sessione 4)
+## Certezze (sessione 5)
 
 - [x] GitHub secrets SUPABASE_URL + SUPABASE_KEY configurati nel repo
-- [x] Keep-alive workflow testato manualmente: HTTP 200, risposta `[{"id":1,"name":"heartbeat",...}]`
-- [x] Tutti i commit pushati su origin/main
+- [x] Keep-alive workflow testato manualmente: HTTP 200
 - [x] config.toml: signup disabilitato (auth + email + sms), project_id corretto
 - [x] Typecheck 0 errori, 60/60 test, Prettier + ESLint OK
 - [x] Schema DB conforme alla specifica (tutte le colonne, CHECK, FK, views verificati)
+- [x] Deploy Vercel funzionante (gestionale-rosario.vercel.app)
+- [x] Utente auth configurato con metadata first_name/last_name + record sales
+- [x] Edge Functions deployate: users, update_password, merge_contacts (CORS OK, 204)
+- [x] Secret SB_SECRET_KEY impostato sul progetto remoto
+- [x] deploy.yml disabilitato auto-trigger (workflow_dispatch only)
 
 ## Architectural Decisions Log
 

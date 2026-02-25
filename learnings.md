@@ -85,3 +85,18 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   commit non pushati. Regola: prima di marcare una fase come completata, eseguire
   SEMPRE una verifica indipendente (typecheck + test + lint + review config + review
   specifica). Non fidarsi mai dello stato scritto senza controllare.
+
+- [2026-02-25] **Edge Functions richiedono SB_SECRET_KEY come secret separato** —
+  `supabaseAdmin.ts` usa `Deno.env.get("SB_SECRET_KEY")` che NON è tra le variabili
+  auto-iniettate da Supabase (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY).
+  Va impostato manualmente con `npx supabase secrets set SB_SECRET_KEY=<service_role_key>`.
+  Senza questo secret, le funzioni crashano con WORKER_ERROR anche sulle OPTIONS requests.
+
+- [2026-02-25] **Utenti creati manualmente da Dashboard non triggano on_auth_user_created** —
+  Il trigger `handle_new_user()` crea il record in `sales` solo quando un utente fa signup
+  via API. Utenti creati dal Dashboard Supabase bypassano il trigger. Fix: inserire
+  manualmente il record in `sales` e aggiornare `raw_user_meta_data` in `auth.users`.
+
+- [2026-02-25] **deploy.yml di Atomic CRM è per GitHub Pages, non Vercel** — Il workflow
+  originale deploya su GitHub Pages con `gh-pages`. Con Vercel collegato al repo, il
+  deploy è automatico su push. Il workflow va disabilitato o impostato su manual dispatch.

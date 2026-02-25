@@ -5,7 +5,7 @@
 Fork di Atomic CRM personalizzato per gestire l'attività professionale
 di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
-## Stato Infrastruttura (verificato sessione 4)
+## Stato Infrastruttura (verificato sessione 5)
 
 ### Certezze — Audit superato
 
@@ -20,12 +20,16 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 | Typecheck | 0 errori | `make typecheck` |
 | Test | 60/60 passati | `make test` |
 | Lint + Prettier | 0 errori | `make lint` |
-| Commit pushati | Tutto su origin/main | `git push` |
+| Deploy Vercel | gestionale-rosario.vercel.app | sessione 5 |
+| Edge Functions | users, update_password, merge_contacts deployate | CORS OPTIONS 204 |
+| Supabase secrets | SB_SECRET_KEY impostato su remoto | sessione 5 |
+| Utente auth | Metadata + sales record configurati | sessione 5 |
 
 ### Cose ancora da verificare manualmente
 
 - Signup disabilitato nel **Supabase Dashboard remoto** (non solo config.toml locale)
 - npm audit: 2 vulnerabilità (1 moderate, 1 high) — da valutare
+- Edge Function `postmark` non funzionante (manca secrets Postmark — non prioritaria)
 
 ## Localizzazione
 
@@ -108,6 +112,22 @@ Migration: `supabase/migrations/20260225180000_gestionale_schema.sql`
 - Progetto remoto: `qvdmzhyzpyaveniirsmo.supabase.co`
 - Keep-alive: GitHub Actions, lunedì e giovedì 08:00 UTC
 - GitHub secrets: SUPABASE_URL + SUPABASE_KEY configurati
+- Edge Function secrets: SB_SECRET_KEY (service role key) configurato su remoto
+
+### Edge Functions (deployate)
+
+| Function | Scopo | Stato |
+| -------- | ----- | ----- |
+| users | Gestione profilo utente (avatar, invite, disable) | OK |
+| update_password | Cambio password utente | OK |
+| merge_contacts | Merge contatti duplicati | OK |
+| postmark | Webhook email inbound (Postmark) | KO (manca secrets Postmark) |
+
+## Deployment
+
+- **Hosting**: Vercel (gestionale-rosario.vercel.app)
+- **Auto-deploy**: Vercel collegato al repo GitHub, deploya su ogni push a main
+- **deploy.yml**: disabilitato auto-trigger (era per GitHub Pages di Atomic CRM), solo manual dispatch
 
 ## Routing & React Router
 
@@ -162,7 +182,7 @@ App.tsx
 
 ### GitHub Actions
 - `.github/workflows/check.yml` — Lint, test, build su push/PR
-- `.github/workflows/deploy.yml` — Deploy docs, demo, Supabase migrations
+- `.github/workflows/deploy.yml` — Deploy docs, demo, Supabase migrations (manual dispatch only)
 - `.github/workflows/keep-alive.yml` — Ping Supabase lunedì e giovedì
 
 ### Git Hooks
