@@ -9,20 +9,23 @@ export function SalesInputs() {
   const record = useRecordContext<Sale>();
   return (
     <div className="space-y-4 w-full">
-      <TextInput source="first_name" validate={required()} helperText={false} />
-      <TextInput source="last_name" validate={required()} helperText={false} />
+      <TextInput source="first_name" label="Nome" validate={required()} helperText={false} />
+      <TextInput source="last_name" label="Cognome" validate={required()} helperText={false} />
       <TextInput
         source="email"
+        label="Email"
         validate={[required(), email()]}
         helperText={false}
       />
       <BooleanInput
         source="administrator"
+        label="Amministratore"
         readOnly={record?.id === identity?.id}
         helperText={false}
       />
       <BooleanInput
         source="disabled"
+        label="Disabilitato"
         readOnly={record?.id === identity?.id}
         helperText={false}
       />

@@ -37,9 +37,10 @@ export const TaskFormContent = ({
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <DateInput source="due_date" helperText={false} validate={required()} />
+        <DateInput source="due_date" label="Scadenza" helperText={false} validate={required()} />
         <SelectInput
           source="type"
+          label="Tipo"
           validate={required()}
           choices={taskTypes}
           optionText="label"

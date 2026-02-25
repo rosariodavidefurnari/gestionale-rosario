@@ -4,7 +4,8 @@ import type { InputProps } from "ra-core";
 
 export const AutocompleteCompanyInput = ({
   validate,
-}: Pick<InputProps, "validate">) => {
+  label,
+}: Pick<InputProps, "validate" | "label">) => {
   const [create] = useCreate();
   const { identity } = useGetIdentity();
   const notify = useNotify();
@@ -33,6 +34,7 @@ export const AutocompleteCompanyInput = ({
   return (
     <AutocompleteInput
       optionText="name"
+      label={label}
       helperText={false}
       onCreate={handleCreateCompany}
       createItemLabel="Crea %{item}"

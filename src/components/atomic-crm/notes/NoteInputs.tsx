@@ -88,6 +88,7 @@ export const NoteInputs = ({
           {showStatus && (
             <SelectInput
               source="status"
+              label="Stato"
               choices={noteStatuses.map((status) => ({
                 id: status.value,
                 name: status.label,

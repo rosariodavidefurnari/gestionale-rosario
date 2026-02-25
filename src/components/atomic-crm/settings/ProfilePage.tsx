@@ -203,6 +203,12 @@ const ProfileForm = ({
   );
 };
 
+const labelMap: Record<string, string> = {
+  first_name: "Nome",
+  last_name: "Cognome",
+  email: "Email",
+};
+
 const TextRender = ({
   source,
   isEditMode,
@@ -211,7 +217,7 @@ const TextRender = ({
   isEditMode: boolean;
 }) => {
   if (isEditMode) {
-    return <TextInput source={source} helperText={false} />;
+    return <TextInput source={source} label={labelMap[source]} helperText={false} />;
   }
   return (
     <div className="m-2">

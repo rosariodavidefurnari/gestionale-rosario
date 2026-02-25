@@ -59,6 +59,7 @@ const CompanyDisplayInputs = () => {
       />
       <TextInput
         source="name"
+        label="Nome"
         className="w-full h-fit"
         validate={required()}
         helperText={false}
@@ -72,13 +73,14 @@ const CompanyContactInputs = () => {
   return (
     <div className="flex flex-col gap-4">
       <h6 className="text-lg font-semibold">Contatto</h6>
-      <TextInput source="website" helperText={false} validate={isUrl} />
+      <TextInput source="website" label="Sito web" helperText={false} validate={isUrl} />
       <TextInput
         source="linkedin_url"
+        label="URL LinkedIn"
         helperText={false}
         validate={isLinkedinUrl}
       />
-      <TextInput source="phone_number" helperText={false} />
+      <TextInput source="phone_number" label="Telefono" helperText={false} />
     </div>
   );
 };
@@ -90,14 +92,15 @@ const CompanyContextInputs = () => {
       <h6 className="text-lg font-semibold">Contesto</h6>
       <SelectInput
         source="sector"
+        label="Settore"
         choices={companySectors}
         optionText="label"
         optionValue="value"
         helperText={false}
       />
-      <SelectInput source="size" choices={sizes} helperText={false} />
-      <TextInput source="revenue" helperText={false} />
-      <TextInput source="tax_identifier" helperText={false} />
+      <SelectInput source="size" label="Dimensione" choices={sizes} helperText={false} />
+      <TextInput source="revenue" label="Fatturato" helperText={false} />
+      <TextInput source="tax_identifier" label="P.IVA / C.F." helperText={false} />
     </div>
   );
 };
@@ -106,11 +109,11 @@ const CompanyAddressInputs = () => {
   return (
     <div className="flex flex-col gap-4">
       <h6 className="text-lg font-semibold">Indirizzo</h6>
-      <TextInput source="address" helperText={false} />
-      <TextInput source="city" helperText={false} />
-      <TextInput source="zipcode" helperText={false} />
-      <TextInput source="state_abbr" helperText={false} />
-      <TextInput source="country" helperText={false} />
+      <TextInput source="address" label="Indirizzo" helperText={false} />
+      <TextInput source="city" label="Città" helperText={false} />
+      <TextInput source="zipcode" label="CAP" helperText={false} />
+      <TextInput source="state_abbr" label="Provincia" helperText={false} />
+      <TextInput source="country" label="Nazione" helperText={false} />
     </div>
   );
 };
@@ -119,8 +122,8 @@ const CompanyAdditionalInformationInputs = () => {
   return (
     <div className="flex flex-col gap-4">
       <h6 className="text-lg font-semibold">Info aggiuntive</h6>
-      <TextInput source="description" multiline helperText={false} />
-      <ArrayInput source="context_links" helperText={false}>
+      <TextInput source="description" label="Descrizione" multiline helperText={false} />
+      <ArrayInput source="context_links" label="Link utili" helperText={false}>
         <SimpleFormIterator disableReordering fullWidth getItemLabel={false}>
           <TextInput
             source=""

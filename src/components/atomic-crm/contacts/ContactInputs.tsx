@@ -56,8 +56,8 @@ const ContactIdentityInputs = () => {
         optionValue="value"
         defaultValue={contactGender[0].value}
       />
-      <TextInput source="first_name" validate={required()} helperText={false} />
-      <TextInput source="last_name" validate={required()} helperText={false} />
+      <TextInput source="first_name" label="Nome" validate={required()} helperText={false} />
+      <TextInput source="last_name" label="Cognome" validate={required()} helperText={false} />
     </div>
   );
 };
@@ -66,9 +66,9 @@ const ContactPositionInputs = () => {
   return (
     <div className="flex flex-col gap-4">
       <h6 className="text-lg font-semibold">Posizione</h6>
-      <TextInput source="title" helperText={false} />
+      <TextInput source="title" label="Ruolo" helperText={false} />
       <ReferenceInput source="company_id" reference="companies" perPage={10}>
-        <AutocompleteCompanyInput />
+        <AutocompleteCompanyInput label="Azienda" />
       </ReferenceInput>
     </div>
   );
@@ -185,7 +185,7 @@ const ContactMiscInputs = () => {
         multiline
         helperText={false}
       />
-      <BooleanInput source="has_newsletter" helperText={false} />
+      <BooleanInput source="has_newsletter" label="Iscritto newsletter" helperText={false} />
       <ReferenceInput
         reference="sales"
         source="sales_id"

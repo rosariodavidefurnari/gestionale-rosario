@@ -37,7 +37,7 @@ const DealInfoInputs = () => {
         validate={required()}
         helperText={false}
       />
-      <TextInput source="description" multiline rows={3} helperText={false} />
+      <TextInput source="description" label="Descrizione" multiline rows={3} helperText={false} />
     </div>
   );
 };
@@ -47,7 +47,7 @@ const DealLinkedToInputs = () => {
     <div className="flex flex-col gap-4 flex-1">
       <h3 className="text-base font-medium">Collegata a</h3>
       <ReferenceInput source="company_id" reference="companies">
-        <AutocompleteCompanyInput validate={required()} />
+        <AutocompleteCompanyInput label="Azienda" validate={required()} />
       </ReferenceInput>
 
       <ReferenceArrayInput source="contact_ids" reference="contacts_summary">
@@ -77,6 +77,7 @@ const DealMiscInputs = () => {
       />
       <NumberInput
         source="amount"
+        label="Importo"
         defaultValue={0}
         helperText={false}
         validate={required()}
@@ -84,11 +85,13 @@ const DealMiscInputs = () => {
       <DateInput
         validate={required()}
         source="expected_closing_date"
+        label="Data chiusura prevista"
         helperText={false}
         defaultValue={new Date().toISOString().split("T")[0]}
       />
       <SelectInput
         source="stage"
+        label="Fase"
         choices={dealStages}
         optionText="label"
         optionValue="value"
