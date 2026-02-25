@@ -19,7 +19,7 @@ export const TaskFormContent = ({
       <TextInput
         autoFocus
         source="text"
-        label="Description"
+        label="Descrizione"
         validate={required()}
         multiline
         className="m-0"
@@ -28,7 +28,7 @@ export const TaskFormContent = ({
       {selectContact && (
         <ReferenceInput source="contact_id" reference="contacts_summary">
           <AutocompleteInput
-            label="Contact"
+            label="Contatto"
             optionText={contactOptionText}
             helperText={false}
             validate={required()}

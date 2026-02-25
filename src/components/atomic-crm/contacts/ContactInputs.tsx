@@ -45,7 +45,7 @@ export const ContactInputs = () => {
 const ContactIdentityInputs = () => {
   return (
     <div className="flex flex-col gap-4">
-      <h6 className="text-lg font-semibold">Identity</h6>
+      <h6 className="text-lg font-semibold">Identità</h6>
       <RadioButtonGroupInput
         label={false}
         row
@@ -65,7 +65,7 @@ const ContactIdentityInputs = () => {
 const ContactPositionInputs = () => {
   return (
     <div className="flex flex-col gap-4">
-      <h6 className="text-lg font-semibold">Position</h6>
+      <h6 className="text-lg font-semibold">Posizione</h6>
       <TextInput source="title" helperText={false} />
       <ReferenceInput source="company_id" reference="companies" perPage={10}>
         <AutocompleteCompanyInput />
@@ -105,10 +105,10 @@ const ContactPersonalInformationInputs = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <h6 className="text-lg font-semibold">Personal info</h6>
+      <h6 className="text-lg font-semibold">Info personali</h6>
       <ArrayInput
         source="email_jsonb"
-        label="Email addresses"
+        label="Indirizzi email"
         helperText={false}
       >
         <SimpleFormIterator
@@ -131,14 +131,14 @@ const ContactPersonalInformationInputs = () => {
             source="type"
             helperText={false}
             label={false}
-            optionText="id"
+            optionText="name"
             choices={personalInfoTypes}
             defaultValue="Work"
             className="w-24 min-w-24"
           />
         </SimpleFormIterator>
       </ArrayInput>
-      <ArrayInput source="phone_jsonb" label="Phone numbers" helperText={false}>
+      <ArrayInput source="phone_jsonb" label="Numeri di telefono" helperText={false}>
         <SimpleFormIterator
           inline
           disableReordering
@@ -150,13 +150,13 @@ const ContactPersonalInformationInputs = () => {
             className="w-full"
             helperText={false}
             label={false}
-            placeholder="Phone number"
+            placeholder="Numero di telefono"
           />
           <SelectInput
             source="type"
             helperText={false}
             label={false}
-            optionText="id"
+            optionText="name"
             choices={personalInfoTypes}
             defaultValue="Work"
             className="w-24 min-w-24"
@@ -173,15 +173,15 @@ const ContactPersonalInformationInputs = () => {
   );
 };
 
-const personalInfoTypes = [{ id: "Work" }, { id: "Home" }, { id: "Other" }];
+const personalInfoTypes = [{ id: "Work", name: "Lavoro" }, { id: "Home", name: "Casa" }, { id: "Other", name: "Altro" }];
 
 const ContactMiscInputs = () => {
   return (
     <div className="flex flex-col gap-4">
-      <h6 className="text-lg font-semibold">Misc</h6>
+      <h6 className="text-lg font-semibold">Altro</h6>
       <TextInput
         source="background"
-        label="Background info (bio, how you met, etc)"
+        label="Info aggiuntive (bio, come vi siete conosciuti, ecc.)"
         multiline
         helperText={false}
       />
@@ -196,7 +196,7 @@ const ContactMiscInputs = () => {
       >
         <SelectInput
           helperText={false}
-          label="Account manager"
+          label="Responsabile"
           optionText={saleOptionRenderer}
           validate={required()}
         />

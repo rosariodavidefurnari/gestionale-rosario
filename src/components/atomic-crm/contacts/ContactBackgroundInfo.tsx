@@ -22,7 +22,7 @@ export const ContactBackgroundInfo = () => {
         }
       />
       <div className="text-muted-foreground md:py-0.5">
-        <span className="text-sm">Added on</span>{" "}
+        <span className="text-sm">Aggiunto il</span>{" "}
         <DateField
           source="first_seen"
           options={{ year: "numeric", month: "long", day: "numeric" }}
@@ -31,7 +31,7 @@ export const ContactBackgroundInfo = () => {
       </div>
 
       <div className="text-muted-foreground md:py-0.5">
-        <span className="text-sm">Last activity on</span>{" "}
+        <span className="text-sm">Ultima attività il</span>{" "}
         <DateField
           source="last_seen"
           options={{ year: "numeric", month: "long", day: "numeric" }}
@@ -40,7 +40,7 @@ export const ContactBackgroundInfo = () => {
       </div>
 
       <div className="inline-flex text-muted-foreground text-sm md:py-0.5">
-        Followed by&nbsp;
+        Seguito da&nbsp;
         <ReferenceField source="sales_id" reference="sales">
           <SaleName />
         </ReferenceField>

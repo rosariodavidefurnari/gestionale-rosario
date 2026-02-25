@@ -21,11 +21,11 @@ export const ContactEmpty = () => {
           height: `calc(100dvh - ${appbarHeight}px)`,
         }}
       >
-        <img src="./img/empty.svg" alt="No contacts found" />
+        <img src="./img/empty.svg" alt="Nessun contatto trovato" />
         <div className="flex flex-col gap-0 items-center">
-          <h6 className="text-lg font-bold">No contacts found</h6>
+          <h6 className="text-lg font-bold">Nessun contatto trovato</h6>
           <p className="text-sm text-muted-foreground text-center mb-4">
-            It seems your contact list is empty.
+            La lista contatti è vuota.
           </p>
         </div>
         <div className="flex flex-row gap-2">
@@ -36,11 +36,11 @@ export const ContactEmpty = () => {
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
-              New Contact
+              Nuovo Contatto
             </Button>
           ) : (
             <>
-              <CreateButton label="New Contact" />
+              <CreateButton label="Nuovo Contatto" />
               <ContactImportButton />
             </>
           )}

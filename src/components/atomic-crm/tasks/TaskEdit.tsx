@@ -31,7 +31,7 @@ export const TaskEdit = ({
           mutationOptions={{
             onSuccess: () => {
               close();
-              notify("Task updated", {
+              notify("Attività aggiornata", {
                 type: "info",
                 undoable: true,
               });
@@ -42,7 +42,7 @@ export const TaskEdit = ({
           <DialogContent className="lg:max-w-xl overflow-y-auto max-h-9/10 top-1/20 translate-y-0">
             <Form className="flex flex-col gap-4">
               <DialogHeader>
-                <DialogTitle>Edit task</DialogTitle>
+                <DialogTitle>Modifica attività</DialogTitle>
               </DialogHeader>
               <TaskFormContent />
               <DialogFooter className="w-full sm:justify-between gap-4">
@@ -50,7 +50,7 @@ export const TaskEdit = ({
                   mutationOptions={{
                     onSuccess: () => {
                       close();
-                      notify("Task deleted", {
+                      notify("Attività eliminata", {
                         type: "info",
                         undoable: true,
                       });
@@ -58,7 +58,7 @@ export const TaskEdit = ({
                   }}
                   redirect={false}
                 />
-                <SaveButton label="Save" />
+                <SaveButton label="Salva" />
               </DialogFooter>
             </Form>
           </DialogContent>

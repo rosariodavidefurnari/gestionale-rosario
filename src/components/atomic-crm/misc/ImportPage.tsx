@@ -31,7 +31,7 @@ export const ImportPage = () => {
     <div className="max-w-2xl mx-auto mt-8">
       <Card>
         <CardHeader>
-          <CardTitle>Import Data</CardTitle>
+          <CardTitle>Importa Dati</CardTitle>
         </CardHeader>
         <CardContent>
           {importState.status === "idle" ? (
@@ -62,10 +62,10 @@ const ImportFromJsonIdle = ({
   <>
     <div className="mb-4">
       <p className="text-sm">
-        You can import sales, companies, contacts, companies, notes, and tasks.
+        Puoi importare utenti, aziende, contatti, note e attività.
       </p>
       <p className="text-sm">
-        Data must be in a JSON file matching the following sample:{" "}
+        I dati devono essere in un file JSON corrispondente a questo esempio:{" "}
         <a
           className="underline"
           download="import-sample.json"
@@ -89,7 +89,7 @@ const ImportFromJsonError = ({
   <>
     <Alert variant="destructive" className="mb-4">
       <AlertCircleIcon />
-      <AlertTitle>Unable to import this file.</AlertTitle>
+      <AlertTitle>Impossibile importare questo file.</AlertTitle>
       <AlertDescription>
         <p>{importState.error.message}</p>
       </AlertDescription>
@@ -112,7 +112,7 @@ const ImportFromJsonForm = ({
       <FileField source="src" title="title" />
     </FileInput>
     <div className="flex justify-end mt-4">
-      <Button type="submit">Import</Button>
+      <Button type="submit">Importa</Button>
     </div>
   </Form>
 );
@@ -125,7 +125,7 @@ const ImportFromJsonStatus = ({
   <>
     <Spinner />
     <p className="my-4 text-sm text-center text-muted-foreground">
-      Import in progress, please don't navigate away from this page.
+      Importazione in corso, non navigare lontano da questa pagina.
     </p>
     <ImportStats importState={importState} />
   </>
@@ -140,22 +140,22 @@ const ImportFromJsonSuccess = ({
 }) => (
   <>
     <p className="mb-4 text-sm">
-      Import complete.{" "}
+      Importazione completata.{" "}
       {hasFailedImports(importState.failedImports) ? (
         <>
           <span className="text-destructive">
-            Some records were not imported.{" "}
+            Alcuni record non sono stati importati.{" "}
           </span>
           <DownloadErrorFileButton failedImports={importState.failedImports} />
         </>
       ) : (
-        <span>All records were imported successfully.</span>
+        <span>Tutti i record sono stati importati con successo.</span>
       )}
     </p>
     <ImportStats importState={importState} />
     <div className="flex justify-end mt-4">
       <Button variant="outline" onClick={reset}>
-        Import another file
+        Importa un altro file
       </Button>
     </div>
   </>
@@ -187,7 +187,7 @@ const DownloadErrorFileButton = ({
       }}
       download="atomic-crm-import-report.json"
     >
-      Download the error report
+      Scarica il report degli errori
     </a>
   );
 };
@@ -230,8 +230,8 @@ const ImportStats = ({
       <TableHeader>
         <TableRow>
           <TableHead className="w-25"></TableHead>
-          <TableHead className="text-right">Imported</TableHead>
-          <TableHead className="text-right">Failed</TableHead>
+          <TableHead className="text-right">Importati</TableHead>
+          <TableHead className="text-right">Falliti</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

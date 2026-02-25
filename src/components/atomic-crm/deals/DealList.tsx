@@ -28,11 +28,11 @@ const DealList = () => {
   const dealFilters = [
     <SearchInput source="q" alwaysOn />,
     <ReferenceInput source="company_id" reference="companies">
-      <AutocompleteInput label={false} placeholder="Company" />
+      <AutocompleteInput label={false} placeholder="Azienda" />
     </ReferenceInput>,
     <SelectInput
       source="category"
-      emptyText="Category"
+      emptyText="Categoria"
       choices={dealCategories}
       optionText="label"
       optionValue="value"
@@ -90,7 +90,7 @@ const DealActions = () => (
   <TopToolbar>
     <FilterButton />
     <ExportButton />
-    <CreateButton label="New Deal" />
+    <CreateButton label="Nuova Trattativa" />
   </TopToolbar>
 );
 

@@ -39,7 +39,7 @@ export const NoteEditSheet = ({
           reference="contacts"
           render={({ referenceRecord }) => (
             <h1 className="text-xl font-semibold truncate pr-10">
-              Edit Note
+              Modifica nota
               {referenceRecord ? (
                 <>
                   {" for "}

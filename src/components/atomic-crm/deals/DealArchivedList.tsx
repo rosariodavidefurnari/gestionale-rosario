@@ -52,11 +52,11 @@ export const DealArchivedList = () => {
         onClick={() => setOpenDialog(true)}
         className="my-4"
       >
-        View archived deals
+        Visualizza trattative archiviate
       </Button>
       <Dialog open={openDialog} onOpenChange={() => setOpenDialog(false)}>
         <DialogContent className="lg:max-w-4xl overflow-y-auto max-h-9/10 top-1/20 translate-y-0">
-          <DialogTitle>Archived Deals</DialogTitle>
+          <DialogTitle>Trattative Archiviate</DialogTitle>
           <div className="flex flex-col gap-8">
             {Object.entries(archivedListsByDate).map(([date, deals]) => (
               <div key={date} className="flex flex-col gap-4">

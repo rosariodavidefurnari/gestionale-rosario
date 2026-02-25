@@ -47,7 +47,7 @@ export function ActivityLogDealNoteCreated({
             >
               <SaleName />
             </ReferenceField>{" "}
-            added a note about deal{" "}
+            ha aggiunto una nota sulla trattativa{" "}
             <ReferenceField
               source="deal_id"
               reference="deals"
@@ -57,7 +57,7 @@ export function ActivityLogDealNoteCreated({
             {context !== "company" && (
               <>
                 {" "}
-                at{" "}
+                presso{" "}
                 <ReferenceField
                   source="deal_id"
                   reference="deals"

@@ -40,11 +40,11 @@ export const CompanyListFilter = () => {
 
       <FilterCategory
         icon={<Users className="h-4 w-4" />}
-        label="Account Manager"
+        label="Responsabile"
       >
         <ToggleFilterButton
           className="w-full justify-between"
-          label={"Me"}
+          label={"Io"}
           value={{ sales_id: identity?.id }}
         />
       </FilterCategory>

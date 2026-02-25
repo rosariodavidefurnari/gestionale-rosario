@@ -46,10 +46,10 @@ export const ProfilePage = () => {
       refetchIdentity();
       refetchUser();
       setEditMode(false);
-      notify("Your profile has been updated");
+      notify("Il tuo profilo è stato aggiornato");
     },
     onError: (_) => {
-      notify("An error occurred. Please try again", {
+      notify("Si è verificato un errore. Riprova", {
         type: "error",
       });
     },
@@ -92,7 +92,7 @@ const ProfileForm = ({
       return dataProvider.updatePassword(identity.id);
     },
     onSuccess: () => {
-      notify("A reset password email has been sent to your email address");
+      notify("Email per il reset della password inviata");
     },
     onError: (e) => {
       notify(`${e}`, {
@@ -111,10 +111,10 @@ const ProfileForm = ({
     },
     onSuccess: () => {
       refetch();
-      notify("Your profile has been updated");
+      notify("Il tuo profilo è stato aggiornato");
     },
     onError: () => {
-      notify("An error occurred. Please try again.");
+      notify("Si è verificato un errore. Riprova.");
     },
   });
   if (!identity) return null;
@@ -133,7 +133,7 @@ const ProfileForm = ({
         <CardContent>
           <div className="mb-4 flex flex-row justify-between">
             <h2 className="text-xl font-semibold text-muted-foreground">
-              Profile
+              Profilo
             </h2>
           </div>
 
@@ -157,7 +157,7 @@ const ProfileForm = ({
                   type="button"
                   onClick={handleClickOpenPasswordChange}
                 >
-                  Change password
+                  Cambia password
                 </Button>
               </>
             )}
@@ -169,13 +169,13 @@ const ProfileForm = ({
               className="flex items-center"
             >
               {isEditMode ? <CircleX /> : <Pencil />}
-              {isEditMode ? "Cancel" : "Edit"}
+              {isEditMode ? "Annulla" : "Modifica"}
             </Button>
 
             {isEditMode && (
               <Button type="submit" disabled={!isDirty} variant="outline">
                 <Save />
-                Save
+                Salva
               </Button>
             )}
           </div>
@@ -186,13 +186,13 @@ const ProfileForm = ({
           <CardContent>
             <div className="space-y-4 justify-between">
               <h2 className="text-xl font-semibold text-muted-foreground">
-                Inbound email
+                Email in entrata
               </h2>
               <p className="text-sm text-muted-foreground">
-                You can start sending emails to your server's inbound email
-                address, e.g. by adding it to the
-                <b> Cc: </b> field. Atomic CRM will process the emails and add
-                notes to the corresponding contacts.
+                Puoi iniziare a inviare email al tuo indirizzo email in entrata,
+                ad esempio aggiungendolo al campo
+                <b> Cc: </b> . Il gestionale elaborerà le email e aggiungerà
+                note ai contatti corrispondenti.
               </p>
               <CopyPaste />
             </div>
@@ -246,7 +246,7 @@ const CopyPaste = () => {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{copied ? "Copied!" : "Copy"}</p>
+          <p>{copied ? "Copiato!" : "Copia"}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

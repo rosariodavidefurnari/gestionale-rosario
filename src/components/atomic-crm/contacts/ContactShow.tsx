@@ -84,7 +84,7 @@ const ContactShowContentMobile = () => {
           onClick={() => setEditOpen(true)}
         >
           <Pencil className="size-5" />
-          <span className="sr-only">Edit record</span>
+          <span className="sr-only">Modifica</span>
         </Button>
       </MobileHeader>
       <MobileContent>
@@ -97,7 +97,7 @@ const ContactShowContentMobile = () => {
               </h2>
               <div className="text-sm text-muted-foreground">
                 {record.title}
-                {record.title && record.company_id != null && " at "}
+                {record.title && record.company_id != null && " presso "}
                 {record.company_id != null && (
                   <ReferenceField
                     source="company_id"
@@ -124,16 +124,16 @@ const ContactShowContentMobile = () => {
 
         <Tabs defaultValue="notes" className="w-full">
           <TabsList className="grid w-full grid-cols-3 h-10">
-            <TabsTrigger value="notes">Notes</TabsTrigger>
+            <TabsTrigger value="notes">Note</TabsTrigger>
             <TabsTrigger value="tasks">
               <ReferenceManyCount
                 target="contact_id"
                 reference="tasks"
                 filter={{ "done_date@is": null }}
               />{" "}
-              Tasks
+              Attività
             </TabsTrigger>
-            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="details">Dettagli</TabsTrigger>
           </TabsList>
 
           <TabsContent value="notes" className="mt-2">
@@ -143,12 +143,12 @@ const ContactShowContentMobile = () => {
               sort={{ field: "date", order: "DESC" }}
               empty={
                 <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <p className="text-muted-foreground mb-4">No notes yet</p>
+                  <p className="text-muted-foreground mb-4">Nessuna nota</p>
                   <Button
                     variant="outline"
                     onClick={() => setNoteCreateOpen(true)}
                   >
-                    Add note
+                    Aggiungi nota
                   </Button>
                 </div>
               }
@@ -173,21 +173,21 @@ const ContactShowContentMobile = () => {
           <TabsContent value="details" className="mt-4">
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold">Personal info</h3>
+                <h3 className="text-lg font-semibold">Info personali</h3>
                 <Separator />
                 <div className="mt-3">
                   <ContactPersonalInfo />
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Background info</h3>
+                <h3 className="text-lg font-semibold">Informazioni</h3>
                 <Separator />
                 <div className="mt-3">
                   <ContactBackgroundInfo />
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Tags</h3>
+                <h3 className="text-lg font-semibold">Etichette</h3>
                 <Separator />
                 <div className="mt-3">
                   <TagsListEdit />
@@ -218,7 +218,7 @@ const ContactShowContent = () => {
                 </h5>
                 <div className="inline-flex text-sm text-muted-foreground">
                   {record.title}
-                  {record.title && record.company_id != null && " at "}
+                  {record.title && record.company_id != null && " presso "}
                   {record.company_id != null && (
                     <ReferenceField
                       source="company_id"

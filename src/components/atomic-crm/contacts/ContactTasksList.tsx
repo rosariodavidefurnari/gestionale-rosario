@@ -46,9 +46,9 @@ export const ContactTasksList = () => {
           contact_id={record.id}
         />
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <p className="text-muted-foreground mb-4">No tasks yet</p>
+          <p className="text-muted-foreground mb-4">Nessuna attività</p>
           <Button variant="outline" onClick={() => setTaskCreateOpen(true)}>
-            Add task
+            Aggiungi attività
           </Button>
         </div>
       </>
@@ -58,29 +58,29 @@ export const ContactTasksList = () => {
   return (
     <div className="flex flex-col gap-4">
       <TasksListFilter
-        title="Overdue"
+        title="In ritardo"
         filter={taskFilters.overdue}
         filterByContact={record.id}
       />
       <TasksListFilter
-        title="Today"
+        title="Oggi"
         filter={taskFilters.today}
         filterByContact={record.id}
       />
       <TasksListFilter
-        title="Tomorrow"
+        title="Domani"
         filter={taskFilters.tomorrow}
         filterByContact={record.id}
       />
       {isBeforeFriday && (
         <TasksListFilter
-          title="This week"
+          title="Questa settimana"
           filter={taskFilters.thisWeek}
           filterByContact={record.id}
         />
       )}
       <TasksListFilter
-        title="Later"
+        title="Più avanti"
         filter={taskFilters.later}
         filterByContact={record.id}
       />

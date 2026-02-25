@@ -1,4 +1,5 @@
 import { formatDistance } from "date-fns";
+import { it } from "date-fns/locale";
 import { FileText } from "lucide-react";
 import { useGetIdentity, useGetList } from "ra-core";
 import { ReferenceField } from "@/components/admin/reference-field";
@@ -53,7 +54,7 @@ export const LatestNotes = () => {
           <FileText className="text-muted-foreground w-6 h-6" />
         </div>
         <h2 className="text-xl font-semibold text-muted-foreground">
-          My Latest Notes
+          Le Mie Note Recenti
         </h2>
       </div>
       <Card>
@@ -65,15 +66,16 @@ export const LatestNotes = () => {
               className="mb-8"
             >
               <div className="text-sm text-muted-foreground">
-                on{" "}
+                su{" "}
                 {note.type === "dealNote" ? (
-                  <Deal note={note} />
+                  <DealRef note={note} />
                 ) : (
-                  <Contact note={note} />
+                  <ContactRef note={note} />
                 )}
-                , added{" "}
+                , aggiunta{" "}
                 {formatDistance(note.date, new Date(), {
                   addSuffix: true,
+                  locale: it,
                 })}
               </div>
               <div>
@@ -89,9 +91,9 @@ export const LatestNotes = () => {
   );
 };
 
-const Deal = ({ note }: any) => (
+const DealRef = ({ note }: any) => (
   <>
-    Deal{" "}
+    Trattativa{" "}
     <ReferenceField
       record={note}
       source="deal_id"
@@ -103,9 +105,9 @@ const Deal = ({ note }: any) => (
   </>
 );
 
-const Contact = ({ note }: any) => (
+const ContactRef = ({ note }: any) => (
   <>
-    Contact{" "}
+    Contatto{" "}
     <ReferenceField<ContactNote, Contact>
       record={note}
       source="contact_id"

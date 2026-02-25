@@ -79,7 +79,7 @@ export const CreateSheet = ({
   children,
   open,
   onOpenChange,
-  title = "Create",
+  title = "Crea",
   redirect: redirectTo = "show",
   mutationOptions,
   defaultValues,
@@ -147,7 +147,7 @@ export const CreateSheet = ({
               <div className="flex w-full gap-4">
                 <SheetClose asChild>
                   <Button variant="ghost" className="flex-1">
-                    Close
+                    Chiudi
                   </Button>
                 </SheetClose>
                 <SaveButton className="flex-1" />

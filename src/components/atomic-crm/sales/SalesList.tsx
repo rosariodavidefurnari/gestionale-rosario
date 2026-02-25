@@ -11,7 +11,7 @@ import { TopToolbar } from "../layout/TopToolbar";
 const SalesListActions = () => (
   <TopToolbar>
     <ExportButton />
-    <CreateButton label="New user" />
+    <CreateButton label="Nuovo utente" />
   </TopToolbar>
 );
 
@@ -27,7 +27,7 @@ const OptionsField = (_props: { label?: string | boolean }) => {
           variant="outline"
           className="border-blue-300 dark:border-blue-700"
         >
-          Admin
+          Amministratore
         </Badge>
       )}
       {record.disabled && (
@@ -35,7 +35,7 @@ const OptionsField = (_props: { label?: string | boolean }) => {
           variant="outline"
           className="border-orange-300 dark:border-orange-700"
         >
-          Disabled
+          Disabilitato
         </Badge>
       )}
     </div>
@@ -45,7 +45,7 @@ const OptionsField = (_props: { label?: string | boolean }) => {
 export function SalesList() {
   return (
     <List
-      title="Users"
+      title="Utenti"
       filters={filters}
       actions={<SalesListActions />}
       sort={{ field: "first_name", order: "ASC" }}

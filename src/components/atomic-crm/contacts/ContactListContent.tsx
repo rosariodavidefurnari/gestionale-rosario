@@ -85,7 +85,7 @@ export const ContactListContent = () => {
 
       {contacts.length === 0 && (
         <div className="p-4">
-          <div className="text-muted-foreground">No contacts found</div>
+          <div className="text-muted-foreground">Nessun contatto trovato</div>
         </div>
       )}
     </div>
@@ -125,7 +125,7 @@ const ContactItemContent = ({
           {contact.title || contact.company_id != null || contact.nb_tasks ? (
             <div className="text-sm text-muted-foreground">
               {contact.title}
-              {contact.title && contact.company_id != null && " at "}
+              {contact.title && contact.company_id != null && " presso "}
               {contact.company_id != null && (
                 <ReferenceField
                   source="company_id"
@@ -222,7 +222,7 @@ export const ContactListContentMobile = () => {
       ))}
       {contacts.length === 0 && (
         <div className="p-4">
-          <div className="text-muted-foreground">No contacts found</div>
+          <div className="text-muted-foreground">Nessun contatto trovato</div>
         </div>
       )}
     </div>
@@ -247,7 +247,7 @@ const ContactItemContentMobile = ({ contact }: { contact: Contact }) => (
           <div className="flex flex-col gap-1">
             <span>
               {contact.title}
-              {contact.title && contact.company_id != null && " at "}
+              {contact.title && contact.company_id != null && " presso "}
               {contact.company_id != null && (
                 <ReferenceField
                   source="company_id"

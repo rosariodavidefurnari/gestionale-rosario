@@ -24,7 +24,7 @@ export function ActivityLogContactCreated({
           <ReferenceField source="sales_id" reference="sales" record={activity}>
             <SaleName />
           </ReferenceField>{" "}
-          added{" "}
+          ha aggiunto{" "}
           <Link to={`/contacts/${contact.id}/show`}>
             {contact.first_name} {contact.last_name}
           </Link>

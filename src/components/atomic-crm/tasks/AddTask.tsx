@@ -58,7 +58,7 @@ export const AddTask = ({
       previousData: contact.data,
     });
 
-    notify("Task added");
+    notify("Attività aggiunta");
   };
 
   if (!identity) return null;
@@ -78,7 +78,7 @@ export const AddTask = ({
                 <Plus className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Create task</TooltipContent>
+            <TooltipContent>Crea attività</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       ) : (
@@ -90,7 +90,7 @@ export const AddTask = ({
             size="sm"
           >
             <Plus className="w-4 h-4" />
-            Add task
+            Aggiungi attività
           </Button>
         </div>
       )}
@@ -119,8 +119,8 @@ export const AddTask = ({
               <DialogHeader>
                 <DialogTitle>
                   {!selectContact
-                    ? "Create a new task for "
-                    : "Create a new task"}
+                    ? "Crea una nuova attività per "
+                    : "Crea una nuova attività"}
                   {!selectContact && (
                     <RecordRepresentation
                       record={contact}

@@ -13,7 +13,7 @@ export function DashboardActivityLog() {
           <Clock className="text-muted-foreground w-6 h-6" />
         </div>
         <h2 className="text-xl font-semibold text-muted-foreground">
-          Latest Activity
+          Attività Recenti
         </h2>
       </div>
       {isMobile ? (

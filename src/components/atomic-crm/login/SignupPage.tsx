@@ -43,7 +43,7 @@ export const SignupPage = () => {
         redirectTo: "/contacts",
       })
         .then(() => {
-          notify("Initial user successfully created");
+          notify("Utente iniziale creato con successo");
           // FIXME: We should probably provide a hook for that in the ra-core package
           queryClient.invalidateQueries({
             queryKey: ["auth", "canAccess"],
@@ -54,7 +54,7 @@ export const SignupPage = () => {
             // An email confirmation is required to continue.
             navigate(ConfirmationRequired.path);
           } else {
-            notify("Failed to log in.", {
+            notify("Accesso fallito.", {
               type: "error",
             });
             navigate("/login");
@@ -103,13 +103,13 @@ export const SignupPage = () => {
       </div>
       <div className="h-full">
         <div className="max-w-sm mx-auto h-full flex flex-col justify-center gap-4">
-          <h1 className="text-2xl font-bold mb-4">Welcome to Atomic CRM</h1>
+          <h1 className="text-2xl font-bold mb-4">Benvenuto nel Gestionale</h1>
           <p className="text-base mb-4">
-            Create the first user account to complete the setup.
+            Crea il primo account utente per completare la configurazione.
           </p>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="first_name">First name</Label>
+              <Label htmlFor="first_name">Nome</Label>
               <Input
                 {...register("first_name", { required: true })}
                 id="first_name"
@@ -118,7 +118,7 @@ export const SignupPage = () => {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="last_name">Last name</Label>
+              <Label htmlFor="last_name">Cognome</Label>
               <Input
                 {...register("last_name", { required: true })}
                 id="last_name"
@@ -153,10 +153,10 @@ export const SignupPage = () => {
                 {isSignUpPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    Creating...
+                    Creazione...
                   </>
                 ) : (
-                  "Create account"
+                  "Crea account"
                 )}
               </Button>
               {googleWorkplaceDomain ? (
@@ -164,7 +164,7 @@ export const SignupPage = () => {
                   className="w-full"
                   domain={googleWorkplaceDomain}
                 >
-                  Sign in with Google Workplace
+                  Accedi con Google Workplace
                 </SSOAuthButton>
               ) : null}
             </div>

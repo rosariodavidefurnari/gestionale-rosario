@@ -11,15 +11,15 @@ export const CompanyEmpty = () => {
         height: `calc(100dvh - ${appbarHeight}px)`,
       }}
     >
-      <img src="./img/empty.svg" alt="No companies found" />
+      <img src="./img/empty.svg" alt="Nessuna azienda trovata" />
       <div className="flex flex-col gap-0 items-center">
-        <h6 className="text-lg font-bold">No companies found</h6>
+        <h6 className="text-lg font-bold">Nessuna azienda trovata</h6>
         <p className="text-sm text-center text-muted-foreground mb-4">
-          It seems your company list is empty.
+          La lista aziende è vuota.
         </p>
       </div>
       <div className="flex space-x-2">
-        <CreateButton label="Create Company" />
+        <CreateButton label="Crea Azienda" />
       </div>
     </div>
   );

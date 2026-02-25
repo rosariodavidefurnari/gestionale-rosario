@@ -26,7 +26,7 @@ export const ContactPersonalInfo = () => {
 
       {record.has_newsletter && (
         <p className="pl-6 py-1 text-sm text-muted-foreground">
-          Subscribed to newsletter
+          Iscritto alla newsletter
         </p>
       )}
 

@@ -5,7 +5,7 @@ import { TasksListContent } from "./TasksListContent";
 export const MobileTasksList = () => (
   <>
     <MobileHeader>
-      <h1 className="text-xl font-semibold">Tasks</h1>
+      <h1 className="text-xl font-semibold">Attività</h1>
     </MobileHeader>
     <MobileContent>
       <TasksListContent />

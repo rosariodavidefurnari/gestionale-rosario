@@ -51,22 +51,22 @@ const Header = () => {
               <div>
                 <nav className="flex">
                   <NavigationTab
-                    label="Dashboard"
+                    label="Bacheca"
                     to="/"
                     isActive={currentPath === "/"}
                   />
                   <NavigationTab
-                    label="Contacts"
+                    label="Contatti"
                     to="/contacts"
                     isActive={currentPath === "/contacts"}
                   />
                   <NavigationTab
-                    label="Companies"
+                    label="Aziende"
                     to="/companies"
                     isActive={currentPath === "/companies"}
                   />
                   <NavigationTab
-                    label="Deals"
+                    label="Trattative"
                     to="/deals"
                     isActive={currentPath === "/deals"}
                   />
@@ -123,7 +123,7 @@ const UsersMenu = () => {
   return (
     <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
       <Link to="/sales" className="flex items-center gap-2">
-        <Users /> Users
+        <Users /> Utenti
       </Link>
     </DropdownMenuItem>
   );
@@ -138,7 +138,7 @@ const ProfileMenu = () => {
     <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
       <Link to="/profile" className="flex items-center gap-2">
         <User />
-        Profile
+        Profilo
       </Link>
     </DropdownMenuItem>
   );
@@ -152,7 +152,7 @@ const SettingsMenu = () => {
   return (
     <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
       <Link to="/settings" className="flex items-center gap-2">
-        <Settings /> Settings
+        <Settings /> Impostazioni
       </Link>
     </DropdownMenuItem>
   );
@@ -166,7 +166,7 @@ const ImportFromJsonMenuItem = () => {
   return (
     <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
       <Link to={ImportPage.path} className="flex items-center gap-2">
-        <Import /> Import data
+        <Import /> Importa dati
       </Link>
     </DropdownMenuItem>
   );

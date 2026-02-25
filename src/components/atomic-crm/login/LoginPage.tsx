@@ -42,7 +42,7 @@ export const LoginPage = (props: { redirectTo?: string }) => {
 
     hasDisplayedRecoveryNotification.current = true;
     notify(
-      "If you're a registered user, you should receive a password recovery email shortly.",
+      "Se sei un utente registrato, riceverai a breve un'email per il recupero della password.",
       {
         type: "success",
       },
@@ -101,7 +101,7 @@ export const LoginPage = (props: { redirectTo?: string }) => {
         <div className="flex flex-col justify-center w-full p-4 lg:p-8">
           <div className="w-full space-y-6 lg:mx-auto lg:w-[350px]">
             <div className="text-center">
-              <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+              <h1 className="text-2xl font-semibold tracking-tight">Accedi</h1>
             </div>
             {disableEmailPasswordAuthentication ? null : (
               <Form className="space-y-8" onSubmit={handleSubmit}>
@@ -123,14 +123,14 @@ export const LoginPage = (props: { redirectTo?: string }) => {
                     className="cursor-pointer"
                     disabled={loading}
                   >
-                    Sign in
+                    Accedi
                   </Button>
                 </div>
               </Form>
             )}
             {googleWorkplaceDomain ? (
               <SSOAuthButton className="w-full" domain={googleWorkplaceDomain}>
-                Sign in with Google Workplace
+                Accedi con Google Workplace
               </SSOAuthButton>
             ) : null}
             {disableEmailPasswordAuthentication ? null : (
@@ -138,7 +138,7 @@ export const LoginPage = (props: { redirectTo?: string }) => {
                 to={"/forgot-password"}
                 className="block text-sm text-center hover:underline"
               >
-                Forgot your password?
+                Password dimenticata?
               </Link>
             )}
           </div>

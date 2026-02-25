@@ -61,7 +61,7 @@ const ImageEditorField = (props: ImageEditorFieldProps) => {
               {...commonProps}
               className="cursor-pointer object-cover"
               style={{ width, height }}
-              alt="Editable content"
+              alt="Contenuto modificabile"
             />
           )}
         </div>
@@ -71,7 +71,7 @@ const ImageEditorField = (props: ImageEditorFieldProps) => {
             onClick={() => setIsDialogOpen(true)}
             className="text-xs underline hover:no-underline cursor-pointer text-center"
           >
-            Change
+            Cambia
           </button>
         )}
       </div>
@@ -151,7 +151,7 @@ const ImageEditorDialog = (props: ImageEditorDialogProps) => {
       )}
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Upload and resize image</DialogTitle>
+          <DialogTitle>Carica e ridimensiona immagine</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-2 justify-center">
           <div
@@ -160,7 +160,7 @@ const ImageEditorDialog = (props: ImageEditorDialogProps) => {
           >
             <input {...getInputProps()} />
             <p className="text-gray-600">
-              Drop a file to upload, or click to select it.
+              Trascina un file da caricare, o clicca per selezionarlo.
             </p>
           </div>
 
@@ -177,10 +177,10 @@ const ImageEditorDialog = (props: ImageEditorDialogProps) => {
 
         <DialogFooter className="flex justify-between w-full">
           <Button type="button" onClick={updateImage}>
-            Update Image
+            Aggiorna Immagine
           </Button>
           <Button type="button" variant="destructive" onClick={deleteImage}>
-            Delete
+            Elimina
           </Button>
         </DialogFooter>
       </DialogContent>

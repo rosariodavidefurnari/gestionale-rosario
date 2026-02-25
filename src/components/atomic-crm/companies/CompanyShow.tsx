@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDistance } from "date-fns";
+import { it } from "date-fns/locale";
 import { UserPlus } from "lucide-react";
 import {
   RecordContextProvider,
@@ -60,7 +61,7 @@ const CompanyShowContentMobile = () => {
         <MobileBackButton to="/" />
         <div className="flex flex-1">
           <Link to="/">
-            <h1 className="text-xl font-semibold">Company</h1>
+            <h1 className="text-xl font-semibold">Azienda</h1>
           </Link>
         </div>
       </MobileHeader>
@@ -113,19 +114,19 @@ const CompanyShowContent = () => {
             </div>
             <Tabs defaultValue={currentTab} onValueChange={handleTabChange}>
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="activity">Activity</TabsTrigger>
+                <TabsTrigger value="activity">Attività</TabsTrigger>
                 <TabsTrigger value="contacts">
                   {record.nb_contacts
                     ? record.nb_contacts === 1
-                      ? "1 Contact"
-                      : `${record.nb_contacts} Contacts`
-                    : "No Contacts"}
+                      ? "1 Contatto"
+                      : `${record.nb_contacts} Contatti`
+                    : "Nessun Contatto"}
                 </TabsTrigger>
                 {record.nb_deals ? (
                   <TabsTrigger value="deals">
                     {record.nb_deals === 1
-                      ? "1 deal"
-                      : `${record.nb_deals} deals`}
+                      ? "1 trattativa"
+                      : `${record.nb_deals} trattative`}
                   </TabsTrigger>
                 ) : null}
               </TabsList>
@@ -206,8 +207,8 @@ const ContactsIterator = () => {
                 <div className="text-sm text-muted-foreground">
                   {contact.title}
                   {contact.nb_tasks
-                    ? ` - ${contact.nb_tasks} task${
-                        contact.nb_tasks > 1 ? "s" : ""
+                    ? ` - ${contact.nb_tasks} attivit${
+                        contact.nb_tasks > 1 ? "à" : "à"
                       }`
                     : ""}
                   &nbsp; &nbsp;
@@ -217,7 +218,7 @@ const ContactsIterator = () => {
               {contact.last_seen && (
                 <div className="text-right">
                   <div className="text-sm text-muted-foreground">
-                    last activity {formatDistance(contact.last_seen, now)} ago{" "}
+                    ultima attività {formatDistance(contact.last_seen, now, { locale: it })} fa{" "}
                     <Status status={contact.status} />
                   </div>
                 </div>
@@ -240,7 +241,7 @@ const CreateRelatedContactButton = () => {
         className="flex items-center gap-2"
       >
         <UserPlus className="h-4 w-4" />
-        Add contact
+        Aggiungi contatto
       </RouterLink>
     </Button>
   );
@@ -268,7 +269,7 @@ const DealsIterator = () => {
                   {deal.amount.toLocaleString("en-US", {
                     notation: "compact",
                     style: "currency",
-                    currency: "USD",
+                    currency: "EUR",
                     currencyDisplay: "narrowSymbol",
                     minimumSignificantDigits: 3,
                   })}
@@ -279,7 +280,7 @@ const DealsIterator = () => {
               </div>
               <div className="text-right">
                 <div className="text-sm text-muted-foreground">
-                  last activity {formatDistance(deal.updated_at, now)} ago{" "}
+                  ultima attività {formatDistance(deal.updated_at, now, { locale: it })} fa{" "}
                 </div>
               </div>
             </RouterLink>

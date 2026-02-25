@@ -52,7 +52,7 @@ export const DealsPipeline = () => {
           className="text-xl font-semibold text-muted-foreground hover:underline"
           to="/deals"
         >
-          Deals Pipeline
+          Pipeline Trattative
         </Link>
       </div>
       <Card>

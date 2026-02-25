@@ -20,7 +20,7 @@ export const ContactList = () => {
             </RouterLink>
             <span className="text-xs text-muted-foreground">
               {contact.title}
-              {contact.title && contact.company_name && " at "}
+              {contact.title && contact.company_name && " presso "}
               {contact.company_name}
             </span>
           </div>

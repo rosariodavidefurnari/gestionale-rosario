@@ -16,7 +16,7 @@ const ContactOptionRender = () => {
         </span>
         <span className="text-xs text-muted-foreground">
           {record.title}
-          {record.title && record.company_name && " at "}
+          {record.title && record.company_name && " presso "}
           {record.company_name}
         </span>
       </div>

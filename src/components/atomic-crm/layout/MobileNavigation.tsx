@@ -53,7 +53,7 @@ export const MobileNavigation = () => {
 
   return (
     <nav
-      aria-label="CRM navigation"
+      aria-label="Navigazione CRM"
       className="fixed bottom-0 left-0 right-0 z-50 bg-secondary h-14"
       style={{
         // iOS bug: even though viewport is set correctly, the bottom safe area inset is not accounted for
@@ -76,14 +76,14 @@ export const MobileNavigation = () => {
           <NavigationButton
             href="/contacts"
             Icon={Users}
-            label="Contacts"
+            label="Contatti"
             isActive={currentPath === "/contacts"}
           />
           <CreateButton />
           <NavigationButton
             href="/tasks"
             Icon={ListTodo}
-            label="Tasks"
+            label="Attività"
             isActive={currentPath === "/tasks"}
           />
           <SettingsButton />
@@ -147,7 +147,7 @@ const CreateButton = () => {
             variant="default"
             size="icon"
             className="h-16 w-16 rounded-full -mt-3"
-            aria-label="Create"
+            aria-label="Crea"
           >
             <Plus className="size-10" />
           </Button>
@@ -159,7 +159,7 @@ const CreateButton = () => {
               setContactCreateOpen(true);
             }}
           >
-            Contact
+            Contatto
           </DropdownMenuItem>
           <DropdownMenuItem
             className="h-12 px-4 text-base"
@@ -167,7 +167,7 @@ const CreateButton = () => {
               setNoteCreateOpen(true);
             }}
           >
-            Note
+            Nota
           </DropdownMenuItem>
           <DropdownMenuItem
             className="h-12 px-4 text-base"
@@ -175,7 +175,7 @@ const CreateButton = () => {
               setTaskCreateOpen(true);
             }}
           >
-            Task
+            Attività
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -196,7 +196,7 @@ const SettingsButton = () => {
           className="flex-col gap-1 h-auto py-2 px-1 rounded-md w-16 text-muted-foreground"
         >
           <Settings className="size-6" />
-          <span className="text-[0.6rem] font-medium">Settings</span>
+          <span className="text-[0.6rem] font-medium">Altro</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
@@ -238,23 +238,23 @@ const ThemeMenu = () => {
       >
         <ToggleGroupItem
           value="system"
-          aria-label="System theme"
+          aria-label="Tema di sistema"
           className="px-3"
         >
           <Smartphone className="size-5 mx-2" />
-          <span className="sr-only">System</span>
+          <span className="sr-only">Sistema</span>
         </ToggleGroupItem>
         <ToggleGroupItem
           value="light"
-          aria-label="Light theme"
+          aria-label="Tema chiaro"
           className="px-3"
         >
           <Sun className="size-5 mx-2" />
-          <span className="sr-only">Light</span>
+          <span className="sr-only">Chiaro</span>
         </ToggleGroupItem>
-        <ToggleGroupItem value="dark" aria-label="Dark theme" className="px-3">
+        <ToggleGroupItem value="dark" aria-label="Tema scuro" className="px-3">
           <Moon className="size-5 mx-2" />
-          <span className="sr-only">Dark</span>
+          <span className="sr-only">Scuro</span>
         </ToggleGroupItem>
       </ToggleGroup>
     </div>

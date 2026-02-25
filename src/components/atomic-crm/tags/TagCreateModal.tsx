@@ -31,7 +31,7 @@ export function TagCreateModal({
   return (
     <TagDialog
       open={open}
-      title="Create a new tag"
+      title="Crea una nuova etichetta"
       onClose={onClose}
       onSubmit={handleCreateTag}
     />

@@ -73,7 +73,7 @@ export const ExportVCardButton = () => {
       className="h-6 cursor-pointer"
     >
       <Download className="w-4 h-4" />
-      Export to vCard
+      Esporta vCard
     </Button>
   );
 };

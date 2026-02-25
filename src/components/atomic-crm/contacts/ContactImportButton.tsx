@@ -38,7 +38,7 @@ export const ContactImportButton = () => {
         onClick={handleOpenModal}
         className="flex items-center gap-2 cursor-pointer"
       >
-        <Upload /> Import CSV
+        <Upload /> Importa CSV
       </Button>
       <ContactImportDialog open={modalOpen} onClose={handleCloseModal} />
     </>
@@ -97,7 +97,7 @@ export function ContactImportDialog({
       <DialogContent className="max-w-2xl">
         <Form className="flex flex-col gap-4">
           <DialogHeader>
-            <DialogTitle>Import</DialogTitle>
+            <DialogTitle>Importa</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col space-y-2">
@@ -106,20 +106,20 @@ export function ContactImportDialog({
                 <Alert>
                   <AlertDescription className="flex flex-row gap-4">
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    The import is running, please do not close this tab.
+                    L'importazione è in corso, non chiudere questa scheda.
                   </AlertDescription>
                 </Alert>
 
                 <div className="text-sm">
-                  Imported{" "}
+                  Importati{" "}
                   <strong>
                     {importer.importCount} / {importer.rowCount}
                   </strong>{" "}
-                  contacts, with <strong>{importer.errorCount}</strong> errors.
+                  contatti, con <strong>{importer.errorCount}</strong> errori.
                   {importer.remainingTime !== null && (
                     <>
                       {" "}
-                      Estimated remaining time:{" "}
+                      Tempo rimanente stimato:{" "}
                       <strong>
                         {millisecondsToTime(importer.remainingTime)}
                       </strong>
@@ -128,7 +128,7 @@ export function ContactImportDialog({
                         onClick={handleReset}
                         className="text-red-600 underline hover:text-red-800"
                       >
-                        Stop import
+                        Interrompi importazione
                       </button>
                     </>
                   )}
@@ -139,8 +139,8 @@ export function ContactImportDialog({
             {importer.state === "error" && (
               <Alert variant="destructive">
                 <AlertDescription>
-                  Failed to import this file, please make sure your provided a
-                  valid CSV file.
+                  Impossibile importare questo file, assicurati di aver fornito un
+                  file CSV valido.
                 </AlertDescription>
               </Alert>
             )}
@@ -148,8 +148,8 @@ export function ContactImportDialog({
             {importer.state === "complete" && (
               <Alert>
                 <AlertDescription>
-                  Contacts import complete. Imported {importer.importCount}{" "}
-                  contacts, with {importer.errorCount} errors
+                  Importazione contatti completata. Importati {importer.importCount}{" "}
+                  contatti, con {importer.errorCount} errori
                 </AlertDescription>
               </Alert>
             )}
@@ -158,13 +158,13 @@ export function ContactImportDialog({
               <>
                 <Alert>
                   <AlertDescription className="flex flex-col gap-4">
-                    Here is a sample CSV file you can use as a template
+                    Ecco un file CSV di esempio che puoi usare come modello
                     <Button asChild variant="outline" size="sm">
                       <Link
                         to={SAMPLE_URL}
                         download={"crm_contacts_sample.csv"}
                       >
-                        Download CSV sample
+                        Scarica CSV di esempio
                       </Link>
                     </Button>{" "}
                   </AlertDescription>
@@ -172,7 +172,7 @@ export function ContactImportDialog({
 
                 <FileInput
                   source="csv"
-                  label="CSV File"
+                  label="File CSV"
                   accept={{ "text/csv": [".csv"] }}
                   onChange={handleFileChange}
                 >
@@ -187,7 +187,7 @@ export function ContactImportDialog({
           <FormToolbar>
             {importer.state === "idle" ? (
               <Button onClick={startImport} disabled={!file}>
-                Import
+                Importa
               </Button>
             ) : (
               <Button
@@ -195,7 +195,7 @@ export function ContactImportDialog({
                 onClick={handleClose}
                 disabled={importer.state === "running"}
               >
-                Close
+                Chiudi
               </Button>
             )}
           </FormToolbar>

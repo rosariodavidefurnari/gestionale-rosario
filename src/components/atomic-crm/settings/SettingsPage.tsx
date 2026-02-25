@@ -20,11 +20,11 @@ import {
 import { defaultConfiguration } from "../root/defaultConfiguration";
 
 const SECTIONS = [
-  { id: "branding", label: "Branding" },
-  { id: "companies", label: "Companies" },
-  { id: "deals", label: "Deals" },
-  { id: "notes", label: "Notes" },
-  { id: "tasks", label: "Tasks" },
+  { id: "branding", label: "Marchio" },
+  { id: "companies", label: "Aziende" },
+  { id: "deals", label: "Trattative" },
+  { id: "notes", label: "Note" },
+  { id: "tasks", label: "Attività" },
 ];
 
 /** Ensure every item in a { value, label } array has a value (slug from label). */
@@ -52,10 +52,10 @@ export const validateItemsInUse = (
     seen.add(slug);
   }
   if (duplicates.size > 0) {
-    return `Duplicate ${displayName}: ${[...duplicates].join(", ")}`;
+    return `Duplicato ${displayName}: ${[...duplicates].join(", ")}`;
   }
   // Check that no in-use value was removed (skip if deals haven't loaded)
-  if (!deals) return "Validating…";
+  if (!deals) return "Validazione…";
   const values = new Set(slugs);
   const inUse = [
     ...new Set(
@@ -67,7 +67,7 @@ export const validateItemsInUse = (
     ),
   ];
   if (inUse.length > 0) {
-    return `Cannot remove ${displayName} that are still used by deals: ${inUse.join(", ")}`;
+    return `Impossibile rimuovere ${displayName} ancora usati nelle trattative: ${inUse.join(", ")}`;
   }
   return undefined;
 };
@@ -100,10 +100,10 @@ export const SettingsPage = () => {
       mutationOptions={{
         onSuccess: (data: any) => {
           updateConfiguration(data.config);
-          notify("Configuration saved successfully");
+          notify("Configurazione salvata con successo");
         },
         onError: () => {
-          notify("Failed to save configuration", { type: "error" });
+          notify("Errore nel salvataggio della configurazione", { type: "error" });
         },
       }}
     >
@@ -171,7 +171,7 @@ const SettingsFormFields = () => {
       {/* Left navigation */}
       <nav className="hidden md:block w-48 shrink-0">
         <div className="sticky top-4 space-y-1">
-          <h1 className="text-2xl font-semibold px-3 mb-2">Settings</h1>
+          <h1 className="text-2xl font-semibold px-3 mb-2">Impostazioni</h1>
           {SECTIONS.map((section) => (
             <button
               key={section.id}
@@ -195,12 +195,12 @@ const SettingsFormFields = () => {
         <Card id="branding">
           <CardContent className="space-y-4">
             <h2 className="text-xl font-semibold text-muted-foreground">
-              Branding
+              Marchio
             </h2>
-            <TextInput source="title" label="App Title" />
+            <TextInput source="title" label="Titolo App" />
             <div className="flex gap-8">
               <div className="flex flex-col items-center gap-1">
-                <p className="text-sm text-muted-foreground">Light Mode Logo</p>
+                <p className="text-sm text-muted-foreground">Logo Modalità Chiara</p>
                 <ImageEditorField
                   source="lightModeLogo"
                   width={100}
@@ -210,7 +210,7 @@ const SettingsFormFields = () => {
                 />
               </div>
               <div className="flex flex-col items-center gap-1">
-                <p className="text-sm text-muted-foreground">Dark Mode Logo</p>
+                <p className="text-sm text-muted-foreground">Logo Modalità Scura</p>
                 <ImageEditorField
                   source="darkModeLogo"
                   width={100}
@@ -227,10 +227,10 @@ const SettingsFormFields = () => {
         <Card id="companies">
           <CardContent className="space-y-4">
             <h2 className="text-xl font-semibold text-muted-foreground">
-              Companies
+              Aziende
             </h2>
             <h3 className="text-lg font-medium text-muted-foreground">
-              Sectors
+              Settori
             </h3>
             <ArrayInput
               source="companySectors"
@@ -248,10 +248,10 @@ const SettingsFormFields = () => {
         <Card id="deals">
           <CardContent className="space-y-4">
             <h2 className="text-xl font-semibold text-muted-foreground">
-              Deals
+              Trattative
             </h2>
             <h3 className="text-lg font-medium text-muted-foreground">
-              Stages
+              Fasi
             </h3>
             <ArrayInput
               source="dealStages"
@@ -267,11 +267,10 @@ const SettingsFormFields = () => {
             <Separator />
 
             <h3 className="text-lg font-medium text-muted-foreground">
-              Pipeline Statuses
+              Stati Pipeline
             </h3>
             <p className="text-sm text-muted-foreground">
-              Select which deal stages count as &quot;pipeline&quot; (completed)
-              deals.
+              Seleziona quali fasi delle trattative contano come &quot;pipeline&quot; (completate).
             </p>
             <div className="flex flex-wrap gap-2">
               {dealStages?.map(
@@ -309,7 +308,7 @@ const SettingsFormFields = () => {
             <Separator />
 
             <h3 className="text-lg font-medium text-muted-foreground">
-              Categories
+              Categorie
             </h3>
             <ArrayInput
               source="dealCategories"
@@ -328,10 +327,10 @@ const SettingsFormFields = () => {
         <Card id="notes">
           <CardContent className="space-y-4">
             <h2 className="text-xl font-semibold text-muted-foreground">
-              Notes
+              Note
             </h2>
             <h3 className="text-lg font-medium text-muted-foreground">
-              Statuses
+              Stati
             </h3>
             <ArrayInput source="noteStatuses" label={false} helperText={false}>
               <SimpleFormIterator inline disableReordering disableClear>
@@ -346,9 +345,9 @@ const SettingsFormFields = () => {
         <Card id="tasks">
           <CardContent className="space-y-4">
             <h2 className="text-xl font-semibold text-muted-foreground">
-              Tasks
+              Attività
             </h2>
-            <h3 className="text-lg font-medium text-muted-foreground">Types</h3>
+            <h3 className="text-lg font-medium text-muted-foreground">Tipi</h3>
             <ArrayInput source="taskTypes" label={false} helperText={false}>
               <SimpleFormIterator disableReordering disableClear>
                 <TextInput source="label" label={false} />
@@ -377,7 +376,7 @@ const SettingsFormFields = () => {
               }
             >
               <RotateCcw className="h-4 w-4 mr-1" />
-              Reset to Defaults
+              Ripristina Predefiniti
             </Button>
             <div className="flex gap-2">
               <Button
@@ -385,11 +384,11 @@ const SettingsFormFields = () => {
                 variant="outline"
                 onClick={() => window.history.back()}
               >
-                Cancel
+                Annulla
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 <Save className="h-4 w-4 mr-1" />
-                {isSubmitting ? "Saving..." : "Save"}
+                {isSubmitting ? "Salvataggio..." : "Salva"}
               </Button>
             </div>
           </div>

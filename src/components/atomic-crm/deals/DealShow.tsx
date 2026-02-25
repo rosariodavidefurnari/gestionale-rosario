@@ -92,10 +92,10 @@ const DealShowContent = () => {
                 <span className="text-sm">
                   {isValid(new Date(record.expected_closing_date))
                     ? format(new Date(record.expected_closing_date), "PP")
-                    : "Invalid date"}
+                    : "Data non valida"}
                 </span>
                 {new Date(record.expected_closing_date) < new Date() ? (
-                  <Badge variant="destructive">Past</Badge>
+                  <Badge variant="destructive">Scaduta</Badge>
                 ) : null}
               </div>
             </div>
@@ -108,7 +108,7 @@ const DealShowContent = () => {
                 {record.amount.toLocaleString("en-US", {
                   notation: "compact",
                   style: "currency",
-                  currency: "USD",
+                  currency: "EUR",
                   currencyDisplay: "narrowSymbol",
                   minimumSignificantDigits: 3,
                 })}
@@ -181,7 +181,7 @@ const DealShowContent = () => {
 
 const ArchivedTitle = () => (
   <div className="bg-orange-500 px-6 py-4">
-    <h3 className="text-lg font-bold text-white">Archived Deal</h3>
+    <h3 className="text-lg font-bold text-white">Trattativa Archiviata</h3>
   </div>
 );
 
@@ -201,11 +201,11 @@ const ArchiveButton = ({ record }: { record: Deal }) => {
       {
         onSuccess: () => {
           redirect("list", "deals");
-          notify("Deal archived", { type: "info", undoable: false });
+          notify("Trattativa archiviata", { type: "info", undoable: false });
           refresh();
         },
         onError: () => {
-          notify("Error: deal not archived", { type: "error" });
+          notify("Errore: trattativa non archiviata", { type: "error" });
         },
       },
     );
@@ -234,14 +234,14 @@ const UnarchiveButton = ({ record }: { record: Deal }) => {
     mutationFn: () => dataProvider.unarchiveDeal(record),
     onSuccess: () => {
       redirect("list", "deals");
-      notify("Deal unarchived", {
+      notify("Trattativa ripristinata", {
         type: "info",
         undoable: false,
       });
       refresh();
     },
     onError: () => {
-      notify("Error: deal not unarchived", { type: "error" });
+      notify("Errore: trattativa non ripristinata", { type: "error" });
     },
   });
 

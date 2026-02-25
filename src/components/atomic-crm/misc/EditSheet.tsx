@@ -84,7 +84,7 @@ export const EditSheet = ({
   children,
   open,
   onOpenChange,
-  title = "Edit",
+  title = "Modifica",
   redirect: redirectTo = "show",
   mutationOptions,
   mutationMode = "undoable",

@@ -21,7 +21,7 @@ export const ImportFromJsonButton = () => {
         onClick={handleOpenModal}
         className="flex items-center gap-2 cursor-pointer"
       >
-        <Upload /> Import JSON file
+        <Upload /> Importa file JSON
       </Button>
       <ImportFromJsonDialog open={modalOpen} onOpenChange={handleCloseModal} />
     </>

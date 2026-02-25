@@ -42,10 +42,10 @@ export function SalesEdit() {
     },
     onSuccess: () => {
       redirect("/sales");
-      notify("User updated successfully");
+      notify("Utente aggiornato con successo");
     },
     onError: () => {
-      notify("An error occurred. Please try again.");
+      notify("Si è verificato un errore. Riprova.");
     },
   });
 
@@ -76,7 +76,7 @@ const SaleEditTitle = () => {
   if (!record) return null;
   return (
     <h2 className="text-lg font-semibold mb-4">
-      Edit {record?.first_name} {record?.last_name}
+      Modifica {record?.first_name} {record?.last_name}
     </h2>
   );
 };
