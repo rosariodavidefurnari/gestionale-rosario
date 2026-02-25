@@ -1,8 +1,10 @@
 name: 🚀 Deploy
 on:
-    push:
-        branches:
-            - main
+    # Disabled automatic deploy until deployment is configured (secrets/vars missing)
+    # push:
+    #     branches:
+    #         - main
+    workflow_dispatch: # Manual trigger only
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
