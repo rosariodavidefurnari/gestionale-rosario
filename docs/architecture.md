@@ -7,14 +7,18 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
 ## Stato Localizzazione
 
-L'interfaccia è **completamente tradotta in italiano**. Due approcci coesistono:
+L'interfaccia è **completamente tradotta in italiano**. Tre livelli di localizzazione:
 
 1. **i18nProvider** (`src/components/atomic-crm/root/i18nProvider.tsx`) — gestisce le
    stringhe framework di ra-core (bottoni, validazione, paginazione, ecc.) tramite
    ra-i18n-polyglot con traduzioni inline.
 
-2. **Stringhe hardcoded** — ~40 file componente hanno le stringhe UI direttamente in
+2. **Stringhe hardcoded** — ~70 file componente hanno le stringhe UI direttamente in
    italiano nel JSX (Atomic CRM non usa useTranslate() nei componenti).
+
+3. **Label form input** — Tutti gli input (TextInput, SelectInput, DateInput, ecc.)
+   hanno `label="..."` esplicita in italiano. Senza label, ra-core auto-genera dal
+   `source` in inglese (es. `expected_closing_date` → "Expected Closing Date").
 
 ### File i18n chiave
 - `src/components/atomic-crm/root/i18nProvider.tsx` — Provider con traduzioni inline
@@ -25,6 +29,7 @@ L'interfaccia è **completamente tradotta in italiano**. Due approcci coesistono
 - Label UI in italiano
 - Valute: EUR, locale it-IT
 - Date: date-fns con locale `it`
+- Ogni nuovo input DEVE avere `label` esplicita in italiano
 
 ## Database Schema
 

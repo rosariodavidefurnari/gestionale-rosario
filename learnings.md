@@ -67,3 +67,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 - [2026-02-25] **sed con JSX: usare python3 -c** — I comandi `sed` falliscono con
   delimitatori `<` e `>` nel JSX. Meglio usare `python3 -c` con `str.replace()` per
   sostituzioni massive nei file .tsx.
+
+- [2026-02-25] **ra-core auto-genera label dai source in inglese** — Quando un input
+  (TextInput, SelectInput, DateInput, ecc.) non ha prop `label` esplicita, ra-core
+  genera la label dal `source`: `expected_closing_date` → "Expected Closing Date".
+  Per l'italiano, OGNI input deve avere `label="..."` esplicita.
+
+- [2026-02-25] **Traduzione in 3 livelli** — La localizzazione completa richiede:
+  1) i18nProvider per le stringhe framework ra-core (bottoni, paginazione, validazione)
+  2) Stringhe hardcoded nel JSX (titoli, testi, messaggi notify)
+  3) Label degli input via prop `label` (altrimenti auto-generati in inglese dal source)
+  Il livello 3 è facile da dimenticare perché i campi "funzionano" senza label esplicita.

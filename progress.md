@@ -2,50 +2,49 @@
 
 ## Current Phase
 
-🟢 Fase 3 — Localizzazione italiana completata, pronto per adattamento moduli
+🟢 Fase 4 — Localizzazione completa al 100%, pronto per adattamento moduli
 
 ## Last Session
 
-- Date: 2026-02-25
+- Date: 2026-02-25 (sessione 3)
 - Completed:
-  - **i18n Provider configurato** — ra-i18n-polyglot con traduzioni italiane inline
-    (pacchetto @christianascone incompatibile, traduzioni direttamente in i18nProvider.tsx)
-  - **Route error risolto** — Conflitto react-router v6/v7, risolto con alias Vite
-    (`react-router-dom` → `react-router`) + patch-package per flatten arrays in CoreAdminRoutes
-  - **Traduzione completa UI in italiano** — ~40 file tradotti, ~200+ stringhe:
-    - Dashboard: Welcome, Stepper, LatestNotes, HotContacts, DealsChart, TasksList,
-      DealsPipeline, DashboardActivityLog, TasksListEmpty
-    - Contacts: ContactShow, ContactAside, ContactInputs, ContactListFilter,
-      ContactBackgroundInfo, ContactPersonalInfo, ContactEmpty,
-      ContactMergeButton, ContactImportButton, ExportVCardButton, TagsListEdit
-    - Deals: DealShow, DealArchivedList, DealEmpty, DealInputs, DealList, OnlyMineInput
-    - Companies: CompanyShow, CompanyAside, CompanyInputs, CompanyEmpty, CompanyList,
-      CompanyListFilter
-    - Notes: Note, NoteCreate, NoteCreateSheet, NoteInputs
-    - Tasks: AddTask, TaskEdit, TaskFormContent
-    - Tags: TagDialog, TagCreateModal, TagEditModal
-    - Settings: SettingsPage, ProfilePage
-    - Sales: SalesList, SalesCreate, SalesEdit
-    - Login: LoginPage, SignupPage, ConfirmationRequired
-    - Import: ImportPage, ImportFromJsonButton, ContactImportButton
-    - Misc: ImageEditorField, CreateSheet, MobileNavigation, ContactOption,
-      ContactListContent, ListNoResults
-    - Activity: ActivityLogContactCreated, ActivityLogDealCreated,
-      ActivityLogCompanyCreated, ActivityLogContactNoteCreated,
-      ActivityLogDealNoteCreated
-    - Layout: Header (menu labels)
-  - **Valute aggiornate** — USD → EUR, locale en-US → it-IT nelle formattazioni
-  - **Date in italiano** — date-fns locale `it` usata per formatDistance
-  - **Typecheck passato** — zero errori TypeScript
+  - **Fix stringhe inglesi residue (batch 2)** — 38 file aggiuntivi tradotti:
+    - Admin components: theme-mode-toggle, error, autocomplete-input, data-table,
+      columns-button, export-button, breadcrumb, show-guesser, number-field, record-field
+    - CRM: ActivityLogContactCreated, CompanyListFilter, sizes, ContactEditSheet,
+      ContactInputs, TagsListEdit, DealsChart (mesi italiano con date-fns locale),
+      HotContacts, DealEdit, ImportPage, InfinitePagination, MobileBackButton,
+      RelativeDate (date-fns locale), NoteEditSheet, NoteShowPage, NotesIteratorMobile,
+      SaleName, ListNoResults, getCompanyAvatar, defaultConfiguration (settori, fasi,
+      categorie, stati note, tipi attività)
+    - FakeRest: companies.ts (USD→EUR, paesi italiani)
+    - i18nProvider.tsx: chiavi mancanti (breadcrumb, search_columns, clear_search, ecc.)
+    - Test aggiornati: getCompanyAvatar.spec, SettingsPage.test
+  - **Fix label form input (batch 3)** — 35 campi input con label esplicita italiana:
+    - DealInputs: Descrizione, Azienda, Importo, Data chiusura prevista, Fase
+    - ContactInputs: Nome, Cognome, Ruolo, Azienda, Iscritto newsletter
+    - CompanyInputs: Nome, Sito web, URL LinkedIn, Telefono, Settore, Dimensione,
+      Fatturato, P.IVA/C.F., Indirizzo, Città, CAP, Provincia, Nazione, Descrizione, Link utili
+    - NoteInputs: Stato
+    - TaskFormContent: Scadenza, Tipo
+    - SalesInputs: Nome, Cognome, Email, Amministratore, Disabilitato
+    - ProfilePage: Nome, Cognome, Email
+    - AutocompleteCompanyInput: accetta prop `label`
+  - **Aria-labels** aggiunti a RoundButton e TagChip
+  - **Typecheck e test** — 0 errori, 60/60 test passati
 
 - Decisions:
-  - Stringhe UI hardcoded direttamente in italiano nei componenti (Atomic CRM non usa
-    useTranslate() nei componenti, i18nProvider gestisce solo le stringhe ra-core framework)
-  - Mantenuti i nomi campi DB in inglese (first_name, last_name, ecc.)
-  - personalInfoTypes: id rimane "Work"/"Home"/"Other" (valori DB), aggiunto campo
-    `name` per le label italiane "Lavoro"/"Casa"/"Altro"
+  - ra-core auto-genera label dal `source` in inglese → servono label esplicite su ogni input
+  - AutocompleteCompanyInput esteso con prop `label` per riuso
 
 ## Previous Sessions
+
+- 2026-02-25 (sessione 2):
+  - i18n Provider configurato (ra-i18n-polyglot, traduzioni inline)
+  - Route error risolto (react-router v6/v7 alias + patch-package)
+  - Traduzione prima passata ~40 file, ~200+ stringhe
+  - Valute USD→EUR, date-fns locale italiano
+  - Decisioni: stringhe hardcoded, nomi DB inglesi, personalInfoTypes con campo `name`
 
 - 2026-02-25 (sessione 1):
   - Fork Atomic CRM, installazione dipendenze, esplorazione struttura
