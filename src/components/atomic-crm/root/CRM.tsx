@@ -21,21 +21,12 @@ import services from "../services";
 import payments from "../payments";
 import expenses from "../expenses";
 import quotes from "../quotes";
-import companies from "../companies";
-import contacts from "../contacts";
 import { Dashboard } from "../dashboard/Dashboard";
 import { MobileDashboard } from "../dashboard/MobileDashboard";
-import deals from "../deals";
 import { Layout } from "../layout/Layout";
 import { MobileLayout } from "../layout/MobileLayout";
 import { SignupPage } from "../login/SignupPage";
 import { ConfirmationRequired } from "../login/ConfirmationRequired";
-import { ImportPage } from "../misc/ImportPage";
-import {
-  authProvider as defaultAuthProvider,
-  dataProvider as defaultDataProvider,
-} from "../providers/supabase";
-import sales from "../sales";
 import { ProfilePage } from "../settings/ProfilePage";
 import { SettingsPage } from "../settings/SettingsPage";
 import {
@@ -44,11 +35,7 @@ import {
 } from "./ConfigurationContext";
 import type { CrmDataProvider } from "../providers/types";
 import {
-  defaultCompanySectors,
   defaultDarkModeLogo,
-  defaultDealCategories,
-  defaultDealPipelineStatuses,
-  defaultDealStages,
   defaultLightModeLogo,
   defaultNoteStatuses,
   defaultTaskTypes,
@@ -58,10 +45,11 @@ import { i18nProvider } from "./i18nProvider";
 import { StartPage } from "../login/StartPage.tsx";
 import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { MobileTasksList } from "../tasks/MobileTasksList.tsx";
-import { ContactListMobile } from "../contacts/ContactList.tsx";
-import { ContactShow } from "../contacts/ContactShow.tsx";
-import { CompanyShow } from "../companies/CompanyShow.tsx";
-import { NoteShowPage } from "../notes/NoteShowPage.tsx";
+import { TasksList } from "../tasks/TasksList.tsx";
+import {
+  authProvider as defaultAuthProvider,
+  dataProvider as defaultDataProvider,
+} from "../providers/supabase";
 
 const defaultStore = localStorageStore(undefined, "CRM");
 
@@ -72,50 +60,7 @@ export type CRMProps = {
   store?: CoreAdminProps["store"];
 } & Partial<ConfigurationContextValue>;
 
-/**
- * CRM Component
- *
- * This component sets up and renders the main CRM application using `ra-core`. It provides
- * default configurations and themes but allows for customization through props. The component
- * seeds the store with any custom prop values for backwards compatibility.
- *
- * @param {LabeledValue[]} companySectors - The list of company sectors used in the application.
- * @param {RaThemeOptions} darkTheme - The theme to use when the application is in dark mode.
- * @param {LabeledValue[]} dealCategories - The categories of deals used in the application.
- * @param {string[]} dealPipelineStatuses - The statuses of deals in the pipeline used in the application.
- * @param {DealStage[]} dealStages - The stages of deals used in the application.
- * @param {RaThemeOptions} lightTheme - The theme to use when the application is in light mode.
- * @param {string} logo - The logo used in the CRM application.
- * @param {NoteStatus[]} noteStatuses - The statuses of notes used in the application.
- * @param {LabeledValue[]} taskTypes - The types of tasks used in the application.
- * @param {string} title - The title of the CRM application.
- *
- * @returns {JSX.Element} The rendered CRM application.
- *
- * @example
- * // Basic usage of the CRM component
- * import { CRM } from '@/components/atomic-crm/dashboard/CRM';
- *
- * const App = () => (
- *     <CRM
- *         logo="/path/to/logo.png"
- *         title="My Custom CRM"
- *         lightTheme={{
- *             ...defaultTheme,
- *             palette: {
- *                 primary: { main: '#0000ff' },
- *             },
- *         }}
- *     />
- * );
- *
- * export default App;
- */
 export const CRM = ({
-  companySectors = defaultCompanySectors,
-  dealCategories = defaultDealCategories,
-  dealPipelineStatuses = defaultDealPipelineStatuses,
-  dealStages = defaultDealStages,
   darkModeLogo = defaultDarkModeLogo,
   lightModeLogo = defaultLightModeLogo,
   noteStatuses = defaultNoteStatuses,
@@ -144,14 +89,8 @@ export const CRM = ({
     img.src = `https://atomic-crm-telemetry.marmelab.com/atomic-crm-telemetry?domain=${window.location.hostname}`;
   }, [disableTelemetry]);
 
-  // Seed the store with CRM prop values if not already stored
-  // (backwards compatibility for prop-based config)
   if (!store.getItem(CONFIGURATION_STORE_KEY)) {
     store.setItem(CONFIGURATION_STORE_KEY, {
-      companySectors,
-      dealCategories,
-      dealPipelineStatuses,
-      dealStages,
       noteStatuses,
       taskTypes,
       title,
@@ -164,8 +103,6 @@ export const CRM = ({
 
   const isMobile = useIsMobile();
 
-  // on login, pre-fetch the configuration to avoid a flickering
-  // when accessing the app for the first time
   const wrappedAuthProvider = useMemo<AuthProvider>(
     () => ({
       ...authProvider,
@@ -246,7 +183,6 @@ const DesktopAdmin = (props: CoreAdminProps) => {
       <CustomRoutes>
         <Route path={ProfilePage.path} element={<ProfilePage />} />
         <Route path={SettingsPage.path} element={<SettingsPage />} />
-        <Route path={ImportPage.path} element={<ImportPage />} />
       </CustomRoutes>
       <Resource name="clients" {...clients} />
       <Resource name="projects" {...projects} />
@@ -254,13 +190,9 @@ const DesktopAdmin = (props: CoreAdminProps) => {
       <Resource name="payments" {...payments} />
       <Resource name="expenses" {...expenses} />
       <Resource name="quotes" {...quotes} />
-      <Resource name="deals" {...deals} />
-      <Resource name="contacts" {...contacts} />
-      <Resource name="companies" {...companies} />
-      <Resource name="contact_notes" />
-      <Resource name="deal_notes" />
-      <Resource name="tasks" />
-      <Resource name="sales" {...sales} />
+      <Resource name="client_tasks" list={TasksList} />
+      <Resource name="client_notes" />
+      <Resource name="sales" />
       <Resource name="tags" />
     </Admin>
   );
@@ -270,7 +202,7 @@ const MobileAdmin = (props: CoreAdminProps) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        gcTime: 1000 * 60 * 60 * 24, // 24 hours
+        gcTime: 1000 * 60 * 60 * 24,
         networkMode: "offlineFirst",
       },
       mutations: {
@@ -306,16 +238,7 @@ const MobileAdmin = (props: CoreAdminProps) => {
           />
           <Route path={OAuthConsentPage.path} element={<OAuthConsentPage />} />
         </CustomRoutes>
-        <Resource
-          name="contacts"
-          list={ContactListMobile}
-          show={ContactShow}
-          recordRepresentation={contacts.recordRepresentation}
-        >
-          <Route path=":id/notes/:noteId" element={<NoteShowPage />} />
-        </Resource>
-        <Resource name="companies" show={CompanyShow} />
-        <Resource name="tasks" list={MobileTasksList} />
+        <Resource name="client_tasks" list={MobileTasksList} />
       </Admin>
     </PersistQueryClientProvider>
   );

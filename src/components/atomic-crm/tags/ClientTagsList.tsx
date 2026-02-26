@@ -19,10 +19,10 @@ const ColoredBadge = (props: any) => {
   );
 };
 
-export const TagsList = () => (
+export const ClientTagsList = () => (
   <ReferenceArrayField
     className="inline-block"
-    resource="contacts"
+    resource="clients"
     source="tags"
     reference="tags"
   >

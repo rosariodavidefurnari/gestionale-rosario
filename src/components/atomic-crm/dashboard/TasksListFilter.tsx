@@ -2,7 +2,6 @@ import {
   type Identifier,
   ListContextProvider,
   ResourceContextProvider,
-  useGetIdentity,
   useGetList,
   useList,
 } from "ra-core";
@@ -13,38 +12,31 @@ import { useIsMobile } from "@/hooks/use-mobile";
 export const TasksListFilter = ({
   title,
   filter,
-  filterByContact,
+  filterByClient,
 }: {
   title: string;
   filter: any;
-  filterByContact?: Identifier;
+  filterByClient?: Identifier;
 }) => {
-  const { identity } = useGetIdentity();
   const isMobile = useIsMobile();
 
   const {
     data: tasks,
     total,
     isPending,
-  } = useGetList(
-    "tasks",
-    {
-      pagination: { page: 1, perPage: 100 },
-      sort: { field: "due_date", order: "ASC" },
-      filter: {
-        ...filter,
-        ...(filterByContact != null
-          ? { contact_id: filterByContact }
-          : { sales_id: identity?.id }),
-      },
+  } = useGetList("client_tasks", {
+    pagination: { page: 1, perPage: 100 },
+    sort: { field: "due_date", order: "ASC" },
+    filter: {
+      ...filter,
+      ...(filterByClient != null ? { client_id: filterByClient } : {}),
     },
-    { enabled: filterByContact != null ? true : !!identity },
-  );
+  });
 
   const listContext = useList({
     data: tasks,
     isPending,
-    resource: "tasks",
+    resource: "client_tasks",
     perPage: isMobile ? 10 : 5,
   });
 
@@ -55,9 +47,9 @@ export const TasksListFilter = ({
       <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">
         {title}
       </p>
-      <ResourceContextProvider value="tasks">
+      <ResourceContextProvider value="client_tasks">
         <ListContextProvider value={listContext}>
-          <TasksIterator showContact={filterByContact == null} />
+          <TasksIterator showClient={filterByClient == null} />
         </ListContextProvider>
       </ResourceContextProvider>
       {total > listContext.perPage && (

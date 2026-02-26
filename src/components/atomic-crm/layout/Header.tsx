@@ -1,4 +1,4 @@
-import { Import, Settings, User, Users } from "lucide-react";
+import { Settings, User } from "lucide-react";
 import { CanAccess, useUserMenu } from "ra-core";
 import { Link, matchPath, useLocation } from "react-router";
 import { RefreshButton } from "@/components/admin/refresh-button";
@@ -7,7 +7,6 @@ import { UserMenu } from "@/components/admin/user-menu";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
-import { ImportPage } from "../misc/ImportPage";
 
 const Header = () => {
   const { darkModeLogo, lightModeLogo, title } = useConfigurationContext();
@@ -28,6 +27,8 @@ const Header = () => {
     currentPath = "/payments";
   } else if (matchPath("/expenses/*", location.pathname)) {
     currentPath = "/expenses";
+  } else if (matchPath("/client_tasks/*", location.pathname)) {
+    currentPath = "/client_tasks";
   } else {
     currentPath = false;
   }
@@ -91,6 +92,11 @@ const Header = () => {
                     to="/expenses"
                     isActive={currentPath === "/expenses"}
                   />
+                  <NavigationTab
+                    label="Promemoria"
+                    to="/client_tasks"
+                    isActive={currentPath === "/client_tasks"}
+                  />
                 </nav>
               </div>
               <div className="flex items-center">
@@ -98,13 +104,9 @@ const Header = () => {
                 <RefreshButton />
                 <UserMenu>
                   <ProfileMenu />
-                  <CanAccess resource="sales" action="list">
-                    <UsersMenu />
-                  </CanAccess>
                   <CanAccess resource="configuration" action="edit">
                     <SettingsMenu />
                   </CanAccess>
-                  <ImportFromJsonMenuItem />
                 </UserMenu>
               </div>
             </div>
@@ -136,24 +138,10 @@ const NavigationTab = ({
   </Link>
 );
 
-const UsersMenu = () => {
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<UsersMenu> must be used inside <UserMenu?");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to="/sales" className="flex items-center gap-2">
-        <Users /> Utenti
-      </Link>
-    </DropdownMenuItem>
-  );
-};
-
 const ProfileMenu = () => {
   const userMenuContext = useUserMenu();
   if (!userMenuContext) {
-    throw new Error("<ProfileMenu> must be used inside <UserMenu?");
+    throw new Error("<ProfileMenu> must be used inside <UserMenu>");
   }
   return (
     <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
@@ -179,17 +167,4 @@ const SettingsMenu = () => {
   );
 };
 
-const ImportFromJsonMenuItem = () => {
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<ImportFromJsonMenuItem> must be used inside <UserMenu>");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to={ImportPage.path} className="flex items-center gap-2">
-        <Import /> Importa dati
-      </Link>
-    </DropdownMenuItem>
-  );
-};
 export default Header;

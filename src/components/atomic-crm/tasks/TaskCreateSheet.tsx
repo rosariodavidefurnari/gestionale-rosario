@@ -1,75 +1,57 @@
 import {
   type Identifier,
   RecordRepresentation,
-  useDataProvider,
   useGetIdentity,
   useGetOne,
   useNotify,
-  useUpdate,
 } from "ra-core";
 import { CreateSheet } from "../misc/CreateSheet";
-import { foreignKeyMapping } from "../notes/foreignKeyMapping";
 import { TaskFormContent } from "./TaskFormContent";
 
 export interface TaskCreateSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contact_id?: Identifier;
+  client_id?: Identifier;
 }
 
 export const TaskCreateSheet = ({
   open,
   onOpenChange,
-  contact_id,
+  client_id,
 }: TaskCreateSheetProps) => {
   const { identity } = useGetIdentity();
-
-  const selectContact = contact_id == null;
-  const { data: contact } = useGetOne(
-    "contacts",
-    { id: contact_id! },
-    { enabled: !selectContact },
-  );
-  const [update] = useUpdate();
-  const dataProvider = useDataProvider();
   const notify = useNotify();
+
+  const selectClient = client_id == null;
+  const { data: client } = useGetOne(
+    "clients",
+    { id: client_id! },
+    { enabled: !selectClient },
+  );
 
   if (!identity) return null;
 
-  const handleSuccess = async (data: any) => {
-    const referenceRecordId = data[foreignKeyMapping["contacts"]];
-    if (!referenceRecordId) return;
-    const { data: contact } = await dataProvider.getOne("contacts", {
-      id: referenceRecordId,
-    });
-    if (!contact) return;
-    update("contacts", {
-      id: referenceRecordId as unknown as Identifier,
-      data: { last_seen: new Date().toISOString() },
-      previousData: contact,
-    });
-    notify("Attività aggiunta");
-    // No redirect, only close the sheet
+  const handleSuccess = async () => {
+    notify("Promemoria aggiunto");
     onOpenChange(false);
   };
 
   return (
     <CreateSheet
-      resource="tasks"
+      resource="client_tasks"
       title={
         <h1 className="text-xl font-semibold truncate pr-10">
-          {!selectContact ? "Crea attività per " : "Crea attività"}
-          {!selectContact && (
-            <RecordRepresentation record={contact} resource="contacts" />
+          {!selectClient ? "Crea promemoria per " : "Crea promemoria"}
+          {!selectClient && (
+            <RecordRepresentation record={client} resource="clients" />
           )}
         </h1>
       }
       redirect={false}
       record={{
-        type: "None",
-        contact_id,
+        type: "none",
+        client_id: client_id ?? null,
         due_date: new Date().toISOString().slice(0, 10),
-        sales_id: identity.id,
       }}
       transform={(data) => {
         const dueDate = new Date(data.due_date);
@@ -85,7 +67,7 @@ export const TaskCreateSheet = ({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <TaskFormContent selectContact={selectContact} />
+      <TaskFormContent selectClient={selectClient} />
     </CreateSheet>
   );
 };

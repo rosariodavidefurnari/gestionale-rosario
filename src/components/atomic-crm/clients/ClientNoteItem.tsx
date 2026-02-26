@@ -3,13 +3,10 @@ import {
   Form,
   useDelete,
   useNotify,
-  useResourceContext,
   useUpdate,
-  WithRecord,
 } from "ra-core";
 import { useEffect, useRef, useState } from "react";
 import type { FieldValues, SubmitHandler } from "react-hook-form";
-import { ReferenceField } from "@/components/admin/reference-field";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -18,33 +15,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { TextInput } from "@/components/admin/text-input";
 
-import { CompanyAvatar } from "../companies/CompanyAvatar";
 import { Markdown } from "../misc/Markdown";
 import { RelativeDate } from "../misc/RelativeDate";
-import { Status } from "../misc/Status";
-import { SaleName } from "../sales/SaleName";
-import type { ContactNote, DealNote } from "../types";
-import { NoteAttachments } from "./NoteAttachments";
-import { NoteInputs } from "./NoteInputs";
+import type { ClientNote } from "../types";
 
-export const Note = ({
-  showStatus,
-  note,
-}: {
-  showStatus?: boolean;
-  note: DealNote | ContactNote;
-  isLast: boolean;
-}) => {
+export const ClientNoteItem = ({ note }: { note: ClientNote }) => {
   const [isHover, setHover] = useState(false);
   const [isEditing, setEditing] = useState(false);
   const [isExpanded, setExpanded] = useState(false);
   const [isTruncated, setTruncated] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-  const resource = useResourceContext();
   const notify = useNotify();
 
-  // Detect if content is truncated
   useEffect(() => {
     const el = contentRef.current;
     if (el) {
@@ -53,8 +37,7 @@ export const Note = ({
   }, [note.text]);
 
   const [update, { isPending }] = useUpdate();
-
-  const [deleteNote] = useDelete(resource, undefined, {
+  const [deleteNote] = useDelete("client_notes", undefined, {
     mutationMode: "undoable",
     onSuccess: () => {
       notify("Nota eliminata", { type: "info", undoable: true });
@@ -62,21 +45,12 @@ export const Note = ({
   });
 
   const handleDelete = () => {
-    deleteNote(resource, { id: note.id, previousData: note });
-  };
-
-  const handleEnterEditMode = () => {
-    setEditing(!isEditing);
-  };
-
-  const handleCancelEdit = () => {
-    setEditing(false);
-    setHover(false);
+    deleteNote("client_notes", { id: note.id, previousData: note });
   };
 
   const handleNoteUpdate: SubmitHandler<FieldValues> = (values) => {
     update(
-      resource,
+      "client_notes",
       { id: note.id, data: values, previousData: note },
       {
         onSuccess: () => {
@@ -87,47 +61,30 @@ export const Note = ({
     );
   };
 
-  const content = (
+  return (
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       className="mb-4"
     >
-      <div className="flex items-center space-x-4 w-full">
-        <ReferenceField source="company_id" reference="companies" link="show">
-          <CompanyAvatar width={20} height={20} />
-        </ReferenceField>
-        <div className="inline-flex h-full items-center text-sm text-muted-foreground">
-          <ReferenceField
-            record={note}
-            resource={resource}
-            source="sales_id"
-            reference="sales"
-            link={false}
-          >
-            <WithRecord render={(record) => <SaleName sale={record} />} />
-          </ReferenceField>{" "}
-          ha aggiunto una nota{" "}
-          {showStatus && note.status && (
-            <Status className="ml-2" status={note.status} />
-          )}
-        </div>
-        <span className={`${isHover ? "visible" : "invisible"}`}>
+      <div className="flex items-center w-full">
+        <span className="text-sm text-muted-foreground">
+          <RelativeDate date={note.date} />
+        </span>
+        <span className={`ml-2 ${isHover ? "visible" : "invisible"}`}>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleEnterEditMode}
+                  onClick={() => setEditing(!isEditing)}
                   className="p-1 h-auto cursor-pointer"
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>Modifica nota</p>
-              </TooltipContent>
+              <TooltipContent>Modifica nota</TooltipContent>
             </Tooltip>
           </TooltipProvider>
           <TooltipProvider>
@@ -142,24 +99,27 @@ export const Note = ({
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>Elimina nota</p>
-              </TooltipContent>
+              <TooltipContent>Elimina nota</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        </span>
-        <div className="flex-1"></div>
-        <span className="text-sm text-muted-foreground">
-          <RelativeDate date={note.date} />
         </span>
       </div>
       {isEditing ? (
         <Form onSubmit={handleNoteUpdate} record={note} className="mt-1">
-          <NoteInputs showStatus={showStatus} />
+          <TextInput
+            source="text"
+            label={false}
+            multiline
+            helperText={false}
+            rows={4}
+          />
           <div className="flex justify-end mt-2 space-x-4">
             <Button
               variant="ghost"
-              onClick={handleCancelEdit}
+              onClick={() => {
+                setEditing(false);
+                setHover(false);
+              }}
               type="button"
               className="cursor-pointer"
             >
@@ -172,12 +132,12 @@ export const Note = ({
               className="flex items-center gap-2 cursor-pointer"
             >
               <Save className="w-4 h-4" />
-              Aggiorna nota
+              Aggiorna
             </Button>
           </div>
         </Form>
       ) : (
-        <div className="pt-2 text-sm max-w-150">
+        <div className="pt-1 text-sm">
           {note.text && (
             <div
               ref={contentRef}
@@ -202,12 +162,8 @@ export const Note = ({
               {isExpanded ? "Mostra meno" : "Leggi tutto"}
             </button>
           )}
-
-          {note.attachments && <NoteAttachments note={note} />}
         </div>
       )}
     </div>
   );
-
-  return content;
 };

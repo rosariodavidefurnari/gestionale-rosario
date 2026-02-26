@@ -16,12 +16,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { TagChip } from "../tags/TagChip";
-import { TagCreateModal } from "../tags/TagCreateModal";
-import type { Contact, Tag } from "../types";
+import { TagChip } from "./TagChip";
+import { TagCreateModal } from "./TagCreateModal";
+import type { Client, Tag } from "../types";
 
-export const TagsListEdit = () => {
-  const record = useRecordContext<Contact>();
+export const ClientTagsListEdit = () => {
+  const record = useRecordContext<Client>();
   const [open, setOpen] = useState(false);
 
   const { data: allTags, isPending: isPendingAllTags } = useGetList<Tag>(
@@ -36,7 +36,7 @@ export const TagsListEdit = () => {
     { ids: record?.tags },
     { enabled: record && record.tags && record.tags.length > 0 },
   );
-  const [update] = useUpdate<Contact>();
+  const [update] = useUpdate<Client>();
 
   const unselectedTags =
     allTags &&
@@ -44,11 +44,9 @@ export const TagsListEdit = () => {
     allTags.filter((tag) => !record.tags?.includes(tag.id));
 
   const handleTagAdd = (id: Identifier) => {
-    if (!record) {
-      throw new Error("No contact record found");
-    }
+    if (!record) return;
     const tags = [...(record.tags ?? []), id];
-    update("contacts", {
+    update("clients", {
       id: record.id,
       data: { tags },
       previousData: record,
@@ -56,43 +54,26 @@ export const TagsListEdit = () => {
   };
 
   const handleTagDelete = async (id: Identifier) => {
-    if (!record) {
-      throw new Error("No contact record found");
-    }
+    if (!record) return;
     const tags = record.tags.filter((tagId) => tagId !== id);
-    await update("contacts", {
+    await update("clients", {
       id: record.id,
       data: { tags },
       previousData: record,
     });
   };
 
-  const openTagCreateDialog = () => {
-    setOpen(true);
-  };
-
-  const handleTagCreateClose = () => {
-    setOpen(false);
-  };
-
   const handleTagCreated = useCallback(
     async (tag: Tag) => {
-      if (!record) {
-        throw new Error("No contact record found");
-      }
-
+      if (!record) return;
       await update(
-        "contacts",
+        "clients",
         {
           id: record.id,
-          data: { tags: [...record.tags, tag.id] },
+          data: { tags: [...(record.tags ?? []), tag.id] },
           previousData: record,
         },
-        {
-          onSuccess: () => {
-            setOpen(false);
-          },
-        },
+        { onSuccess: () => setOpen(false) },
       );
     },
     [update, record],
@@ -129,15 +110,13 @@ export const TagsListEdit = () => {
                 <Badge
                   variant="secondary"
                   className="text-sm md:text-xs font-normal text-black"
-                  style={{
-                    backgroundColor: tag.color,
-                  }}
+                  style={{ backgroundColor: tag.color }}
                 >
                   {tag.name}
                 </Badge>
               </DropdownMenuItem>
             ))}
-            <DropdownMenuItem onClick={openTagCreateDialog}>
+            <DropdownMenuItem onClick={() => setOpen(true)}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -153,7 +132,7 @@ export const TagsListEdit = () => {
 
       <TagCreateModal
         open={open}
-        onClose={handleTagCreateClose}
+        onClose={() => setOpen(false)}
         onSuccess={handleTagCreated}
       />
     </div>

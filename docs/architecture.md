@@ -5,54 +5,37 @@
 Fork di Atomic CRM personalizzato per gestire l'attività professionale
 di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
-## Stato Infrastruttura (verificato sessione 10)
+## Stato Infrastruttura (verificato sessione 11)
 
 ### Certezze — Audit superato
 
 | Componente | Stato | Verificato |
 |------------|-------|------------|
-| Schema DB (8 tabelle + 2 views) | Deployed e conforme alla specifica | migration review |
+| Schema DB (8 tabelle + 2 views + 2 tabelle tasks/notes) | Deployed e conforme | migration review |
 | Migration Fase 2 (discount + tariffe) | Applicata al DB remoto | `npx supabase db push` |
 | Migration quotes index | Applicata al DB remoto | sessione 9 |
+| Migration client_tasks + client_notes + tags | Applicata al DB remoto | sessione 11 |
 | Dashboard Fase 2 (Recharts) | Implementata (desktop + mobile KPI) | sessione 10 |
+| Pulizia moduli Atomic CRM | Completata (companies, contacts, deals eliminati) | sessione 11 |
+| Tasks adattati (Promemoria) | Funzionanti con client_tasks | sessione 11 |
+| Notes clienti | Funzionanti con client_notes | sessione 11 |
+| Tags clienti | Funzionanti (BIGINT[] su clients) | sessione 11 |
 | RLS policies | Attive su tutte le tabelle | audit manuale |
 | Signup pubblico | DISABILITATO (config.toml) | sessione 4 |
 | Keep-alive workflow | Attivo, testato con successo (HTTP 200) | `gh workflow run` |
-| GitHub secrets | SUPABASE_URL + SUPABASE_KEY configurati | `gh secret list` |
 | Localizzazione IT | Completa su ~70+ file, 3 livelli | audit sessione 4 |
-| Typecheck | 0 errori | sessione 10 |
-| Build produzione (`npm run build`) | OK | sessione 10 |
-| Test | 60/60 passati | sessione 9 |
-| Lint + Prettier | 0 errori | sessione 9 |
+| Typecheck | 0 errori | sessione 11 |
+| Build produzione (`npm run build`) | OK | sessione 11 |
+| Test | 42/42 passati | sessione 11 |
+| Lint | 0 nuovi errori | sessione 11 |
 | Deploy Vercel | gestionale-rosario.vercel.app | sessione 5 |
-| Edge Functions | users, update_password, merge_contacts deployate | CORS OPTIONS 204 |
-| Supabase secrets | SB_SECRET_KEY impostato su remoto | sessione 5 |
-| Utente auth | Metadata + sales record configurati | sessione 5 |
 
 ### Cose ancora da verificare manualmente
 
 - Signup disabilitato nel **Supabase Dashboard remoto** (non solo config.toml locale)
 - npm audit: 4 vulnerabilità (1 moderate, 3 high) — da valutare
 - Edge Function `postmark` non funzionante (manca secrets Postmark — non prioritaria)
-
-## Localizzazione
-
-L'interfaccia è **completamente tradotta in italiano**. Tre livelli:
-
-1. **i18nProvider** (`src/components/atomic-crm/root/i18nProvider.tsx`) — stringhe
-   framework ra-core (bottoni, validazione, paginazione) tramite ra-i18n-polyglot
-   con traduzioni inline.
-
-2. **Stringhe hardcoded** — ~70+ file componente con stringhe UI in italiano nel JSX.
-
-3. **Label form input** — Tutti gli input hanno `label="..."` esplicita in italiano.
-
-### Convenzioni di traduzione
-- Valori DB in inglese (produzione_tv, in_corso, ricevuto, primo_contatto, ecc.)
-- Label UI in italiano
-- Valute: EUR, locale it-IT
-- Date: date-fns con locale `it`
-- Ogni nuovo input DEVE avere `label` esplicita in italiano
+- 3 errori lint pre-esistenti (useGetOne condizionale in ExpenseShow/PaymentShow)
 
 ## Database Schema
 
@@ -60,12 +43,14 @@ L'interfaccia è **completamente tradotta in italiano**. Tre livelli:
 
 | Tabella | Scopo | RLS | Colonne |
 |---------|-------|-----|---------|
-| clients | Anagrafica clienti | auth.uid() IS NOT NULL | 11 col, 2 CHECK |
+| clients | Anagrafica clienti | auth.uid() IS NOT NULL | 12 col (incl. tags BIGINT[]), 2 CHECK |
 | projects | Progetti/programmi | auth.uid() IS NOT NULL | 12 col, 3 CHECK |
 | services | Registro lavori (cuore) | auth.uid() IS NOT NULL | 14 col (incl. discount), 1 CHECK |
 | quotes | Preventivi + pipeline Kanban | auth.uid() IS NOT NULL | 13 col (incl. index), 1 CHECK (10 stati) |
 | payments | Tracking pagamenti | auth.uid() IS NOT NULL | 12 col, 3 CHECK |
 | expenses | Spese e km | auth.uid() IS NOT NULL | 11 col, 1 CHECK |
+| client_tasks | Promemoria (opzionalmente legati a un cliente) | auth.uid() IS NOT NULL | 8 col, FK opzionale |
+| client_notes | Note clienti (con allegati) | auth.uid() IS NOT NULL | 7 col, FK obbligatoria |
 | settings | Configurazione | auth.uid() IS NOT NULL | 3 col (key-value) |
 | keep_alive | Heartbeat free tier | SELECT public | 3 col |
 
@@ -76,10 +61,7 @@ primo_contatto → preventivo_inviato → in_trattativa → accettato →
 acconto_ricevuto → in_lavorazione → completato → saldato → rifiutato / perso
 ```
 
-La colonna `index` (SMALLINT) gestisce l'ordinamento delle card dentro ogni colonna Kanban.
-Nessun campo `archived_at` — gli stati finali sono colonne visibili nel board.
-
-### Settings (aggiornate Fase 2 — sessione 7)
+### Settings (aggiornate Fase 2)
 - `default_km_rate`: 0.19
 - `default_fee_shooting`: **233** (tariffa 2025/2026)
 - `default_fee_editing_standard`: **311** (Montaggio GS)
@@ -87,15 +69,14 @@ Nessun campo `archived_at` — gli stati finali sono colonne visibili nel board.
 - `default_fee_editing_short`: **156** (Montaggio VIV/BTF)
 - `currency`: EUR
 
-### Views (aggiornate Fase 2 — includono discount)
+### Views
 
 | View | Scopo |
 |------|-------|
 | project_financials | Riepilogo finanziario per progetto (fees - discount, km, paid, balance) |
 | monthly_revenue | Fatturato mensile per categoria (fees - discount) |
 
-Per l'uso frontend con React Admin/Supabase provider, le views dashboard hanno
-primary key esplicite nel dataProvider:
+PK esplicite nel dataProvider:
 - `monthly_revenue` → PK composita `month + category`
 - `project_financials` → PK `project_id`
 
@@ -106,22 +87,25 @@ primary key esplicite nel dataProvider:
 | `20260225180000_gestionale_schema.sql` | Schema iniziale (8 tabelle, RLS, views, dati iniziali) |
 | `20260225230028_fase2_discount_tariffe.sql` | Colonna discount, tariffe aggiornate, views fix |
 | `20260226120000_add_quotes_index.sql` | Colonna index su quotes per ordinamento Kanban |
+| `20260226200000_client_tasks_notes_tags.sql` | Tabelle client_tasks, client_notes, colonna tags su clients |
 
-## Moduli Frontend (sessione 10)
+## Moduli Frontend (sessione 11)
 
 ### Moduli IMPLEMENTATI
 
 | Modulo | Directory | File | Tipo | Stato |
 |--------|-----------|------|------|-------|
-| **Clienti** | `src/components/atomic-crm/clients/` | 8 file | CRUD (Table) | Completo |
-| **Progetti** | `src/components/atomic-crm/projects/` | 8 file | CRUD (Table) | Completo |
-| **Registro Lavori** | `src/components/atomic-crm/services/` | 9 file | CRUD (Table) | Completo |
-| **Preventivi** | `src/components/atomic-crm/quotes/` | 13 file | Kanban drag-and-drop | Completo |
-| **Pagamenti** | `src/components/atomic-crm/payments/` | 8 file | CRUD (Table) | Completo |
-| **Spese** | `src/components/atomic-crm/expenses/` | 8 file | CRUD (Table) | Completo |
-| **Dashboard** | `src/components/atomic-crm/dashboard/` | 14 file | Recharts + KPI + alert | Completo |
+| **Clienti** | `clients/` | 11 file | CRUD (Table) + Tags/Notes/Tasks | Completo |
+| **Progetti** | `projects/` | 8 file | CRUD (Table) | Completo |
+| **Registro Lavori** | `services/` | 9 file | CRUD (Table) | Completo |
+| **Preventivi** | `quotes/` | 13 file | Kanban drag-and-drop | Completo |
+| **Pagamenti** | `payments/` | 8 file | CRUD (Table) | Completo |
+| **Spese** | `expenses/` | 8 file | CRUD (Table) | Completo |
+| **Promemoria** | `tasks/` | 11 file | Lista con filtri temporali | Completo |
+| **Tags** | `tags/` | 4 file | CRUD + array su clients | Completo |
+| **Dashboard** | `dashboard/` | 14 file | Recharts + KPI + alert | Completo |
 
-### Struttura moduli CRUD (Clienti, Progetti, Servizi, Pagamenti, Spese)
+### Struttura moduli CRUD
 
 ```
 src/components/atomic-crm/[modulo]/
@@ -136,144 +120,128 @@ src/components/atomic-crm/[modulo]/
 └── [modulo]Types.ts       # Choices e labels per select/badge
 ```
 
-### Struttura modulo Kanban (Preventivi)
+### Struttura Promemoria (Tasks)
 
 ```
-src/components/atomic-crm/quotes/
-├── index.tsx              # Export (list, recordRepresentation)
-├── quotesTypes.ts         # 10 stati, 6 tipi servizio, label maps
-├── stages.ts              # getQuotesByStatus (raggruppamento per colonne)
-├── QuoteList.tsx          # List + filtri + CSV export + routing dialogs
-├── QuoteListContent.tsx   # DragDropContext + onDragEnd + reorder logic
-├── QuoteColumn.tsx        # Droppable column con totale EUR
-├── QuoteCard.tsx          # Draggable card (descrizione, cliente, tipo, importo)
-├── QuoteCreate.tsx        # Dialog creazione + reindex automatico
-├── QuoteEdit.tsx          # Dialog modifica con DeleteButton
-├── QuoteShow.tsx          # Dialog dettaglio con info fields
-├── QuoteInputs.tsx        # Form condiviso (rejection_reason condizionale)
-└── QuoteEmpty.tsx         # Stato vuoto con pulsante crea
+src/components/atomic-crm/tasks/
+├── TasksList.tsx          # Pagina lista desktop
+├── MobileTasksList.tsx    # Pagina lista mobile
+├── TasksListContent.tsx   # Composizione filtri temporali
+├── Task.tsx               # Riga singola task con checkbox done
+├── AddTask.tsx            # Dialog creazione (con selectClient opzionale)
+├── TaskFormContent.tsx    # Form fields (testo, tipo, data, cliente)
+├── TaskCreateSheet.tsx    # Sheet mobile creazione
+├── TaskEdit.tsx           # Pagina edit
+├── TaskEditSheet.tsx      # Sheet mobile edit
+├── TasksIterator.tsx      # Lista task con ordinamento
+└── taskFilters.ts         # Filtri: overdue, today, tomorrow, thisWeek, later
 ```
 
-**Pattern Kanban (da Deals):**
-- `DragDropContext` wrappa il board, `onDragEnd` gestisce lo spostamento
-- Ogni colonna è un `Droppable` con droppableId = status value
-- Ogni card è un `Draggable` con draggableId = quote.id
-- Update locale sincrono (optimistic UI) + persistenza asincrona + refetch
-- Reorder gestisce sia spostamenti intra-colonna che cross-colonna
-- Al Create, tutti i quotes nella stessa colonna vengono reindexati
+Risorsa: `client_tasks` (UUID PK, FK opzionale a clients)
 
-### Moduli DA IMPLEMENTARE
+### Struttura Note Clienti
 
-| Modulo | Tipo | Note |
-|--------|------|------|
-| Nessuno | — | Moduli core Fase 2 completati (8/8) |
+Integrato nella scheda cliente (ClientShow):
+- `clients/ClientNotesSection.tsx` — lista + inline create
+- `clients/ClientNoteItem.tsx` — singola nota con edit/delete
+- `clients/ClientTasksSection.tsx` — promemoria del cliente
 
-### Struttura Dashboard (Recharts)
+Risorsa: `client_notes` (UUID PK, FK obbligatoria a clients)
+
+### Struttura Tags
+
+```
+src/components/atomic-crm/tags/
+├── ClientTagsList.tsx     # Display tags (ReferenceArrayField)
+├── ClientTagsListEdit.tsx # Gestione tags (add/remove/create)
+├── TagsList.tsx           # Lista tags base
+└── colors.ts              # Palette colori
+```
+
+### Dashboard (Recharts)
 
 ```
 src/components/atomic-crm/dashboard/
-├── Dashboard.tsx                  # Composizione desktop (KPI + charts + pipeline/top + alert)
-├── MobileDashboard.tsx            # Dashboard mobile (KPI-only)
-├── useDashboardData.ts            # useGetList multipli (views + tabelle)
+├── Dashboard.tsx                  # Desktop (KPI + charts + pipeline + alert)
+├── MobileDashboard.tsx            # Mobile (KPI-only)
+├── useDashboardData.ts            # useGetList multipli
 ├── dashboardModel.ts              # Aggregazioni KPI/grafici/pipeline/alert
 ├── DashboardKpiCards.tsx          # 4 KPI cards
 ├── DashboardRevenueTrendChart.tsx # Line chart (12 mesi)
-├── DashboardCategoryChart.tsx     # Bar chart orizzontale per categoria
-├── DashboardPipelineCard.tsx      # Pipeline preventivi per stato
-├── DashboardTopClientsCard.tsx    # Top 5 clienti (anno corrente)
-├── DashboardAlertsCard.tsx        # Pagamenti / prossimi lavori / preventivi senza risposta
-├── DashboardLoading.tsx           # Skeleton desktop + mobile
-├── Welcome.tsx                    # Card demo (riusata)
-├── TasksListFilter.tsx            # Helper legacy riusato da tasks/contacts
-└── TasksListEmpty.tsx             # Helper legacy riusato da tasks/contacts
+├── DashboardCategoryChart.tsx     # Bar chart per categoria
+├── DashboardPipelineCard.tsx      # Pipeline preventivi
+├── DashboardTopClientsCard.tsx    # Top 5 clienti
+├── DashboardAlertsCard.tsx        # Alert urgenti
+├── DashboardLoading.tsx           # Skeleton loading
+├── TasksListFilter.tsx            # Helper filtro task per dashboard
+└── TasksListEmpty.tsx             # Helper stato vuoto task
 ```
 
-**Fonti dati dashboard:**
-- `monthly_revenue` (KPI fatturato mese/anno, line chart, category chart, km mese)
-- `quotes` (KPI preventivi aperti, pipeline, preventivi senza risposta)
-- `payments` (KPI pagamenti in attesa, alert scadenze/scaduti)
-- `services` + `projects` + `clients` (prossimi lavori, top clienti)
-
-### Moduli Atomic CRM da rimuovere/valutare
-
-| Modulo | Decisione |
-|--------|-----------|
-| Companies | RIMUOVERE |
-| Tasks | Probabilmente rimuovere |
-| Tags | Probabilmente rimuovere |
-| Activity Log | Probabilmente rimuovere |
-
-## Navigazione (sessione 10)
+## Navigazione (sessione 11)
 
 ```
-Bacheca | Clienti | Progetti | Registro Lavori | Preventivi | Pagamenti | Spese
+Bacheca | Clienti | Progetti | Registro Lavori | Preventivi | Pagamenti | Spese | Promemoria
 ```
 
-Menu utente (dropdown): Profilo | Utenti | Impostazioni | Importa dati
+Menu utente (dropdown): Profilo | Impostazioni
+
+Mobile: Inizio | Clienti | [+] | Promemoria | Altro
 
 ## Risorse registrate in CRM.tsx
 
 ```
-clients, projects, services, payments,      ← NUOVE (Fase 2, CRUD)
-expenses, quotes                             ← NUOVE (Fase 2, Kanban)
-deals, contacts, companies, contact_notes,   ← Atomic CRM (da rimuovere/adattare)
-deal_notes, tasks, sales, tags
+clients, projects, services, payments,     ← CRUD con pagine
+expenses, quotes                           ← CRUD/Kanban con pagine
+client_tasks                               ← Lista con pagina desktop + mobile
+client_notes, sales, tags                  ← Headless (senza pagina dedicata)
 ```
 
 ## Tipi TypeScript (types.ts)
 
 ```
-Client, Project, Service, Payment,           ← NUOVI (Fase 2, CRUD)
-Expense, Quote                               ← NUOVI (Fase 2, Quote ha campo index)
-Contact, Company, Deal, ContactNote,         ← Atomic CRM originali
-DealNote, Tag, Task, Sale, Activity
+Client, Project, Service, Payment,         ← CRUD
+Expense, Quote                             ← CRUD/Kanban
+ClientTask, ClientNote                     ← Tasks/Notes adattati
+Tag, Sale, SalesFormData, SignUpData        ← Infrastruttura
+RAFile, AttachmentNote                     ← File/allegati
+LabeledValue, NoteStatus                  ← Config
 ```
 
 ## Authentication
 
 - Method: Supabase Auth, email/password
 - User: rosariodavide.furnari@gmail.com (unico)
-- Signup pubblico: DISABILITATO in config.toml (auth + email + sms)
+- Signup pubblico: DISABILITATO in config.toml
 - API Keys: VITE_SB_PUBLISHABLE_KEY (formato sb_publishable_...)
 
 ## Supabase Config
 
-- Project ID locale: `gestionale-rosario`
 - Progetto remoto: `qvdmzhyzpyaveniirsmo.supabase.co`
 - Keep-alive: GitHub Actions, lunedì e giovedì 08:00 UTC
-- GitHub secrets: SUPABASE_URL + SUPABASE_KEY configurati
 - Edge Function secrets: SB_SECRET_KEY configurato su remoto
 
 ## Deployment
 
 - **Hosting**: Vercel (gestionale-rosario.vercel.app)
 - **Auto-deploy**: Vercel collegato al repo GitHub, deploya su ogni push a main
-- **deploy.yml**: disabilitato auto-trigger, solo manual dispatch
 
 ## Pages Map
 
 ```
 /login          → Login (unica pagina pubblica)
-/               → Dashboard finanziaria (Recharts: KPI, grafici, pipeline, alert) ✅
-/clients        → Lista clienti ✅
-/clients/:id    → Scheda cliente ✅
-/projects       → Lista progetti ✅
-/projects/:id   → Dettaglio progetto ✅
-/services       → Registro lavori ✅
-/services/:id   → Dettaglio servizio ✅
-/quotes         → Pipeline preventivi (Kanban 10 stati) ✅
-/quotes/create  → Dialog creazione preventivo ✅
-/quotes/:id     → Dialog modifica preventivo ✅
-/quotes/:id/show → Dialog dettaglio preventivo ✅
-/payments       → Lista pagamenti ✅
-/payments/:id   → Dettaglio pagamento ✅
-/expenses       → Spese e km ✅
-/expenses/:id   → Dettaglio spesa ✅
-/settings       → Impostazioni (tariffe default)
+/               → Dashboard finanziaria (Recharts: KPI, grafici, pipeline, alert)
+/clients        → Lista clienti
+/clients/:id    → Scheda cliente (dettagli + tags + note + promemoria)
+/projects       → Lista progetti
+/projects/:id   → Dettaglio progetto
+/services       → Registro lavori
+/services/:id   → Dettaglio servizio
+/quotes         → Pipeline preventivi (Kanban 10 stati)
+/payments       → Lista pagamenti
+/payments/:id   → Dettaglio pagamento
+/expenses       → Spese e km
+/expenses/:id   → Dettaglio spesa
+/client_tasks   → Lista promemoria (filtri: scaduti, oggi, domani, settimana, più avanti)
+/settings       → Impostazioni (Marchio, Note, Attività)
 /profile        → Profilo utente
 ```
-
-## Documenti design
-
-- `docs/design-fase2.md` — Wireframe e design visivo di ogni modulo
-- `docs/data-import-analysis.md` — Analisi dati reali da file Numbers di Diego Caltabiano

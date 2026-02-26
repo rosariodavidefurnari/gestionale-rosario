@@ -14,17 +14,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
-import type { Contact, Task as TData } from "../types";
+import type { Client, ClientTask } from "../types";
 import { TaskEdit } from "./TaskEdit";
 import { TaskEditSheet } from "./TaskEditSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Task = ({
   task,
-  showContact,
+  showClient,
 }: {
-  task: TData;
-  showContact?: boolean;
+  task: ClientTask;
+  showClient?: boolean;
 }) => {
   const isMobile = useIsMobile();
   const { taskTypes } = useConfigurationContext();
@@ -54,7 +54,7 @@ export const Task = ({
   };
 
   const handleCheck = () => () => {
-    update("tasks", {
+    update("client_tasks", {
       id: task.id,
       data: {
         done_date: task.done_date ? null : new Date().toISOString(),
@@ -73,7 +73,7 @@ export const Task = ({
       return;
     }
 
-    queryClient.invalidateQueries({ queryKey: ["tasks", "getList"] });
+    queryClient.invalidateQueries({ queryKey: ["client_tasks", "getList"] });
   }, [queryClient, isUpdatePending, isSuccess, variables]);
 
   const labelId = `checkbox-list-label-${task.id}`;
@@ -108,10 +108,10 @@ export const Task = ({
             <div className="text-sm text-muted-foreground">
               scadenza&nbsp;
               <DateField source="due_date" record={task} />
-              {showContact && (
-                <ReferenceField<TData, Contact>
-                  source="contact_id"
-                  reference="contacts"
+              {showClient && task.client_id && (
+                <ReferenceField<ClientTask, Client>
+                  source="client_id"
+                  reference="clients"
                   record={task}
                   link="show"
                   className="inline text-sm text-muted-foreground"
@@ -121,8 +121,7 @@ export const Task = ({
                       <>
                         {" "}
                         (Rif:&nbsp;
-                        {referenceRecord?.first_name}{" "}
-                        {referenceRecord?.last_name})
+                        {referenceRecord?.name})
                       </>
                     );
                   }}
@@ -147,7 +146,7 @@ export const Task = ({
             <DropdownMenuItem
               className="cursor-pointer h-12 md:h-8 px-4 md:px-2 text-base md:text-sm"
               onClick={() => {
-                update("tasks", {
+                update("client_tasks", {
                   id: task.id,
                   data: {
                     due_date: new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -163,7 +162,7 @@ export const Task = ({
             <DropdownMenuItem
               className="cursor-pointer h-12 md:h-8 px-4 md:px-2 text-base md:text-sm"
               onClick={() => {
-                update("tasks", {
+                update("client_tasks", {
                   id: task.id,
                   data: {
                     due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)

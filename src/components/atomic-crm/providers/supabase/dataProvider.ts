@@ -3,21 +3,11 @@ import { defaultPrimaryKeys } from "@raphiniert/ra-data-postgrest";
 import {
   withLifecycleCallbacks,
   type DataProvider,
-  type GetListParams,
   type Identifier,
   type ResourceCallbacks,
 } from "ra-core";
-import type {
-  ContactNote,
-  Deal,
-  DealNote,
-  RAFile,
-  Sale,
-  SalesFormData,
-  SignUpData,
-} from "../../types";
+import type { RAFile, Sale, SalesFormData, SignUpData } from "../../types";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
-import { getActivityLog } from "../commons/activity";
 import { getIsInitialized } from "./authProvider";
 import { supabase } from "./supabase";
 
@@ -40,44 +30,8 @@ const baseDataProvider = supabaseDataProvider({
     .set("project_financials", ["project_id"]),
 });
 
-const processCompanyLogo = async (params: any) => {
-  const logo = params.data.logo;
-
-  if (logo?.rawFile instanceof File) {
-    await uploadToBucket(logo);
-  }
-
-  return {
-    ...params,
-    data: {
-      ...params.data,
-      logo,
-    },
-  };
-};
-
 const dataProviderWithCustomMethods = {
   ...baseDataProvider,
-  async getList(resource: string, params: GetListParams) {
-    if (resource === "companies") {
-      return baseDataProvider.getList("companies_summary", params);
-    }
-    if (resource === "contacts") {
-      return baseDataProvider.getList("contacts_summary", params);
-    }
-
-    return baseDataProvider.getList(resource, params);
-  },
-  async getOne(resource: string, params: any) {
-    if (resource === "companies") {
-      return baseDataProvider.getOne("companies_summary", params);
-    }
-    if (resource === "contacts") {
-      return baseDataProvider.getOne("contacts_summary", params);
-    }
-
-    return baseDataProvider.getOne(resource, params);
-  },
 
   async signUp({ email, password, first_name, last_name }: SignUpData) {
     const response = await supabase.auth.signUp({
@@ -173,49 +127,8 @@ const dataProviderWithCustomMethods = {
 
     return passwordUpdated;
   },
-  async unarchiveDeal(deal: Deal) {
-    // get all deals where stage is the same as the deal to unarchive
-    const { data: deals } = await baseDataProvider.getList<Deal>("deals", {
-      filter: { stage: deal.stage },
-      pagination: { page: 1, perPage: 1000 },
-      sort: { field: "index", order: "ASC" },
-    });
-
-    // set index for each deal starting from 1, if the deal to unarchive is found, set its index to the last one
-    const updatedDeals = deals.map((d, index) => ({
-      ...d,
-      index: d.id === deal.id ? 0 : index + 1,
-      archived_at: d.id === deal.id ? null : d.archived_at,
-    }));
-
-    return await Promise.all(
-      updatedDeals.map((updatedDeal) =>
-        baseDataProvider.update("deals", {
-          id: updatedDeal.id,
-          data: updatedDeal,
-          previousData: deals.find((d) => d.id === updatedDeal.id),
-        }),
-      ),
-    );
-  },
-  async getActivityLog(companyId?: Identifier) {
-    return getActivityLog(baseDataProvider, companyId);
-  },
   async isInitialized() {
     return getIsInitialized();
-  },
-  async mergeContacts(sourceId: Identifier, targetId: Identifier) {
-    const { data, error } = await supabase.functions.invoke("merge_contacts", {
-      method: "POST",
-      body: { loserId: sourceId, winnerId: targetId },
-    });
-
-    if (error) {
-      console.error("merge_contacts.error", error);
-      throw new Error("Failed to merge contacts");
-    }
-
-    return data;
   },
   async getConfiguration(): Promise<ConfigurationContextValue> {
     const { data } = await baseDataProvider.getOne("configuration", { id: 1 });
@@ -257,22 +170,11 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
     },
   },
   {
-    resource: "contact_notes",
-    beforeSave: async (data: ContactNote, _, __) => {
+    resource: "client_notes",
+    beforeSave: async (data: any, _, __) => {
       if (data.attachments) {
         data.attachments = await Promise.all(
-          data.attachments.map((fi) => uploadToBucket(fi)),
-        );
-      }
-      return data;
-    },
-  },
-  {
-    resource: "deal_notes",
-    beforeSave: async (data: DealNote, _, __) => {
-      if (data.attachments) {
-        data.attachments = await Promise.all(
-          data.attachments.map((fi) => uploadToBucket(fi)),
+          data.attachments.map((fi: RAFile) => uploadToBucket(fi)),
         );
       }
       return data;
@@ -287,59 +189,6 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
       return data;
     },
   },
-  {
-    resource: "contacts",
-    beforeGetList: async (params) => {
-      return applyFullTextSearch([
-        "first_name",
-        "last_name",
-        "company_name",
-        "title",
-        "email",
-        "phone",
-        "background",
-      ])(params);
-    },
-  },
-  {
-    resource: "companies",
-    beforeGetList: async (params) => {
-      return applyFullTextSearch([
-        "name",
-        "phone_number",
-        "website",
-        "zipcode",
-        "city",
-        "state_abbr",
-      ])(params);
-    },
-    beforeCreate: async (params) => {
-      const createParams = await processCompanyLogo(params);
-
-      return {
-        ...createParams,
-        data: {
-          created_at: new Date().toISOString(),
-          ...createParams.data,
-        },
-      };
-    },
-    beforeUpdate: async (params) => {
-      return await processCompanyLogo(params);
-    },
-  },
-  {
-    resource: "contacts_summary",
-    beforeGetList: async (params) => {
-      return applyFullTextSearch(["first_name", "last_name"])(params);
-    },
-  },
-  {
-    resource: "deals",
-    beforeGetList: async (params) => {
-      return applyFullTextSearch(["name", "category", "description"])(params);
-    },
-  },
 ];
 
 export const dataProvider = withLifecycleCallbacks(
@@ -347,39 +196,8 @@ export const dataProvider = withLifecycleCallbacks(
   lifeCycleCallbacks,
 ) as CrmDataProvider;
 
-const applyFullTextSearch = (columns: string[]) => (params: GetListParams) => {
-  if (!params.filter?.q) {
-    return params;
-  }
-  const { q, ...filter } = params.filter;
-  return {
-    ...params,
-    filter: {
-      ...filter,
-      "@or": columns.reduce((acc, column) => {
-        if (column === "email")
-          return {
-            ...acc,
-            [`email_fts@ilike`]: q,
-          };
-        if (column === "phone")
-          return {
-            ...acc,
-            [`phone_fts@ilike`]: q,
-          };
-        else
-          return {
-            ...acc,
-            [`${column}@ilike`]: q,
-          };
-      }, {}),
-    },
-  };
-};
-
 const uploadToBucket = async (fi: RAFile) => {
   if (!fi.src.startsWith("blob:") && !fi.src.startsWith("data:")) {
-    // Sign URL check if path exists in the bucket
     if (fi.path) {
       const { error } = await supabase.storage
         .from("attachments")
@@ -403,10 +221,6 @@ const uploadToBucket = async (fi: RAFile) => {
     : fi.rawFile;
 
   if (dataContent == null) {
-    // We weren't able to download the file from its src (e.g. user must be signed in on another website to access it)
-    // or the file has no content (not probable)
-    // In that case, just return it as is: when trying to download it, users should be redirected to the other website
-    // and see they need to be signed in. It will then be their responsibility to upload the file back to the note.
     return fi;
   }
 
@@ -429,7 +243,6 @@ const uploadToBucket = async (fi: RAFile) => {
   fi.path = filePath;
   fi.src = data.publicUrl;
 
-  // save MIME type
   const mimeType = file.type;
   fi.type = mimeType;
 

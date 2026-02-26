@@ -202,3 +202,30 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   Per la dashboard finanziaria (KPI + grafici + alert) è più robusto avere:
   `useDashboardData.ts` (query `useGetList`) + `dashboardModel.ts` (aggregazioni/format)
   + componenti presentazionali piccoli (card/grafici). Riduce duplicazioni e facilita debug.
+
+- [2026-02-26] **UUID vs BIGINT: nuove tabelle per FK incompatibili** — Le tabelle originali
+  Atomic CRM usano BIGINT per `contacts.id` e `tasks.contact_id`. Il gestionale usa UUID per
+  `clients.id`. Non è possibile alterare le FK — serve creare nuove tabelle (`client_tasks`,
+  `client_notes`) con UUID PK e FK. Pattern: quando il tipo di ID cambia, non adattare la
+  vecchia tabella, creane una nuova.
+
+- [2026-02-26] **FK opzionale con ON DELETE SET NULL per entità generiche** — `client_tasks`
+  ha `client_id` opzionale (FK con ON DELETE SET NULL) perché un promemoria può essere generico
+  ("comprare hard disk") o legato a un cliente. `client_notes` ha `client_id` obbligatorio
+  (ON DELETE CASCADE) perché una nota senza cliente non ha senso. La scelta SET NULL vs CASCADE
+  dipende dal significato semantico della relazione.
+
+- [2026-02-26] **Pulizia moduli: analisi prima, decisione poi, esecuzione rapida** — L'utente
+  si è irritato quando ho proposto di eliminare moduli senza spiegare cosa facessero. Pattern
+  corretto: (1) analisi approfondita con documento dedicato, (2) presentare opzioni chiare,
+  (3) ottenere approvazione, (4) eseguire rapidamente senza chiedere conferme intermedie.
+
+- [2026-02-26] **FakeRest dataProvider: lifecycle callbacks pesanti** — Il dataProvider FakeRest
+  aveva ~300 righe di callbacks per companies, contacts, deals, tasks (update nb_contacts,
+  nb_deals, nb_tasks, avatar processing, company name sync). Nella pulizia, rimuovere prima
+  i callbacks è più sicuro che rimuovere prima i tipi — evita errori di compilazione intermedi.
+
+- [2026-02-26] **Import module non riutilizzabile con schema diverso** — Il modulo Import di
+  Atomic CRM (ImportPage + useImportFromJson) era strutturato per importare companies → contacts
+  → notes → tasks con FK BIGINT e ID mapping. Con lo schema UUID del gestionale, non è
+  adattabile — va riscritto da zero quando servirà.

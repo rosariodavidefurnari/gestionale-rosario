@@ -26,7 +26,7 @@ export const TaskEdit = ({
       {taskId && (
         <EditBase
           id={taskId}
-          resource="tasks"
+          resource="client_tasks"
           className="mt-0"
           mutationOptions={{
             onSuccess: () => {

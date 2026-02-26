@@ -2,142 +2,112 @@
 
 ## Current Phase
 
-🟢 Fase 2 — Moduli Core COMPLETATI. 8/8 step completati.
+🟢 Fase 2 + Pulizia completata. Sistema operativo, pronto per import dati e test visivo.
 
 ## Last Session
 
-### Sessione 10 (2026-02-26)
+### Sessione 11 (2026-02-26)
 
 - Completed:
-  - **Dashboard finanziaria** — riscrittura completa dashboard Atomic CRM con **Recharts**
-    - 4 KPI card: fatturato mese, fatturato anno, pagamenti in attesa, preventivi aperti
-    - 2 grafici: andamento fatturato mensile (line, 12 mesi) + fatturato per categoria (bar orizzontale)
-    - Pipeline preventivi (bar orizzontale per stato) + Top 5 clienti (anno corrente)
-    - Sezione alert: pagamenti urgenti/scaduti, prossimi lavori (14 giorni), preventivi senza risposta >7 giorni
-    - Mobile dashboard semplificata: KPI card (pattern dedicato, senza grafici pesanti)
-    - Loading skeleton + stato errore con pulsante "Riprova"
-  - **Data layer dashboard** centralizzato
-    - `useDashboardData.ts` con `useGetList` su `monthly_revenue`, `payments`, `quotes`, `services`, `projects`, `clients`
-    - `dashboardModel.ts` per aggregazioni KPI/grafici/pipeline/alert (view-model unico)
-  - **Installato `recharts`** (`package.json` + `package-lock.json`)
-  - **DataProvider Supabase aggiornato** — primary keys esplicite per views:
-    - `monthly_revenue` → `["month", "category"]`
-    - `project_financials` → `["project_id"]`
-  - **Pulizia dashboard legacy**
-    - rimossi componenti non più usati: `DealsChart`, `HotContacts`, `LatestNotes`, `DashboardActivityLog`, `DashboardStepper`, `DealsPipeline`, `TasksList`
-    - mantenuti `TasksListFilter` e `TasksListEmpty` perché riusati da moduli `tasks/` e `contacts/`
-  - **Fix build production** (blocco Vite/Rollup)
-    - `useWatch` importato da `ra-core` causava errore runtime di bundle
-    - fixato in 5 file (`projects`, `quotes`, `expenses`, `services`) con import da `react-hook-form`
-  - **Verifiche**
-    - `npm run typecheck` ✅
-    - `npm run build` ✅
-    - lint mirato dashboard/provider ✅
+  - **Pulizia moduli Atomic CRM** — 4 fasi completate (A→D)
+    - **Fase A**: Migration DB `20260226200000_client_tasks_notes_tags.sql`
+      - Tabella `client_tasks` (UUID PK, FK opzionale a clients ON DELETE SET NULL)
+      - Tabella `client_notes` (UUID PK, FK obbligatoria a clients ON DELETE CASCADE)
+      - Colonna `tags BIGINT[]` aggiunta a clients
+      - RLS + policy su tutte le nuove tabelle
+      - Pushata al DB remoto con successo
+    - **Fase B**: Adattamento Tasks, Notes, Tags per clients
+      - Tasks adattati: `contact_id` → `client_id`, resource `tasks` → `client_tasks`
+      - 10 file nel modulo tasks/ riscritti (Task, AddTask, TaskFormContent, TaskCreateSheet, TaskEdit, TaskEditSheet, TasksIterator, TasksListFilter, TasksListEmpty)
+      - Notes clienti: ClientNoteItem.tsx + ClientNotesSection.tsx (inline create/list)
+      - Tags clienti: ClientTagsList.tsx + ClientTagsListEdit.tsx (in tags/)
+      - ClientShow aggiornato con sezioni Tags, Note, Promemoria
+      - ClientTasksSection.tsx per promemoria nella scheda cliente
+      - TasksList.tsx (pagina lista desktop per tab Promemoria)
+    - **Fase C**: Rimozione moduli morti
+      - 5 directory eliminate: companies/ (14), contacts/ (24), deals/ (16), activity/ (9), notes/ (14)
+      - Sales UI rimossa (SalesList, SalesCreate, SalesEdit, SalesInputs), tenuto SaleName + headless
+      - Import module eliminato (ImportPage, useImportFromJson — era per contacts/companies)
+      - Commons puliti: activity.ts, getCompanyAvatar, getContactAvatar, mergeContacts eliminati
+      - FakeRest generators eliminati: companies, contacts, contactNotes, deals, dealNotes, tasks
+      - supabase/dataProvider.ts: rimosso view routing companies/contacts, unarchiveDeal, getActivityLog, mergeContacts, callbacks morti
+      - fakerest/dataProvider.ts: rimosso tutti callbacks companies/contacts/deals/tasks
+      - SettingsPage: rimosso sezioni "Aziende" e "Trattative"
+      - Header: rimosso ImportFromJsonMenuItem e UsersMenu, aggiunto tab "Promemoria"
+      - MobileNavigation: rimosso contacts/companies/deals, CreateButton crea solo Promemoria
+      - ConfigurationContext: rimosso companySectors, dealCategories, dealStages, dealPipelineStatuses
+      - types.ts: rimosso Company, Contact, Deal, DealNote, ContactNote (old), Task (old), Activity, ContactGender
+      - consts.ts: rimosso costanti activity log vecchie
+      - App.tsx: aggiornato commento JSDoc
+      - ContactOption.tsx eliminato, SettingsPage.test.ts (deals) eliminato
+    - **Fase D**: Verifica completa
+      - Typecheck: 0 errori ✅
+      - Build: OK (4.35s) ✅
+      - Test: 42/42 passati ✅
+      - Lint: 0 nuovi errori ✅
 
 - Decisions:
-  - Dashboard desktop con grafici + sezioni dettagliate; dashboard mobile solo KPI (più veloce e leggibile)
-  - Aggregazioni in `dashboardModel.ts` per mantenere i componenti UI piccoli (<150 righe)
-  - Dashboard legge dati grezzi dalle tabelle/views e calcola KPI/alert lato frontend (single-user, volume ridotto)
-  - Primary key esplicite sulle views nel dataProvider per compatibilità React Admin / ra-data-postgrest
+  - client_tasks.client_id è opzionale (ON DELETE SET NULL) — promemoria possono essere generici
+  - client_notes.client_id è obbligatorio (ON DELETE CASCADE) — note sempre legate a un cliente
+  - Tags usano BIGINT[] sulla tabella clients (match con tags.id BIGINT)
+  - Import module rimosso interamente (era per formato Atomic CRM, non compatibile)
+  - Sales mantenuto headless (tabella + trigger) per futuro multi-utente
+  - Pagina /settings semplificata: solo Marchio, Note, Attività
 
-- Files created:
-  - `src/components/atomic-crm/dashboard/dashboardModel.ts`
-  - `src/components/atomic-crm/dashboard/useDashboardData.ts`
-  - `src/components/atomic-crm/dashboard/DashboardLoading.tsx`
-  - `src/components/atomic-crm/dashboard/DashboardKpiCards.tsx`
-  - `src/components/atomic-crm/dashboard/DashboardRevenueTrendChart.tsx`
-  - `src/components/atomic-crm/dashboard/DashboardCategoryChart.tsx`
-  - `src/components/atomic-crm/dashboard/DashboardPipelineCard.tsx`
-  - `src/components/atomic-crm/dashboard/DashboardTopClientsCard.tsx`
-  - `src/components/atomic-crm/dashboard/DashboardAlertsCard.tsx`
+- Migration created:
+  - `supabase/migrations/20260226200000_client_tasks_notes_tags.sql`
 
-- Files modified:
-  - `src/components/atomic-crm/dashboard/Dashboard.tsx` (desktop dashboard Recharts)
-  - `src/components/atomic-crm/dashboard/MobileDashboard.tsx` (mobile KPI-only)
-  - `src/components/atomic-crm/providers/supabase/dataProvider.ts` (primary keys views)
-  - `package.json` / `package-lock.json` (aggiunta `recharts`)
-  - `src/components/atomic-crm/projects/ProjectInputs.tsx` (`useWatch` import fix)
-  - `src/components/atomic-crm/quotes/QuoteInputs.tsx` (`useWatch` import fix)
-  - `src/components/atomic-crm/expenses/ExpenseInputs.tsx` (`useWatch` import fix)
-  - `src/components/atomic-crm/services/ServiceInputs.tsx` (`useWatch` import fix)
-  - `src/components/atomic-crm/services/ServiceTotals.tsx` (`useWatch` import fix)
+- Files created (Fase B):
+  - `src/components/atomic-crm/clients/ClientNoteItem.tsx`
+  - `src/components/atomic-crm/clients/ClientNotesSection.tsx`
+  - `src/components/atomic-crm/clients/ClientTasksSection.tsx`
+  - `src/components/atomic-crm/tags/ClientTagsList.tsx`
+  - `src/components/atomic-crm/tags/ClientTagsListEdit.tsx`
+  - `src/components/atomic-crm/tasks/TasksList.tsx`
 
-- Next action: **Pulizia moduli Atomic CRM non necessari** (Companies, Deals, Activity Log, ecc.)
+- Files heavily modified:
+  - `src/components/atomic-crm/tasks/` (10 file — contact → client)
+  - `src/components/atomic-crm/clients/ClientShow.tsx` (tags + notes + tasks)
+  - `src/components/atomic-crm/root/CRM.tsx` (risorse pulite)
+  - `src/components/atomic-crm/providers/supabase/dataProvider.ts` (cleanup)
+  - `src/components/atomic-crm/providers/fakerest/dataProvider.ts` (cleanup)
+  - `src/components/atomic-crm/settings/SettingsPage.tsx` (sezioni ridotte)
+  - `src/components/atomic-crm/layout/Header.tsx` (+Promemoria, -Import, -Utenti)
+  - `src/components/atomic-crm/layout/MobileNavigation.tsx` (cleanup)
+  - `src/components/atomic-crm/root/ConfigurationContext.tsx` (interface ridotta)
+  - `src/components/atomic-crm/root/defaultConfiguration.ts` (defaults ridotti)
+  - `src/components/atomic-crm/types.ts` (+ClientTask, +ClientNote, -Company, -Contact, -Deal, ecc.)
+  - `src/components/atomic-crm/consts.ts` (costanti ridotte)
+
+- Next action: **Import dati reali Diego Caltabiano** (da docs/data-import-analysis.md)
+
+### Sessione 10 (precedente)
+
+- Dashboard finanziaria con Recharts (4 KPI, 2 grafici, pipeline, alert)
+- Mobile dashboard KPI-only
+- Fix build production (useWatch import)
+- Typecheck 0, build OK
 
 ### Sessione 9 (precedente)
 
-- Date: 2026-02-26 (sessione 9)
-- Completed:
-  - **Modulo Preventivi (Quotes)** — Kanban 10 stati con drag-and-drop, adattamento da Deals
-    - 13 file creati in `src/components/atomic-crm/quotes/`
-    - Board Kanban con @hello-pangea/dnd (DragDropContext > Droppable > Draggable)
-    - 10 colonne: Primo contatto → Preventivo inviato → In trattativa → Accettato → Acconto ricevuto → In lavorazione → Completato → Saldato → Rifiutato → Perso
-    - Card mostra: descrizione, nome cliente (via useGetOne), tipo servizio + data evento, importo EUR
-    - Dialog modali per Create/Edit/Show (pattern identico a Deals, non pagine full come altri moduli)
-    - Create con reindex automatico (incrementa index dei quotes nella stessa colonna)
-    - Export CSV con risoluzione FK (fetchRelatedRecords per nome cliente)
-    - Filtri: ricerca testo, cliente (autocomplete), tipo servizio (select)
-    - Campo "Motivo rifiuto" condizionale (visibile solo se status = rifiutato, via useWatch)
-    - Scroll orizzontale per 10 colonne con min-w-[150px] per colonna
-  - **Migration `20260226120000_add_quotes_index.sql`** — Aggiunta colonna `index SMALLINT DEFAULT 0` a quotes per ordinamento Kanban
-  - **Migration pushata al DB remoto** con successo
-  - **Tipo `Quote` aggiunto** a types.ts (14 campi incluso index)
-  - **Risorsa `quotes` registrata** in CRM.tsx
-  - **Tab "Preventivi" aggiunto** al Header.tsx (7 tab totali)
-  - **Typecheck 0 errori, 60/60 test, lint OK**
-
-- Decisions:
-  - Quotes usa Dialog modali (come Deals) anziché pagine full (come Clienti/Progetti) — coerente con il pattern Kanban
-  - Stati quotes definiti come costanti locali in quotesTypes.ts (non via ConfigurationContext) — schema DB fisso con CHECK constraint
-  - Nessun meccanismo di archiviazione (archived_at) per quotes — gli stati finali (saldato, rifiutato, perso) sono semplicemente colonne nel Kanban
-  - Header column usa text-xs per compattezza con 10 colonne
-  - Colonna `index` necessaria per il drag-and-drop — non era nello schema originale, aggiunta via migration dedicata
-
-- Files created:
-  - `supabase/migrations/20260226120000_add_quotes_index.sql`
-  - `src/components/atomic-crm/quotes/index.tsx`
-  - `src/components/atomic-crm/quotes/quotesTypes.ts` (10 stati, 6 tipi servizio, label maps)
-  - `src/components/atomic-crm/quotes/stages.ts` (getQuotesByStatus)
-  - `src/components/atomic-crm/quotes/QuoteCard.tsx` (Draggable card)
-  - `src/components/atomic-crm/quotes/QuoteColumn.tsx` (Droppable column)
-  - `src/components/atomic-crm/quotes/QuoteListContent.tsx` (DragDropContext + reorder logic)
-  - `src/components/atomic-crm/quotes/QuoteList.tsx` (List + filters + CSV export)
-  - `src/components/atomic-crm/quotes/QuoteCreate.tsx` (Dialog + reindex)
-  - `src/components/atomic-crm/quotes/QuoteEdit.tsx` (Dialog + FormToolbar)
-  - `src/components/atomic-crm/quotes/QuoteShow.tsx` (Dialog + detail view)
-  - `src/components/atomic-crm/quotes/QuoteInputs.tsx` (form con rejection_reason condizionale)
-  - `src/components/atomic-crm/quotes/QuoteEmpty.tsx` (stato vuoto)
-
-- Files modified:
-  - `src/components/atomic-crm/types.ts` (aggiunto tipo Quote)
-  - `src/components/atomic-crm/root/CRM.tsx` (risorsa quotes + import)
-  - `src/components/atomic-crm/layout/Header.tsx` (7 tab: +Preventivi)
-
-- Next action: Implementare **Dashboard** — riscrittura completa con Recharts (4 card, 2 grafici, pipeline, alert)
-
-### Sessione 8 (precedente)
-
-- Date: 2026-02-26 (breve, solo documentazione)
-- Completed:
-  - learnings.md aggiornato — 8 nuove voci dalla sessione 7
-  - progress.md e architecture.md verificati
+- Modulo Preventivi (Quotes) — Kanban 10 stati, drag-and-drop, 13 file
 
 ### Sessione 7
 
-- Date: 2026-02-26
-- Completed:
-  - DB migration Fase 2, 5 moduli CRUD (Clienti, Progetti, Registro Lavori, Pagamenti, Spese)
-  - Navigazione aggiornata, 5 risorse registrate, 6 tipi TypeScript
-  - Typecheck 0 errori, 60/60 test, lint OK
+- DB migration Fase 2, 5 moduli CRUD, 60/60 test
 
 ## Previous Sessions
 
-- 2026-02-25 (sessione 6): Design completo Fase 2, analisi dati Diego Caltabiano
-- 2026-02-25 (sessione 5): Deploy Vercel, Edge Functions, fix CORS, fix utente auth
-- 2026-02-25 (sessione 4): Audit completo, fix signup, keep-alive, Prettier
-- 2026-02-25 (sessione 3): Fix stringhe inglesi (batch 2+3)
-- 2026-02-25 (sessione 2): i18n Provider, traduzione ~200+ stringhe
-- 2026-02-25 (sessione 1): Fork Atomic CRM, Supabase remoto, migration, RLS, views
+- 2026-02-26 (sessione 10): Dashboard finanziaria Recharts
+- 2026-02-26 (sessione 9): Modulo Preventivi Kanban
+- 2026-02-26 (sessione 8): Solo documentazione
+- 2026-02-26 (sessione 7): 5 moduli CRUD + migration
+- 2026-02-25 (sessione 6): Design completo Fase 2
+- 2026-02-25 (sessione 5): Deploy Vercel, Edge Functions, CORS
+- 2026-02-25 (sessione 4): Audit, fix signup, keep-alive
+- 2026-02-25 (sessione 3): Fix stringhe inglesi
+- 2026-02-25 (sessione 2): i18n Provider, ~200+ stringhe
+- 2026-02-25 (sessione 1): Fork, Supabase remoto, migration, RLS
 
 ## Next Steps
 
@@ -145,13 +115,11 @@
 2. [x] Modulo Clienti
 3. [x] Modulo Progetti
 4. [x] Modulo Registro Lavori (Services)
-5. [x] Modulo Preventivi (Quotes) — Kanban 10 stati, drag-and-drop ✅ sessione 9
+5. [x] Modulo Preventivi (Quotes)
 6. [x] Modulo Pagamenti
 7. [x] Modulo Spese
-8. [x] Dashboard — riscrittura completa con Recharts ✅ sessione 10
-
-### Dopo i moduli core:
-9. [ ] Pulizia moduli Atomic CRM non necessari (Companies, Tasks, Tags, Activity Log)
+8. [x] Dashboard Recharts
+9. [x] Pulizia moduli Atomic CRM + adattamento Tasks/Notes/Tags
 10. [ ] Import dati reali Diego Caltabiano (da docs/data-import-analysis.md)
 11. [ ] Test visivo completo di ogni modulo
 12. [ ] Deploy su Vercel e test in produzione
@@ -160,23 +128,18 @@
 
 - FakeRest data generators usano `faker/locale/en_US` (solo demo mode, non produzione)
 - 4 vulnerabilità npm (1 moderate, 3 high) — da valutare con `npm audit`
-- 26 Vitest warnings su promise non awaited in supabaseAdapter.spec.ts (codice upstream)
+- Warnings Vitest su promise non awaited in supabaseAdapter.spec.ts (codice upstream)
 - Verificare che signup sia disabilitato anche nel **Supabase Dashboard remoto**
 - Edge Function `postmark` crasha (manca secrets Postmark — non prioritaria)
+- 3 errori lint pre-esistenti (useGetOne condizionale in ExpenseShow/PaymentShow, mergeTranslations inutilizzato in i18nProvider)
 
-## Certezze (sessione 10)
+## Certezze (sessione 11)
 
-- [x] Migration Fase 2 + quotes index applicate al DB remoto (3 migration custom totali)
-- [x] 7 moduli core funzionanti: Clienti, Progetti, Registro Lavori, Preventivi (Kanban), Pagamenti, Spese + Dashboard
-- [x] Navigazione aggiornata con 7 tab
-- [x] Dashboard finanziaria implementata con Recharts (4 KPI, 2 grafici, pipeline, top clienti, alert)
-- [x] Typecheck 0 errori e build produzione OK (`npm run build`)
-- [x] Test 60/60 e lint completo OK (ultimo run completo: sessione 9)
-- [x] Tutti i moduli CRUD seguono il pattern Atomic CRM
-- [x] Modulo Preventivi segue il pattern Kanban di Deals (@hello-pangea/dnd)
-- [x] Export CSV in italiano per ogni modulo (inclusi Preventivi)
-- [x] Filtri con operatori postgrest per ogni lista
-- [x] 7 tipi TypeScript custom: Client, Project, Service, Payment, Expense, Quote
+- [x] Pulizia completata: 0 moduli Atomic CRM residui (companies, contacts, deals eliminati)
+- [x] Tasks adattati come "Promemoria" (client_tasks), Notes come "Note clienti" (client_notes), Tags su clients
+- [x] Navigazione aggiornata con 8 tab (+ Promemoria)
+- [x] Typecheck 0 errori, build OK, 42/42 test, lint 0 nuovi errori
+- [x] Migration client_tasks + client_notes + tags applicata al DB remoto
 
 ## Architectural Decisions Log
 
@@ -196,5 +159,8 @@
 | 2026-02-26 | Quotes usa Dialog modali come Deals | Pattern Kanban richiede overlay, non pagine dedicate |
 | 2026-02-26 | Quote statuses come costanti locali | Fissi nel DB CHECK, non serve ConfigurationContext |
 | 2026-02-26 | Niente archived_at per quotes | Status finali (saldato/rifiutato/perso) coprono il caso |
-| 2026-02-26 | Dashboard aggregata via `dashboardModel.ts` + `useDashboardData` | Componenti UI piccoli, dati/trasformazioni centralizzati |
-| 2026-02-26 | Primary key esplicite per views dashboard nel dataProvider | `monthly_revenue` e `project_financials` non hanno `id` |
+| 2026-02-26 | Dashboard aggregata | Componenti UI piccoli, dati/trasformazioni centralizzati |
+| 2026-02-26 | Primary key esplicite per views | monthly_revenue e project_financials non hanno id |
+| 2026-02-26 | client_tasks con FK opzionale | Promemoria possono essere generici o legati a un cliente |
+| 2026-02-26 | Import module rimosso | Era per formato Atomic CRM (contacts/companies), non compatibile |
+| 2026-02-26 | Sales headless (senza UI) | Tabella+trigger mantenuti per futuro multi-utente |

@@ -1,6 +1,7 @@
 import { DeleteButton, ReferenceField } from "@/components/admin";
 import { type Identifier, RecordRepresentation } from "ra-core";
 import { EditSheet } from "../misc/EditSheet";
+import type { Client, ClientTask } from "../types";
 import { TaskFormContent } from "./TaskFormContent";
 
 export interface TaskEditSheetProps {
@@ -16,21 +17,21 @@ export const TaskEditSheet = ({
 }: TaskEditSheetProps) => {
   return (
     <EditSheet
-      resource="tasks"
+      resource="client_tasks"
       id={taskId}
       title={
-        <ReferenceField
-          source="contact_id"
-          reference="contacts"
+        <ReferenceField<ClientTask, Client>
+          source="client_id"
+          reference="clients"
           render={({ referenceRecord }) => (
             <h1 className="text-xl font-semibold truncate pr-10">
-              Modifica attività
+              Modifica promemoria
               {referenceRecord ? (
                 <>
                   {" per "}
                   <RecordRepresentation
                     record={referenceRecord}
-                    resource="contacts"
+                    resource="clients"
                   />
                 </>
               ) : null}

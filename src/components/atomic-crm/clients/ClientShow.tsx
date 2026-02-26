@@ -8,6 +8,9 @@ import { Phone, Mail, MapPin, FileText } from "lucide-react";
 import type { Client } from "../types";
 import { ClientTypeBadge } from "./ClientListContent";
 import { clientSourceLabels } from "./clientTypes";
+import { ClientTagsListEdit } from "../tags/ClientTagsListEdit";
+import { ClientNotesSection } from "./ClientNotesSection";
+import { ClientTasksSection } from "./ClientTasksSection";
 
 export const ClientShow = () => (
   <ShowBase>
@@ -20,16 +23,33 @@ const ClientShowContent = () => {
   if (isPending || !record) return null;
 
   return (
-    <div className="mt-2 mb-2 flex gap-8">
-      <div className="flex-1">
-        <Card>
-          <CardContent>
-            <ClientHeader record={record} />
-            <Separator className="my-4" />
-            <ClientDetails record={record} />
-          </CardContent>
-        </Card>
-      </div>
+    <div className="mt-2 mb-2 flex flex-col gap-6">
+      <Card>
+        <CardContent>
+          <ClientHeader record={record} />
+          <Separator className="my-4" />
+          <ClientDetails record={record} />
+          <Separator className="my-4" />
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+              Etichette
+            </h3>
+            <ClientTagsListEdit />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent>
+          <ClientTasksSection />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent>
+          <ClientNotesSection />
+        </CardContent>
+      </Card>
     </div>
   );
 };
@@ -83,7 +103,7 @@ const ClientDetails = ({ record }: { record: Client }) => (
     {record.notes && (
       <div className="space-y-3">
         <h6 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Note
+          Note generali
         </h6>
         <p className="text-sm whitespace-pre-wrap">{record.notes}</p>
       </div>

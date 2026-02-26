@@ -3,11 +3,9 @@ import {
   CreateBase,
   Form,
   RecordRepresentation,
-  useDataProvider,
   useGetIdentity,
   useNotify,
   useRecordContext,
-  useUpdate,
 } from "ra-core";
 import { useState } from "react";
 import { SaveButton } from "@/components/admin/form";
@@ -29,36 +27,23 @@ import {
 import { TaskFormContent } from "./TaskFormContent";
 
 export const AddTask = ({
-  selectContact,
+  selectClient,
   display = "chip",
 }: {
-  selectContact?: boolean;
+  selectClient?: boolean;
   display?: "chip" | "icon";
 }) => {
   const { identity } = useGetIdentity();
-  const dataProvider = useDataProvider();
-  const [update] = useUpdate();
   const notify = useNotify();
-  const contact = useRecordContext();
+  const client = useRecordContext();
   const [open, setOpen] = useState(false);
   const handleOpen = () => {
     setOpen(true);
   };
 
-  const handleSuccess = async (data: any) => {
+  const handleSuccess = async () => {
     setOpen(false);
-    const contact = await dataProvider.getOne("contacts", {
-      id: data.contact_id,
-    });
-    if (!contact.data) return;
-
-    await update("contacts", {
-      id: contact.data.id,
-      data: { last_seen: new Date().toISOString() },
-      previousData: contact.data,
-    });
-
-    notify("Attività aggiunta");
+    notify("Promemoria aggiunto");
   };
 
   if (!identity) return null;
@@ -78,7 +63,7 @@ export const AddTask = ({
                 <Plus className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Crea attività</TooltipContent>
+            <TooltipContent>Crea promemoria</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       ) : (
@@ -90,18 +75,17 @@ export const AddTask = ({
             size="sm"
           >
             <Plus className="w-4 h-4" />
-            Aggiungi attività
+            Aggiungi promemoria
           </Button>
         </div>
       )}
 
       <CreateBase
-        resource="tasks"
+        resource="client_tasks"
         record={{
-          type: "None",
-          contact_id: contact?.id,
+          type: "none",
+          client_id: client?.id ?? null,
           due_date: new Date().toISOString().slice(0, 10),
-          sales_id: identity.id,
         }}
         transform={(data) => {
           const dueDate = new Date(data.due_date);
@@ -118,18 +102,18 @@ export const AddTask = ({
             <Form className="flex flex-col gap-4">
               <DialogHeader>
                 <DialogTitle>
-                  {!selectContact
-                    ? "Crea una nuova attività per "
-                    : "Crea una nuova attività"}
-                  {!selectContact && (
+                  {!selectClient
+                    ? "Crea promemoria per "
+                    : "Crea promemoria"}
+                  {!selectClient && (
                     <RecordRepresentation
-                      record={contact}
-                      resource="contacts"
+                      record={client}
+                      resource="clients"
                     />
                   )}
                 </DialogTitle>
               </DialogHeader>
-              <TaskFormContent selectContact={selectContact} />
+              <TaskFormContent selectClient={selectClient} />
               <DialogFooter className="w-full justify-end">
                 <SaveButton />
               </DialogFooter>

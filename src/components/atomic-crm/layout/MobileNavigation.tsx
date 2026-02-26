@@ -23,10 +23,8 @@ import {
 } from "lucide-react";
 import { Translate, useAuthProvider, useGetIdentity, useLogout } from "ra-core";
 import { Link, matchPath, useLocation, useMatch } from "react-router";
-import { ContactCreateSheet } from "../contacts/ContactCreateSheet";
-import { useState } from "react";
-import { NoteCreateSheet } from "../notes/NoteCreateSheet";
 import { TaskCreateSheet } from "../tasks/TaskCreateSheet";
+import { useState } from "react";
 
 export const MobileNavigation = () => {
   const location = useLocation();
@@ -34,14 +32,10 @@ export const MobileNavigation = () => {
   let currentPath: string | boolean = "/";
   if (matchPath("/", location.pathname)) {
     currentPath = "/";
-  } else if (matchPath("/contacts/*", location.pathname)) {
-    currentPath = "/contacts";
-  } else if (matchPath("/companies/*", location.pathname)) {
-    currentPath = "/companies";
-  } else if (matchPath("/tasks/*", location.pathname)) {
-    currentPath = "/tasks";
-  } else if (matchPath("/deals/*", location.pathname)) {
-    currentPath = "/deals";
+  } else if (matchPath("/clients/*", location.pathname)) {
+    currentPath = "/clients";
+  } else if (matchPath("/client_tasks/*", location.pathname)) {
+    currentPath = "/client_tasks";
   } else {
     currentPath = false;
   }
@@ -56,11 +50,7 @@ export const MobileNavigation = () => {
       aria-label="Navigazione CRM"
       className="fixed bottom-0 left-0 right-0 z-50 bg-secondary h-14"
       style={{
-        // iOS bug: even though viewport is set correctly, the bottom safe area inset is not accounted for
-        // So we manually add some padding to avoid the navigation being too close to the home bar
         paddingBottom: isPwa && isWebiOS ? 15 : undefined,
-        // We use box-sizing: border-box, so the height contains the padding.
-        // To actually increase the padding, we need to increase the height as well
         height:
           "calc(var(--spacing)) * 6" + (isPwa && isWebiOS ? " + 15px" : ""),
       }}
@@ -74,17 +64,17 @@ export const MobileNavigation = () => {
             isActive={currentPath === "/"}
           />
           <NavigationButton
-            href="/contacts"
+            href="/clients"
             Icon={Users}
-            label="Contatti"
-            isActive={currentPath === "/contacts"}
+            label="Clienti"
+            isActive={currentPath === "/clients"}
           />
           <CreateButton />
           <NavigationButton
-            href="/tasks"
+            href="/client_tasks"
             Icon={ListTodo}
-            label="Attività"
-            isActive={currentPath === "/tasks"}
+            label="Promemoria"
+            isActive={currentPath === "/client_tasks"}
           />
           <SettingsButton />
         </>
@@ -120,26 +110,15 @@ const NavigationButton = ({
 );
 
 const CreateButton = () => {
-  const contact_id = useMatch("/contacts/:id/*")?.params.id;
-  const [contactCreateOpen, setContactCreateOpen] = useState(false);
-  const [noteCreateOpen, setNoteCreateOpen] = useState(false);
+  const client_id = useMatch("/clients/:id/*")?.params.id;
   const [taskCreateOpen, setTaskCreateOpen] = useState(false);
 
   return (
     <>
-      <ContactCreateSheet
-        open={contactCreateOpen}
-        onOpenChange={setContactCreateOpen}
-      />
-      <NoteCreateSheet
-        open={noteCreateOpen}
-        onOpenChange={setNoteCreateOpen}
-        contact_id={contact_id}
-      />
       <TaskCreateSheet
         open={taskCreateOpen}
         onOpenChange={setTaskCreateOpen}
-        contact_id={contact_id}
+        client_id={client_id}
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -156,26 +135,10 @@ const CreateButton = () => {
           <DropdownMenuItem
             className="h-12 px-4 text-base"
             onSelect={() => {
-              setContactCreateOpen(true);
-            }}
-          >
-            Contatto
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="h-12 px-4 text-base"
-            onSelect={() => {
-              setNoteCreateOpen(true);
-            }}
-          >
-            Nota
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="h-12 px-4 text-base"
-            onSelect={() => {
               setTaskCreateOpen(true);
             }}
           >
-            Attività
+            Promemoria
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

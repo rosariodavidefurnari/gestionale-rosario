@@ -1,12 +1,9 @@
 import { RotateCcw, Save } from "lucide-react";
-import type { RaRecord } from "ra-core";
-import { EditBase, Form, useGetList, useInput, useNotify } from "ra-core";
-import { useCallback, useMemo } from "react";
+import { EditBase, Form, useInput, useNotify } from "ra-core";
+import { useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { toSlug } from "@/lib/toSlug";
 import { ArrayInput } from "@/components/admin/array-input";
 import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
 import { TextInput } from "@/components/admin/text-input";
@@ -21,70 +18,32 @@ import { defaultConfiguration } from "../root/defaultConfiguration";
 
 const SECTIONS = [
   { id: "branding", label: "Marchio" },
-  { id: "companies", label: "Aziende" },
-  { id: "deals", label: "Trattative" },
   { id: "notes", label: "Note" },
   { id: "tasks", label: "Attività" },
 ];
-
-/** Ensure every item in a { value, label } array has a value (slug from label). */
-const ensureValues = (items: { value?: string; label: string }[] | undefined) =>
-  items?.map((item) => ({ ...item, value: item.value || toSlug(item.label) }));
-
-/**
- * Validate that no items were removed if they are still referenced by existing deals.
- * Also rejects duplicate slug values.
- * Returns undefined if valid, or an error message string.
- */
-export const validateItemsInUse = (
-  items: { value: string; label: string }[] | undefined,
-  deals: RaRecord[] | undefined,
-  fieldName: string,
-  displayName: string,
-) => {
-  if (!items) return undefined;
-  // Check for duplicate slugs
-  const slugs = items.map((i) => i.value || toSlug(i.label));
-  const seen = new Set<string>();
-  const duplicates = new Set<string>();
-  for (const slug of slugs) {
-    if (seen.has(slug)) duplicates.add(slug);
-    seen.add(slug);
-  }
-  if (duplicates.size > 0) {
-    return `Duplicato ${displayName}: ${[...duplicates].join(", ")}`;
-  }
-  // Check that no in-use value was removed (skip if deals haven't loaded)
-  if (!deals) return "Validazione…";
-  const values = new Set(slugs);
-  const inUse = [
-    ...new Set(
-      deals
-        .filter(
-          (deal) => deal[fieldName] && !values.has(deal[fieldName] as string),
-        )
-        .map((deal) => deal[fieldName] as string),
-    ),
-  ];
-  if (inUse.length > 0) {
-    return `Impossibile rimuovere ${displayName} ancora usati nelle trattative: ${inUse.join(", ")}`;
-  }
-  return undefined;
-};
 
 const transformFormValues = (data: Record<string, any>) => ({
   config: {
     title: data.title,
     lightModeLogo: data.lightModeLogo,
     darkModeLogo: data.darkModeLogo,
-    companySectors: ensureValues(data.companySectors),
-    dealCategories: ensureValues(data.dealCategories),
     taskTypes: ensureValues(data.taskTypes),
-    dealStages: ensureValues(data.dealStages),
-    dealPipelineStatuses: data.dealPipelineStatuses,
     noteStatuses: ensureValues(data.noteStatuses),
   } as ConfigurationContextValue,
 });
+
+/** Ensure every item in a { value, label } array has a value (slug from label). */
+const ensureValues = (items: { value?: string; label: string }[] | undefined) =>
+  items?.map((item) => ({
+    ...item,
+    value: item.value || toSlug(item.label),
+  }));
+
+const toSlug = (label: string) =>
+  label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 export const SettingsPage = () => {
   const updateConfiguration = useConfigurationUpdater();
@@ -124,11 +83,7 @@ const SettingsForm = () => {
       title: config.title,
       lightModeLogo: { src: config.lightModeLogo },
       darkModeLogo: { src: config.darkModeLogo },
-      companySectors: config.companySectors,
-      dealCategories: config.dealCategories,
       taskTypes: config.taskTypes,
-      dealStages: config.dealStages,
-      dealPipelineStatuses: config.dealPipelineStatuses,
       noteStatuses: config.noteStatuses,
     }),
     [config],
@@ -143,30 +98,9 @@ const SettingsForm = () => {
 
 const SettingsFormFields = () => {
   const {
-    watch,
-    setValue,
     reset,
     formState: { isSubmitting },
   } = useFormContext();
-
-  const dealStages = watch("dealStages");
-  const dealPipelineStatuses: string[] = watch("dealPipelineStatuses") ?? [];
-
-  const { data: deals } = useGetList("deals", {
-    pagination: { page: 1, perPage: 1000 },
-  });
-
-  const validateDealStages = useCallback(
-    (stages: { value: string; label: string }[] | undefined) =>
-      validateItemsInUse(stages, deals, "stage", "stages"),
-    [deals],
-  );
-
-  const validateDealCategories = useCallback(
-    (categories: { value: string; label: string }[] | undefined) =>
-      validateItemsInUse(categories, deals, "category", "categories"),
-    [deals],
-  );
 
   return (
     <div className="flex gap-8 mt-4 pb-20">
@@ -226,105 +160,6 @@ const SettingsFormFields = () => {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Companies */}
-        <Card id="companies">
-          <CardContent className="space-y-4">
-            <h2 className="text-xl font-semibold text-muted-foreground">
-              Aziende
-            </h2>
-            <h3 className="text-lg font-medium text-muted-foreground">
-              Settori
-            </h3>
-            <ArrayInput
-              source="companySectors"
-              label={false}
-              helperText={false}
-            >
-              <SimpleFormIterator disableReordering disableClear>
-                <TextInput source="label" label={false} />
-              </SimpleFormIterator>
-            </ArrayInput>
-          </CardContent>
-        </Card>
-
-        {/* Deals */}
-        <Card id="deals">
-          <CardContent className="space-y-4">
-            <h2 className="text-xl font-semibold text-muted-foreground">
-              Trattative
-            </h2>
-            <h3 className="text-lg font-medium text-muted-foreground">Fasi</h3>
-            <ArrayInput
-              source="dealStages"
-              label={false}
-              helperText={false}
-              validate={validateDealStages}
-            >
-              <SimpleFormIterator disableClear>
-                <TextInput source="label" label={false} />
-              </SimpleFormIterator>
-            </ArrayInput>
-
-            <Separator />
-
-            <h3 className="text-lg font-medium text-muted-foreground">
-              Stati Pipeline
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Seleziona quali fasi delle trattative contano come
-              &quot;pipeline&quot; (completate).
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {dealStages?.map(
-                (stage: { value: string; label: string }, idx: number) => {
-                  const isSelected = dealPipelineStatuses.includes(stage.value);
-                  return (
-                    <Button
-                      key={idx}
-                      type="button"
-                      variant={isSelected ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => {
-                        if (isSelected) {
-                          setValue(
-                            "dealPipelineStatuses",
-                            dealPipelineStatuses.filter(
-                              (s) => s !== stage.value,
-                            ),
-                          );
-                        } else {
-                          setValue("dealPipelineStatuses", [
-                            ...dealPipelineStatuses,
-                            stage.value,
-                          ]);
-                        }
-                      }}
-                    >
-                      {stage.label || stage.value}
-                    </Button>
-                  );
-                },
-              )}
-            </div>
-
-            <Separator />
-
-            <h3 className="text-lg font-medium text-muted-foreground">
-              Categorie
-            </h3>
-            <ArrayInput
-              source="dealCategories"
-              label={false}
-              helperText={false}
-              validate={validateDealCategories}
-            >
-              <SimpleFormIterator disableReordering disableClear>
-                <TextInput source="label" label={false} />
-              </SimpleFormIterator>
-            </ArrayInput>
           </CardContent>
         </Card>
 
