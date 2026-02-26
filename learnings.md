@@ -100,3 +100,105 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 - [2026-02-25] **deploy.yml di Atomic CRM è per GitHub Pages, non Vercel** — Il workflow
   originale deploya su GitHub Pages con `gh-pages`. Con Vercel collegato al repo, il
   deploy è automatico su push. Il workflow va disabilitato o impostato su manual dispatch.
+
+- [2026-02-25] **Scrivere design/analisi in file .md, non in chat** — L'utente ha
+  esplicitamente chiesto di non scrivere design lunghi nella chat ma in file dedicati
+  sotto `docs/`. Questo permette di consultarli nelle sessioni successive senza perderli.
+
+- [2026-02-25] **SPOT = tariffa flat, non spezzata** — Gli spot hanno una tariffa unica
+  (€312) che copre riprese + montaggio. Nel DB va in `fee_other` con `fee_shooting=0`
+  e `fee_editing=0`. Il setting key va rinominato da `default_fee_editing_spot` a
+  `default_fee_spot` per chiarezza.
+
+- [2026-02-25] **numbers-parser per file .numbers** — I file Apple Numbers non sono
+  leggibili direttamente (binari). Usare `pip3 install numbers-parser` e script Python
+  per estrarre i dati. Il tool Read di Claude può leggere il file ma non parsare i dati
+  strutturati delle celle.
+
+- [2026-02-25] **Design phase obbligatoria prima di implementazione** — L'utente ha
+  voluto vedere wireframe e design di OGNI modulo prima di scrivere codice. Creati
+  `docs/design-fase2.md` (wireframe) e `docs/data-import-analysis.md` (dati reali).
+  La Fase 2 è critica perché modifica il software, non lo usa soltanto.
+
+- [2026-02-25] **Tariffe 2025/2026 aggiornate** — Nuove tariffe da PDF:
+  Riprese €233, Montaggio GS €311, Montaggio VIV €156, SPOT completo €312.
+  Aumento ~25% rispetto alle tariffe precedenti. Nuovo programma TV: Vale il Viaggio (VIV).
+
+- [2026-02-26] **Moduli custom in directory separate** — Creati i nuovi moduli
+  (clients, projects, services, payments, expenses) come directory separate in
+  `src/components/atomic-crm/`, senza modificare i moduli originali di Atomic CRM.
+  Ogni modulo segue la stessa struttura: index.tsx, List, ListContent, ListFilter,
+  Create, Edit, Show, Inputs, Types.
+
+- [2026-02-26] **Table component per liste tabulari** — Usato il componente Table
+  di shadcn/ui (non CardList) per le liste dei moduli. Più appropriato per dati
+  tabulari come servizi, pagamenti, spese. Import da `@/components/ui/table`.
+
+- [2026-02-26] **useWatch per campi condizionali e totali real-time** — `useWatch`
+  di react-hook-form è perfetto per: conditional rendering
+  (campo tv_show visibile solo se category=produzione_tv), sezioni alternative
+  (km vs importo in spese), e calcoli real-time (totali compensi in servizi).
+  Import consigliato: `from "react-hook-form"` (non `ra-core`). Sintassi:
+  `const value = useWatch({ name: "field_name" })`.
+
+- [2026-02-26] **useGetOne per FK nelle liste** — Per mostrare nomi relazionali
+  (es: nome progetto nella lista servizi), usare `useGetOne("resource", { id, enabled })`.
+  Il parametro `enabled: !!id` evita fetch inutili quando l'FK è null.
+
+- [2026-02-26] **Export CSV con fetchRelatedRecords** — Per includere nomi relazionali
+  nel CSV (es: nome cliente nel CSV progetti), usare `fetchRelatedRecords` passato
+  come secondo parametro dell'exporter. Esempio:
+  `const clients = await fetchRelatedRecords(records, "client_id", "clients");`
+
+- [2026-02-26] **Badge colorati per stati e tipi** — Pattern consolidato: definire
+  una mappa `colorMap` con variant shadcn (default, secondary, destructive, outline)
+  e usare `<Badge variant={colorMap[value]}>{label}</Badge>`. Le mappe label e color
+  vanno nel file `[modulo]Types.ts`.
+
+- [2026-02-26] **Non chiedere conferma su cose già documentate** — L'utente si è
+  irritato quando gli è stato chiesto "da dove vuoi partire?" mentre l'ordine era
+  già scritto in progress.md e docs/design-fase2.md. Regola: seguire il piano
+  documentato senza chiedere conferma inutile. Chiedere SOLO per decisioni non
+  coperte dalla documentazione.
+
+- [2026-02-26] **Adattamento Kanban da Deals a Quotes** — Il pattern è quasi 1:1.
+  Differenze chiave: campo `stage` → `status`, costanti locali anziché ConfigurationContext,
+  niente `archived_at` (gli stati finali sono colonne normali), niente `sales_id`/`contact_ids`.
+  La logica di reindex (updateQuoteStatus/updateQuoteStatusLocal) è identica cambiando solo
+  il nome campo e il nome risorsa nel dataProvider.
+
+- [2026-02-26] **Quotes richiede colonna `index` non prevista nello schema** — La tabella
+  quotes originale nella migration non aveva la colonna `index` (SMALLINT) necessaria per
+  l'ordinamento Kanban. Servita migration dedicata. Lezione: quando si adatta un pattern
+  che usa un campo (come il Kanban con index), verificare che il campo esista nello schema.
+
+- [2026-02-26] **Dialog modali per moduli Kanban, pagine full per moduli CRUD** — Due
+  pattern distinti nel gestionale: i moduli CRUD (Clienti, Progetti, Servizi, Pagamenti,
+  Spese) usano pagine full con Card layout e CreateBase/EditBase/ShowBase. I moduli
+  Kanban (Preventivi, Deals) usano Dialog modali che si sovrappongono al board. Il
+  pattern è determinato dal tipo di vista principale (tabella vs board).
+
+- [2026-02-26] **Hooks React prima dei return condizionali** — ESLint `react-hooks/rules-of-hooks`
+  rileva quando un hook (es: useGetOne) è chiamato dopo un `if (!record) return null`.
+  Fix: spostare il hook prima del return condizionale e usare `enabled: !!record?.field`
+  per evitare fetch inutili. Pattern: tutti gli hook in cima, poi i guard return.
+
+- [2026-02-26] **10 colonne Kanban: min-width + overflow-x-auto** — Con 10 colonne,
+  `flex-1` da solo produce colonne troppo strette. Soluzione: `min-w-[150px]` su ogni
+  colonna + `overflow-x-auto` sul container + `text-xs` per gli header. Il gap tra
+  colonne va ridotto da `gap-4` (Deals, 6 colonne) a `gap-2` (Quotes, 10 colonne).
+
+- [2026-02-26] **Typecheck può passare ma Vite build fallire sugli export runtime** —
+  In Fase 2 il codice compilava con `tsc --noEmit`, ma `npm run build` falliva perché
+  `useWatch` era importato da `ra-core` (non esportato nel bundle runtime). Lezione:
+  dopo modifiche ai form/hooks fare SEMPRE anche `npm run build`, non solo typecheck.
+
+- [2026-02-26] **Views Supabase senza `id` richiedono primaryKeys esplicite nel dataProvider** —
+  Le views `monthly_revenue` e `project_financials` non hanno colonna `id`. Per usarle
+  in React Admin con `ra-supabase-core/@raphiniert/ra-data-postgrest` serve mappare le
+  PK nel provider (`monthly_revenue` => `month,category`; `project_financials` => `project_id`).
+
+- [2026-02-26] **Dashboard complessa: separare fetch e aggregazioni dalla UI** —
+  Per la dashboard finanziaria (KPI + grafici + alert) è più robusto avere:
+  `useDashboardData.ts` (query `useGetList`) + `dashboardModel.ts` (aggregazioni/format)
+  + componenti presentazionali piccoli (card/grafici). Riduce duplicazioni e facilita debug.
