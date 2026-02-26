@@ -15,6 +15,12 @@ import { ForgotPasswordPage } from "@/components/supabase/forgot-password-page";
 import { SetPasswordPage } from "@/components/supabase/set-password-page";
 import { OAuthConsentPage } from "@/components/supabase/oauth-consent-page";
 
+import clients from "../clients";
+import projects from "../projects";
+import services from "../services";
+import payments from "../payments";
+import expenses from "../expenses";
+import quotes from "../quotes";
 import companies from "../companies";
 import contacts from "../contacts";
 import { Dashboard } from "../dashboard/Dashboard";
@@ -242,6 +248,12 @@ const DesktopAdmin = (props: CoreAdminProps) => {
         <Route path={SettingsPage.path} element={<SettingsPage />} />
         <Route path={ImportPage.path} element={<ImportPage />} />
       </CustomRoutes>
+      <Resource name="clients" {...clients} />
+      <Resource name="projects" {...projects} />
+      <Resource name="services" {...services} />
+      <Resource name="payments" {...payments} />
+      <Resource name="expenses" {...expenses} />
+      <Resource name="quotes" {...quotes} />
       <Resource name="deals" {...deals} />
       <Resource name="contacts" {...contacts} />
       <Resource name="companies" {...companies} />

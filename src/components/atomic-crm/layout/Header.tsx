@@ -16,12 +16,18 @@ const Header = () => {
   let currentPath: string | boolean = "/";
   if (matchPath("/", location.pathname)) {
     currentPath = "/";
-  } else if (matchPath("/contacts/*", location.pathname)) {
-    currentPath = "/contacts";
-  } else if (matchPath("/companies/*", location.pathname)) {
-    currentPath = "/companies";
-  } else if (matchPath("/deals/*", location.pathname)) {
-    currentPath = "/deals";
+  } else if (matchPath("/clients/*", location.pathname)) {
+    currentPath = "/clients";
+  } else if (matchPath("/projects/*", location.pathname)) {
+    currentPath = "/projects";
+  } else if (matchPath("/services/*", location.pathname)) {
+    currentPath = "/services";
+  } else if (matchPath("/quotes/*", location.pathname)) {
+    currentPath = "/quotes";
+  } else if (matchPath("/payments/*", location.pathname)) {
+    currentPath = "/payments";
+  } else if (matchPath("/expenses/*", location.pathname)) {
+    currentPath = "/expenses";
   } else {
     currentPath = false;
   }
@@ -56,19 +62,34 @@ const Header = () => {
                     isActive={currentPath === "/"}
                   />
                   <NavigationTab
-                    label="Contatti"
-                    to="/contacts"
-                    isActive={currentPath === "/contacts"}
+                    label="Clienti"
+                    to="/clients"
+                    isActive={currentPath === "/clients"}
                   />
                   <NavigationTab
-                    label="Aziende"
-                    to="/companies"
-                    isActive={currentPath === "/companies"}
+                    label="Progetti"
+                    to="/projects"
+                    isActive={currentPath === "/projects"}
                   />
                   <NavigationTab
-                    label="Trattative"
-                    to="/deals"
-                    isActive={currentPath === "/deals"}
+                    label="Registro Lavori"
+                    to="/services"
+                    isActive={currentPath === "/services"}
+                  />
+                  <NavigationTab
+                    label="Preventivi"
+                    to="/quotes"
+                    isActive={currentPath === "/quotes"}
+                  />
+                  <NavigationTab
+                    label="Pagamenti"
+                    to="/payments"
+                    isActive={currentPath === "/payments"}
+                  />
+                  <NavigationTab
+                    label="Spese"
+                    to="/expenses"
+                    isActive={currentPath === "/expenses"}
                   />
                 </nav>
               </div>
