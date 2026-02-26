@@ -1,66 +1,60 @@
-import { useGetList } from "ra-core";
+import { RefreshCw } from "lucide-react";
 
-import type { Contact, ContactNote } from "../types";
-import { DashboardActivityLog } from "./DashboardActivityLog";
-import { DashboardStepper } from "./DashboardStepper";
-import { DealsChart } from "./DealsChart";
-import { HotContacts } from "./HotContacts";
-import { TasksList } from "./TasksList";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
 import { Welcome } from "./Welcome";
+import { DashboardAlertsCard } from "./DashboardAlertsCard";
+import { DashboardCategoryChart } from "./DashboardCategoryChart";
+import { DashboardKpiCards } from "./DashboardKpiCards";
+import { DashboardLoading } from "./DashboardLoading";
+import { DashboardPipelineCard } from "./DashboardPipelineCard";
+import { DashboardRevenueTrendChart } from "./DashboardRevenueTrendChart";
+import { DashboardTopClientsCard } from "./DashboardTopClientsCard";
+import { useDashboardData } from "./useDashboardData";
 
 export const Dashboard = () => {
-  const {
-    data: dataContact,
-    total: totalContact,
-    isPending: isPendingContact,
-  } = useGetList<Contact>("contacts", {
-    pagination: { page: 1, perPage: 1 },
-  });
+  const { data, isPending, error, refetch } = useDashboardData();
 
-  const { total: totalContactNotes, isPending: isPendingContactNotes } =
-    useGetList<ContactNote>("contact_notes", {
-      pagination: { page: 1, perPage: 1 },
-    });
-
-  const { total: totalDeal, isPending: isPendingDeal } = useGetList<Contact>(
-    "deals",
-    {
-      pagination: { page: 1, perPage: 1 },
-    },
-  );
-
-  const isPending = isPendingContact || isPendingContactNotes || isPendingDeal;
-
-  if (isPending) {
-    return null;
-  }
-
-  if (!totalContact) {
-    return <DashboardStepper step={1} />;
-  }
-
-  if (!totalContactNotes) {
-    return <DashboardStepper step={2} contactId={dataContact?.[0]?.id} />;
+  if (isPending || !data) {
+    if (error) {
+      return <DashboardError onRetry={refetch} />;
+    }
+    return <DashboardLoading />;
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-1">
-      <div className="md:col-span-3">
-        <div className="flex flex-col gap-4">
-          {import.meta.env.VITE_IS_DEMO === "true" ? <Welcome /> : null}
-          <HotContacts />
-        </div>
-      </div>
-      <div className="md:col-span-6">
-        <div className="flex flex-col gap-6">
-          {totalDeal ? <DealsChart /> : null}
-          <DashboardActivityLog />
-        </div>
+    <div className="space-y-6 mt-1">
+      {import.meta.env.VITE_IS_DEMO === "true" ? <Welcome /> : null}
+
+      <DashboardKpiCards kpis={data.kpis} />
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <DashboardRevenueTrendChart data={data.revenueTrend} />
+        <DashboardCategoryChart data={data.categoryBreakdown} />
       </div>
 
-      <div className="md:col-span-3">
-        <TasksList />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+        <div className="grid grid-cols-1 gap-6">
+          <DashboardPipelineCard data={data.quotePipeline} />
+          <DashboardTopClientsCard data={data.topClients} />
+        </div>
+        <DashboardAlertsCard alerts={data.alerts} />
       </div>
     </div>
   );
 };
+
+const DashboardError = ({ onRetry }: { onRetry: () => void }) => (
+  <Card className="mt-1">
+    <CardContent className="px-6 py-10 text-center">
+      <p className="text-sm text-muted-foreground mb-4">
+        Impossibile caricare i dati della dashboard.
+      </p>
+      <Button variant="outline" onClick={onRetry} className="gap-2">
+        <RefreshCw className="h-4 w-4" />
+        Riprova
+      </Button>
+    </CardContent>
+  </Card>
+);

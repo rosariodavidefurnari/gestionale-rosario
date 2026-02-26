@@ -1,4 +1,5 @@
 import { supabaseDataProvider } from "ra-supabase-core";
+import { defaultPrimaryKeys } from "@raphiniert/ra-data-postgrest";
 import {
   withLifecycleCallbacks,
   type DataProvider,
@@ -34,6 +35,9 @@ const baseDataProvider = supabaseDataProvider({
   apiKey: import.meta.env.VITE_SB_PUBLISHABLE_KEY,
   supabaseClient: supabase,
   sortOrder: "asc,desc.nullslast" as any,
+  primaryKeys: new Map(defaultPrimaryKeys)
+    .set("monthly_revenue", ["month", "category"])
+    .set("project_financials", ["project_id"]),
 });
 
 const processCompanyLogo = async (params: any) => {
