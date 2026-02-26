@@ -11,6 +11,7 @@ import { clientSourceLabels } from "./clientTypes";
 import { ClientTagsListEdit } from "../tags/ClientTagsListEdit";
 import { ClientNotesSection } from "./ClientNotesSection";
 import { ClientTasksSection } from "./ClientTasksSection";
+import { ClientFinancialSummary } from "./ClientFinancialSummary";
 
 export const ClientShow = () => (
   <ShowBase>
@@ -36,6 +37,15 @@ const ClientShowContent = () => {
             </h3>
             <ClientTagsListEdit />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+            Riepilogo finanziario
+          </h3>
+          <ClientFinancialSummary record={record} />
         </CardContent>
       </Card>
 

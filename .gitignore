@@ -41,5 +41,6 @@ public/r/
 .claude/settings.local.json
 
 # Private local source files (do not commit)
+/Fatture/
 /riepilogo analisi compensi per servizi per diego caltabiano.pdf
 /Rosario Furnari - Servizi per Diego Caltabiano - DAL 27 10 24 AL 07 04 25.numbers

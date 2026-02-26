@@ -3,12 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { EditButton } from "@/components/admin/edit-button";
 import { DeleteButton } from "@/components/admin/delete-button";
-import { Calendar, Wallet, User } from "lucide-react";
+import { Calendar, Wallet, User, Euro, Car, Hash } from "lucide-react";
 import { Link } from "react-router";
 
 import type { Project } from "../types";
 import { ProjectCategoryBadge, ProjectStatusBadge } from "./ProjectListContent";
 import { projectTvShowLabels } from "./projectTypes";
+import { QuickEpisodeDialog } from "./QuickEpisodeDialog";
 
 export const ProjectShow = () => (
   <ShowBase>
@@ -21,16 +22,22 @@ const ProjectShowContent = () => {
   if (isPending || !record) return null;
 
   return (
-    <div className="mt-2 mb-2 flex gap-8">
-      <div className="flex-1">
-        <Card>
-          <CardContent>
-            <ProjectHeader record={record} />
-            <Separator className="my-4" />
-            <ProjectDetails record={record} />
-          </CardContent>
-        </Card>
-      </div>
+    <div className="mt-2 mb-2 flex flex-col gap-6">
+      <Card>
+        <CardContent>
+          <ProjectHeader record={record} />
+          <Separator className="my-4" />
+          <ProjectDetails record={record} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+            Riepilogo finanziario
+          </h3>
+          <ProjectFinancials projectId={String(record.id)} />
+        </CardContent>
+      </Card>
     </div>
   );
 };
@@ -62,6 +69,9 @@ const ProjectHeader = ({ record }: { record: Project }) => {
         </div>
       </div>
       <div className="flex gap-2">
+        {record.category === "produzione_tv" && (
+          <QuickEpisodeDialog record={record} />
+        )}
         <EditButton />
         <DeleteButton redirect="list" />
       </div>
@@ -105,6 +115,83 @@ const ProjectDetails = ({ record }: { record: Project }) => (
         <p className="text-sm whitespace-pre-wrap">{record.notes}</p>
       </div>
     )}
+  </div>
+);
+
+const eur = (n: number) =>
+  n.toLocaleString("it-IT", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 2,
+  });
+
+const toNum = (v: unknown) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const ProjectFinancials = ({ projectId }: { projectId: string }) => {
+  const { data, isPending } = useGetOne("project_financials", {
+    id: projectId,
+  });
+
+  if (isPending) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-16 bg-muted rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const totalFees = toNum(data.total_fees);
+  const totalKm = toNum(data.total_km);
+  const totalKmCost = toNum(data.total_km_cost);
+  const totalServices = toNum(data.total_services);
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <MetricCard icon={<Hash className="size-4" />} label="Servizi" value={String(totalServices)} />
+      <MetricCard icon={<Euro className="size-4" />} label="Compensi" value={eur(totalFees)} />
+      <MetricCard
+        icon={<Car className="size-4" />}
+        label="Km"
+        value={`${totalKm.toLocaleString("it-IT")} km`}
+        sub={eur(totalKmCost)}
+      />
+      <MetricCard
+        icon={<Wallet className="size-4" />}
+        label="Totale"
+        value={eur(totalFees + totalKmCost)}
+        className="font-bold"
+      />
+    </div>
+  );
+};
+
+const MetricCard = ({
+  icon,
+  label,
+  value,
+  sub,
+  className,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  sub?: string;
+  className?: string;
+}) => (
+  <div className="rounded-lg border bg-card p-3">
+    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+      {icon}
+      {label}
+    </div>
+    <div className={`text-base font-semibold ${className ?? ""}`}>{value}</div>
+    {sub && <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>}
   </div>
 );
 

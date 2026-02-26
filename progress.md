@@ -2,9 +2,110 @@
 
 ## Current Phase
 
-🟢 Fase 2 + Pulizia completata. Sistema operativo, pronto per import dati e test visivo.
+🟢 Fase 2 + Pulizia + Import dati completata. Test visivo in corso — fix bug critici (view, filtri, colonne).
 
 ## Last Session
+
+### Sessione 12 (2026-02-27)
+
+- Completed:
+  - **Import dati Diego Caltabiano** — Migration SQL `20260227100000_import_diego_caltabiano.sql`
+    - 1 client (Diego Caltabiano, codice fiscale, P.IVA, email, telefono)
+    - 9 projects (GS S1, BTF S1, SPOT S1, Borghi Marinari S2, GS regolari S2, BTF S2, montaggio bonus, HD Seagate, iPhone 14)
+    - 64 services (16 GS S1 + 1 bonus + 15 BTF S1 + 6 SPOT S1 + 16 Borghi S2 + 3 GS S2 + 5 BTF S2 + 2 placeholder)
+    - 7 payments (€999 + €2000 + €3113 + €2500 + €2000 + €1795.19 + €2682.35 = €15,089.54)
+    - 3 expenses (HD Seagate €293, HD S2 €260, iPhone 14 -€500)
+  - **Import spese km** — Migration `20260227110000_import_diego_km_expenses.sql`
+    - 40 record expense tipo `spostamento_km`, uno per servizio con km > 0
+    - Totale km expenses: €1,245.64
+  - **Pagamento pendente + split per progetto** — Migrations:
+    - `20260227120000_import_diego_pending_payment.sql` — pagamento iniziale €7,152.10
+    - `20260227130000_import_diego_split_payments.sql` — split in 3 pagamenti per progetto:
+      - GS S2: €989.24, Borghi Marinari: €5,201.36, BTF S2: €961.50
+    - Assegnato `project_id` ai pagamenti esistenti (Foglio 1 → GS, Foglio 2 acconto → Borghi)
+  - **UI: Riepilogo finanziario cliente** — `ClientFinancialSummary.tsx`
+    - 4 metric cards: Compensi, Rimborso km (+spese), Pagato, Da saldare
+    - Aggiunto alla scheda ClientShow
+  - **UI: Riepilogo finanziario progetto** — `ProjectFinancials` in `ProjectShow.tsx`
+    - 4 metriche: Servizi, Compensi, Km, Totale
+  - **UI: Filtro per progetto** — Aggiunto a PaymentListFilter e ExpenseListFilter
+  - **UI: Colonna Progetto** — Aggiunta a PaymentListContent
+  - **FIX CRITICO: Prodotto cartesiano nella view project_financials** — Migration `20260227140000_fix_project_financials_view.sql`
+    - Bug: LEFT JOIN services × payments produceva N×M righe, gonfiando tutti i totali
+    - Fix: pre-aggregazione in subquery prima del JOIN
+    - Compensi mostrati: €73,141 → dovrebbe essere ~€20,942
+  - **Verifica totali** — Python script verifica al centesimo:
+    - Foglio 1: €12,407.19 ✅
+    - Foglio 2: €9,834.45 ✅
+    - Grand Total: €22,241.64 ✅
+    - Pagamenti: €15,089.54 ✅
+    - Da saldare: €7,152.10 ✅
+  - **Tutte le 5 migration pushate al DB remoto** ✅
+  - Typecheck: 0 errori, Build: OK
+
+- Decisions:
+  - Migration idempotente con `ON CONFLICT DO NOTHING` su settings e client
+  - Km rate €0.19 applicato ai totali foglio (colonna km_amount in DB)
+  - HD Seagate con markup 25% (€234 → €293 per il cliente)
+  - iPhone 14 come spesa negativa (-€500) perché è un credito/detrazione
+  - Montaggio bonus come progetto separato (servizio singolo a €249)
+  - 2 servizi BTF S2 come placeholder (data 2025-06-01 e 2025-07-01, importi zero)
+  - Spese km create come record `spostamento_km` nella tabella expenses (1 per servizio con km > 0)
+  - Pagamento pendente diviso proporzionalmente per progetto (GS 13.8%, Borghi 72.7%, BTF 13.4%)
+  - View fix con subquery pre-aggregation per evitare Cartesian product
+
+- Migrations created:
+  - `supabase/migrations/20260227100000_import_diego_caltabiano.sql`
+  - `supabase/migrations/20260227110000_import_diego_km_expenses.sql`
+  - `supabase/migrations/20260227120000_import_diego_pending_payment.sql`
+  - `supabase/migrations/20260227130000_import_diego_split_payments.sql`
+  - `supabase/migrations/20260227140000_fix_project_financials_view.sql`
+
+- Files created:
+  - `src/components/atomic-crm/clients/ClientFinancialSummary.tsx`
+
+- Files modified:
+  - `src/components/atomic-crm/clients/ClientShow.tsx` (+ ClientFinancialSummary)
+  - `src/components/atomic-crm/projects/ProjectShow.tsx` (+ ProjectFinancials section)
+  - `src/components/atomic-crm/payments/PaymentListFilter.tsx` (+ filtro progetto)
+  - `src/components/atomic-crm/payments/PaymentListContent.tsx` (+ colonna Progetto)
+  - `src/components/atomic-crm/expenses/ExpenseListFilter.tsx` (+ filtro progetto)
+
+- Continued (same session):
+  - **Fix invoice_ref mancanti** — Migration `20260227190000_fix_missing_invoice_refs.sql`
+    - 2 pagamenti (€989.24 e €5,201.36 del 10/11/2025) senza invoice_ref → assegnato FPR 6/25
+    - Query remota via REST API con service_role key (bypassa RLS)
+  - **Fix payment_type acconto → saldo** — Migration `20260227210000_fix_payment_types.sql`
+    - €3,113 (03/03/2025) FPR 1/25: era "acconto", è "saldo" (completa la fattura)
+    - €2,682.35 (14/10/2025) FPR 4/25: era "acconto", è "saldo" (unico pagamento)
+    - Verifica sistematica: lette 5 fatture PDF, confrontati importi e date
+  - **Servizi BTF non fatturati** — Migration `20260227200000_complete_btf_cantina_tre_santi.sql`
+    - 18/09 (vendemmia) e 21/10 (puntata finale) a Cantina Tre Santi con fee=0
+    - Confronto date fatture: nessuna fattura copre quelle date → lavoro non fatturato
+    - Completati con tariffe standard BTF: shooting=187, editing=125, km=120
+  - **Spese e pagamento BTF mancanti** — Migration `20260227220000_btf_extra_expenses_and_payment.sql`
+    - 2 expense spostamento_km (120km × €0.19 ciascuno)
+    - 1 payment in_attesa €669.60 (saldo per 2 puntate BTF non fatturate)
+  - **Verifica km rate da file originale** — Letto file Numbers con numbers_parser
+    - Confermato €0.19/km su tutti i servizi (nessuna eccezione)
+  - **Google Calendar MCP** — Configurato server MCP per Google Calendar
+    - OAuth credentials Google Cloud salvate in ~/.config/google-calendar-mcp/
+    - Server aggiunto con `claude mcp add` (pacchetto @cocal/google-calendar-mcp)
+  - **Tutte le 4 migration pushate al DB remoto** ✅
+
+- Decisions (continued):
+  - Verifica finanziaria via fatture PDF (date + importi), non solo file originale Numbers
+  - Servizi completati ma non fatturati: creare anche expense km e payment in_attesa
+  - payment_type "saldo" quando il pagamento completa la fattura (anche se c'è un acconto precedente)
+  - €0.19/km confermato come rate uniforme da file originale
+
+- Migrations created (continued):
+  - `supabase/migrations/20260227190000_fix_missing_invoice_refs.sql`
+  - `supabase/migrations/20260227200000_complete_btf_cantina_tre_santi.sql`
+  - `supabase/migrations/20260227210000_fix_payment_types.sql`
+  - `supabase/migrations/20260227220000_btf_extra_expenses_and_payment.sql`
+
+- Next action: **Test visivo completo**, deploy Vercel, verifica date BTF su Google Calendar
 
 ### Sessione 11 (2026-02-26)
 
@@ -120,9 +221,10 @@
 7. [x] Modulo Spese
 8. [x] Dashboard Recharts
 9. [x] Pulizia moduli Atomic CRM + adattamento Tasks/Notes/Tags
-10. [ ] Import dati reali Diego Caltabiano (da docs/data-import-analysis.md)
-11. [ ] Test visivo completo di ogni modulo
-12. [ ] Deploy su Vercel e test in produzione
+10. [x] Import dati reali Diego Caltabiano (84 record + 40 km expenses + 3 split payments)
+11. [x] Fix prodotto cartesiano view project_financials + UI finanziari (ClientShow, ProjectShow)
+12. [ ] Test visivo completo di ogni modulo (in corso)
+13. [ ] Deploy su Vercel e test in produzione
 
 ## Remaining Low-Priority Items
 
@@ -132,6 +234,17 @@
 - Verificare che signup sia disabilitato anche nel **Supabase Dashboard remoto**
 - Edge Function `postmark` crasha (manca secrets Postmark — non prioritaria)
 - 3 errori lint pre-esistenti (useGetOne condizionale in ExpenseShow/PaymentShow, mergeTranslations inutilizzato in i18nProvider)
+
+## Certezze (sessione 12)
+
+- [x] Import Diego Caltabiano: 84 record + 40 km expenses + 3 split payments = 127 record totali
+- [x] Totali verificati al centesimo: €22,241.64 totale, €15,089.54 pagato, €7,152.10 da saldare
+- [x] 5 migration pushate al DB remoto con successo
+- [x] Fix prodotto cartesiano view project_financials (subquery pre-aggregation)
+- [x] Filtri per progetto aggiunti a Pagamenti e Spese
+- [x] Colonna Progetto aggiunta alla lista Pagamenti
+- [x] Riepilogo finanziario su ClientShow e ProjectShow
+- [x] Typecheck 0 errori, build OK
 
 ## Certezze (sessione 11)
 

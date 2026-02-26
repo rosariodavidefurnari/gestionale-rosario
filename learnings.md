@@ -229,3 +229,70 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   Atomic CRM (ImportPage + useImportFromJson) era strutturato per importare companies → contacts
   → notes → tasks con FK BIGINT e ID mapping. Con lo schema UUID del gestionale, non è
   adattabile — va riscritto da zero quando servirà.
+
+- [2026-02-27] **Import dati via migration SQL, non via API** — Per import iniziali di dati
+  storici (es: fogli di calcolo clienti), una migration SQL con INSERT è più affidabile che
+  passare dall'API REST. Vantaggi: idempotente (ON CONFLICT DO NOTHING), verificabile con
+  script Python, tracciabile nel version control, bypassa RLS (è DDL). Pattern: generare
+  gli UUID in anticipo per collegare le FK tra tabelle nella stessa migration.
+
+- [2026-02-27] **Verifica totali con Python, non a mano** — Per import di dati finanziari
+  da fogli di calcolo, creare uno script Python di verifica che calcola i totali dagli
+  stessi dati della migration e li confronta con i totali attesi dal foglio originale.
+  Trovare discrepanze al centesimo prima del push, non dopo.
+
+- [2026-02-27] **psql verso Supabase remoto: IPv6 routing issue** — La connessione diretta
+  psql al DB remoto Supabase può fallire con "No route to host" su reti che non supportano
+  IPv6. `supabase db push` funziona perché usa la Management API (HTTPS), non psql.
+  Per query di verifica su remoto, usare il Dashboard SQL Editor.
+
+- [2026-02-27] **Cartesian product in SQL views con LEFT JOIN multipli** — Quando una view
+  fa `LEFT JOIN services ON project_id` e `LEFT JOIN payments ON project_id` sullo stesso
+  progetto, si ottiene N×M righe se il progetto ha N services e M payments. Tutti i SUM()
+  risultano gonfiati. Fix: pre-aggregare in subquery prima del JOIN:
+  `LEFT JOIN (SELECT project_id, SUM(...) FROM services GROUP BY project_id) sv ON ...`.
+  Questo pattern è la regola per qualsiasi view con 2+ LEFT JOIN 1-to-many sulla stessa chiave.
+
+- [2026-02-27] **Il sistema gestisce già feature che non usi nella migration** — L'utente si è
+  irritato perché il tipo spesa `spostamento_km` esisteva già nel codice ma la migration di
+  import non creava quei record. Stessa cosa per `project_id` sui pagamenti e i filtri per
+  progetto. Regola: prima di importare dati, verificare TUTTE le colonne e tipi del modulo
+  per assicurarsi che la migration crei record completi, non parziali.
+
+- [2026-02-27] **service_role key per query remote via REST API** — La publishable key
+  rispetta RLS e può restituire risultati vuoti. Per query di verifica/debug sul DB remoto
+  Supabase, usare la `service_role` key nell'header `apikey` + `Authorization: Bearer`.
+  Endpoint: `https://<project>.supabase.co/rest/v1/<table>?select=*&<filters>`.
+
+- [2026-02-27] **Verificare via fatture, non solo file originale** — Per confermare che
+  un lavoro non è stato fatturato, non basta che le celle siano vuote nel foglio di calcolo.
+  Serve confrontare le date del servizio con le date di copertura delle fatture emesse. Se
+  nessuna fattura copre quelle date → lavoro effettivamente non fatturato. L'utente considera
+  le fatture PDF come fonte autoritativa, non il foglio di calcolo.
+
+- [2026-02-27] **Completare un servizio = anche expense + payment** — Quando si completano
+  servizi con fee e km, creare ANCHE i record expense (spostamento_km) e payment (in_attesa)
+  corrispondenti. Senza questi record i moduli Pagamenti e Spese non mostrano nulla, anche
+  se il servizio ha i dati corretti. Il sistema non genera automaticamente expense/payment
+  dai servizi — sono entità separate.
+
+- [2026-02-27] **File originale come fonte di verità per tariffe** — Per verificare tariffe
+  km o compensi, controllare il file originale (Numbers/Excel) e non il DB. Il DB contiene
+  i dati importati, che potrebbero avere errori di import. Il file originale è la fonte di
+  verità. Usare `numbers_parser` per leggere file .numbers.
+
+- [2026-02-27] **payment_type: acconto vs saldo dipende dalla fattura** — Un pagamento è
+  "saldo" se completa l'importo della fattura (anche se è il secondo pagamento dopo un
+  acconto). È "acconto" solo se rimane un saldo residuo sulla fattura. Verificare sempre
+  confrontando la somma dei pagamenti con l'importo fattura.
+
+- [2026-02-27] **Google Calendar: usare il server MCP integrato di Anthropic, non quello locale** —
+  Ci sono DUE server MCP per Google Calendar configurati:
+  1. `google-calendar` (locale, @cocal/google-calendar-mcp) — richiede OAuth Google Cloud separato,
+     i token scadono facilmente, richiede `npx @cocal/google-calendar-mcp auth` per ri-autenticarsi,
+     e serve aggiungere il proprio email come "utente di test" nella Google Cloud Console.
+  2. `claude.ai Google Calendar` (integrato Anthropic) — connesso automaticamente tramite l'account
+     Claude dell'utente. Funziona subito, nessuna configurazione OAuth necessaria. Tool names:
+     `mcp__claude_ai_Google_Calendar__gcal_list_events` (con parametro `q` per ricerca testo),
+     `mcp__claude_ai_Google_Calendar__gcal_list_calendars`, ecc.
+  **USARE SEMPRE il server claude.ai**, non quello locale. Il server locale è ridondante.

@@ -15,9 +15,11 @@ import {
   type ConfigurationContextValue,
 } from "../root/ConfigurationContext";
 import { defaultConfiguration } from "../root/defaultConfiguration";
+import { TagsSettingsSection } from "./TagsSettingsSection";
 
 const SECTIONS = [
   { id: "branding", label: "Marchio" },
+  { id: "tags", label: "Etichette" },
   { id: "notes", label: "Note" },
   { id: "tasks", label: "Attività" },
 ];
@@ -160,6 +162,16 @@ const SettingsFormFields = () => {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Tags */}
+        <Card id="tags">
+          <CardContent className="space-y-4">
+            <h2 className="text-xl font-semibold text-muted-foreground">
+              Etichette
+            </h2>
+            <TagsSettingsSection />
           </CardContent>
         </Card>
 

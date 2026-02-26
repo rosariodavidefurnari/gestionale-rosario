@@ -5,7 +5,7 @@
 Fork di Atomic CRM personalizzato per gestire l'attività professionale
 di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
-## Stato Infrastruttura (verificato sessione 11)
+## Stato Infrastruttura (verificato sessione 12)
 
 ### Certezze — Audit superato
 
@@ -15,6 +15,10 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 | Migration Fase 2 (discount + tariffe) | Applicata al DB remoto | `npx supabase db push` |
 | Migration quotes index | Applicata al DB remoto | sessione 9 |
 | Migration client_tasks + client_notes + tags | Applicata al DB remoto | sessione 11 |
+| Import dati Diego Caltabiano (84 + 40 km + 3 split) | Applicata al DB remoto | sessione 12 |
+| Fix view project_financials (Cartesian product) | Applicata al DB remoto | sessione 12 |
+| Filtri progetto su Pagamenti/Spese | Implementati | sessione 12 |
+| Riepilogo finanziario su ClientShow/ProjectShow | Implementato | sessione 12 |
 | Dashboard Fase 2 (Recharts) | Implementata (desktop + mobile KPI) | sessione 10 |
 | Pulizia moduli Atomic CRM | Completata (companies, contacts, deals eliminati) | sessione 11 |
 | Tasks adattati (Promemoria) | Funzionanti con client_tasks | sessione 11 |
@@ -88,6 +92,19 @@ PK esplicite nel dataProvider:
 | `20260225230028_fase2_discount_tariffe.sql` | Colonna discount, tariffe aggiornate, views fix |
 | `20260226120000_add_quotes_index.sql` | Colonna index su quotes per ordinamento Kanban |
 | `20260226200000_client_tasks_notes_tags.sql` | Tabelle client_tasks, client_notes, colonna tags su clients |
+| `20260227100000_import_diego_caltabiano.sql` | Import dati reali: 1 client + 9 projects + 64 services + 7 payments + 3 expenses |
+| `20260227110000_import_diego_km_expenses.sql` | 40 spese spostamento_km (una per servizio con km > 0) |
+| `20260227120000_import_diego_pending_payment.sql` | Pagamento pendente iniziale €7,152.10 |
+| `20260227130000_import_diego_split_payments.sql` | Split pagamento pendente per progetto + assign project_id |
+| `20260227140000_fix_project_financials_view.sql` | Fix prodotto cartesiano nella view (subquery pre-aggregation) |
+| `20260227150000_assign_invoice_refs.sql` | Assegna invoice_ref (FPR) ai pagamenti ricevuti |
+| `20260227160000_import_diego_nisseno.sql` | Import 4 puntate Nisseno + km expenses + pagamento |
+| `20260227170000_fix_nisseno_payment_date.sql` | Fix data pagamento Nisseno (29/12/2025) |
+| `20260227180000_fix_nisseno_fee_breakdown.sql` | Fix breakdown compensi Nisseno (shooting+editing separati) |
+| `20260227190000_fix_missing_invoice_refs.sql` | Fix 2 pagamenti senza invoice_ref → FPR 6/25 |
+| `20260227200000_complete_btf_cantina_tre_santi.sql` | Completa 2 servizi BTF non fatturati (vendemmia + puntata finale) |
+| `20260227210000_fix_payment_types.sql` | Fix payment_type acconto → saldo per 2 pagamenti che completano fattura |
+| `20260227220000_btf_extra_expenses_and_payment.sql` | Aggiunge 2 expense km + 1 payment in_attesa per BTF non fatturato |
 
 ## Moduli Frontend (sessione 11)
 
