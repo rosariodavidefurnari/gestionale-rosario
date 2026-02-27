@@ -16,9 +16,9 @@ export const ProjectListFilter = () => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (value) {
-      setFilters({ ...filterValues, q: value });
+      setFilters({ ...filterValues, "name@ilike": `%${value}%` });
     } else {
-      const { q: _, ...rest } = filterValues;
+      const { "name@ilike": _, ...rest } = filterValues;
       setFilters(rest);
     }
   };
@@ -41,7 +41,7 @@ export const ProjectListFilter = () => {
           <Input
             placeholder="Cerca progetto..."
             className="pl-8"
-            value={filterValues.q ?? ""}
+            value={(filterValues["name@ilike"] as string)?.replace(/%/g, "") ?? ""}
             onChange={handleSearchChange}
           />
         </div>
