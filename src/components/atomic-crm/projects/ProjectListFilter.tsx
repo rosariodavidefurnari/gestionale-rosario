@@ -23,6 +23,16 @@ export const ProjectListFilter = () => {
     }
   };
 
+  const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value) {
+      setFilters({ ...filterValues, "client_id@eq": value });
+    } else {
+      const { "client_id@eq": _, ...rest } = filterValues;
+      setFilters(rest);
+    }
+  };
+
   return (
     <div className="shrink-0 w-56 order-last hidden md:block">
       <div className="flex flex-col gap-6">
@@ -35,6 +45,27 @@ export const ProjectListFilter = () => {
             onChange={handleSearchChange}
           />
         </div>
+
+        {clients && clients.length > 0 && (
+          <FilterSection
+            icon={<User className="size-4" />}
+            label="Cliente"
+          >
+            <select
+              aria-label="Filtra per cliente"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+              value={(filterValues["client_id@eq"] as string) ?? ""}
+              onChange={handleClientChange}
+            >
+              <option value="">Tutti</option>
+              {clients.map((client) => (
+                <option key={String(client.id)} value={String(client.id)}>
+                  {client.name}
+                </option>
+              ))}
+            </select>
+          </FilterSection>
+        )}
 
         <FilterSection
           icon={<Folder className="size-4" />}
@@ -77,29 +108,6 @@ export const ProjectListFilter = () => {
             />
           ))}
         </FilterSection>
-
-        {clients && clients.length > 0 && (
-          <FilterSection
-            icon={<User className="size-4" />}
-            label="Cliente"
-          >
-            {clients.map((client) => (
-              <FilterBadge
-                key={String(client.id)}
-                label={client.name}
-                isActive={filterValues["client_id@eq"] === String(client.id)}
-                onToggle={() => {
-                  if (filterValues["client_id@eq"] === String(client.id)) {
-                    const { "client_id@eq": _, ...rest } = filterValues;
-                    setFilters(rest);
-                  } else {
-                    setFilters({ ...filterValues, "client_id@eq": String(client.id) });
-                  }
-                }}
-              />
-            ))}
-          </FilterSection>
-        )}
       </div>
     </div>
   );
