@@ -8,12 +8,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Clapperboard } from "lucide-react";
 import type { Project } from "../types";
-import { QuickEpisodeForm, getDefaultFees } from "./QuickEpisodeForm";
+import { QuickEpisodeForm, getDefaultFees, type EpisodeFormData } from "./QuickEpisodeForm";
 
 interface QuickEpisodeDialogProps {
   record: Project;
@@ -28,23 +25,9 @@ export const QuickEpisodeDialog = ({ record }: QuickEpisodeDialogProps) => {
 
   const defaults = getDefaultFees(record.tv_show);
 
-  const handleSubmit = async (data: {
-    service_date: string;
-    service_type: string;
-    fee_shooting: number;
-    fee_editing: number;
-    fee_other: number;
-    km_distance: number;
-    km_rate: number;
-    location: string;
-    notes: string;
-    createPayment: boolean;
-    paymentType: string;
-    paymentStatus: string;
-  }) => {
+  const handleSubmit = async (data: EpisodeFormData) => {
     setSaving(true);
     try {
-      // 1. Create service
       await create(
         "services",
         {
@@ -65,7 +48,6 @@ export const QuickEpisodeDialog = ({ record }: QuickEpisodeDialogProps) => {
         { returnPromise: true },
       );
 
-      // 2. Create km expense if km > 0
       if (data.km_distance > 0) {
         await create(
           "expenses",
@@ -86,30 +68,7 @@ export const QuickEpisodeDialog = ({ record }: QuickEpisodeDialogProps) => {
         );
       }
 
-      // 3. Create payment if requested
-      if (data.createPayment) {
-        const totalFees =
-          data.fee_shooting + data.fee_editing + data.fee_other;
-        const kmCost = data.km_distance * data.km_rate;
-        await create(
-          "payments",
-          {
-            data: {
-              client_id: record.client_id,
-              project_id: record.id,
-              payment_type: data.paymentType,
-              amount: totalFees + kmCost,
-              status: data.paymentStatus,
-              notes: data.location
-                ? `Puntata ${data.service_date} — ${data.location}`
-                : `Puntata ${data.service_date}`,
-            },
-          },
-          { returnPromise: true },
-        );
-      }
-
-      notify("Puntata registrata con successo", { type: "success" });
+      notify("Puntata registrata", { type: "success" });
       refresh();
       setOpen(false);
     } catch {
@@ -124,7 +83,7 @@ export const QuickEpisodeDialog = ({ record }: QuickEpisodeDialogProps) => {
       <DialogTrigger asChild>
         <Button size="sm" variant="default">
           <Clapperboard className="size-4 mr-1" />
-          Registra Puntata
+          Puntata
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">

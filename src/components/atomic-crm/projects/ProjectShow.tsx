@@ -10,6 +10,7 @@ import type { Project } from "../types";
 import { ProjectCategoryBadge, ProjectStatusBadge } from "./ProjectListContent";
 import { projectTvShowLabels } from "./projectTypes";
 import { QuickEpisodeDialog } from "./QuickEpisodeDialog";
+import { QuickPaymentDialog } from "./QuickPaymentDialog";
 
 export const ProjectShow = () => (
   <ShowBase>
@@ -72,6 +73,7 @@ const ProjectHeader = ({ record }: { record: Project }) => {
         {record.category === "produzione_tv" && (
           <QuickEpisodeDialog record={record} />
         )}
+        <QuickPaymentDialog record={record} />
         <EditButton />
         <DeleteButton redirect="list" />
       </div>
@@ -151,9 +153,12 @@ const ProjectFinancials = ({ projectId }: { projectId: string }) => {
   const totalKm = toNum(data.total_km);
   const totalKmCost = toNum(data.total_km_cost);
   const totalServices = toNum(data.total_services);
+  const totalPaid = toNum(data.total_paid);
+  const grandTotal = totalFees + totalKmCost;
+  const balanceDue = grandTotal - totalPaid;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
       <MetricCard icon={<Hash className="size-4" />} label="Servizi" value={String(totalServices)} />
       <MetricCard icon={<Euro className="size-4" />} label="Compensi" value={eur(totalFees)} />
       <MetricCard
@@ -164,9 +169,21 @@ const ProjectFinancials = ({ projectId }: { projectId: string }) => {
       />
       <MetricCard
         icon={<Wallet className="size-4" />}
-        label="Totale"
-        value={eur(totalFees + totalKmCost)}
+        label="Totale lavori"
+        value={eur(grandTotal)}
         className="font-bold"
+      />
+      <MetricCard
+        icon={<Euro className="size-4" />}
+        label="Pagato"
+        value={eur(totalPaid)}
+        className="text-green-600"
+      />
+      <MetricCard
+        icon={<Wallet className="size-4" />}
+        label="Da incassare"
+        value={eur(balanceDue)}
+        className={balanceDue > 0 ? "text-orange-600 font-bold" : "text-green-600 font-bold"}
       />
     </div>
   );

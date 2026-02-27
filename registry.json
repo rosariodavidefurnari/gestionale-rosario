@@ -132,6 +132,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/settings/TagsSettingsSection.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/settings/SettingsPage.tsx",
           "type": "registry:component"
         },
@@ -345,6 +349,14 @@
         },
         {
           "path": "src/components/atomic-crm/projects/index.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/projects/QuickEpisodeForm.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/projects/QuickEpisodeDialog.tsx",
           "type": "registry:component"
         },
         {
@@ -669,6 +681,10 @@
         },
         {
           "path": "src/components/atomic-crm/clients/ClientInputs.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/clients/ClientFinancialSummary.tsx",
           "type": "registry:component"
         },
         {

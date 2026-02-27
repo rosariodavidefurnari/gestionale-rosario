@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 
 export interface FeeDefaults {
@@ -28,23 +27,22 @@ export const getDefaultFees = (
   }
 };
 
+export interface EpisodeFormData {
+  service_date: string;
+  service_type: string;
+  fee_shooting: number;
+  fee_editing: number;
+  fee_other: number;
+  km_distance: number;
+  km_rate: number;
+  location: string;
+  notes: string;
+}
+
 interface Props {
   defaults: FeeDefaults;
   saving: boolean;
-  onSubmit: (data: {
-    service_date: string;
-    service_type: string;
-    fee_shooting: number;
-    fee_editing: number;
-    fee_other: number;
-    km_distance: number;
-    km_rate: number;
-    location: string;
-    notes: string;
-    createPayment: boolean;
-    paymentType: string;
-    paymentStatus: string;
-  }) => void;
+  onSubmit: (data: EpisodeFormData) => void;
   onCancel: () => void;
 }
 
@@ -57,9 +55,6 @@ export const QuickEpisodeForm = ({ defaults, saving, onSubmit, onCancel }: Props
   const [kmRate] = useState(defaults.km_rate);
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
-  const [createPayment, setCreatePayment] = useState(false);
-  const [paymentType, setPaymentType] = useState("saldo");
-  const [paymentStatus, setPaymentStatus] = useState("in_attesa");
 
   const totalFees = feeShooting + feeEditing + feeOther;
   const kmCost = kmDistance * kmRate;
@@ -78,9 +73,6 @@ export const QuickEpisodeForm = ({ defaults, saving, onSubmit, onCancel }: Props
       km_rate: kmRate,
       location,
       notes,
-      createPayment,
-      paymentType,
-      paymentStatus,
     });
   };
 
@@ -134,47 +126,6 @@ export const QuickEpisodeForm = ({ defaults, saving, onSubmit, onCancel }: Props
           <span>€{grandTotal.toFixed(2)}</span>
         </div>
       </div>
-
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id="ep-payment"
-          checked={createPayment}
-          onCheckedChange={(v) => setCreatePayment(v === true)}
-        />
-        <Label htmlFor="ep-payment" className="cursor-pointer">
-          Crea anche pagamento (€{grandTotal.toFixed(2)})
-        </Label>
-      </div>
-
-      {createPayment && (
-        <div className="grid grid-cols-2 gap-3 pl-6">
-          <div>
-            <Label htmlFor="ep-ptype">Tipo</Label>
-            <select
-              id="ep-ptype"
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
-              value={paymentType}
-              onChange={(e) => setPaymentType(e.target.value)}
-            >
-              <option value="saldo">Saldo</option>
-              <option value="acconto">Acconto</option>
-              <option value="rimborso_spese">Rimborso spese</option>
-            </select>
-          </div>
-          <div>
-            <Label htmlFor="ep-pstatus">Stato</Label>
-            <select
-              id="ep-pstatus"
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
-              value={paymentStatus}
-              onChange={(e) => setPaymentStatus(e.target.value)}
-            >
-              <option value="in_attesa">In attesa</option>
-              <option value="ricevuto">Ricevuto</option>
-            </select>
-          </div>
-        </div>
-      )}
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>

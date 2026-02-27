@@ -1,0 +1,213 @@
+import { useState } from "react";
+import { useCreate, useGetOne, useNotify, useRefresh } from "ra-core";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Euro } from "lucide-react";
+import type { Project } from "../types";
+
+const eur = (n: number) =>
+  n.toLocaleString("it-IT", { style: "currency", currency: "EUR", minimumFractionDigits: 2 });
+
+const toNum = (v: unknown) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+export const QuickPaymentDialog = ({ record }: { record: Project }) => {
+  const [open, setOpen] = useState(false);
+  const [create] = useCreate();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const [saving, setSaving] = useState(false);
+
+  const { data: financials } = useGetOne("project_financials", {
+    id: record.id,
+  });
+
+  const totalFees = toNum(financials?.total_fees);
+  const totalKmCost = toNum(financials?.total_km_cost);
+  const totalPaid = toNum(financials?.total_paid);
+  const balanceDue = totalFees + totalKmCost - totalPaid;
+
+  const [amount, setAmount] = useState(0);
+  const [paymentType, setPaymentType] = useState("acconto");
+  const [paymentDate, setPaymentDate] = useState("");
+  const [status, setStatus] = useState("ricevuto");
+  const [method, setMethod] = useState("bonifico");
+  const [notes, setNotes] = useState("");
+
+  const resetForm = () => {
+    setAmount(0);
+    setPaymentType("acconto");
+    setPaymentDate("");
+    setStatus("ricevuto");
+    setMethod("bonifico");
+    setNotes("");
+  };
+
+  const handleOpenChange = (v: boolean) => {
+    if (v) {
+      resetForm();
+      setAmount(balanceDue > 0 ? balanceDue : 0);
+    }
+    setOpen(v);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (amount <= 0) return;
+    setSaving(true);
+    try {
+      await create(
+        "payments",
+        {
+          data: {
+            client_id: record.client_id,
+            project_id: record.id,
+            payment_type: paymentType,
+            amount,
+            status,
+            method: method || null,
+            payment_date: paymentDate || null,
+            notes: notes || null,
+          },
+        },
+        { returnPromise: true },
+      );
+      notify("Pagamento registrato", { type: "success" });
+      refresh();
+      setOpen(false);
+    } catch {
+      notify("Errore durante la registrazione", { type: "error" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <Euro className="size-4 mr-1" />
+          Pagamento
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Registra Pagamento — {record.name}</DialogTitle>
+        </DialogHeader>
+
+        <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
+          <div className="flex justify-between">
+            <span>Totale lavori</span>
+            <span>{eur(totalFees + totalKmCost)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Già pagato</span>
+            <span>{eur(totalPaid)}</span>
+          </div>
+          <Separator className="my-1" />
+          <div className="flex justify-between font-bold">
+            <span>Da incassare</span>
+            <span className={balanceDue > 0 ? "text-orange-600" : "text-green-600"}>
+              {eur(balanceDue)}
+            </span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 mt-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="pay-type">Tipo</Label>
+              <select
+                id="pay-type"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                value={paymentType}
+                onChange={(e) => setPaymentType(e.target.value)}
+              >
+                <option value="acconto">Acconto</option>
+                <option value="saldo">Saldo</option>
+                <option value="parziale">Parziale</option>
+                <option value="rimborso_spese">Rimborso spese</option>
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="pay-amount">Importo (EUR) *</Label>
+              <Input
+                id="pay-amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={amount}
+                onChange={(e) => setAmount(Number(e.target.value))}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="pay-date">Data pagamento</Label>
+              <Input
+                id="pay-date"
+                type="date"
+                value={paymentDate}
+                onChange={(e) => setPaymentDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="pay-status">Stato</Label>
+              <select
+                id="pay-status"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option value="ricevuto">Ricevuto</option>
+                <option value="in_attesa">In attesa</option>
+                <option value="scaduto">Scaduto</option>
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="pay-method">Metodo</Label>
+              <select
+                id="pay-method"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                value={method}
+                onChange={(e) => setMethod(e.target.value)}
+              >
+                <option value="bonifico">Bonifico</option>
+                <option value="contanti">Contanti</option>
+                <option value="paypal">PayPal</option>
+                <option value="altro">Altro</option>
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="pay-notes">Note</Label>
+              <Input
+                id="pay-notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={saving}>
+              Annulla
+            </Button>
+            <Button type="submit" disabled={saving || amount <= 0}>
+              {saving ? "Salvataggio..." : "Registra"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
