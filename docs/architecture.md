@@ -5,7 +5,7 @@
 Fork di Atomic CRM personalizzato per gestire l'attività professionale
 di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
-## Stato Infrastruttura (verificato sessione 12)
+## Stato Infrastruttura (verificato sessione 13)
 
 ### Certezze — Audit superato
 
@@ -16,8 +16,11 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 | Migration quotes index | Applicata al DB remoto | sessione 9 |
 | Migration client_tasks + client_notes + tags | Applicata al DB remoto | sessione 11 |
 | Import dati Diego Caltabiano (84 + 40 km + 3 split) | Applicata al DB remoto | sessione 12 |
+| Riallocazione pagamenti Diego (DELETE 10 + CREATE 11) | Applicata al DB remoto | sessione 13 |
 | Fix view project_financials (Cartesian product) | Applicata al DB remoto | sessione 12 |
 | Filtri progetto su Pagamenti/Spese | Implementati | sessione 12 |
+| Ricerca progetto (ilike) | Fix `q` → `name@ilike` | sessione 13 |
+| Bilanci verificati: tutti i progetti Diego a 0 o pending | Confermato | sessione 13 |
 | Riepilogo finanziario su ClientShow/ProjectShow | Implementato | sessione 12 |
 | Dashboard Fase 2 (Recharts) | Implementata (desktop + mobile KPI) | sessione 10 |
 | Pulizia moduli Atomic CRM | Completata (companies, contacts, deals eliminati) | sessione 11 |
@@ -105,6 +108,7 @@ PK esplicite nel dataProvider:
 | `20260227200000_complete_btf_cantina_tre_santi.sql` | Completa 2 servizi BTF non fatturati (vendemmia + puntata finale) |
 | `20260227210000_fix_payment_types.sql` | Fix payment_type acconto → saldo per 2 pagamenti che completano fattura |
 | `20260227220000_btf_extra_expenses_and_payment.sql` | Aggiunge 2 expense km + 1 payment in_attesa per BTF non fatturato |
+| `20260227205707_reallocate_diego_payments.sql` | Riallocazione completa: DELETE 10 errati + CREATE 11 corretti per progetto |
 
 ## Moduli Frontend (sessione 11)
 

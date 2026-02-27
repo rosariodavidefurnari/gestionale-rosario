@@ -2,9 +2,56 @@
 
 ## Current Phase
 
-🟢 Fase 2 + Pulizia + Import dati completata. Test visivo in corso — fix bug critici (view, filtri, colonne).
+🟢 Fase 2 + Pulizia + Import + Verifica finanziaria completata. UX migliorata, pagamenti riallocati, deploy su Vercel.
 
 ## Last Session
+
+### Sessione 13 (2026-02-27, sera)
+
+- Completed:
+  - **Deploy su Vercel** — Build OK, push a GitHub, deploy automatico
+  - **Separazione workflow episodi/pagamenti** — QuickEpisodeDialog semplificato (solo servizio), QuickPaymentDialog nuovo (pagamento a livello progetto)
+  - **Smart payment amounts** — Auto-fill importo in base al tipo: acconto=compensi, saldo=residuo, rimborso=totale spese
+  - **Expenses nella view project_financials** — Migration `20260227230000_add_expenses_to_project_financials.sql`: aggiunge total_expenses da tabella expenses (km + materiale + noleggio con markup)
+  - **Alert pagamenti intelligenti** — Dashboard mostra TUTTI i pagamenti pending con urgency (overdue/due_soon/pending), non solo finestra 7 giorni
+  - **Progetto e note negli alert** — PaymentAlert esteso con projectName e notes per identificare i pagamenti
+  - **Filtro cliente nella lista progetti** — Dropdown select con tutti i clienti (non badge, meglio UX con molti clienti)
+  - **Fix ricerca progetti** — Campo "Cerca progetto" convertito da `q` (FTS, non funzionante) a `name@ilike` con wildcards
+  - **Riallocazione COMPLETA pagamenti Diego** — Migration `20260227205707_reallocate_diego_payments.sql`:
+    - Incrociati fogli CSV + fatture XML + DB per trovare allocazione corretta
+    - DELETE 10 pagamenti errati, CREATE 11 corretti
+    - Foglio 1: GS €6.761,59 + BTF €4.207,71 + 6 Spot €1.437,89 = €12.407,19
+    - Foglio 2: GS €1.360,25 + BTF €1.322,10 + BM €7.152,10 = €9.834,45
+    - Tutti gli spot a balance 0, GS a 0, BM a 0, Nisseno a 0
+    - BTF mostra €669,60 = pending non fatturato, VIV mostra €389 = in attesa
+    - Totale ricevuto invariato: €23.985,64
+
+- Decisions:
+  - Workflow pagamenti: separato da episodi, a livello progetto (non per singolo servizio)
+  - Rimosso "parziale" come tipo pagamento (ridondante con acconto)
+  - Rimosso "scaduto" dal dialog pagamento (auto-determinato dal sistema)
+  - DROP VIEW + CREATE VIEW quando l'ordine colonne cambia (non CREATE OR REPLACE)
+  - Fogli contabili CSV come fonte di verità per allocazione pagamenti
+  - Km allocati proporzionalmente ai progetti basandosi sui dati foglio
+  - Spese km NON fatturate al cliente (confermato dalle fatture XML)
+  - Dropdown per filtro clienti (non badge) — scalabilità UX
+
+- Migrations created:
+  - `supabase/migrations/20260227230000_add_expenses_to_project_financials.sql`
+  - `supabase/migrations/20260227205707_reallocate_diego_payments.sql`
+
+- Files created:
+  - `src/components/atomic-crm/projects/QuickPaymentDialog.tsx`
+
+- Files modified:
+  - `src/components/atomic-crm/projects/QuickEpisodeForm.tsx` (semplificato)
+  - `src/components/atomic-crm/projects/QuickEpisodeDialog.tsx` (semplificato)
+  - `src/components/atomic-crm/projects/ProjectShow.tsx` (+ QuickPaymentDialog, financials aggiornati)
+  - `src/components/atomic-crm/projects/ProjectListFilter.tsx` (+ filtro cliente dropdown, fix ricerca)
+  - `src/components/atomic-crm/dashboard/dashboardModel.ts` (alert urgency, projectName, notes)
+  - `src/components/atomic-crm/dashboard/DashboardAlertsCard.tsx` (urgency UI, PaymentAlertRow)
+
+- Next action: **Test visivo completo**, verifica deploy Vercel aggiornato
 
 ### Sessione 12 (2026-02-27)
 

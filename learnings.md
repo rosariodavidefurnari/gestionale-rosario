@@ -286,6 +286,29 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   acconto). È "acconto" solo se rimane un saldo residuo sulla fattura. Verificare sempre
   confrontando la somma dei pagamenti con l'importo fattura.
 
+- [2026-02-27] **PostgREST `q` filter richiede tsvector — usare `name@ilike` per ricerca testuale** —
+  Il filtro `q` del formato ra-data-postgrest presuppone una colonna tsvector per full-text search.
+  Se non esiste (e non serve crearla), usare `name@ilike` con `%value%` come wildcards. Pattern:
+  `setFilters({ "name@ilike": \`%${value}%\` })` e recuperare il valore display con `.replace(/%/g, "")`.
+
+- [2026-02-27] **Fogli contabili CSV come fonte di verità per allocazione pagamenti** —
+  Quando i pagamenti coprono più progetti (fatture cumulative), l'unica fonte affidabile è il
+  foglio contabile interno che dettaglia per-progetto: servizi, km, spese accessorie. Le fatture
+  XML non hanno questo dettaglio (importo globale). Pattern: CSV foglio → totali per progetto →
+  split pagamenti nel DB con stessa `invoice_ref`.
+
+- [2026-02-27] **Una fattura può coprire più progetti — split payments con invoice_ref condiviso** —
+  FPR 2/25 copriva GS + BTF + 6 Spot. Nel DB ogni progetto ha il suo record payment con lo stesso
+  `invoice_ref`. Questo è corretto: la somma dei payments con stessa ref = importo fattura.
+
+- [2026-02-27] **DO $$ blocks per migration complesse con variabili** — Per migration che devono
+  referenziare gli stessi UUID più volte (client_id, project_ids), usare `DO $$ DECLARE ... BEGIN
+  ... END $$;`. Le variabili rendono il SQL leggibile e meno soggetto a errori di copia-incolla.
+
+- [2026-02-27] **`npx supabase db push --include-all` per migration fuori ordine** — Se il timestamp
+  della migration è anteriore all'ultima migration remota, `db push` rifiuta con "Found local
+  migration files to be inserted before the last migration". Flag `--include-all` forza l'inclusione.
+
 - [2026-02-27] **Google Calendar: usare il server MCP integrato di Anthropic, non quello locale** —
   Ci sono DUE server MCP per Google Calendar configurati:
   1. `google-calendar` (locale, @cocal/google-calendar-mcp) — richiede OAuth Google Cloud separato,
