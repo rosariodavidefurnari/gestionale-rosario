@@ -294,7 +294,10 @@ export const buildDashboardModel = ({
     return sum;
   }, 0);
 
-  const pendingPayments = payments.filter((payment) => payment.status !== "ricevuto");
+  // Exclude refunds from pending alerts (refunds are outgoing, not incoming)
+  const pendingPayments = payments.filter(
+    (payment) => payment.status !== "ricevuto" && payment.payment_type !== "rimborso",
+  );
   const pendingPaymentsTotal = pendingPayments.reduce(
     (sum, payment) => sum + toNumber(payment.amount),
     0,

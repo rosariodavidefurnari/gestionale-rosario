@@ -5,7 +5,7 @@
 Fork di Atomic CRM personalizzato per gestire l'attività professionale
 di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
-## Stato Infrastruttura (verificato sessione 13)
+## Stato Infrastruttura (verificato sessione 14)
 
 ### Certezze — Audit superato
 
@@ -54,8 +54,8 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 | projects | Progetti/programmi | auth.uid() IS NOT NULL | 12 col, 3 CHECK |
 | services | Registro lavori (cuore) | auth.uid() IS NOT NULL | 14 col (incl. discount), 1 CHECK |
 | quotes | Preventivi + pipeline Kanban | auth.uid() IS NOT NULL | 13 col (incl. index), 1 CHECK (10 stati) |
-| payments | Tracking pagamenti | auth.uid() IS NOT NULL | 12 col, 3 CHECK |
-| expenses | Spese e km | auth.uid() IS NOT NULL | 11 col, 1 CHECK |
+| payments | Tracking pagamenti | auth.uid() IS NOT NULL | 12 col, 3 CHECK + tipo rimborso |
+| expenses | Spese e km | auth.uid() IS NOT NULL | 11 col, 1 CHECK + tipo credito_ricevuto |
 | client_tasks | Promemoria (opzionalmente legati a un cliente) | auth.uid() IS NOT NULL | 8 col, FK opzionale |
 | client_notes | Note clienti (con allegati) | auth.uid() IS NOT NULL | 7 col, FK obbligatoria |
 | settings | Configurazione | auth.uid() IS NOT NULL | 3 col (key-value) |
@@ -109,6 +109,8 @@ PK esplicite nel dataProvider:
 | `20260227210000_fix_payment_types.sql` | Fix payment_type acconto → saldo per 2 pagamenti che completano fattura |
 | `20260227220000_btf_extra_expenses_and_payment.sql` | Aggiunge 2 expense km + 1 payment in_attesa per BTF non fatturato |
 | `20260227205707_reallocate_diego_payments.sql` | Riallocazione completa: DELETE 10 errati + CREATE 11 corretti per progetto |
+| `20260227230000_add_expenses_to_project_financials.sql` | Aggiunge total_expenses dalla tabella expenses alla view project_financials |
+| `20260228000000_audit_constraints.sql` | Audit sessione 14: UNIQUE, CHECK >= 0, tipi credito_ricevuto + rimborso, iPhone migrato |
 
 ## Moduli Frontend (sessione 11)
 

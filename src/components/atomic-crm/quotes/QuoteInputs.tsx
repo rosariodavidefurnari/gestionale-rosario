@@ -1,4 +1,4 @@
-import { required } from "ra-core";
+import { required, minValue } from "ra-core";
 import { useWatch } from "react-hook-form";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { ReferenceInput } from "@/components/admin/reference-input";
@@ -47,7 +47,7 @@ export const QuoteInputs = () => {
       <NumberInput
         source="amount"
         label="Importo preventivo (EUR)"
-        validate={required()}
+        validate={[required(), minValue(0)]}
         defaultValue={0}
         helperText={false}
       />

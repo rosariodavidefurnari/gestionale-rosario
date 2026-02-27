@@ -13,6 +13,9 @@ const eur = (n: number) =>
   n.toLocaleString("it-IT", { minimumFractionDigits: 2 });
 
 const computeTotal = (e: Expense) => {
+  if (e.expense_type === "credito_ricevuto") {
+    return -(e.amount ?? 0);
+  }
   if (e.expense_type === "spostamento_km") {
     return (e.km_distance ?? 0) * (e.km_rate ?? 0.19);
   }
@@ -89,10 +92,13 @@ const ExpenseDetails = ({
   total: number;
 }) => {
   const isKm = record.expense_type === "spostamento_km";
+  const isCredit = record.expense_type === "credito_ricevuto";
 
   return (
     <div className="space-y-2 max-w-sm">
-      {isKm ? (
+      {isCredit ? (
+        <DetailRow label="Valore credito" value={`EUR ${eur(record.amount ?? 0)}`} />
+      ) : isKm ? (
         <>
           <DetailRow label="Km percorsi" value={String(record.km_distance ?? 0)} />
           <DetailRow label="Tariffa km" value={`EUR ${eur(record.km_rate ?? 0.19)}`} />

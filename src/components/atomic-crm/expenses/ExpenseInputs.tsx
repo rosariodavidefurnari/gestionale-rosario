@@ -1,4 +1,4 @@
-import { required } from "ra-core";
+import { required, minValue } from "ra-core";
 import { useWatch } from "react-hook-form";
 import { Separator } from "@/components/ui/separator";
 import { TextInput } from "@/components/admin/text-input";
@@ -56,11 +56,20 @@ const ExpenseIdentityInputs = () => (
 const ExpenseAmountInputs = () => {
   const expenseType = useWatch({ name: "expense_type" });
   const isKm = expenseType === "spostamento_km";
+  const isCredit = expenseType === "credito_ricevuto";
 
   return (
     <div className="flex flex-col gap-4">
-      <h6 className="text-lg font-semibold">Importo</h6>
-      {isKm ? <KmSection /> : <AmountSection />}
+      <h6 className="text-lg font-semibold">
+        {isCredit ? "Credito" : "Importo"}
+      </h6>
+      {isCredit ? (
+        <CreditSection />
+      ) : isKm ? (
+        <KmSection />
+      ) : (
+        <AmountSection />
+      )}
       <TextInput source="description" label="Descrizione" helperText={false} />
       <TextInput
         source="invoice_ref"
@@ -70,6 +79,18 @@ const ExpenseAmountInputs = () => {
     </div>
   );
 };
+
+const CreditSection = () => (
+  <>
+    <NumberInput
+      source="amount"
+      label="Valore credito (EUR)"
+      defaultValue={0}
+      validate={[required(), minValue(0)]}
+      helperText="Es: iPhone dato come compenso, sconto concordato"
+    />
+  </>
+);
 
 const KmSection = () => {
   const kmDistance = useWatch({ name: "km_distance" }) ?? 0;
@@ -82,12 +103,14 @@ const KmSection = () => {
         source="km_distance"
         label="Km percorsi"
         defaultValue={0}
+        validate={minValue(0)}
         helperText={false}
       />
       <NumberInput
         source="km_rate"
         label="Tariffa km (EUR)"
         defaultValue={0.19}
+        validate={minValue(0)}
         helperText={false}
       />
       <div className="text-sm font-medium px-1 pt-1 border-t">
@@ -111,12 +134,14 @@ const AmountSection = () => {
         source="amount"
         label="Importo spesa (EUR)"
         defaultValue={0}
+        validate={minValue(0)}
         helperText={false}
       />
       <NumberInput
         source="markup_percent"
         label="Ricarico %"
         defaultValue={0}
+        validate={minValue(0)}
         helperText={false}
       />
       <div className="text-sm font-medium px-1 pt-1 border-t">

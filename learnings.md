@@ -319,3 +319,17 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
      `mcp__claude_ai_Google_Calendar__gcal_list_events` (con parametro `q` per ricerca testo),
      `mcp__claude_ai_Google_Calendar__gcal_list_calendars`, ecc.
   **USARE SEMPRE il server claude.ai**, non quello locale. Il server locale è ridondante.
+
+- [2026-02-28] **Non c'è DB Supabase locale — sempre push diretto al remoto** — L'utente non usa
+  `supabase start` per un'istanza locale. Tutte le migration vanno applicate direttamente con
+  `npx supabase db push --include-all`. Non provare `npx supabase migration up`.
+
+- [2026-02-28] **Segno determinato dal TIPO, non dal valore** — Per importi finanziari, il valore
+  nel DB è sempre >= 0. Il tipo determina la direzione: `credito_ricevuto` (expense) → riduce
+  le spese, `rimborso` (payment) → riduce il totale pagato. Questo evita ambiguità e permette
+  CHECK >= 0 su tutte le colonne numeriche.
+
+- [2026-02-28] **computeTotal ha 3 copie** — La funzione `computeTotal` per le spese esiste in
+  3 file: ExpenseListContent.tsx, ExpenseShow.tsx, ExpenseList.tsx (export CSV). Quando si
+  aggiungono tipi spesa o si modifica la logica, aggiornarle TUTTE. Valutare refactoring in
+  un helper condiviso se cresce ulteriormente.

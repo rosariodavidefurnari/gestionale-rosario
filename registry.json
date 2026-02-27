@@ -352,6 +352,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/projects/QuickPaymentDialog.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/projects/QuickEpisodeForm.tsx",
           "type": "registry:component"
         },

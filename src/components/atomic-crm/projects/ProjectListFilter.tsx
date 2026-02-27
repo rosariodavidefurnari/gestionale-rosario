@@ -1,15 +1,38 @@
+import { useState } from "react";
 import { useListFilterContext, useGetList } from "ra-core";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Folder, Activity, User } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Search,
+  Folder,
+  Activity,
+  User,
+  ChevronsUpDown,
+  X,
+} from "lucide-react";
 
 import type { Client } from "../types";
 import { projectCategoryChoices, projectStatusChoices } from "./projectTypes";
 
 export const ProjectListFilter = () => {
   const { filterValues, setFilters } = useListFilterContext();
+  const [clientOpen, setClientOpen] = useState(false);
+
   const { data: clients } = useGetList<Client>("clients", {
-    pagination: { page: 1, perPage: 100 },
+    pagination: { page: 1, perPage: 200 },
     sort: { field: "name", order: "ASC" },
   });
 
@@ -23,16 +46,6 @@ export const ProjectListFilter = () => {
     }
   };
 
-  const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    if (value) {
-      setFilters({ ...filterValues, "client_id@eq": value });
-    } else {
-      const { "client_id@eq": _, ...rest } = filterValues;
-      setFilters(rest);
-    }
-  };
-
   return (
     <div className="shrink-0 w-56 order-last hidden md:block">
       <div className="flex flex-col gap-6">
@@ -41,7 +54,9 @@ export const ProjectListFilter = () => {
           <Input
             placeholder="Cerca progetto..."
             className="pl-8"
-            value={(filterValues["name@ilike"] as string)?.replace(/%/g, "") ?? ""}
+            value={
+              (filterValues["name@ilike"] as string)?.replace(/%/g, "") ?? ""
+            }
             onChange={handleSearchChange}
           />
         </div>
@@ -51,19 +66,63 @@ export const ProjectListFilter = () => {
             icon={<User className="size-4" />}
             label="Cliente"
           >
-            <select
-              aria-label="Filtra per cliente"
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
-              value={(filterValues["client_id@eq"] as string) ?? ""}
-              onChange={handleClientChange}
-            >
-              <option value="">Tutti</option>
-              {clients.map((client) => (
-                <option key={String(client.id)} value={String(client.id)}>
-                  {client.name}
-                </option>
-              ))}
-            </select>
+            <div className="w-full">
+              <Popover open={clientOpen} onOpenChange={setClientOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Filtra per cliente"
+                    className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                  >
+                    <span className="truncate">
+                      {filterValues["client_id@eq"]
+                        ? clients.find(
+                            (c) =>
+                              String(c.id) === filterValues["client_id@eq"],
+                          )?.name ?? "Tutti"
+                        : "Tutti"}
+                    </span>
+                    {filterValues["client_id@eq"] ? (
+                      <X
+                        className="size-3.5 shrink-0 opacity-50 hover:opacity-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const { "client_id@eq": _, ...rest } = filterValues;
+                          setFilters(rest);
+                        }}
+                      />
+                    ) : (
+                      <ChevronsUpDown className="size-3.5 shrink-0 opacity-50" />
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-52 p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Cerca cliente..." />
+                    <CommandList>
+                      <CommandEmpty>Nessun cliente</CommandEmpty>
+                      <CommandGroup>
+                        {clients.map((c) => (
+                          <CommandItem
+                            key={String(c.id)}
+                            value={c.name}
+                            onSelect={() => {
+                              setFilters({
+                                ...filterValues,
+                                "client_id@eq": String(c.id),
+                              });
+                              setClientOpen(false);
+                            }}
+                          >
+                            {c.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
           </FilterSection>
         )}
 

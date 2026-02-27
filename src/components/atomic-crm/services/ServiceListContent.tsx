@@ -71,6 +71,7 @@ const ServiceRow = ({
           {new Date(service.service_date).toLocaleDateString("it-IT", {
             day: "2-digit",
             month: "2-digit",
+            year: "numeric",
           })}
         </Link>
       </TableCell>

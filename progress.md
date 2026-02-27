@@ -2,9 +2,53 @@
 
 ## Current Phase
 
-🟢 Fase 2 + Pulizia + Import + Verifica finanziaria completata. UX migliorata, pagamenti riallocati, deploy su Vercel.
+🟡 Audit robustezza in corso. A1+B1 (duplicati) e A2+B2 (importi negativi + crediti + rimborsi) completati. Restano A3-A7, B4-B6, C1-C2.
 
 ## Last Session
+
+### Sessione 14 (2026-02-28, audit robustezza)
+
+- In progress:
+  - **Audit robustezza** — 19 problemi identificati in audit.md (7 P0, 6 P1, 4 P2)
+  - **A1 + B1: Duplicati clienti** — UNIQUE constraint DB su `clients.name` + validazione async frontend (query pre-save con esclusione record corrente in edit)
+  - **A2 + B2: Importi negativi + crediti + rimborsi**:
+    - CHECK >= 0 su tutte le colonne numeriche (services, payments, expenses, quotes)
+    - `minValue(0)` di ra-core su tutti i NumberInput (4 file Inputs)
+    - Nuovo tipo spesa `credito_ricevuto` (bene/sconto ricevuto dal cliente, riduce spese)
+    - Nuovo tipo pagamento `rimborso` (rimborso al cliente, riduce il pagato)
+    - Migration: iPhone da amount=-500 → amount=+500, type=credito_ricevuto
+    - View `project_financials` aggiornata: crediti sottratti dalle spese, rimborsi sottratti dal pagato
+    - `computeTotal` aggiornato in 3 file (ExpenseListContent, ExpenseShow, ExpenseList)
+    - `ClientFinancialSummary` aggiornato per crediti e rimborsi
+    - `dashboardModel.ts` aggiornato: rimborsi esclusi dai pending alerts
+    - Descrizioni tipi aggiunte (expenseTypeDescriptions, paymentTypeDescriptions)
+    - Sezione CreditSection nel form spese (solo campo amount con helperText)
+
+- Decisions:
+  - Il segno è determinato dal TIPO, non dal valore: importi sempre >= 0
+  - `credito_ricevuto` per spese (iPhone, sconti, barter): valore positivo, sistema sottrae
+  - `rimborso` per pagamenti: importo positivo, sistema sottrae dal total_paid
+  - Duplicati clienti: DB UNIQUE + frontend check (scelta utente: entrambi)
+  - Descrizioni mini per tipi spesa/pagamento: basate su funzionamento reale sistema
+
+- Migration created:
+  - `supabase/migrations/20260228000000_audit_constraints.sql` (UNIQUE, CHECK, tipi nuovi, iPhone migration, view aggiornata)
+
+- Files modified:
+  - `src/components/atomic-crm/clients/ClientInputs.tsx` (validazione unique name)
+  - `src/components/atomic-crm/services/ServiceInputs.tsx` (minValue su 6 campi)
+  - `src/components/atomic-crm/payments/PaymentInputs.tsx` (minValue su amount)
+  - `src/components/atomic-crm/expenses/ExpenseInputs.tsx` (minValue + CreditSection)
+  - `src/components/atomic-crm/quotes/QuoteInputs.tsx` (minValue su amount)
+  - `src/components/atomic-crm/expenses/expenseTypes.ts` (credito_ricevuto + descriptions)
+  - `src/components/atomic-crm/payments/paymentTypes.ts` (rimborso + descriptions)
+  - `src/components/atomic-crm/expenses/ExpenseListContent.tsx` (computeTotal per crediti)
+  - `src/components/atomic-crm/expenses/ExpenseShow.tsx` (computeTotal + CreditSection view)
+  - `src/components/atomic-crm/expenses/ExpenseList.tsx` (computeTotal export)
+  - `src/components/atomic-crm/clients/ClientFinancialSummary.tsx` (crediti e rimborsi)
+  - `src/components/atomic-crm/dashboard/dashboardModel.ts` (rimborsi esclusi da pending)
+
+- Next action: Continuare audit (A3-A7, B4-B6, C1-C2)
 
 ### Sessione 13 (2026-02-27, sera)
 

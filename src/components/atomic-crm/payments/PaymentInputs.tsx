@@ -1,4 +1,4 @@
-import { required } from "ra-core";
+import { required, minValue } from "ra-core";
 import { Separator } from "@/components/ui/separator";
 import { TextInput } from "@/components/admin/text-input";
 import { SelectInput } from "@/components/admin/select-input";
@@ -68,7 +68,7 @@ const PaymentDetailInputs = () => (
     <NumberInput
       source="amount"
       label="Importo (EUR)"
-      validate={required()}
+      validate={[required(), minValue(0)]}
       helperText={false}
     />
     <SelectInput

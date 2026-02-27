@@ -56,6 +56,9 @@ const ExpenseListActions = () => (
 );
 
 const computeTotal = (e: Expense) => {
+  if (e.expense_type === "credito_ricevuto") {
+    return -(e.amount ?? 0);
+  }
   if (e.expense_type === "spostamento_km") {
     return (e.km_distance ?? 0) * (e.km_rate ?? 0.19);
   }

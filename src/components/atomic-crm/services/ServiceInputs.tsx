@@ -1,4 +1,4 @@
-import { required } from "ra-core";
+import { required, minValue } from "ra-core";
 import { useWatch } from "react-hook-form";
 import { Separator } from "@/components/ui/separator";
 import { TextInput } from "@/components/admin/text-input";
@@ -65,24 +65,28 @@ const ServiceFeeInputs = () => (
       source="fee_shooting"
       label="Compenso riprese (EUR)"
       defaultValue={0}
+      validate={minValue(0)}
       helperText={false}
     />
     <NumberInput
       source="fee_editing"
       label="Compenso montaggio (EUR)"
       defaultValue={0}
+      validate={minValue(0)}
       helperText={false}
     />
     <NumberInput
       source="fee_other"
       label="Compenso altro (EUR)"
       defaultValue={0}
+      validate={minValue(0)}
       helperText={false}
     />
     <NumberInput
       source="discount"
       label="Sconto (EUR)"
       defaultValue={0}
+      validate={minValue(0)}
       helperText={false}
     />
     <ServiceTotals />
@@ -101,12 +105,14 @@ const ServiceKmInputs = () => {
         source="km_distance"
         label="Km percorsi"
         defaultValue={0}
+        validate={minValue(0)}
         helperText={false}
       />
       <NumberInput
         source="km_rate"
         label="Tariffa km (EUR)"
         defaultValue={0.19}
+        validate={minValue(0)}
         helperText={false}
       />
       <div className="text-sm font-medium px-1">

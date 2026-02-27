@@ -3,6 +3,7 @@ export const paymentTypeChoices = [
   { id: "saldo", name: "Saldo" },
   { id: "parziale", name: "Parziale" },
   { id: "rimborso_spese", name: "Rimborso spese" },
+  { id: "rimborso", name: "Rimborso al cliente" },
 ] as const;
 
 export const paymentMethodChoices = [
@@ -29,4 +30,13 @@ export const paymentTypeLabels: Record<string, string> = {
   saldo: "Saldo",
   parziale: "Parziale",
   rimborso_spese: "Rimborso spese",
+  rimborso: "Rimborso al cliente",
+};
+
+export const paymentTypeDescriptions: Record<string, string> = {
+  acconto: "Pagamento parziale anticipato dal cliente",
+  saldo: "Pagamento finale che completa la fattura",
+  parziale: "Pagamento parziale non legato a fattura specifica",
+  rimborso_spese: "Il cliente ti rimborsa spese sostenute",
+  rimborso: "Tu rimborsi il cliente (riduce il totale pagato)",
 };

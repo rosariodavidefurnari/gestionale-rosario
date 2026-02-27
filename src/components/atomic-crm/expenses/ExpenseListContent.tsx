@@ -16,6 +16,9 @@ const eur = (n: number) =>
   n ? n.toLocaleString("it-IT", { minimumFractionDigits: 2 }) : "--";
 
 const computeTotal = (e: Expense) => {
+  if (e.expense_type === "credito_ricevuto") {
+    return -(e.amount ?? 0);
+  }
   if (e.expense_type === "spostamento_km") {
     return (e.km_distance ?? 0) * (e.km_rate ?? 0.19);
   }
@@ -34,6 +37,7 @@ export const ExpenseListContent = () => {
         <TableRow>
           <TableHead>Data</TableHead>
           <TableHead>Tipo</TableHead>
+          <TableHead className="hidden md:table-cell">Cliente</TableHead>
           <TableHead>Progetto</TableHead>
           <TableHead className="text-right hidden md:table-cell">Km</TableHead>
           <TableHead className="text-right">Totale EUR</TableHead>
@@ -68,6 +72,10 @@ const ExpenseRow = ({
     id: expense.project_id ?? "",
     enabled: !!expense.project_id,
   } as any);
+  const { data: client } = useGetOne("clients", {
+    id: expense.client_id ?? "",
+    enabled: !!expense.client_id,
+  } as any);
   const total = computeTotal(expense);
 
   return (
@@ -79,6 +87,9 @@ const ExpenseRow = ({
       </TableCell>
       <TableCell className="text-sm">
         {expenseTypeLabels[expense.expense_type] ?? expense.expense_type}
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground hidden md:table-cell">
+        {client?.name ?? ""}
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">
         {project?.name ?? ""}
