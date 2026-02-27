@@ -1,12 +1,17 @@
-import { useListFilterContext } from "ra-core";
+import { useListFilterContext, useGetList } from "ra-core";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Folder, Activity } from "lucide-react";
+import { Search, Folder, Activity, User } from "lucide-react";
 
+import type { Client } from "../types";
 import { projectCategoryChoices, projectStatusChoices } from "./projectTypes";
 
 export const ProjectListFilter = () => {
   const { filterValues, setFilters } = useListFilterContext();
+  const { data: clients } = useGetList<Client>("clients", {
+    pagination: { page: 1, perPage: 100 },
+    sort: { field: "name", order: "ASC" },
+  });
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -72,6 +77,29 @@ export const ProjectListFilter = () => {
             />
           ))}
         </FilterSection>
+
+        {clients && clients.length > 0 && (
+          <FilterSection
+            icon={<User className="size-4" />}
+            label="Cliente"
+          >
+            {clients.map((client) => (
+              <FilterBadge
+                key={String(client.id)}
+                label={client.name}
+                isActive={filterValues["client_id@eq"] === String(client.id)}
+                onToggle={() => {
+                  if (filterValues["client_id@eq"] === String(client.id)) {
+                    const { "client_id@eq": _, ...rest } = filterValues;
+                    setFilters(rest);
+                  } else {
+                    setFilters({ ...filterValues, "client_id@eq": String(client.id) });
+                  }
+                }}
+              />
+            ))}
+          </FilterSection>
+        )}
       </div>
     </div>
   );
