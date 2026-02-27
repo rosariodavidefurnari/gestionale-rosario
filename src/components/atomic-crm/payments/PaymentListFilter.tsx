@@ -14,19 +14,28 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
 import {
   CircleDollarSign,
   FolderOpen,
+  User,
+  Calendar,
   ChevronsUpDown,
   X,
 } from "lucide-react";
 
-import type { Project } from "../types";
+import type { Client, Project } from "../types";
 import { paymentStatusChoices } from "./paymentTypes";
 
 export const PaymentListFilter = () => {
   const { filterValues, setFilters } = useListFilterContext();
+  const [clientOpen, setClientOpen] = useState(false);
   const [projectOpen, setProjectOpen] = useState(false);
+
+  const { data: clients } = useGetList<Client>("clients", {
+    pagination: { page: 1, perPage: 200 },
+    sort: { field: "name", order: "ASC" },
+  });
 
   const { data: projects } = useGetList<Project>("projects", {
     pagination: { page: 1, perPage: 200 },
@@ -56,6 +65,71 @@ export const PaymentListFilter = () => {
             />
           ))}
         </FilterSection>
+
+        {clients && clients.length > 0 && (
+          <FilterSection
+            icon={<User className="size-4" />}
+            label="Cliente"
+          >
+            <div className="w-full">
+              <Popover open={clientOpen} onOpenChange={setClientOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Filtra per cliente"
+                    className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                  >
+                    <span className="truncate">
+                      {filterValues["client_id@eq"]
+                        ? clients.find(
+                            (c) =>
+                              String(c.id) === filterValues["client_id@eq"],
+                          )?.name ?? "Tutti"
+                        : "Tutti"}
+                    </span>
+                    {filterValues["client_id@eq"] ? (
+                      <X
+                        className="size-3.5 shrink-0 opacity-50 hover:opacity-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const { "client_id@eq": _, ...rest } = filterValues;
+                          setFilters(rest);
+                        }}
+                      />
+                    ) : (
+                      <ChevronsUpDown className="size-3.5 shrink-0 opacity-50" />
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-52 p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Cerca cliente..." />
+                    <CommandList>
+                      <CommandEmpty>Nessun cliente</CommandEmpty>
+                      <CommandGroup>
+                        {clients.map((c) => (
+                          <CommandItem
+                            key={String(c.id)}
+                            value={c.name}
+                            onSelect={() => {
+                              setFilters({
+                                ...filterValues,
+                                "client_id@eq": String(c.id),
+                              });
+                              setClientOpen(false);
+                            }}
+                          >
+                            {c.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+          </FilterSection>
+        )}
 
         {projects && projects.length > 0 && (
           <FilterSection
@@ -121,6 +195,54 @@ export const PaymentListFilter = () => {
             </div>
           </FilterSection>
         )}
+
+        <FilterSection
+          icon={<Calendar className="size-4" />}
+          label="Periodo"
+        >
+          <div className="flex flex-col gap-2 w-full">
+            <div>
+              <label className="text-xs text-muted-foreground">Da</label>
+              <Input
+                type="date"
+                className="h-8 text-sm"
+                value={(filterValues["payment_date@gte"] as string) ?? ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value) {
+                    setFilters({
+                      ...filterValues,
+                      "payment_date@gte": value,
+                    });
+                  } else {
+                    const { "payment_date@gte": _, ...rest } = filterValues;
+                    setFilters(rest);
+                  }
+                }}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">A</label>
+              <Input
+                type="date"
+                className="h-8 text-sm"
+                value={(filterValues["payment_date@lte"] as string) ?? ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value) {
+                    setFilters({
+                      ...filterValues,
+                      "payment_date@lte": value,
+                    });
+                  } else {
+                    const { "payment_date@lte": _, ...rest } = filterValues;
+                    setFilters(rest);
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </FilterSection>
       </div>
     </div>
   );

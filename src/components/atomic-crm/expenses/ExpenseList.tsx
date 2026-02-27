@@ -5,7 +5,7 @@ import { ExportButton } from "@/components/admin/export-button";
 import { List } from "@/components/admin/list";
 import { SortButton } from "@/components/admin/sort-button";
 
-import type { Expense } from "../types";
+import type { Client, Expense, Project } from "../types";
 import { ExpenseListContent } from "./ExpenseListContent";
 import { ExpenseListFilter } from "./ExpenseListFilter";
 import { TopToolbar } from "../layout/TopToolbar";
@@ -65,9 +65,21 @@ const computeTotal = (e: Expense) => {
   return (e.amount ?? 0) * (1 + (e.markup_percent ?? 0) / 100);
 };
 
-const exporter: Exporter<Expense> = async (records) => {
+const exporter: Exporter<Expense> = async (records, fetchRelatedRecords) => {
+  const clients = await fetchRelatedRecords<Client>(
+    records,
+    "client_id",
+    "clients",
+  );
+  const projects = await fetchRelatedRecords<Project>(
+    records,
+    "project_id",
+    "projects",
+  );
   const rows = records.map((e) => ({
     data: e.expense_date,
+    cliente: e.client_id ? (clients[e.client_id]?.name ?? "") : "",
+    progetto: e.project_id ? (projects[e.project_id]?.name ?? "") : "",
     tipo: expenseTypeLabels[e.expense_type] ?? e.expense_type,
     km: e.km_distance ?? "",
     tariffa_km: e.km_rate ?? "",

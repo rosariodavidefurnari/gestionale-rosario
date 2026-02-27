@@ -5,7 +5,7 @@ import { ExportButton } from "@/components/admin/export-button";
 import { List } from "@/components/admin/list";
 import { SortButton } from "@/components/admin/sort-button";
 
-import type { Client, Payment } from "../types";
+import type { Client, Payment, Project } from "../types";
 import { PaymentListContent } from "./PaymentListContent";
 import { PaymentListFilter } from "./PaymentListFilter";
 import { TopToolbar } from "../layout/TopToolbar";
@@ -61,9 +61,15 @@ const exporter: Exporter<Payment> = async (records, fetchRelatedRecords) => {
     "client_id",
     "clients",
   );
+  const projects = await fetchRelatedRecords<Project>(
+    records,
+    "project_id",
+    "projects",
+  );
   const rows = records.map((p) => ({
     data: p.payment_date ?? "",
     cliente: clients[p.client_id]?.name ?? "",
+    progetto: p.project_id ? (projects[p.project_id]?.name ?? "") : "",
     tipo: paymentTypeLabels[p.payment_type] ?? p.payment_type,
     importo: p.amount,
     metodo: p.method ?? "",
