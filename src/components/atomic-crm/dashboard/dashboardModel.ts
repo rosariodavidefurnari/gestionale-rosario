@@ -70,6 +70,8 @@ export type DashboardAlerts = {
 export type PaymentAlert = {
   id: string;
   clientName: string;
+  projectName?: string;
+  notes?: string;
   amount: number;
   status: string;
   urgency: "overdue" | "due_soon" | "pending";
@@ -360,6 +362,7 @@ export const buildDashboardModel = ({
       const parsedDate = paymentDate ? new Date(paymentDate) : null;
       const validDate = parsedDate && !Number.isNaN(parsedDate.valueOf()) ? parsedDate : null;
       const clientName = clientById.get(String(payment.client_id))?.name ?? "Cliente";
+      const project = payment.project_id ? projectById.get(String(payment.project_id)) : undefined;
       const daysOffset = validDate ? diffDays(today, validDate) : undefined;
       const isOverdue = payment.status === "scaduto" || (daysOffset != null && daysOffset < 0);
       const isDueSoon = daysOffset != null && daysOffset >= 0 && daysOffset <= 14;
@@ -371,6 +374,8 @@ export const buildDashboardModel = ({
       return {
         id: String(payment.id),
         clientName,
+        projectName: project?.name,
+        notes: payment.notes,
         amount: toNumber(payment.amount),
         status: isOverdue ? "scaduto" : payment.status,
         urgency,

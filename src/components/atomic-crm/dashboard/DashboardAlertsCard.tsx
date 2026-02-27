@@ -98,10 +98,15 @@ const PaymentAlertRow = ({ payment }: { payment: PaymentAlert }) => {
           : `Scadenza: ${formatDayMonth(payment.paymentDate)}`
     : "Senza scadenza";
 
+  const detail = payment.projectName ?? payment.notes;
+
   return (
     <div className="flex items-start justify-between gap-2 text-sm">
       <div className="min-w-0">
-        <p className="font-medium truncate">{payment.clientName}</p>
+        <p className="font-medium truncate">
+          {payment.clientName}
+          {detail && <span className="font-normal text-muted-foreground"> · {detail}</span>}
+        </p>
         <p className="text-xs text-muted-foreground flex items-center gap-1">
           {config.icon}
           {dateInfo}
