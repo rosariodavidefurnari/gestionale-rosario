@@ -22,6 +22,36 @@ const toNum = (v: unknown) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+const getSuggestedAmount = (
+  type: string,
+  totals: { fees: number; expenses: number; paid: number },
+) => {
+  const balance = totals.fees + totals.expenses - totals.paid;
+  switch (type) {
+    case "rimborso_spese":
+      return totals.expenses;
+    case "acconto":
+      return totals.fees;
+    case "saldo":
+      return Math.max(balance, 0);
+    default:
+      return Math.max(balance, 0);
+  }
+};
+
+const getAmountHint = (type: string): string => {
+  switch (type) {
+    case "rimborso_spese":
+      return "= totale spese progetto (km, materiale, noleggio...)";
+    case "acconto":
+      return "= compensi professionali";
+    case "saldo":
+      return "= residuo da incassare";
+    default:
+      return "";
+  }
+};
+
 export const QuickPaymentDialog = ({ record }: { record: Project }) => {
   const [open, setOpen] = useState(false);
   const [create] = useCreate();
@@ -34,9 +64,12 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
   });
 
   const totalFees = toNum(financials?.total_fees);
-  const totalKmCost = toNum(financials?.total_km_cost);
+  const totalExpenses = toNum(financials?.total_expenses);
   const totalPaid = toNum(financials?.total_paid);
-  const balanceDue = totalFees + totalKmCost - totalPaid;
+  const grandTotal = totalFees + totalExpenses;
+  const balanceDue = grandTotal - totalPaid;
+
+  const totals = { fees: totalFees, expenses: totalExpenses, paid: totalPaid };
 
   const [amount, setAmount] = useState(0);
   const [paymentType, setPaymentType] = useState("acconto");
@@ -45,19 +78,19 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
   const [method, setMethod] = useState("bonifico");
   const [notes, setNotes] = useState("");
 
-  const resetForm = () => {
-    setAmount(0);
-    setPaymentType("acconto");
-    setPaymentDate("");
-    setStatus("ricevuto");
-    setMethod("bonifico");
-    setNotes("");
+  const handleTypeChange = (newType: string) => {
+    setPaymentType(newType);
+    setAmount(getSuggestedAmount(newType, totals));
   };
 
   const handleOpenChange = (v: boolean) => {
     if (v) {
-      resetForm();
-      setAmount(balanceDue > 0 ? balanceDue : 0);
+      setPaymentType("acconto");
+      setPaymentDate("");
+      setStatus("ricevuto");
+      setMethod("bonifico");
+      setNotes("");
+      setAmount(getSuggestedAmount("acconto", totals));
     }
     setOpen(v);
   };
@@ -93,6 +126,8 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
     }
   };
 
+  const hint = getAmountHint(paymentType);
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
@@ -108,12 +143,23 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
 
         <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
           <div className="flex justify-between">
-            <span>Totale lavori</span>
-            <span>{eur(totalFees + totalKmCost)}</span>
+            <span>Compensi</span>
+            <span>{eur(totalFees)}</span>
+          </div>
+          {totalExpenses > 0 && (
+            <div className="flex justify-between">
+              <span>Spese</span>
+              <span>{eur(totalExpenses)}</span>
+            </div>
+          )}
+          <Separator className="my-1" />
+          <div className="flex justify-between font-medium">
+            <span>Totale</span>
+            <span>{eur(grandTotal)}</span>
           </div>
           <div className="flex justify-between">
             <span>Già pagato</span>
-            <span>{eur(totalPaid)}</span>
+            <span className="text-green-600">{eur(totalPaid)}</span>
           </div>
           <Separator className="my-1" />
           <div className="flex justify-between font-bold">
@@ -132,11 +178,10 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
                 id="pay-type"
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
                 value={paymentType}
-                onChange={(e) => setPaymentType(e.target.value)}
+                onChange={(e) => handleTypeChange(e.target.value)}
               >
                 <option value="acconto">Acconto</option>
                 <option value="saldo">Saldo</option>
-                <option value="parziale">Parziale</option>
                 <option value="rimborso_spese">Rimborso spese</option>
               </select>
             </div>
@@ -151,6 +196,9 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
                 onChange={(e) => setAmount(Number(e.target.value))}
                 required
               />
+              {hint && (
+                <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="pay-date">Data pagamento</Label>
@@ -178,6 +226,7 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
               <Label htmlFor="pay-method">Metodo</Label>
               <select
                 id="pay-method"
+                aria-label="Metodo di pagamento"
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
                 value={method}
                 onChange={(e) => setMethod(e.target.value)}

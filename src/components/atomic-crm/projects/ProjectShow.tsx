@@ -150,11 +150,10 @@ const ProjectFinancials = ({ projectId }: { projectId: string }) => {
   if (!data) return null;
 
   const totalFees = toNum(data.total_fees);
-  const totalKm = toNum(data.total_km);
-  const totalKmCost = toNum(data.total_km_cost);
+  const totalExpenses = toNum(data.total_expenses);
   const totalServices = toNum(data.total_services);
   const totalPaid = toNum(data.total_paid);
-  const grandTotal = totalFees + totalKmCost;
+  const grandTotal = totalFees + totalExpenses;
   const balanceDue = grandTotal - totalPaid;
 
   return (
@@ -163,13 +162,12 @@ const ProjectFinancials = ({ projectId }: { projectId: string }) => {
       <MetricCard icon={<Euro className="size-4" />} label="Compensi" value={eur(totalFees)} />
       <MetricCard
         icon={<Car className="size-4" />}
-        label="Km"
-        value={`${totalKm.toLocaleString("it-IT")} km`}
-        sub={eur(totalKmCost)}
+        label="Spese"
+        value={eur(totalExpenses)}
       />
       <MetricCard
         icon={<Wallet className="size-4" />}
-        label="Totale lavori"
+        label="Totale"
         value={eur(grandTotal)}
         className="font-bold"
       />
