@@ -11,18 +11,6 @@ export const quoteStatuses = [
   { value: "perso", label: "Perso" },
 ];
 
-export const quoteServiceTypes = [
-  { value: "wedding", label: "Wedding" },
-  { value: "battesimo", label: "Battesimo" },
-  { value: "compleanno", label: "Compleanno" },
-  { value: "evento", label: "Evento" },
-  { value: "spot", label: "Spot" },
-  { value: "sito_web", label: "Sito Web" },
-];
-
 export const quoteStatusLabels: Record<string, string> = Object.fromEntries(
   quoteStatuses.map((s) => [s.value, s.label]),
 );
-
-export const quoteServiceTypeLabels: Record<string, string> =
-  Object.fromEntries(quoteServiceTypes.map((s) => [s.value, s.label]));

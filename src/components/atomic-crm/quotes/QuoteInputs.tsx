@@ -8,10 +8,12 @@ import { DateInput } from "@/components/admin/date-input";
 import { SelectInput } from "@/components/admin/select-input";
 import { Separator } from "@/components/ui/separator";
 
-import { quoteStatuses, quoteServiceTypes } from "./quotesTypes";
+import { useConfigurationContext } from "../root/ConfigurationContext";
+import { quoteStatuses } from "./quotesTypes";
 
 export const QuoteInputs = () => {
   const status = useWatch({ name: "status" });
+  const { quoteServiceTypes } = useConfigurationContext();
 
   return (
     <div className="flex flex-col gap-4">

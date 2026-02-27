@@ -52,8 +52,8 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 |---------|-------|-----|---------|
 | clients | Anagrafica clienti | auth.uid() IS NOT NULL | 12 col (incl. tags BIGINT[]), 2 CHECK |
 | projects | Progetti/programmi | auth.uid() IS NOT NULL | 12 col, 3 CHECK |
-| services | Registro lavori (cuore) | auth.uid() IS NOT NULL | 14 col (incl. discount), 1 CHECK |
-| quotes | Preventivi + pipeline Kanban | auth.uid() IS NOT NULL | 13 col (incl. index), 1 CHECK (10 stati) |
+| services | Registro lavori (cuore) | auth.uid() IS NOT NULL | 14 col (incl. discount), no CHECK service_type (dinamico) |
+| quotes | Preventivi + pipeline Kanban | auth.uid() IS NOT NULL | 13 col (incl. index), 1 CHECK (10 stati), no CHECK service_type (dinamico) |
 | payments | Tracking pagamenti | auth.uid() IS NOT NULL | 12 col, 3 CHECK + tipo rimborso |
 | expenses | Spese e km | auth.uid() IS NOT NULL | 11 col, 1 CHECK + tipo credito_ricevuto |
 | client_tasks | Promemoria (opzionalmente legati a un cliente) | auth.uid() IS NOT NULL | 8 col, FK opzionale |
@@ -116,6 +116,8 @@ PK esplicite nel dataProvider:
 | `20260227224137_date_range_checks.sql` | CHECK end_date >= start_date (projects), response_date >= sent_date (quotes) |
 | `20260227224448_add_updated_at_columns.sql` | updated_at + trigger set_updated_at() su services, payments, expenses |
 | `20260227224515_unique_project_client_name.sql` | UNIQUE (client_id, name) su projects |
+| `20260227230519_add_quotes_service_type_check.sql` | CHECK su quotes.service_type (poi droppato) |
+| `20260227231714_drop_service_type_checks.sql` | DROP CHECK su quotes + services service_type (tipi ora dinamici) |
 
 ## Moduli Frontend (sessione 11)
 
@@ -270,6 +272,6 @@ LabeledValue, NoteStatus                  ← Config
 /expenses       → Spese e km
 /expenses/:id   → Dettaglio spesa
 /client_tasks   → Lista promemoria (filtri: scaduti, oggi, domani, settimana, più avanti)
-/settings       → Impostazioni (Marchio, Note, Attività)
+/settings       → Impostazioni (Marchio, Tipi preventivo, Tipi servizio, Note, Attività)
 /profile        → Profilo utente
 ```

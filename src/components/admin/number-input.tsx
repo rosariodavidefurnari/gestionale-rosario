@@ -37,6 +37,7 @@ export const NumberInput = (props: NumberInputProps) => {
     resource: resourceProp,
     validate: _validateProp,
     format: _formatProp,
+    defaultValue: _defaultValue,
     parse = convertStringToNumber,
     onFocus,
     helperText,

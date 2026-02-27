@@ -365,3 +365,26 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   spieghi il problema, si facciano domande pertinenti (non quelle a cui l'utente non può
   ragionevolmente rispondere), e si attenda conferma prima di modificare codice. Non modificare
   mai silenziosamente.
+
+- [2026-02-28] **Tipi configurabili via ConfigurationContext, non hardcoded** — Quando una lista
+  di valori (tipi servizio, tipi preventivo) deve poter crescere senza intervento del developer,
+  usare ConfigurationContext (persistito via `useStore` di ra-core). Pattern: aggiungere il campo
+  a `ConfigurationContextValue`, defaults in `defaultConfiguration.ts`, sezione editabile in
+  SettingsPage con ArrayInput + SimpleFormIterator, e `ensureValues()` nel transform per auto-generare
+  slug value dal label. I consumatori usano `useConfigurationContext()` e lookup con `.find()`.
+
+- [2026-02-28] **CHECK constraint DB incompatibili con valori dinamici** — Se i valori di un campo
+  sono gestiti dall'utente via UI (ConfigurationContext/Settings), i CHECK constraint statici nel DB
+  devono essere rimossi. Altrimenti inserire un nuovo tipo nel Settings non basta: il DB rifiuta il
+  valore. Lesson: usare CHECK solo per valori veramente fissi (es: stati pipeline hardcoded).
+
+- [2026-02-28] **Exporter CSV dentro il componente quando serve config** — L'exporter di react-admin
+  è una funzione standalone passata come prop a `<List>`. Se deve leggere valori da ConfigurationContext
+  (hook), non può stare fuori dal componente. Pattern: definire exporter dentro il componente con
+  `useCallback`, passarlo sia a `<List exporter={}>` che a `<ExportButton exporter={}>`.
+
+- [2026-02-28] **LabeledValue { value, label } vs { id, name }** — ConfigurationContext usa il formato
+  `{ value: string; label: string }` (tipo `LabeledValue`). I vecchi array di choices usavano
+  `{ id, name }`. Quando si migra, aggiornare TUTTI i consumatori: `type.id` → `type.value`,
+  `type.name` → `type.label`. Se un SelectInput usa `optionValue="value"` e `optionText="label"`,
+  i choices devono avere quei campi.

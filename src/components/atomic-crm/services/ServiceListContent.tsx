@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 
 import type { Service } from "../types";
-import { serviceTypeLabels } from "./serviceTypes";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 import { ErrorMessage } from "../misc/ErrorMessage";
 
 const eur = (n: number) =>
@@ -63,6 +63,7 @@ const ServiceRow = ({
   link: string;
 }) => {
   const { data: project } = useGetOne("projects", { id: service.project_id });
+  const { serviceTypeChoices } = useConfigurationContext();
   const total =
     service.fee_shooting + service.fee_editing + service.fee_other - service.discount;
 
@@ -81,7 +82,7 @@ const ServiceRow = ({
         {project?.name ?? ""}
       </TableCell>
       <TableCell className="text-sm">
-        {serviceTypeLabels[service.service_type] ?? service.service_type}
+        {serviceTypeChoices.find((t) => t.value === service.service_type)?.label ?? service.service_type}
       </TableCell>
       <TableCell className="text-right text-sm hidden md:table-cell">
         {eur(service.fee_shooting)}

@@ -7,7 +7,7 @@ import { Calendar, MapPin, FileText } from "lucide-react";
 import { Link } from "react-router";
 
 import type { Service } from "../types";
-import { serviceTypeLabels } from "./serviceTypes";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 import { ErrorMessage } from "../misc/ErrorMessage";
 
 const eur = (n: number) =>
@@ -51,12 +51,16 @@ const ServiceShowContent = () => {
 
 const ServiceHeader = ({ record }: { record: Service }) => {
   const { data: project } = useGetOne("projects", { id: record.project_id });
+  const { serviceTypeChoices } = useConfigurationContext();
+  const serviceLabel =
+    serviceTypeChoices.find((t) => t.value === record.service_type)?.label ??
+    record.service_type;
 
   return (
     <div className="flex items-start justify-between">
       <div>
         <h2 className="text-2xl font-bold">
-          {serviceTypeLabels[record.service_type] ?? record.service_type}
+          {serviceLabel}
         </h2>
         <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
           <span className="flex items-center gap-1">

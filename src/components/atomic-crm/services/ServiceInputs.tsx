@@ -7,7 +7,7 @@ import { ReferenceInput } from "@/components/admin/reference-input";
 import { NumberInput } from "@/components/admin/number-input";
 import { DateInput } from "@/components/admin/date-input";
 
-import { serviceTypeChoices } from "./serviceTypes";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 import { ServiceTotals } from "./ServiceTotals";
 
 export const ServiceInputs = () => {
@@ -31,32 +31,35 @@ export const ServiceInputs = () => {
   );
 };
 
-const ServiceIdentityInputs = () => (
-  <div className="flex flex-col gap-4">
-    <h6 className="text-lg font-semibold">Servizio</h6>
-    <DateInput
-      source="service_date"
-      label="Data servizio"
-      validate={required()}
-      helperText={false}
-    />
-    <ReferenceInput source="project_id" reference="projects">
-      <SelectInput
-        label="Progetto"
-        optionText="name"
+const ServiceIdentityInputs = () => {
+  const { serviceTypeChoices } = useConfigurationContext();
+  return (
+    <div className="flex flex-col gap-4">
+      <h6 className="text-lg font-semibold">Servizio</h6>
+      <DateInput
+        source="service_date"
+        label="Data servizio"
         validate={required()}
         helperText={false}
       />
-    </ReferenceInput>
-    <SelectInput
-      source="service_type"
-      label="Tipo servizio"
-      choices={serviceTypeChoices}
-      validate={required()}
-      helperText={false}
-    />
-  </div>
-);
+      <ReferenceInput source="project_id" reference="projects">
+        <SelectInput
+          label="Progetto"
+          optionText="name"
+          validate={required()}
+          helperText={false}
+        />
+      </ReferenceInput>
+      <SelectInput
+        source="service_type"
+        label="Tipo servizio"
+        choices={serviceTypeChoices}
+        validate={required()}
+        helperText={false}
+      />
+    </div>
+  );
+};
 
 const ServiceFeeInputs = () => (
   <div className="flex flex-col gap-4">

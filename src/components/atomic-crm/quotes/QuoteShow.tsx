@@ -8,11 +8,17 @@ import {
 import { DeleteButton } from "@/components/admin/delete-button";
 import { EditButton } from "@/components/admin/edit-button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 
 import type { Quote } from "../types";
-import { quoteStatusLabels, quoteServiceTypeLabels } from "./quotesTypes";
+import { useConfigurationContext } from "../root/ConfigurationContext";
+import { quoteStatusLabels } from "./quotesTypes";
 
 export const QuoteShow = ({ open, id }: { open: boolean; id?: string }) => {
   const redirect = useRedirect();
@@ -23,6 +29,10 @@ export const QuoteShow = ({ open, id }: { open: boolean; id?: string }) => {
   return (
     <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="lg:max-w-4xl p-4 overflow-y-auto max-h-9/10 top-1/20 translate-y-0">
+        <DialogTitle className="sr-only">Dettaglio preventivo</DialogTitle>
+        <DialogDescription className="sr-only">
+          Visualizzazione dettaglio preventivo
+        </DialogDescription>
         {id ? (
           <ShowBase id={id}>
             <QuoteShowContent />
@@ -35,6 +45,7 @@ export const QuoteShow = ({ open, id }: { open: boolean; id?: string }) => {
 
 const QuoteShowContent = () => {
   const record = useRecordContext<Quote>();
+  const { quoteServiceTypes } = useConfigurationContext();
 
   const { data: client } = useGetOne("clients", {
     id: record?.client_id,
@@ -45,7 +56,8 @@ const QuoteShowContent = () => {
 
   const statusLabel = quoteStatusLabels[record.status] ?? record.status;
   const serviceLabel =
-    quoteServiceTypeLabels[record.service_type] ?? record.service_type;
+    quoteServiceTypes.find((t) => t.value === record.service_type)?.label ??
+    record.service_type;
 
   return (
     <div className="space-y-2">

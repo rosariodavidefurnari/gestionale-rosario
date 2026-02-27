@@ -9,7 +9,12 @@ import {
 import { Create } from "@/components/admin/create";
 import { SaveButton } from "@/components/admin/form";
 import { FormToolbar } from "@/components/admin/simple-form";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import type { Quote } from "../types";
 import { QuoteInputs } from "./QuoteInputs";
@@ -68,6 +73,10 @@ export const QuoteCreate = ({ open }: { open: boolean }) => {
   return (
     <Dialog open={open} onOpenChange={() => handleClose()}>
       <DialogContent className="lg:max-w-4xl overflow-y-auto max-h-9/10 top-1/20 translate-y-0">
+        <DialogTitle>Nuovo preventivo</DialogTitle>
+        <DialogDescription className="sr-only">
+          Compila i campi per creare un nuovo preventivo
+        </DialogDescription>
         <Create resource="quotes" mutationOptions={{ onSuccess }}>
           <Form defaultValues={{ index: 0, status: "primo_contatto" }}>
             <QuoteInputs />

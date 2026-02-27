@@ -8,7 +8,12 @@ import {
 import { Link } from "react-router";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { FormToolbar } from "../layout/FormToolbar";
 import type { Quote } from "../types";
@@ -27,6 +32,9 @@ export const QuoteEdit = ({ open, id }: { open: boolean; id?: string }) => {
   return (
     <Dialog open={open} onOpenChange={() => handleClose()}>
       <DialogContent className="lg:max-w-4xl p-4 overflow-y-auto max-h-9/10 top-1/20 translate-y-0">
+        <DialogDescription className="sr-only">
+          Modifica i campi del preventivo
+        </DialogDescription>
         {id ? (
           <EditBase
             id={id}

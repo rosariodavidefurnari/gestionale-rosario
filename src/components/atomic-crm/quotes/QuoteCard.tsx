@@ -4,7 +4,7 @@ import { useGetOne, useRedirect } from "ra-core";
 import { Card, CardContent } from "@/components/ui/card";
 
 import type { Quote } from "../types";
-import { quoteServiceTypeLabels } from "./quotesTypes";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 
 export const QuoteCard = ({
   quote,
@@ -38,6 +38,7 @@ const QuoteCardContent = ({
   quote: Quote;
 }) => {
   const redirect = useRedirect();
+  const { quoteServiceTypes } = useConfigurationContext();
   const { data: client } = useGetOne("clients", {
     id: quote.client_id,
     enabled: !!quote.client_id,
@@ -50,7 +51,8 @@ const QuoteCardContent = ({
   };
 
   const serviceLabel =
-    quoteServiceTypeLabels[quote.service_type] ?? quote.service_type;
+    quoteServiceTypes.find((t) => t.value === quote.service_type)?.label ??
+    quote.service_type;
   const eventDate =
     quote.event_date && isValid(new Date(quote.event_date))
       ? format(new Date(quote.event_date), "dd/MM/yyyy")

@@ -11,19 +11,18 @@ import { SearchInput } from "@/components/admin/search-input";
 import { SelectInput } from "@/components/admin/select-input";
 
 import type { Client, Quote } from "../types";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 import { TopToolbar } from "../layout/TopToolbar";
 import { QuoteCreate } from "./QuoteCreate";
 import { QuoteEdit } from "./QuoteEdit";
 import { QuoteEmpty } from "./QuoteEmpty";
 import { QuoteListContent } from "./QuoteListContent";
 import { QuoteShow } from "./QuoteShow";
-import {
-  quoteServiceTypes,
-  quoteStatusLabels,
-  quoteServiceTypeLabels,
-} from "./quotesTypes";
+import { quoteStatusLabels } from "./quotesTypes";
 
 const QuoteList = () => {
+  const { quoteServiceTypes } = useConfigurationContext();
+
   const quoteFilters = [
     <SearchInput source="q" alwaysOn />,
     <ReferenceInput source="client_id" reference="clients">
@@ -37,6 +36,33 @@ const QuoteList = () => {
       optionValue="value"
     />,
   ];
+
+  const typeLabels: Record<string, string> = Object.fromEntries(
+    quoteServiceTypes.map((t) => [t.value, t.label]),
+  );
+
+  const exporter: Exporter<Quote> = async (records, fetchRelatedRecords) => {
+    const clients = await fetchRelatedRecords<Client>(
+      records,
+      "client_id",
+      "clients",
+    );
+    const rows = records.map((q) => ({
+      descrizione: q.description ?? "",
+      cliente: clients[q.client_id]?.name ?? "",
+      tipo_servizio: typeLabels[q.service_type] ?? q.service_type,
+      data_evento: q.event_date ?? "",
+      importo: q.amount,
+      stato: quoteStatusLabels[q.status] ?? q.status,
+      data_invio: q.sent_date ?? "",
+      data_risposta: q.response_date ?? "",
+      motivo_rifiuto: q.rejection_reason ?? "",
+      note: q.notes ?? "",
+    }));
+    return jsonExport(rows, {}, (_err: any, csv: string) => {
+      downloadCSV(csv, "preventivi");
+    });
+  };
 
   return (
     <List
@@ -63,7 +89,7 @@ const QuoteLayout = () => {
   const hasFilters = filterValues && Object.keys(filterValues).length > 0;
 
   if (isPending) return null;
-  if (!data?.length && !hasFilters) return <QuoteEmpty />;
+  if (!data?.length && !hasFilters && !matchCreate) return <QuoteEmpty />;
 
   return (
     <div className="w-full">
@@ -85,29 +111,5 @@ const QuoteActions = () => (
     <CreateButton label="Nuovo Preventivo" />
   </TopToolbar>
 );
-
-const exporter: Exporter<Quote> = async (records, fetchRelatedRecords) => {
-  const clients = await fetchRelatedRecords<Client>(
-    records,
-    "client_id",
-    "clients",
-  );
-  const rows = records.map((q) => ({
-    descrizione: q.description ?? "",
-    cliente: clients[q.client_id]?.name ?? "",
-    tipo_servizio:
-      quoteServiceTypeLabels[q.service_type] ?? q.service_type,
-    data_evento: q.event_date ?? "",
-    importo: q.amount,
-    stato: quoteStatusLabels[q.status] ?? q.status,
-    data_invio: q.sent_date ?? "",
-    data_risposta: q.response_date ?? "",
-    motivo_rifiuto: q.rejection_reason ?? "",
-    note: q.notes ?? "",
-  }));
-  return jsonExport(rows, {}, (_err: any, csv: string) => {
-    downloadCSV(csv, "preventivi");
-  });
-};
 
 export default QuoteList;

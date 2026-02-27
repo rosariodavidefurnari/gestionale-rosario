@@ -20,6 +20,8 @@ import { TagsSettingsSection } from "./TagsSettingsSection";
 const SECTIONS = [
   { id: "branding", label: "Marchio" },
   { id: "tags", label: "Etichette" },
+  { id: "quote-types", label: "Tipi preventivo" },
+  { id: "service-types", label: "Tipi servizio" },
   { id: "notes", label: "Note" },
   { id: "tasks", label: "Attività" },
 ];
@@ -31,6 +33,8 @@ const transformFormValues = (data: Record<string, any>) => ({
     darkModeLogo: data.darkModeLogo,
     taskTypes: ensureValues(data.taskTypes),
     noteStatuses: ensureValues(data.noteStatuses),
+    quoteServiceTypes: ensureValues(data.quoteServiceTypes),
+    serviceTypeChoices: ensureValues(data.serviceTypeChoices),
   } as ConfigurationContextValue,
 });
 
@@ -87,6 +91,8 @@ const SettingsForm = () => {
       darkModeLogo: { src: config.darkModeLogo },
       taskTypes: config.taskTypes,
       noteStatuses: config.noteStatuses,
+      quoteServiceTypes: config.quoteServiceTypes,
+      serviceTypeChoices: config.serviceTypeChoices,
     }),
     [config],
   );
@@ -172,6 +178,50 @@ const SettingsFormFields = () => {
               Etichette
             </h2>
             <TagsSettingsSection />
+          </CardContent>
+        </Card>
+
+        {/* Quote service types */}
+        <Card id="quote-types">
+          <CardContent className="space-y-4">
+            <h2 className="text-xl font-semibold text-muted-foreground">
+              Tipi preventivo
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Categorie di lavoro proposte al cliente (es. Wedding, Produzione
+              TV, Spot).
+            </p>
+            <ArrayInput
+              source="quoteServiceTypes"
+              label={false}
+              helperText={false}
+            >
+              <SimpleFormIterator disableReordering disableClear>
+                <TextInput source="label" label={false} />
+              </SimpleFormIterator>
+            </ArrayInput>
+          </CardContent>
+        </Card>
+
+        {/* Service type choices */}
+        <Card id="service-types">
+          <CardContent className="space-y-4">
+            <h2 className="text-xl font-semibold text-muted-foreground">
+              Tipi servizio
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Tipi di prestazione nel registro lavori (es. Riprese, Montaggio,
+              Fotografia).
+            </p>
+            <ArrayInput
+              source="serviceTypeChoices"
+              label={false}
+              helperText={false}
+            >
+              <SimpleFormIterator disableReordering disableClear>
+                <TextInput source="label" label={false} />
+              </SimpleFormIterator>
+            </ArrayInput>
           </CardContent>
         </Card>
 

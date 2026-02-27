@@ -2,9 +2,56 @@
 
 ## Current Phase
 
-🟢 Audit robustezza COMPLETATO. Tutti i 19 problemi (A1-A7, B1-B8, C1-C2) risolti. Typecheck 0 errori, build OK.
+🟢 Tipi servizio editabili da Impostazioni. CHECK constraint dinamici rimossi. Typecheck 0 errori.
 
 ## Last Session
+
+### Sessione 15 (2026-02-28, tipi servizio configurabili)
+
+- Completed:
+  - **Fix dialog preventivi**: NumberInput controlled/uncontrolled warning (destructured defaultValue), DialogTitle/DialogDescription mancanti su QuoteCreate, QuoteShow, QuoteEdit
+  - **CHECK constraint quotes.service_type**: Migration `20260227230519_add_quotes_service_type_check.sql` (poi droppata — vedi sotto)
+  - **Tipi servizio editabili da Impostazioni**:
+    - ConfigurationContext: aggiunti `quoteServiceTypes` e `serviceTypeChoices` (LabeledValue[])
+    - defaultConfiguration: valori default con nuovi tipi (produzione_tv, videoclip, documentario, spot, sito_web)
+    - SettingsPage: 2 nuove sezioni "Tipi preventivo" e "Tipi servizio" con ArrayInput editabili
+    - 10 componenti aggiornati per leggere da config invece che da costanti hardcoded:
+      - Preventivi: QuoteInputs, QuoteCard, QuoteShow, QuoteList (exporter incluso)
+      - Servizi: ServiceInputs, ServiceList (exporter incluso), ServiceShow, ServiceListContent, ServiceListFilter
+    - Pulizia: rimossi export dead code da quotesTypes.ts, svuotato serviceTypes.ts
+    - DB: droppati CHECK constraint su quotes.service_type e services.service_type (migration `20260227231714_drop_service_type_checks.sql`)
+
+- Decisions:
+  - Tipi preventivo e tipi servizio sono due liste separate (concettualmente diversi: tipo evento vs tipo lavoro tecnico)
+  - Formato LabeledValue { value, label } per coerenza con ConfigurationContext (non { id, name })
+  - ensureValues() auto-genera slug value dal label se mancante
+  - CHECK constraint incompatibili con tipi dinamici — rimossi entrambi
+  - Exporter CSV spostati dentro il componente per accedere alla config via hook
+
+- Migrations created:
+  - `supabase/migrations/20260227230519_add_quotes_service_type_check.sql` (aggiunto e poi droppato)
+  - `supabase/migrations/20260227231714_drop_service_type_checks.sql`
+
+- Files modified:
+  - `src/components/admin/number-input.tsx` (fix defaultValue passthrough)
+  - `src/components/atomic-crm/root/ConfigurationContext.tsx` (+ quoteServiceTypes, serviceTypeChoices)
+  - `src/components/atomic-crm/root/defaultConfiguration.ts` (+ defaults con nuovi tipi)
+  - `src/components/atomic-crm/settings/SettingsPage.tsx` (+ 2 sezioni editabili)
+  - `src/components/atomic-crm/quotes/QuoteCreate.tsx` (+ DialogTitle/DialogDescription)
+  - `src/components/atomic-crm/quotes/QuoteEdit.tsx` (+ DialogDescription)
+  - `src/components/atomic-crm/quotes/QuoteShow.tsx` (+ DialogTitle/DialogDescription, config)
+  - `src/components/atomic-crm/quotes/QuoteInputs.tsx` (config)
+  - `src/components/atomic-crm/quotes/QuoteCard.tsx` (config)
+  - `src/components/atomic-crm/quotes/QuoteList.tsx` (config, exporter inside component)
+  - `src/components/atomic-crm/quotes/quotesTypes.ts` (rimossi quoteServiceTypes/quoteServiceTypeLabels)
+  - `src/components/atomic-crm/services/ServiceInputs.tsx` (config)
+  - `src/components/atomic-crm/services/ServiceList.tsx` (config, exporter inside component)
+  - `src/components/atomic-crm/services/ServiceShow.tsx` (config)
+  - `src/components/atomic-crm/services/ServiceListContent.tsx` (config)
+  - `src/components/atomic-crm/services/ServiceListFilter.tsx` (config, type.id→type.value)
+  - `src/components/atomic-crm/services/serviceTypes.ts` (svuotato, placeholder)
+
+- Next action: Test visivo completo, deploy Vercel
 
 ### Sessione 14 (2026-02-28, audit robustezza)
 
@@ -103,7 +150,7 @@
   - `20260227224448_add_updated_at_columns.sql`
   - `20260227224515_unique_project_client_name.sql`
 
-- Next action: Push a GitHub, deploy Vercel, test visivo completo
+- Next action: Test visivo completo, deploy Vercel
 
 ### Sessione 13 (2026-02-27, sera)
 

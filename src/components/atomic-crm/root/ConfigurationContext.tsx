@@ -9,6 +9,8 @@ export const CONFIGURATION_STORE_KEY = "app.configuration";
 export interface ConfigurationContextValue {
   noteStatuses: NoteStatus[];
   taskTypes: LabeledValue[];
+  quoteServiceTypes: LabeledValue[];
+  serviceTypeChoices: LabeledValue[];
   title: string;
   darkModeLogo: string;
   lightModeLogo: string;

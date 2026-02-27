@@ -26,12 +26,13 @@ import {
 } from "lucide-react";
 
 import type { Project, Service } from "../types";
-import { serviceTypeChoices } from "./serviceTypes";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 
 export const ServiceListFilter = () => {
   const { filterValues, setFilters } = useListFilterContext();
   const [projectOpen, setProjectOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const { serviceTypeChoices } = useConfigurationContext();
 
   const { data: projects } = useGetList<Project>("projects", {
     pagination: { page: 1, perPage: 200 },
@@ -150,17 +151,17 @@ export const ServiceListFilter = () => {
         >
           {serviceTypeChoices.map((type) => (
             <FilterBadge
-              key={type.id}
-              label={type.name}
-              isActive={filterValues["service_type@eq"] === type.id}
+              key={type.value}
+              label={type.label}
+              isActive={filterValues["service_type@eq"] === type.value}
               onToggle={() => {
-                if (filterValues["service_type@eq"] === type.id) {
+                if (filterValues["service_type@eq"] === type.value) {
                   const { "service_type@eq": _, ...rest } = filterValues;
                   setFilters(rest);
                 } else {
                   setFilters({
                     ...filterValues,
-                    "service_type@eq": type.id,
+                    "service_type@eq": type.value,
                   });
                 }
               }}
