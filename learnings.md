@@ -333,3 +333,19 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   3 file: ExpenseListContent.tsx, ExpenseShow.tsx, ExpenseList.tsx (export CSV). Quando si
   aggiungono tipi spesa o si modifica la logica, aggiornarle TUTTE. Valutare refactoring in
   un helper condiviso se cresce ulteriormente.
+
+- [2026-02-28] **Dashboard non usa expenses — KPI non impattati da crediti/rimborsi** — La
+  bacheca (`buildDashboardModel`) carica solo: monthly_revenue (view da services), payments,
+  quotes, services, projects, clients. Le spese (expenses) NON sono nel data model della
+  dashboard. Crediti e rimborsi impattano solo ClientFinancialSummary e project_financials view.
+
+- [2026-02-28] **Spese senza project_id: correttamente escluse dalla view, incluse nel riepilogo cliente** —
+  Una spesa/credito dissociata da un progetto (project_id = NULL) viene esclusa da
+  `project_financials` (WHERE project_id IS NOT NULL) ma inclusa in ClientFinancialSummary
+  (filtra per client_id). Questo è il comportamento corretto: crediti generici riducono il
+  dovuto complessivo del cliente, non di un progetto specifico.
+
+- [2026-02-28] **Tooltip nativi browser per descrizioni nei select** — Per mostrare descrizioni
+  al passaggio del mouse sulle opzioni di un SelectInput, usare `optionText` come funzione che
+  ritorna `<span title={description}>{name}</span>`. Funziona con Radix Select senza modificare
+  i componenti admin/ui. Ritardo di ~1s prima che appaia (comportamento browser standard).

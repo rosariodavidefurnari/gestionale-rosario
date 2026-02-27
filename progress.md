@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-🟡 Audit robustezza in corso. A1+B1 (duplicati) e A2+B2 (importi negativi + crediti + rimborsi) completati. Restano A3-A7, B4-B6, C1-C2.
+🟡 Audit robustezza in corso. A1+B1 (duplicati), A2+B2 (importi + crediti + rimborsi), A3+B3 (payment_date NOT NULL) completati. Restano A4-A7, B4-B6, C1-C2.
 
 ## Last Session
 
@@ -48,7 +48,30 @@
   - `src/components/atomic-crm/clients/ClientFinancialSummary.tsx` (crediti e rimborsi)
   - `src/components/atomic-crm/dashboard/dashboardModel.ts` (rimborsi esclusi da pending)
 
-- Next action: Continuare audit (A3-A7, B4-B6, C1-C2)
+- Continued (same session):
+  - **A3 + B3: payment_date obbligatoria**:
+    - Frontend: `validate={required()}` su DateInput in PaymentInputs.tsx
+    - DB: Migration `20260227220805_payment_date_not_null.sql` — safety fill NULL→created_at + ALTER COLUMN SET NOT NULL
+    - Migration pushata al DB remoto
+  - **Ricerca descrizione nelle Spese**: Campo di ricerca `description@ilike` nella sidebar filtri ExpenseListFilter (stesso pattern di ServiceListFilter per località)
+  - **Tooltip descrizioni tipi**: `optionText` come funzione con `<span title={...}>` su SelectInput tipo in ExpenseInputs e PaymentInputs — mostra descrizione al passaggio del mouse
+  - iPhone dissociato dal progetto "Borghi Marinari" (scelta utente) — credito generico a livello cliente, non progetto-specifico
+
+- Decisions (continued):
+  - payment_date sempre obbligatoria (nessuna eccezione)
+  - Tooltip nativi browser (`title` attr) per descrizioni tipi — approccio minimale senza componenti extra
+  - Crediti senza project_id: esclusi da project_financials view (WHERE project_id IS NOT NULL), inclusi in ClientFinancialSummary (filtra per client_id)
+  - Dashboard non usa expenses — KPI non impattati da crediti/rimborsi
+
+- Migrations created (continued):
+  - `supabase/migrations/20260227220805_payment_date_not_null.sql`
+
+- Files modified (continued):
+  - `src/components/atomic-crm/payments/PaymentInputs.tsx` (required payment_date + tooltip tipo)
+  - `src/components/atomic-crm/expenses/ExpenseInputs.tsx` (tooltip tipo)
+  - `src/components/atomic-crm/expenses/ExpenseListFilter.tsx` (campo ricerca descrizione)
+
+- Next action: Continuare audit (A4-A7, B4-B6, C1-C2)
 
 ### Sessione 13 (2026-02-27, sera)
 

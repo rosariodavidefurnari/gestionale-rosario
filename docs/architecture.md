@@ -5,7 +5,7 @@
 Fork di Atomic CRM personalizzato per gestire l'attività professionale
 di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
-## Stato Infrastruttura (verificato sessione 14)
+## Stato Infrastruttura (verificato sessione 14, aggiornato)
 
 ### Certezze — Audit superato
 
@@ -111,6 +111,7 @@ PK esplicite nel dataProvider:
 | `20260227205707_reallocate_diego_payments.sql` | Riallocazione completa: DELETE 10 errati + CREATE 11 corretti per progetto |
 | `20260227230000_add_expenses_to_project_financials.sql` | Aggiunge total_expenses dalla tabella expenses alla view project_financials |
 | `20260228000000_audit_constraints.sql` | Audit sessione 14: UNIQUE, CHECK >= 0, tipi credito_ricevuto + rimborso, iPhone migrato |
+| `20260227220805_payment_date_not_null.sql` | payment_date NOT NULL (safety fill + ALTER COLUMN) |
 
 ## Moduli Frontend (sessione 11)
 

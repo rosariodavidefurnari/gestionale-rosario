@@ -7,7 +7,7 @@ import { ReferenceInput } from "@/components/admin/reference-input";
 import { NumberInput } from "@/components/admin/number-input";
 import { DateInput } from "@/components/admin/date-input";
 
-import { expenseTypeChoices } from "./expenseTypes";
+import { expenseTypeChoices, expenseTypeDescriptions } from "./expenseTypes";
 
 export const ExpenseInputs = () => {
   return (
@@ -41,6 +41,11 @@ const ExpenseIdentityInputs = () => (
       source="expense_type"
       label="Tipo"
       choices={expenseTypeChoices}
+      optionText={(choice: { id: string; name: string }) => (
+        <span title={expenseTypeDescriptions[choice.id]}>
+          {choice.name}
+        </span>
+      )}
       validate={required()}
       helperText={false}
     />

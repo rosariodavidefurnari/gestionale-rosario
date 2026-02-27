@@ -14,7 +14,9 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
 import {
+  Search,
   Receipt,
   FolderOpen,
   ChevronsUpDown,
@@ -33,9 +35,34 @@ export const ExpenseListFilter = () => {
     sort: { field: "name", order: "ASC" },
   });
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value) {
+      setFilters({ ...filterValues, "description@ilike": `%${value}%` });
+    } else {
+      const { "description@ilike": _, ...rest } = filterValues;
+      setFilters(rest);
+    }
+  };
+
   return (
     <div className="shrink-0 w-56 order-last hidden md:block">
       <div className="flex flex-col gap-6">
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 size-4 text-muted-foreground" />
+          <Input
+            placeholder="Cerca descrizione..."
+            className="pl-8"
+            value={
+              (filterValues["description@ilike"] as string)?.replace(
+                /%/g,
+                "",
+              ) ?? ""
+            }
+            onChange={handleSearchChange}
+          />
+        </div>
+
         <FilterSection
           icon={<Receipt className="size-4" />}
           label="Tipo spesa"

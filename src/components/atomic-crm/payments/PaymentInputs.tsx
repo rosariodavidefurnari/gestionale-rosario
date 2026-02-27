@@ -8,6 +8,7 @@ import { DateInput } from "@/components/admin/date-input";
 
 import {
   paymentTypeChoices,
+  paymentTypeDescriptions,
   paymentMethodChoices,
   paymentStatusChoices,
 } from "./paymentTypes";
@@ -35,6 +36,7 @@ const PaymentIdentityInputs = () => (
     <DateInput
       source="payment_date"
       label="Data pagamento"
+      validate={required()}
       helperText={false}
     />
     <ReferenceInput source="client_id" reference="clients">
@@ -62,6 +64,11 @@ const PaymentDetailInputs = () => (
       source="payment_type"
       label="Tipo"
       choices={paymentTypeChoices}
+      optionText={(choice: { id: string; name: string }) => (
+        <span title={paymentTypeDescriptions[choice.id]}>
+          {choice.name}
+        </span>
+      )}
       validate={required()}
       helperText={false}
     />
