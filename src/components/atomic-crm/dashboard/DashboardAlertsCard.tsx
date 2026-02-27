@@ -1,4 +1,4 @@
-import { AlertTriangle, CalendarClock, MessageCircleQuestion } from "lucide-react";
+import { AlertTriangle, CalendarClock, Clock, MessageCircleQuestion } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import {
   formatCompactCurrency,
   formatDayMonth,
   type DashboardAlerts,
+  type PaymentAlert,
 } from "./dashboardModel";
 
 export const DashboardAlertsCard = ({
@@ -23,30 +24,15 @@ export const DashboardAlertsCard = ({
     <CardContent className="px-4 pb-4 space-y-5">
       <AlertSection
         icon={<AlertTriangle className="h-4 w-4" />}
-        title="Pagamenti in scadenza / scaduti"
+        title="Pagamenti"
         count={alerts.paymentAlerts.length}
       >
         {alerts.paymentAlerts.length ? (
           alerts.paymentAlerts.map((payment) => (
-            <div key={payment.id} className="flex items-start justify-between gap-2 text-sm">
-              <div className="min-w-0">
-                <p className="font-medium truncate">{payment.clientName}</p>
-                <p className="text-xs text-muted-foreground">
-                  {payment.paymentDate ? `Data: ${formatDayMonth(payment.paymentDate)} · ` : ""}
-                  {payment.status === "scaduto"
-                    ? "Scaduto"
-                    : payment.daysOffset != null
-                      ? `Scade tra ${payment.daysOffset}g`
-                      : "In attesa"}
-                </p>
-              </div>
-              <Badge variant={payment.status === "scaduto" ? "destructive" : "secondary"}>
-                {formatCompactCurrency(payment.amount)}
-              </Badge>
-            </div>
+            <PaymentAlertRow key={payment.id} payment={payment} />
           ))
         ) : (
-          <EmptyText text="Nessun pagamento urgente." />
+          <EmptyText text="Nessun pagamento in sospeso." />
         )}
       </AlertSection>
 
@@ -94,6 +80,40 @@ export const DashboardAlertsCard = ({
   </Card>
 );
 
+const PaymentAlertRow = ({ payment }: { payment: PaymentAlert }) => {
+  const urgencyConfig = {
+    overdue: { badge: "destructive" as const, label: "Scaduto", icon: <AlertTriangle className="h-3 w-3" /> },
+    due_soon: { badge: "secondary" as const, label: "In scadenza", icon: <Clock className="h-3 w-3" /> },
+    pending: { badge: "outline" as const, label: "In attesa", icon: null },
+  };
+  const config = urgencyConfig[payment.urgency];
+
+  const dateInfo = payment.paymentDate
+    ? payment.urgency === "overdue"
+      ? `Scaduto il ${formatDayMonth(payment.paymentDate)}`
+      : payment.daysOffset === 0
+        ? "Scade oggi"
+        : payment.daysOffset != null && payment.daysOffset > 0
+          ? `Scade tra ${payment.daysOffset}g`
+          : `Scadenza: ${formatDayMonth(payment.paymentDate)}`
+    : "Senza scadenza";
+
+  return (
+    <div className="flex items-start justify-between gap-2 text-sm">
+      <div className="min-w-0">
+        <p className="font-medium truncate">{payment.clientName}</p>
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          {config.icon}
+          {dateInfo}
+        </p>
+      </div>
+      <Badge variant={config.badge}>
+        {formatCompactCurrency(payment.amount)}
+      </Badge>
+    </div>
+  );
+};
+
 const AlertSection = ({
   icon,
   title,
@@ -109,7 +129,7 @@ const AlertSection = ({
     <div className="flex items-center gap-2">
       <span className="text-muted-foreground">{icon}</span>
       <p className="text-sm font-medium flex-1">{title}</p>
-      <Badge variant="outline">{count}</Badge>
+      {count > 0 && <Badge variant="outline">{count}</Badge>}
     </div>
     <div className="space-y-2 rounded-lg border bg-muted/20 p-3">{children}</div>
   </section>

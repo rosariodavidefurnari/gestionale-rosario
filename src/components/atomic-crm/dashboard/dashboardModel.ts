@@ -72,6 +72,7 @@ export type PaymentAlert = {
   clientName: string;
   amount: number;
   status: string;
+  urgency: "overdue" | "due_soon" | "pending";
   paymentDate?: string;
   daysOffset?: number;
 };
@@ -361,25 +362,29 @@ export const buildDashboardModel = ({
       const clientName = clientById.get(String(payment.client_id))?.name ?? "Cliente";
       const daysOffset = validDate ? diffDays(today, validDate) : undefined;
       const isOverdue = payment.status === "scaduto" || (daysOffset != null && daysOffset < 0);
-      const isDueSoon = daysOffset != null && daysOffset >= 0 && daysOffset <= 7;
-      if (!isOverdue && !isDueSoon) return null;
+      const isDueSoon = daysOffset != null && daysOffset >= 0 && daysOffset <= 14;
+      const urgency: PaymentAlert["urgency"] = isOverdue
+        ? "overdue"
+        : isDueSoon
+          ? "due_soon"
+          : "pending";
       return {
         id: String(payment.id),
         clientName,
         amount: toNumber(payment.amount),
         status: isOverdue ? "scaduto" : payment.status,
+        urgency,
         paymentDate,
         daysOffset,
       } satisfies PaymentAlert;
     })
-    .filter((item): item is PaymentAlert => item !== null)
     .sort((a, b) => {
-      const aScore = a.status === "scaduto" ? 0 : 1;
-      const bScore = b.status === "scaduto" ? 0 : 1;
-      if (aScore !== bScore) return aScore - bScore;
+      const urgencyOrder = { overdue: 0, due_soon: 1, pending: 2 };
+      const diff = urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+      if (diff !== 0) return diff;
       return (a.daysOffset ?? 999) - (b.daysOffset ?? 999);
     })
-    .slice(0, 6);
+    .slice(0, 10);
 
   const upcomingServices = services
     .map((service) => {

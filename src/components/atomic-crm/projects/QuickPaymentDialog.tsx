@@ -219,7 +219,6 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
               >
                 <option value="ricevuto">Ricevuto</option>
                 <option value="in_attesa">In attesa</option>
-                <option value="scaduto">Scaduto</option>
               </select>
             </div>
             <div>
