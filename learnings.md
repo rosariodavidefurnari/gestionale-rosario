@@ -349,3 +349,19 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   al passaggio del mouse sulle opzioni di un SelectInput, usare `optionText` come funzione che
   ritorna `<span title={description}>{name}</span>`. Funziona con Radix Select senza modificare
   i componenti admin/ui. Ritardo di ~1s prima che appaia (comportamento browser standard).
+
+- [2026-02-28] **Kanban drag-and-drop e CHECK DB non sono compatibili** — Se un CHECK constraint
+  richiede un campo compilato per un certo stato (es: rejection_reason per rifiutato), il drag-and-drop
+  che cambia solo lo status farà fallire l'UPDATE. Soluzioni: (1) bloccare il drag verso quello stato,
+  (2) solo validazione frontend senza CHECK DB, (3) default automatico. In questo progetto: opzione 1
+  per rifiutato (drag bloccato), opzione 2 per date condizionali (sent_date/response_date).
+
+- [2026-02-28] **ErrorMessage condiviso in misc/** — Componente riutilizzabile per errori di
+  caricamento: `<ErrorMessage message="..." />` con AlertCircle icon. Usato da 4 ListContent e
+  5 Show pages. Destrutturare `error` da `useListContext()` o `useShowContext()`. `useRecordContext()`
+  (QuoteShow) non espone error — gestito a livello ShowBase.
+
+- [2026-02-28] **Spiegare PRIMA, domande COERENTI, poi agire** — L'utente vuole sempre che si
+  spieghi il problema, si facciano domande pertinenti (non quelle a cui l'utente non può
+  ragionevolmente rispondere), e si attenda conferma prima di modificare codice. Non modificare
+  mai silenziosamente.

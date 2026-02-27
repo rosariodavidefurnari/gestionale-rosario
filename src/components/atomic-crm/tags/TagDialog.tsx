@@ -45,8 +45,9 @@ export function TagDialog({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!newTagName.trim()) return;
 
-    await onSubmit({ name: newTagName, color: newTagColor });
+    await onSubmit({ name: newTagName.trim(), color: newTagColor });
 
     setDisabled(true);
     setNewTagName("");
@@ -100,7 +101,7 @@ export function TagDialog({
           <div className="flex justify-end pt-4">
             <Button
               variant="outline"
-              disabled={disabled}
+              disabled={disabled || !newTagName.trim()}
               className={cn(
                 buttonVariants({ variant: "outline" }),
                 "text-primary",

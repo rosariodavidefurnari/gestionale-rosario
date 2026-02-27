@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-🟡 Audit robustezza in corso. A1+B1 (duplicati), A2+B2 (importi + crediti + rimborsi), A3+B3 (payment_date NOT NULL) completati. Restano A4-A7, B4-B6, C1-C2.
+🟢 Audit robustezza COMPLETATO. Tutti i 19 problemi (A1-A7, B1-B8, C1-C2) risolti. Typecheck 0 errori, build OK.
 
 ## Last Session
 
@@ -71,7 +71,39 @@
   - `src/components/atomic-crm/expenses/ExpenseInputs.tsx` (tooltip tipo)
   - `src/components/atomic-crm/expenses/ExpenseListFilter.tsx` (campo ricerca descrizione)
 
-- Next action: Continuare audit (A4-A7, B4-B6, C1-C2)
+- Continued (same session, second part):
+  - **Filtri coerenti Pagamenti/Spese**: Client dropdown + date range filter aggiunti a PaymentListFilter e ExpenseListFilter; project colonna aggiunta a export CSV di entrambi
+  - **A4: Motivo rifiuto required quando status=rifiutato**:
+    - Frontend: `validate={required()}` su rejection_reason in QuoteInputs
+    - DB: CHECK constraint `status != 'rifiutato' OR rejection_reason IS NOT NULL`
+    - Kanban: drag verso colonna "Rifiutato" bloccato — editing obbligatorio per compilare motivo
+  - **A5 + B8: Date incoerenti**:
+    - DB: CHECK `end_date >= start_date` su projects, `response_date >= sent_date` su quotes (tollerano NULL)
+    - Frontend: validatore inline su end_date e response_date
+  - **A6: Date preventivo condizionali per status**:
+    - Frontend: `sent_date` required se status ≠ primo_contatto; `response_date` required per accettato/rifiutato/successivi
+    - Solo frontend (no DB CHECK per compatibilità Kanban drag-and-drop)
+  - **A7: Tag name non vuoto**: early return + button disabled se `newTagName.trim()` vuoto in TagDialog
+  - **B4: updated_at su services, payments, expenses**: Migration con ADD COLUMN + trigger `set_updated_at()`
+  - **B6: UNIQUE (client_id, name) su projects**: Migration con UNIQUE constraint
+  - **C1 + C2: Error handling liste e show pages**:
+    - Creato `misc/ErrorMessage.tsx` (componente riutilizzabile con AlertCircle)
+    - Aggiunto `if (error) return <ErrorMessage />` a 4 ListContent + 5 Show pages
+  - **Typecheck 0 errori, build OK**
+
+- Decisions (second part):
+  - Dashboard come early warning per pagamenti scaduti — niente auto-update DB status (utente decide manualmente)
+  - Kanban drag verso "Rifiutato" bloccato per coerenza con DB constraint rejection_reason
+  - Date condizionali solo frontend (sent_date, response_date) per compatibilità drag-and-drop
+  - ErrorMessage come componente condiviso in misc/ anziché duplicato in ogni file
+
+- Migrations created (second part):
+  - `20260227223414_quote_rejection_reason_required.sql`
+  - `20260227224137_date_range_checks.sql`
+  - `20260227224448_add_updated_at_columns.sql`
+  - `20260227224515_unique_project_client_name.sql`
+
+- Next action: Push a GitHub, deploy Vercel, test visivo completo
 
 ### Sessione 13 (2026-02-27, sera)
 

@@ -11,6 +11,7 @@ import {
 
 import type { Expense } from "../types";
 import { expenseTypeLabels } from "./expenseTypes";
+import { ErrorMessage } from "../misc/ErrorMessage";
 
 const eur = (n: number) =>
   n ? n.toLocaleString("it-IT", { minimumFractionDigits: 2 }) : "--";
@@ -26,9 +27,10 @@ const computeTotal = (e: Expense) => {
 };
 
 export const ExpenseListContent = () => {
-  const { data, isPending } = useListContext<Expense>();
+  const { data, isPending, error } = useListContext<Expense>();
   const createPath = useCreatePath();
 
+  if (error) return <ErrorMessage />;
   if (isPending || !data) return null;
 
   return (

@@ -8,6 +8,7 @@ import { Link } from "react-router";
 
 import type { Expense } from "../types";
 import { expenseTypeLabels } from "./expenseTypes";
+import { ErrorMessage } from "../misc/ErrorMessage";
 
 const eur = (n: number) =>
   n.toLocaleString("it-IT", { minimumFractionDigits: 2 });
@@ -29,7 +30,8 @@ export const ExpenseShow = () => (
 );
 
 const ExpenseShowContent = () => {
-  const { record, isPending } = useShowContext<Expense>();
+  const { record, isPending, error } = useShowContext<Expense>();
+  if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
 
   const { data: project } = useGetOne("projects", {

@@ -68,12 +68,29 @@ export const QuoteInputs = () => {
       <DateInput
         source="sent_date"
         label="Data invio preventivo"
+        validate={(value: string, allValues: Record<string, unknown>) => {
+          if (!value && allValues.status && allValues.status !== "primo_contatto") {
+            return "Obbligatoria per questo stato";
+          }
+        }}
         helperText={false}
       />
 
       <DateInput
         source="response_date"
         label="Data risposta"
+        validate={(value: string, allValues: Record<string, unknown>) => {
+          const needsResponse = [
+            "accettato", "acconto_ricevuto", "in_lavorazione",
+            "completato", "saldato", "rifiutato",
+          ];
+          if (!value && needsResponse.includes(allValues.status as string)) {
+            return "Obbligatoria per questo stato";
+          }
+          if (value && allValues.sent_date && value < (allValues.sent_date as string)) {
+            return "La data risposta non può essere prima della data invio";
+          }
+        }}
         helperText={false}
       />
 
@@ -81,6 +98,7 @@ export const QuoteInputs = () => {
         <TextInput
           source="rejection_reason"
           label="Motivo rifiuto"
+          validate={required()}
           multiline
           rows={2}
           helperText={false}

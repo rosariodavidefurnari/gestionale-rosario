@@ -12,14 +12,16 @@ import { Badge } from "@/components/ui/badge";
 
 import type { Payment } from "../types";
 import { paymentTypeLabels, paymentStatusLabels } from "./paymentTypes";
+import { ErrorMessage } from "../misc/ErrorMessage";
 
 const eur = (n: number) =>
   n.toLocaleString("it-IT", { minimumFractionDigits: 2 });
 
 export const PaymentListContent = () => {
-  const { data, isPending } = useListContext<Payment>();
+  const { data, isPending, error } = useListContext<Payment>();
   const createPath = useCreatePath();
 
+  if (error) return <ErrorMessage />;
   if (isPending || !data) return null;
 
   return (

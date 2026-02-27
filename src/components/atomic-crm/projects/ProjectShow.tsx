@@ -11,6 +11,7 @@ import { ProjectCategoryBadge, ProjectStatusBadge } from "./ProjectListContent";
 import { projectTvShowLabels } from "./projectTypes";
 import { QuickEpisodeDialog } from "./QuickEpisodeDialog";
 import { QuickPaymentDialog } from "./QuickPaymentDialog";
+import { ErrorMessage } from "../misc/ErrorMessage";
 
 export const ProjectShow = () => (
   <ShowBase>
@@ -19,7 +20,8 @@ export const ProjectShow = () => (
 );
 
 const ProjectShowContent = () => {
-  const { record, isPending } = useShowContext<Project>();
+  const { record, isPending, error } = useShowContext<Project>();
+  if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
 
   return (

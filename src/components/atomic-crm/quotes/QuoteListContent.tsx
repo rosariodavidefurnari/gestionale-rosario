@@ -40,6 +40,14 @@ export const QuoteListContent = () => {
 
     if (!destination) return;
 
+    // Block drag into "rifiutato" — must edit the quote to set rejection_reason
+    if (
+      destination.droppableId === "rifiutato" &&
+      source.droppableId !== "rifiutato"
+    ) {
+      return;
+    }
+
     if (
       destination.droppableId === source.droppableId &&
       destination.index === source.index

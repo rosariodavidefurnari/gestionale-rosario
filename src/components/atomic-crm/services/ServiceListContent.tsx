@@ -11,14 +11,16 @@ import {
 
 import type { Service } from "../types";
 import { serviceTypeLabels } from "./serviceTypes";
+import { ErrorMessage } from "../misc/ErrorMessage";
 
 const eur = (n: number) =>
   n ? n.toLocaleString("it-IT", { minimumFractionDigits: 2 }) : "--";
 
 export const ServiceListContent = () => {
-  const { data, isPending } = useListContext<Service>();
+  const { data, isPending, error } = useListContext<Service>();
   const createPath = useCreatePath();
 
+  if (error) return <ErrorMessage />;
   if (isPending || !data) return null;
 
   return (

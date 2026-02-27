@@ -9,6 +9,7 @@ import { Link } from "react-router";
 import type { Payment } from "../types";
 import { PaymentStatusBadge } from "./PaymentListContent";
 import { paymentTypeLabels } from "./paymentTypes";
+import { ErrorMessage } from "../misc/ErrorMessage";
 
 const eur = (n: number) =>
   n.toLocaleString("it-IT", { minimumFractionDigits: 2 });
@@ -20,7 +21,8 @@ export const PaymentShow = () => (
 );
 
 const PaymentShowContent = () => {
-  const { record, isPending } = useShowContext<Payment>();
+  const { record, isPending, error } = useShowContext<Payment>();
+  if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
 
   const { data: client } = useGetOne("clients", { id: record.client_id });

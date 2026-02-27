@@ -8,6 +8,7 @@ import { Link } from "react-router";
 
 import type { Service } from "../types";
 import { serviceTypeLabels } from "./serviceTypes";
+import { ErrorMessage } from "../misc/ErrorMessage";
 
 const eur = (n: number) =>
   n.toLocaleString("it-IT", { minimumFractionDigits: 2 });
@@ -19,7 +20,8 @@ export const ServiceShow = () => (
 );
 
 const ServiceShowContent = () => {
-  const { record, isPending } = useShowContext<Service>();
+  const { record, isPending, error } = useShowContext<Service>();
+  if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
 
   const total =

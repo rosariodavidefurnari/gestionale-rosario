@@ -12,11 +12,13 @@ import { Badge } from "@/components/ui/badge";
 
 import type { Client } from "../types";
 import { clientTypeLabels, clientSourceLabels } from "./clientTypes";
+import { ErrorMessage } from "../misc/ErrorMessage";
 
 export const ClientListContent = () => {
-  const { data, isPending } = useListContext<Client>();
+  const { data, isPending, error } = useListContext<Client>();
   const createPath = useCreatePath();
 
+  if (error) return <ErrorMessage />;
   if (isPending || !data) return null;
 
   return (

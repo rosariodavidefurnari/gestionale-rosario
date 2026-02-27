@@ -12,6 +12,7 @@ import { ClientTagsListEdit } from "../tags/ClientTagsListEdit";
 import { ClientNotesSection } from "./ClientNotesSection";
 import { ClientTasksSection } from "./ClientTasksSection";
 import { ClientFinancialSummary } from "./ClientFinancialSummary";
+import { ErrorMessage } from "../misc/ErrorMessage";
 
 export const ClientShow = () => (
   <ShowBase>
@@ -20,7 +21,8 @@ export const ClientShow = () => (
 );
 
 const ClientShowContent = () => {
-  const { record, isPending } = useShowContext<Client>();
+  const { record, isPending, error } = useShowContext<Client>();
+  if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
 
   return (
