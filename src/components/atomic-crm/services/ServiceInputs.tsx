@@ -78,6 +78,8 @@ const ServiceIdentityInputs = () => {
         source="service_type"
         label="Tipo servizio"
         choices={serviceTypeChoices}
+        optionText="label"
+        optionValue="value"
         validate={required()}
         helperText={false}
       />
