@@ -716,6 +716,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/DashboardAnnualAiSummaryCard.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/DashboardAnnual.tsx",
           "type": "registry:component"
         },
