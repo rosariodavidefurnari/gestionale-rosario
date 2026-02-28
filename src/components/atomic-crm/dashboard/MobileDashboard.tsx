@@ -71,7 +71,11 @@ export const MobileDashboard = () => {
     <Wrapper>
       <div className="space-y-4 mt-1">
         {import.meta.env.VITE_IS_DEMO === "true" ? <Welcome /> : null}
-        <DashboardKpiCards kpis={data.kpis} compact />
+        <DashboardKpiCards
+          kpis={data.kpis}
+          year={data.selectedYear}
+          compact
+        />
         {data.fiscal && <MobileFiscalKpis fiscal={data.fiscal} />}
       </div>
     </Wrapper>

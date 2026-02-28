@@ -16,17 +16,20 @@ import type { AtecoBreakdownPoint } from "./fiscalModel";
 
 export const DashboardAtecoChart = ({
   data,
+  year,
 }: {
   data: AtecoBreakdownPoint[];
+  year: number;
 }) => {
   if (data.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Fatturato per ATECO</CardTitle>
+          <p className="text-xs text-muted-foreground">Anno {year}</p>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground py-6 text-center">
-          Nessun dato per l'anno corrente
+          Nessun dato per l'anno {year}
         </CardContent>
       </Card>
     );
@@ -42,6 +45,7 @@ export const DashboardAtecoChart = ({
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Fatturato per ATECO</CardTitle>
+        <p className="text-xs text-muted-foreground">Anno {year}</p>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={220}>

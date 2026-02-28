@@ -19,9 +19,11 @@ import {
 
 export const DashboardKpiCards = ({
   kpis,
+  year,
   compact = false,
 }: {
   kpis: DashboardKpis;
+  year: number;
   compact?: boolean;
 }) => {
   const delta = kpis.monthlyRevenueDeltaPct;
@@ -56,7 +58,7 @@ export const DashboardKpiCards = ({
         title="Fatturato anno"
         value={formatCurrency(kpis.annualRevenue)}
         icon={<Wallet className="h-4 w-4" />}
-        subtitle={`Anno ${new Date().getFullYear()}`}
+        subtitle={`Anno ${year}`}
       />
       <KpiCard
         title="Pagamenti in attesa"

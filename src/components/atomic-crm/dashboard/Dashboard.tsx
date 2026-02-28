@@ -51,17 +51,27 @@ export const Dashboard = () => {
         isCurrentYear={isCurrentYear}
       />
 
-      <DashboardKpiCards kpis={data.kpis} />
+      <DashboardKpiCards kpis={data.kpis} year={data.selectedYear} />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <DashboardRevenueTrendChart data={data.revenueTrend} />
-        <DashboardCategoryChart data={data.categoryBreakdown} />
+        <DashboardRevenueTrendChart
+          data={data.revenueTrend}
+          year={data.selectedYear}
+          isCurrentYear={isCurrentYear}
+        />
+        <DashboardCategoryChart
+          data={data.categoryBreakdown}
+          year={data.selectedYear}
+        />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
         <div className="grid grid-cols-1 gap-6">
           <DashboardPipelineCard data={data.quotePipeline} />
-          <DashboardTopClientsCard data={data.topClients} />
+          <DashboardTopClientsCard
+            data={data.topClients}
+            year={data.selectedYear}
+          />
         </div>
         {isCurrentYear && <DashboardAlertsCard alerts={data.alerts} />}
       </div>
@@ -103,7 +113,10 @@ export const Dashboard = () => {
           />
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <DashboardAtecoChart data={data.fiscal.atecoBreakdown} />
+            <DashboardAtecoChart
+              data={data.fiscal.atecoBreakdown}
+              year={data.selectedYear}
+            />
             {isCurrentYear && (
               <DashboardDeadlinesCard
                 deadlines={data.fiscal.deadlines}

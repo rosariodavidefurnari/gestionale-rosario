@@ -17,14 +17,20 @@ import {
 
 export const DashboardRevenueTrendChart = ({
   data,
+  year,
+  isCurrentYear,
 }: {
   data: RevenueTrendPoint[];
+  year: number;
+  isCurrentYear: boolean;
 }) => (
   <Card className="gap-0">
     <CardHeader className="px-4 pb-3">
       <CardTitle className="text-base">Andamento fatturato mensile</CardTitle>
       <p className="text-xs text-muted-foreground">
-        Ultimi 12 mesi (compensi lordi)
+        {isCurrentYear
+          ? "Ultimi 12 mesi (compensi lordi)"
+          : `Gen-Dic ${year} (compensi lordi)`}
       </p>
     </CardHeader>
     <CardContent className="px-2 pb-2">

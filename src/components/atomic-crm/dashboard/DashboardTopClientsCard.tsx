@@ -5,8 +5,10 @@ import { formatCompactCurrency, type TopClientPoint } from "./dashboardModel";
 
 export const DashboardTopClientsCard = ({
   data,
+  year,
 }: {
   data: TopClientPoint[];
+  year: number;
 }) => {
   const maxRevenue = data[0]?.revenue ?? 0;
 
@@ -14,12 +16,12 @@ export const DashboardTopClientsCard = ({
     <Card className="gap-0">
       <CardHeader className="px-4 pb-3">
         <CardTitle className="text-base">Top 5 clienti</CardTitle>
-        <p className="text-xs text-muted-foreground">Fatturato anno corrente</p>
+        <p className="text-xs text-muted-foreground">Fatturato anno {year}</p>
       </CardHeader>
       <CardContent className="px-4 pb-4">
         {!data.length ? (
           <p className="text-sm text-muted-foreground">
-            Nessun fatturato disponibile per l'anno corrente.
+            Nessun fatturato disponibile per l'anno {year}.
           </p>
         ) : (
           <div className="space-y-4">

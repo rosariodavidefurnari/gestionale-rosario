@@ -20,13 +20,15 @@ const colors = ["#0ea5e9", "#14b8a6", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 export const DashboardCategoryChart = ({
   data,
+  year,
 }: {
   data: CategoryBreakdownPoint[];
+  year: number;
 }) => (
   <Card className="gap-0">
     <CardHeader className="px-4 pb-3">
       <CardTitle className="text-base">Fatturato per categoria</CardTitle>
-      <p className="text-xs text-muted-foreground">Totale anno corrente</p>
+      <p className="text-xs text-muted-foreground">Totale anno {year}</p>
     </CardHeader>
     <CardContent className="px-2 pb-2">
       {!data.length || data.every((item) => item.revenue === 0) ? (

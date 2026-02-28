@@ -1,0 +1,700 @@
+---
+title: Historical Analytics AI-Ready
+description: Technical specification for the historical dashboard, Supabase aggregate views, semantic rules, and AI-ready analytics context.
+---
+
+This document defines the historical analytics layer for Atomic CRM.
+
+The goal is not just to add a "history" tab to the dashboard. The goal is to create a stable semantic layer so that:
+
+- the frontend can render historical metrics correctly,
+- future analytics widgets can reuse the same definitions,
+- and an AI assistant can interpret company data without inventing meanings or comparing incompatible periods.
+
+## Scope
+
+This specification covers:
+
+- canonical business definitions for historical metrics,
+- Supabase aggregate views for historical analytics,
+- frontend architecture for a dedicated `Storico` dashboard mode,
+- error handling and empty-state rules,
+- and the semantic context required for future AI analysis.
+
+This specification does not cover:
+
+- natural-language prompt design,
+- LLM provider selection,
+- or advanced forecasting models.
+
+## Why This Exists
+
+If the AI reads raw tables directly, it will make predictable mistakes:
+
+- it will confuse `compensi per competenza` with `incassi`,
+- it will compare a `YTD` year with a fully closed year,
+- it will not know which KPIs are `N/D`,
+- it will not know whether a number is complete or partial,
+- and it will not know which caveats must be shown to the user.
+
+The fix is to introduce a semantic layer between raw data and interpretation.
+
+## Canonical Terms
+
+The following terms are normative. The dashboard, SQL views, tests, and future AI layer must all use the same meaning.
+
+- `Compensi per competenza`
+    - Sum of `fee_shooting + fee_editing + fee_other - discount`.
+    - Time basis: `services.service_date`.
+    - This is the default basis for historical revenue analysis.
+- `Incassi`
+    - Sum of received payments.
+    - Time basis: `payments.payment_date`.
+    - This is not the default basis for the first historical dashboard release.
+- `Anno chiuso`
+    - A calendar year strictly earlier than the current business year.
+    - Example: on `2026-02-28`, the latest closed year is `2025`.
+- `Anno corrente YTD`
+    - The current calendar year truncated at the business `as_of_date`.
+    - Example: on `2026-02-28`, `2026` is shown as `YTD al 28/02/2026`, not as a full year.
+- `YoY`
+    - Growth between the last two closed years.
+    - Example: on `2026-02-28`, the correct `YoY` is `2025 vs 2024`.
+    - It must never compare `2026 YTD` against `2025 full year`.
+- `As of date`
+    - The effective business date used to decide what is complete, partial, or future.
+
+## Business Clock And Timezone
+
+Historical analytics must be evaluated using a business timezone. For this project, the default business timezone is `Europe/Rome`.
+
+This matters because the source tables now use `TIMESTAMPTZ`. Without a fixed business timezone, a service recorded near midnight UTC can fall into the wrong day, month, or year for Italian business reporting.
+
+Recommended rule:
+
+- derive `as_of_date` with `timezone('Europe/Rome', now())::date`,
+- derive the service year with `extract(year from timezone('Europe/Rome', service_date))`,
+- and compare future records using `timezone('Europe/Rome', service_date)::date <= as_of_date`.
+
+If the application becomes multi-company or multi-timezone in the future, the business timezone should move from code/docs into configuration.
+
+## Historical Dashboard Product Rules
+
+The dashboard must expose two distinct modes:
+
+- `Annuale`
+    - operational view,
+    - year selector visible,
+    - alerts, fiscal, deadlines, and in-year metrics allowed.
+- `Storico`
+    - strategic view,
+    - no year selector,
+    - no fiscal deadlines,
+    - no operational alerts,
+    - only metrics that remain meaningful across multiple years.
+
+The historical dashboard should initially show:
+
+- `Compensi storici totali`,
+- `Miglior anno chiuso`,
+- `Ultimo anno chiuso`,
+- `Crescita YoY su anni chiusi`,
+- `Compensi per anno`,
+- `Mix categorie per anno`,
+- `Top clienti all-time`.
+
+## KPI Contract
+
+Every KPI must have:
+
+- a stable identifier,
+- one formula,
+- one temporal basis,
+- one rule for `N/D`,
+- and one mandatory subtitle explaining what the user is seeing.
+
+### Historical KPI definitions
+
+- `historical_total_competence_revenue`
+    - Formula: sum of yearly competence revenue from the first year with data to `as_of_date`.
+    - Subtitle: `Compensi maturati per competenza, inclusa la quota YTD dell'anno corrente.`
+- `best_closed_year`
+    - Formula: closed year with the highest competence revenue.
+    - Subtitle: `Miglior anno chiuso per compensi maturati.`
+    - `N/D` if there is no closed year.
+- `latest_closed_year_revenue`
+    - Formula: competence revenue of the latest closed year.
+    - Subtitle: `Ultimo anno chiuso disponibile.`
+    - `N/D` if there is no closed year.
+- `yoy_closed_years`
+    - Formula: `(latest_closed_year_revenue - previous_closed_year_revenue) / previous_closed_year_revenue`.
+    - Subtitle: `Crescita su anni chiusi. Esempio: 2025 vs 2024.`
+    - `N/D` if there are fewer than 2 closed years.
+    - `N/D` if the comparison base is `0`.
+
+## Copy Contract
+
+No historical widget should display ambiguous labels such as `Fatturato` without context.
+
+Approved copy examples:
+
+- `Compensi per competenza. 2026 mostrato come YTD al 28/02/2026.`
+- `Crescita YoY su anni chiusi: 2025 vs 2024.`
+- `Top clienti all-time per compensi maturati, non per incassi.`
+- `Servizi futuri esclusi dal calcolo fino alla data di osservazione.`
+
+Forbidden copy examples:
+
+- `Totale anno corrente` inside the historical dashboard,
+- `Fatturato` without specifying whether it is competence-based or cash-based,
+- `YoY` without naming the compared years.
+
+## Supabase Aggregate Views
+
+The historical dashboard must rely on aggregate views instead of fetching large raw tables in the frontend.
+
+Recommended view set:
+
+- `analytics_business_clock`
+- `analytics_history_meta`
+- `analytics_yearly_competence_revenue`
+- `analytics_yearly_competence_revenue_by_category`
+- `analytics_client_lifetime_competence_revenue`
+
+Phase 2 optional views:
+
+- `analytics_yearly_cash_inflow`
+- `analytics_yearly_quote_outcomes`
+
+### `analytics_business_clock`
+
+Purpose:
+
+- define one authoritative business date,
+- define current year and latest closed year,
+- expose the business timezone used by analytics.
+
+Suggested definition:
+
+```sql
+create or replace view public.analytics_business_clock
+with (security_invoker=on) as
+select
+  1 as id,
+  'Europe/Rome'::text as business_timezone,
+  timezone('Europe/Rome', now()) as as_of_ts,
+  timezone('Europe/Rome', now())::date as as_of_date,
+  extract(year from timezone('Europe/Rome', now()))::int as current_year,
+  (extract(year from timezone('Europe/Rome', now()))::int - 1) as latest_closed_year;
+```
+
+### `analytics_history_meta`
+
+Purpose:
+
+- expose global history metadata,
+- simplify empty states and YTD subtitles,
+- give the AI a single source of truth for the observation window.
+
+Columns:
+
+- `id`
+- `business_timezone`
+- `as_of_date`
+- `current_year`
+- `latest_closed_year`
+- `first_year_with_data`
+- `last_year_with_data`
+- `total_years`
+- `has_current_year_data`
+- `has_future_services`
+
+Suggested definition:
+
+```sql
+create or replace view public.analytics_history_meta
+with (security_invoker=on) as
+with clock as (
+  select * from public.analytics_business_clock
+),
+service_rows as (
+  select
+    timezone(clock.business_timezone, s.service_date)::date as service_local_date,
+    extract(year from timezone(clock.business_timezone, s.service_date))::int as service_year
+  from public.services s
+  cross join clock
+),
+bounds as (
+  select
+    min(service_year) filter (where service_local_date <= clock.as_of_date) as first_year_with_data,
+    max(service_year) filter (where service_local_date <= clock.as_of_date) as last_year_with_data,
+    bool_or(service_year = clock.current_year and service_local_date <= clock.as_of_date) as has_current_year_data,
+    bool_or(service_local_date > clock.as_of_date) as has_future_services
+  from service_rows
+  cross join clock
+)
+select
+  clock.id,
+  clock.business_timezone,
+  clock.as_of_date,
+  clock.current_year,
+  clock.latest_closed_year,
+  bounds.first_year_with_data,
+  bounds.last_year_with_data,
+  case
+    when bounds.first_year_with_data is null then 0
+    else clock.current_year - bounds.first_year_with_data + 1
+  end as total_years,
+  coalesce(bounds.has_current_year_data, false) as has_current_year_data,
+  coalesce(bounds.has_future_services, false) as has_future_services
+from clock
+cross join bounds;
+```
+
+### `analytics_yearly_competence_revenue`
+
+Purpose:
+
+- produce the yearly competence-based historical series,
+- provide the base for top-level KPIs and the main annual chart,
+- preserve zero-value years between the first year with data and the current year.
+
+Columns:
+
+- `year`
+- `is_closed_year`
+- `is_ytd`
+- `as_of_date`
+- `revenue`
+- `total_km`
+- `km_cost`
+- `services_count`
+- `projects_count`
+- `clients_count`
+
+Suggested definition:
+
+```sql
+create or replace view public.analytics_yearly_competence_revenue
+with (security_invoker=on) as
+with clock as (
+  select * from public.analytics_business_clock
+),
+meta as (
+  select * from public.analytics_history_meta
+),
+years as (
+  select
+    generate_series(meta.first_year_with_data, clock.current_year, 1)::int as year
+  from meta
+  cross join clock
+  where meta.first_year_with_data is not null
+),
+aggregated as (
+  select
+    extract(year from timezone(clock.business_timezone, s.service_date))::int as year,
+    sum(s.fee_shooting + s.fee_editing + s.fee_other - s.discount) as revenue,
+    sum(s.km_distance) as total_km,
+    sum(s.km_distance * s.km_rate) as km_cost,
+    count(*) as services_count,
+    count(distinct s.project_id) as projects_count,
+    count(distinct p.client_id) as clients_count
+  from public.services s
+  join public.projects p on p.id = s.project_id
+  cross join clock
+  where timezone(clock.business_timezone, s.service_date)::date <= clock.as_of_date
+  group by 1
+)
+select
+  years.year,
+  years.year < clock.current_year as is_closed_year,
+  years.year = clock.current_year as is_ytd,
+  clock.as_of_date,
+  coalesce(aggregated.revenue, 0) as revenue,
+  coalesce(aggregated.total_km, 0) as total_km,
+  coalesce(aggregated.km_cost, 0) as km_cost,
+  coalesce(aggregated.services_count, 0) as services_count,
+  coalesce(aggregated.projects_count, 0) as projects_count,
+  coalesce(aggregated.clients_count, 0) as clients_count
+from years
+cross join clock
+left join aggregated on aggregated.year = years.year
+order by years.year asc;
+```
+
+### `analytics_yearly_competence_revenue_by_category`
+
+Purpose:
+
+- describe how the business mix evolves over time,
+- support stacked annual charts and AI explanations such as `growth came mostly from wedding and produzione_tv`.
+
+Columns:
+
+- `year`
+- `category`
+- `is_closed_year`
+- `is_ytd`
+- `as_of_date`
+- `revenue`
+- `services_count`
+- `projects_count`
+
+Suggested definition:
+
+```sql
+create or replace view public.analytics_yearly_competence_revenue_by_category
+with (security_invoker=on) as
+with clock as (
+  select * from public.analytics_business_clock
+),
+meta as (
+  select * from public.analytics_history_meta
+),
+categories as (
+  select distinct category from public.projects
+),
+years as (
+  select
+    generate_series(meta.first_year_with_data, clock.current_year, 1)::int as year
+  from meta
+  cross join clock
+  where meta.first_year_with_data is not null
+),
+grid as (
+  select years.year, categories.category
+  from years
+  cross join categories
+),
+aggregated as (
+  select
+    extract(year from timezone(clock.business_timezone, s.service_date))::int as year,
+    p.category,
+    sum(s.fee_shooting + s.fee_editing + s.fee_other - s.discount) as revenue,
+    count(*) as services_count,
+    count(distinct s.project_id) as projects_count
+  from public.services s
+  join public.projects p on p.id = s.project_id
+  cross join clock
+  where timezone(clock.business_timezone, s.service_date)::date <= clock.as_of_date
+  group by 1, 2
+)
+select
+  grid.year,
+  grid.category,
+  grid.year < clock.current_year as is_closed_year,
+  grid.year = clock.current_year as is_ytd,
+  clock.as_of_date,
+  coalesce(aggregated.revenue, 0) as revenue,
+  coalesce(aggregated.services_count, 0) as services_count,
+  coalesce(aggregated.projects_count, 0) as projects_count
+from grid
+cross join clock
+left join aggregated
+  on aggregated.year = grid.year
+ and aggregated.category = grid.category
+order by grid.year asc, grid.category asc;
+```
+
+### `analytics_client_lifetime_competence_revenue`
+
+Purpose:
+
+- rank clients by total historical competence revenue,
+- support both dashboard cards and future AI reasoning about client concentration.
+
+Columns:
+
+- `client_id`
+- `client_name`
+- `first_service_date`
+- `last_service_date`
+- `lifetime_revenue`
+- `active_years_count`
+- `projects_count`
+- `services_count`
+
+Suggested definition:
+
+```sql
+create or replace view public.analytics_client_lifetime_competence_revenue
+with (security_invoker=on) as
+with clock as (
+  select * from public.analytics_business_clock
+)
+select
+  c.id as client_id,
+  c.name as client_name,
+  min(timezone(clock.business_timezone, s.service_date)::date) as first_service_date,
+  max(timezone(clock.business_timezone, s.service_date)::date) as last_service_date,
+  sum(s.fee_shooting + s.fee_editing + s.fee_other - s.discount) as lifetime_revenue,
+  count(distinct extract(year from timezone(clock.business_timezone, s.service_date))::int) as active_years_count,
+  count(distinct p.id) as projects_count,
+  count(*) as services_count
+from public.services s
+join public.projects p on p.id = s.project_id
+join public.clients c on c.id = p.client_id
+cross join clock
+where timezone(clock.business_timezone, s.service_date)::date <= clock.as_of_date
+group by c.id, c.name
+order by lifetime_revenue desc, c.name asc;
+```
+
+## Why These Views Are Better Than Raw Fetching
+
+The current annual dashboard loads multiple raw resources client-side. That is acceptable for a small operational dashboard, but it is a weak base for historical analytics and future AI features.
+
+The aggregate views above solve four problems:
+
+- they reduce pagination risk,
+- they make YTD and closed-year rules explicit,
+- they give the frontend smaller, cleaner payloads,
+- and they give the AI a stable set of already-interpreted numbers.
+
+## Frontend Architecture
+
+Recommended structure:
+
+- `src/components/atomic-crm/dashboard/Dashboard.tsx`
+    - shell and mode switch between `Annuale` and `Storico`
+- `src/components/atomic-crm/dashboard/useAnnualDashboardData.ts`
+    - current logic extracted from the existing hook
+- `src/components/atomic-crm/dashboard/useHistoricalDashboardData.ts`
+    - fetches only the new aggregate views
+- `src/components/atomic-crm/dashboard/dashboardHistoryModel.ts`
+    - converts aggregate rows into UI-ready structures
+- `src/components/atomic-crm/dashboard/DashboardHistorical.tsx`
+    - main historical layout
+- `src/components/atomic-crm/dashboard/analyticsDefinitions.ts`
+    - canonical metric dictionary reused by UI and future AI context builders
+
+Historical widgets should be independent. If one widget fails, the others should still render.
+
+## Historical Widget States
+
+Each historical widget must support these states:
+
+- `loading`
+- `ready`
+- `partial_error`
+- `empty`
+- `not_applicable`
+
+Examples:
+
+- `YoY` is `not_applicable` if fewer than two closed years exist.
+- `Best closed year` is `not_applicable` if the company has only current-year data.
+- the main history chart is `empty` if there are no services up to `as_of_date`.
+
+## Error Handling
+
+### Query-level errors
+
+If all historical queries fail:
+
+- show a single blocking card,
+- text: `Impossibile caricare lo storico aziendale.`,
+- action: `Riprova`.
+
+If only one widget fails:
+
+- keep the rest of the page visible,
+- show a local error state in that widget,
+- text example: `Impossibile calcolare il mix categorie.`
+
+### Data-quality errors and warnings
+
+These are not transport errors. They are semantic conditions that the UI and future AI must treat explicitly.
+
+- `insufficient_closed_years`
+    - not enough closed years for `YoY`.
+- `zero_baseline`
+    - previous closed year revenue is zero, so `YoY` is not comparable.
+- `no_historical_services`
+    - no services at all before or on `as_of_date`.
+- `future_services_excluded`
+    - future-dated services exist but are excluded from current calculations.
+- `partial_current_year`
+    - current year is present but only as `YTD`.
+
+Recommended UI behavior:
+
+- show an explanatory subtitle for `partial_current_year`,
+- show a muted badge or tooltip for `future_services_excluded`,
+- show `N/D` for non-comparable KPIs,
+- never silently coerce semantic errors into numeric values.
+
+## AI-Ready Semantic Layer
+
+The AI should not query the raw database and guess the meaning of numbers. It should consume a curated context object built from the aggregate views and a metric dictionary.
+
+Recommended files:
+
+- `src/components/atomic-crm/dashboard/analyticsDefinitions.ts`
+- `src/lib/analytics/buildAnalyticsContext.ts`
+
+Recommended TypeScript shape:
+
+```ts
+export type AnalyticsMetricDefinition = {
+    id: string;
+    label: string;
+    basis: 'competence_revenue' | 'cash_inflow';
+    grain: 'all_time' | 'year' | 'year_over_year';
+    unit: 'currency' | 'percent' | 'count';
+    formula: string;
+    naPolicy: string;
+    interpretationRule: string;
+    defaultSubtitle: string;
+};
+
+export type AnalyticsContext = {
+    meta: {
+        businessTimezone: string;
+        asOfDate: string;
+        currentYear: number;
+        latestClosedYear: number | null;
+        firstYearWithData: number | null;
+        hasFutureServices: boolean;
+    };
+    metrics: Array<{
+        id: string;
+        label: string;
+        value: number | null;
+        formattedValue: string;
+        comparisonLabel?: string;
+        basis: 'competence_revenue' | 'cash_inflow';
+        isYtd: boolean;
+        isComparable: boolean;
+        warningCode?: string;
+    }>;
+    series: {
+        yearlyRevenue: Array<{
+            year: number;
+            revenue: number;
+            isClosedYear: boolean;
+            isYtd: boolean;
+        }>;
+        yearlyRevenueByCategory: Array<{
+            year: number;
+            category: string;
+            revenue: number;
+        }>;
+    };
+    qualityFlags: string[];
+};
+```
+
+## AI Interpretation Rules
+
+These rules must be encoded in code and test cases, not just in prompts.
+
+- Never compare `YTD` current year against a closed full year unless the comparison explicitly says `YTD vs same period`.
+- `YoY` means the last two closed years only.
+- If the denominator is zero, return `N/D`, not `Infinity`, not `100%`.
+- If the metric is competence-based, say so explicitly.
+- If future-dated records are excluded, the AI must mention that exclusion when relevant.
+- If data is insufficient, the AI must say `non dimostrabile con i dati disponibili`.
+
+Example on `2026-02-28`:
+
+- `2026` is `YTD al 28/02/2026`.
+- `YoY` is `2025 vs 2024`.
+- Any answer that compares `2026` full-year style against `2025` is wrong.
+
+## Recommended UX Contract For Historical Widgets
+
+Each widget must declare:
+
+- metric basis,
+- comparison basis,
+- whether the current year is partial,
+- and the observation date.
+
+Examples:
+
+- `Compensi per competenza. Serie annuale dal 2023 al 2026. 2026 mostrato come YTD al 28/02/2026.`
+- `Crescita YoY su anni chiusi: 2025 vs 2024.`
+- `Top clienti all-time per compensi maturati fino al 28/02/2026.`
+
+## FakeRest And Demo Mode
+
+The FakeRest provider currently does not expose historical analytics resources.
+
+For local demo compatibility, choose one of these strategies:
+
+- add synthetic `analytics_*` resources in the FakeRest generator,
+- or disable the historical dashboard in demo mode with a clear notice.
+
+The preferred option is to generate synthetic `analytics_*` resources. This keeps the semantic contract identical between demo and production.
+
+## Provider Integration
+
+The Supabase data provider must register the primary keys of the new views.
+
+Add these keys to the provider map:
+
+- `analytics_business_clock` -> `id`
+- `analytics_history_meta` -> `id`
+- `analytics_yearly_competence_revenue` -> `year`
+- `analytics_yearly_competence_revenue_by_category` -> `year, category`
+- `analytics_client_lifetime_competence_revenue` -> `client_id`
+
+## Testing Strategy
+
+Unit tests must cover:
+
+- current year treated as YTD,
+- closed-year detection,
+- `YoY` based on the last two closed years,
+- `YoY` with zero denominator,
+- missing years rendered as zero,
+- future-dated services excluded from `as_of_date`,
+- empty historical state,
+- top clients lifetime ranking.
+
+Acceptance checks for the UI:
+
+- on `2026-02-28`, the current year subtitle says `YTD al 28/02/2026`,
+- `YoY` subtitle says `2025 vs 2024`,
+- every historical widget declares what it is showing,
+- no historical widget silently uses fiscal/operational wording,
+- and `N/D` states are explained, not hidden.
+
+## Implementation Roadmap
+
+Phase 1:
+
+- create the Supabase `analytics_*` views,
+- register their primary keys in the data provider,
+- define `analyticsDefinitions.ts`,
+- add `useHistoricalDashboardData`,
+- build the `Storico` dashboard shell.
+
+Phase 2:
+
+- implement widget-level error states,
+- add FakeRest support,
+- add tests for semantic rules,
+- add `buildAnalyticsContext` for AI consumption.
+
+Phase 3:
+
+- introduce `cash_inflow` historical views,
+- add optional `YTD vs same period last year`,
+- expose AI explanations based on the semantic context,
+- and only then consider forecasting or advanced anomaly detection.
+
+## Final Principle
+
+The key design rule is simple:
+
+The AI must not infer the meaning of business data from raw tables. It must receive:
+
+- already-aggregated numbers,
+- explicit time semantics,
+- explicit metric definitions,
+- explicit comparability rules,
+- and explicit caveats.
+
+That is the foundation that makes future AI analysis both easy to integrate and hard to misinterpret.
