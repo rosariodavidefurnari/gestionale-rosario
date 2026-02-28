@@ -228,6 +228,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/quotes/quoteProjectLinking.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/quotes/index.tsx",
           "type": "registry:component"
         },
@@ -269,6 +273,10 @@
         },
         {
           "path": "src/components/atomic-crm/quotes/QuoteCard.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/quotes/CreateProjectFromQuoteDialog.tsx",
           "type": "registry:component"
         },
         {
@@ -405,6 +413,10 @@
         },
         {
           "path": "src/components/atomic-crm/payments/paymentTypes.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/payments/paymentLinking.ts",
           "type": "registry:component"
         },
         {
