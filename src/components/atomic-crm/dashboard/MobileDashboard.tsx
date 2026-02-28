@@ -1,12 +1,16 @@
+import { CalendarClock, PiggyBank, Shield } from "lucide-react";
 import { RefreshCw } from "lucide-react";
 import { useTimeout } from "ra-core";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 import MobileHeader from "../layout/MobileHeader";
 import { MobileContent } from "../layout/MobileContent";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { formatCurrency, formatCurrencyPrecise } from "./dashboardModel";
+import type { FiscalModel } from "./fiscalModel";
 import { Welcome } from "./Welcome";
 import { DashboardKpiCards } from "./DashboardKpiCards";
 import { MobileDashboardLoading } from "./DashboardLoading";
@@ -60,7 +64,77 @@ export const MobileDashboard = () => {
       <div className="space-y-4 mt-1">
         {import.meta.env.VITE_IS_DEMO === "true" ? <Welcome /> : null}
         <DashboardKpiCards kpis={data.kpis} compact />
+        {data.fiscal && <MobileFiscalKpis fiscal={data.fiscal} />}
       </div>
     </Wrapper>
+  );
+};
+
+const MobileFiscalKpis = ({ fiscal }: { fiscal: FiscalModel }) => {
+  const { fiscalKpis, deadlines } = fiscal;
+  const nextDeadline = deadlines.find((d) => !d.isPast);
+
+  return (
+    <div className="grid grid-cols-1 gap-3">
+      {/* Monthly set-aside */}
+      <Card className="gap-2 py-3">
+        <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
+          <CardTitle className="text-sm font-medium">
+            Accantonamento mensile
+          </CardTitle>
+          <PiggyBank className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="px-4">
+          <div className="text-xl font-semibold">
+            {formatCurrencyPrecise(fiscalKpis.accantonamentoMensile)}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Next deadline */}
+      {nextDeadline && (
+        <Card className="gap-2 py-3">
+          <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
+            <CardTitle className="text-sm font-medium">
+              Prossima scadenza
+            </CardTitle>
+            <CalendarClock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="px-4 space-y-1">
+            <div className="text-xl font-semibold">
+              {formatCurrency(nextDeadline.totalAmount)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {new Date(nextDeadline.date + "T00:00:00").toLocaleDateString(
+                "it-IT",
+                { day: "2-digit", month: "long" },
+              )}{" "}
+              — {nextDeadline.label} ({nextDeadline.daysUntil}g)
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Ceiling */}
+      <Card className="gap-2 py-3">
+        <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
+          <CardTitle className="text-sm font-medium">
+            Tetto forfettario
+          </CardTitle>
+          <Shield className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="px-4 space-y-2">
+          <Progress
+            value={Math.min(100, fiscalKpis.percentualeUtilizzoTetto)}
+            className="h-2"
+          />
+          <p className="text-xs text-muted-foreground">
+            {Math.round(fiscalKpis.percentualeUtilizzoTetto)}% utilizzato —{" "}
+            {formatCurrency(Math.abs(fiscalKpis.distanzaDalTetto))}
+            {fiscalKpis.distanzaDalTetto < 0 ? " oltre" : " rimanenti"}
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
