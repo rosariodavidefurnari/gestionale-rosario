@@ -45,7 +45,8 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
 - Signup disabilitato nel **Supabase Dashboard remoto** (non solo config.toml locale)
 - npm audit: 4 vulnerabilità (1 moderate, 3 high) — da valutare
-- Edge Function `postmark` non funzionante (manca secrets Postmark — non prioritaria)
+- Edge Function inbound `postmark` rimossa dal progetto: comunicazioni future su
+  `Gmail` outbound cliente e `CallMeBot` per alert interni prioritari
 - 3 errori lint pre-esistenti (useGetOne condizionale in ExpenseShow/PaymentShow)
 
 ## Database Schema

@@ -34,10 +34,15 @@ The implementation is now functionally closed for v1:
   by authenticated remote smoke and real browser click-test.
 - the commercial backbone slice `Quote -> Project -> Payment` is now
   browser-validated too,
+- the simple `client -> payment` path now has a direct UI entry point too,
 - the quote-driven quick-payment path is now browser-validated too, including
   the case with no linked project,
 - the `quote_items` foundation is now implemented inside `quotes` without
   introducing a separate CRUD module,
+- quote show now also exposes a first non-invasive visibility layer for linked
+  payments,
+- that quote-side payment visibility layer is now browser-validated too on the
+  real authenticated quote show path,
 - itemized quotes now auto-derive `amount` from line items, keep the classic
   quote path backward-compatible, and are browser-validated on real create/show
   flows,
@@ -56,7 +61,22 @@ The implementation is now functionally closed for v1:
   - `DashboardHistoricalCashInflowAiCard`
   - `historical_cash_inflow_summary`
   - `historical_cash_inflow_answer`
-  - browser-validated on the real authenticated UI path.
+  - browser-validated on the real authenticated UI path,
+- and that same `incassi` layer now also has a first separate non-AI surface:
+  - `DashboardHistoricalCashInflowCard`
+  - test-validated on the real `Storico` render path.
+- and a first operational semantic backbone now exists too:
+  - `crmSemanticRegistry`
+  - `operationalConfig.defaultKmRate`
+  - `services.is_taxable`
+  - shared km/service formulas reused by UI, fiscal model, and future AI
+    consumers.
+- and a first product-capability / communication foundation now exists too:
+  - `crmCapabilityRegistry`
+  - `quoteStatusEmailTemplates`
+  - provider-agnostic mail rendering with `Gmail` as planned outbound target
+  - `CallMeBot` declared as the planned internal high-priority notification
+    channel
 
 The next work is now future expansion on top of a stable shipped core, not a
 missing foundation piece.
@@ -72,6 +92,92 @@ Cross-surface note:
   - commercial backbone hardening for `Quote -> Project -> Payment`
   - because global AI on weak cross-module links would stay fragile
 
+Strategic product note:
+
+- the long-term goal is **not** to keep shipping isolated AI widgets in many
+  pages,
+- but to unify the useful AI capabilities into one clearer AI experience
+  without losing what already works.
+- the current page-level AI cards should therefore be treated as transitional,
+  not as the final UX architecture.
+
+## First Open Priority
+
+The next Pareto step is:
+
+- manual customer email sending for quote status updates via `Gmail SMTP`,
+- built on top of `quoteStatusEmailTemplates`,
+- still blocking all automatic send paths when a flow includes services with
+  `is_taxable = false`.
+
+Why this comes next:
+
+- the semantic and capability foundations already exist,
+- the communication direction is already decided,
+- it closes a real business workflow,
+- and it strengthens the future unified AI without adding one more scattered
+  AI surface.
+
+Not the next step by default:
+
+- more page-level AI cards
+- more dashboard widgets
+- broader automation before the manual path is stable
+
+## Stop Line For This Phase
+
+This work must not grow forever. For this phase, `enough` means:
+
+- `Storico` stays reliable on its current semantic split:
+  - `compensi`
+  - `incassi`
+- `Annuale` stays AI-enabled only on the approved `annual_operations` context,
+  without trying to absorb fiscal simulation or alert logic into the same AI
+  payload.
+- the commercial backbone stays solid on the real cases that matter now:
+  - `client -> payment`
+  - `quote -> payment`
+  - `quote -> project -> payment`
+- `quote` and `project` remain optional:
+  - do not force them on simple jobs such as lightweight wedding work.
+
+What is already enough today:
+
+- the current `Storico` AI and non-AI foundations,
+- the current `Annuale` AI operational flow,
+- the current client/quote/project/payment links already validated in the real
+  UI.
+
+What is still legitimate work in this phase:
+
+- keeping tests and semantic rules aligned when these existing widgets change,
+- at most one more small commercial slice if it closes a real workflow gap,
+- importing more real historical data only when it becomes product-useful.
+
+What is **not** part of this phase by default:
+
+- turning `Annuale` into a full-page AI assistant,
+- opening a multi-turn global AI chat across the whole CRM,
+- adding more dashboard cards unless one replaces confusion with clarity,
+- inventing workflow steps that create bureaucracy without better data.
+- adding more scattered AI interfaces unless they are clearly temporary and
+  compatible with later unification.
+- re-spreading business meanings across forms instead of reusing the semantic
+  registry and shared formulas.
+- shipping customer-facing status emails from page-level copy instead of one
+  shared template layer with explicit send policy.
+- leaving dead communication branches like `Postmark` in the repo after the
+  product direction has already moved elsewhere.
+
+Stop condition:
+
+- if the current UI already supports the three commercial paths above without
+  forcing fake structure,
+- and `Storico` / `Annuale` keep producing coherent outputs on the current
+  validated paths,
+- this phase is complete enough and new ideas belong to `v2`, not to endless
+  slice expansion.
+
 ## How To Use This Backlog In A New Chat
 
 Ask the new session to:
@@ -80,6 +186,8 @@ Ask the new session to:
 2. read this file
 3. read `doc/src/content/docs/developers/historical-analytics-ai-ready.mdx`
 4. continue from the first unfinished priority without re-opening already closed architecture decisions
+5. if a feature changes CRM behavior, update the semantic registry, capability
+   registry, tests, and continuity docs in the same pass
 
 ## Completed Since Last Update
 
@@ -117,6 +225,68 @@ Ask the new session to:
   - closed-years-only YoY
   - insufficient-data / zero-baseline conditions
   - future-services exclusion
+
+### Operational semantic backbone for AI-safe read/write
+
+- Added shared semantic registry:
+  - `src/lib/semantics/crmSemanticRegistry.ts`
+- Added provider access:
+  - `dataProvider.getCrmSemanticRegistry()`
+- Added configurable operational rule:
+  - `operationalConfig.defaultKmRate`
+- Added service fiscal flag:
+  - `services.is_taxable`
+- Added semantic descriptions to fixed dictionaries:
+  - client types
+  - acquisition sources
+  - project categories / statuses / TV shows
+  - quote statuses
+  - payment types / methods / statuses
+- Reused the same formulas in the real app:
+  - service net value
+  - taxable service net value
+  - travel reimbursement
+- Aligned real UI paths:
+  - service create/show/list
+  - expense create/show/list
+  - quick TV episode creation
+  - fiscal model
+- Validation completed on `2026-02-28`:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/semantics/crmSemanticRegistry.test.ts src/components/atomic-crm/dashboard/fiscalModel.test.ts src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts src/lib/analytics/buildAnnualOperationsContext.test.ts`
+  - `npx supabase db push`
+
+### Capability registry and quote-status email templates
+
+- Added a first capability catalog for the future unified AI:
+  - `src/lib/semantics/crmCapabilityRegistry.ts`
+- It now declares:
+  - main resources
+  - main pages
+  - critical dialogs/modals
+  - important business actions
+  - route mode (`hash`)
+  - a mandatory integration checklist for future features
+- Added a first communication template layer:
+  - `src/lib/communications/quoteStatusEmailTemplates.ts`
+- It now supports:
+  - quote-status specific send policies
+  - dynamic HTML/text output
+  - required-field checks before sending
+  - shared sections instead of hardcoded page copy
+  - hard safety rule:
+    - services with `is_taxable = false` must never trigger automatic emails
+- Product direction locked:
+  - outbound mail target is `Gmail`
+  - the current template layer stays provider-agnostic until credentials and
+    transport are wired
+  - internal urgent notifications target `CallMeBot`
+- Cleanup completed:
+  - the old inbound `postmark` function and related profile UI/config were
+    removed from the repo
+- Validation completed on `2026-02-28`:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/communications/quoteStatusEmailTemplates.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`
 
 ### Explicit scope decision
 
@@ -397,6 +567,47 @@ Ask the new session to:
     - verified itemized rendering in quote show on the real authenticated app
     - no browser console errors after the explicit `name@ilike` fix
 
+### Quote payment visibility slice completed
+
+- Added quote-side payment summary helper:
+  - `quotePaymentsSummary.ts`
+- Added quote-side UI section:
+  - `QuotePaymentsSection.tsx`
+- Added product behavior:
+  - quote show now exposes linked-payment visibility without leaving the quote
+  - the user can read:
+    - already received
+    - already registered but still open
+    - remaining amount not yet linked to payments
+    - individual linked payment rows
+- Scope rule preserved:
+  - no new mandatory object was introduced
+  - no automatic status transition was introduced
+  - the feature strengthens the current `quote -> payment` link instead of
+    inventing a heavier workflow
+- Validation on `2026-02-28`:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/quotes/quotePaymentsSummary.test.ts src/components/atomic-crm/quotes/QuotePaymentsSection.test.tsx src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/quotes/quoteProjectLinking.test.ts src/components/atomic-crm/quotes/quoteItems.test.ts`
+
+### Client direct-payment slice completed
+
+- Added client-side quick path helpers:
+  - `buildPaymentCreateDefaultsFromClient()`
+  - `buildPaymentCreatePathFromClient()`
+- Added product behavior:
+  - client show now exposes `Nuovo pagamento`
+  - the button opens the existing payment create form with `client_id`
+    already set
+- Scope rule preserved:
+  - no new mandatory object was introduced
+  - no project is forced for the simple case
+  - no duplicate payment form/dialog was introduced
+- Validation on `2026-02-28`:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/quotes/QuotePaymentsSection.test.tsx src/components/atomic-crm/quotes/quotePaymentsSummary.test.ts`
+  - authenticated browser smoke:
+    - `client show -> Nuovo pagamento -> payment create with client prefilled`
+
 ### Annual operations drill-down completed
 
 - Added semantic drill-down payload inside `annual_operations`:
@@ -512,7 +723,7 @@ Ask the new session to:
     - `2026` as `YTD`
   - authenticated REST query with a temporary user showed the same rows
 - Scope rule preserved:
-  - do not merge `incassi` into the existing `Storico` UI yet
+  - do not mix `incassi` into the existing competence widgets
   - keep `compensi` and `incassi` as separate semantic bases
 
 ### Historical `incassi` AI consumer added
@@ -541,6 +752,24 @@ Ask the new session to:
   - the new card stays separate from the existing `Storico` KPI/chart widgets
   - `compensi` and `incassi` are still never mixed in one widget
 
+### Historical `incassi` non-AI surface added
+
+- Added dedicated UI card:
+  - `DashboardHistoricalCashInflowCard`
+- Added browser/UI tests:
+  - `DashboardHistoricalCashInflowCard.test.tsx`
+  - `DashboardHistorical.ui.test.tsx`
+- Added product behavior:
+  - `Storico` now shows a small non-AI card for received cash
+  - the card reuses `dataProvider.getHistoricalCashInflowContext()`
+  - the card keeps totals/yearly rows/caveat wording centered on `incassi`
+- Scope rule preserved:
+  - the card is separate from competence KPIs/charts
+  - the card does not rename or reinterpret any `compensi` widget
+- Validation on `2026-02-28`:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowAiCard.test.tsx src/lib/analytics/buildHistoricalCashInflowContext.test.ts`
+
 ## Priority 1
 
 ### Keep the new historical / annual / commercial tests updated if widgets evolve
@@ -561,6 +790,12 @@ Tasks:
 - keep coverage for empty/error/YTD/YoY semantics and AI card actions,
 - keep `quote_items` and lookup-helper tests aligned with any future form
   refactor,
+- for authenticated smoke on the linked Supabase project, reuse
+  `scripts/auth-smoke-user.mjs` instead of rebuilding temp-user auth manually,
+- for authenticated browser smoke on the local Vite runtime, always use
+  hash-based routes:
+  - `http://127.0.0.1:4173/#/...`
+  - example: `http://127.0.0.1:4173/#/quotes/<id>/show`
 - keep `supabase/config.toml` aligned when new UI-invoked functions are added.
 
 Acceptance:
@@ -570,44 +805,53 @@ Acceptance:
 
 ## Priority 2
 
-### Optional non-AI surface for historical `incassi`
+### Commercial base review before stopping the phase
 
 Why:
 
-- the AI card now exists and is useful,
-- but product may still want a small visual surface for `incassi` without
-  forcing the user to ask the AI first.
+- the target paths for this phase are now all represented in the UI:
+  - `client -> payment`
+  - `quote -> payment`
+  - `quote -> project -> payment`
+- so the right next move may now be to stop, not to invent more slices.
 
 Tasks:
 
-- only if useful, add one small clearly labeled widget/card for received cash,
-- keep it separate from competence-based widgets,
-- avoid mixed labels like generic `fatturato`.
+- verify whether a concrete workflow hole still exists in one of the three
+  target paths,
+- if no such gap exists, stop this phase,
+- if a gap does exist, only then justify one further small slice.
 
 Acceptance:
 
-- a user can read a basic historical cash signal without AI, while the semantic
-  separation stays intact.
+- either:
+  - the phase is declared complete enough on the commercial side,
+  - or one last small slice is justified by a real gap instead of by momentum.
 
 ## Priority 3
 
-### Optional prompt / markdown polish of the AI card
+### Future AI interface unification
 
 Why:
 
-- the browser output is now semantically correct and understandable,
-- but product may still want a denser or more opinionated presentation.
+- a fundamental product goal is to stop keeping AI features scattered across
+  many pages,
+- while preserving the already useful capabilities and avoiding regressions.
 
 Tasks:
 
-- only if useful after UI review, tighten prompt formatting or card typography,
+- only after the current foundations are considered stable, map the existing
+  AI entry points and converge them into one clearer experience,
 - keep the semantic rules unchanged,
-- avoid introducing a multi-turn chat flow at this stage.
+- preserve the capabilities already validated in `Storico` and `Annuale`,
+- do not remove page-level utility until the unified replacement is at least as
+  usable.
 
 Acceptance:
 
-- the generated summary/answer is easier to scan without changing business
-  logic.
+- AI functionality becomes easier to use from one place,
+- without losing the current validated question/answer capabilities,
+- and without creating regressions in simple day-to-day use.
 
 ## Priority 4
 
@@ -628,7 +872,7 @@ Acceptance:
 - demo mode does not expose a broken historical tab if the product scope starts
   caring about demo parity.
 
-## Priority 6
+## Priority 5
 
 ### Expand analytics surface / assistant UX
 

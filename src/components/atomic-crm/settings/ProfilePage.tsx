@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { CircleX, Copy, Pencil, Save } from "lucide-react";
+import { CircleX, Pencil, Save } from "lucide-react";
 import {
   Form,
   useDataProvider,
@@ -14,12 +14,6 @@ import { RecordField } from "@/components/admin/record-field";
 import { TextInput } from "@/components/admin/text-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 import ImageEditorField from "../misc/ImageEditorField";
 import type { CrmDataProvider } from "../providers/types";
@@ -181,24 +175,6 @@ const ProfileForm = ({
           </div>
         </CardContent>
       </Card>
-      {import.meta.env.VITE_INBOUND_EMAIL && (
-        <Card>
-          <CardContent>
-            <div className="space-y-4 justify-between">
-              <h2 className="text-xl font-semibold text-muted-foreground">
-                Email in entrata
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Puoi iniziare a inviare email al tuo indirizzo email in entrata,
-                ad esempio aggiungendolo al campo
-                <b> Cc: </b> . Il gestionale elaborerà le email e aggiungerà
-                note ai contatti corrispondenti.
-              </p>
-              <CopyPaste />
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
@@ -227,38 +203,4 @@ const TextRender = ({
     </div>
   );
 };
-
-const CopyPaste = () => {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    setCopied(true);
-    navigator.clipboard.writeText(import.meta.env.VITE_INBOUND_EMAIL);
-    setTimeout(() => {
-      setCopied(false);
-    }, 1500);
-  };
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            type="button"
-            onClick={handleCopy}
-            variant="ghost"
-            className="normal-case justify-between w-full"
-          >
-            <span className="overflow-hidden text-ellipsis">
-              {import.meta.env.VITE_INBOUND_EMAIL}
-            </span>
-            <Copy className="h-4 w-4 ml-2" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{copied ? "Copiato!" : "Copia"}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-};
-
 ProfilePage.path = "/profile";

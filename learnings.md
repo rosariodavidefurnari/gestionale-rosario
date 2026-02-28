@@ -10,6 +10,143 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Se una feature deve vivere bene nella futura chat AI
+  unificata, la chiusura corretta non è solo codice + test: serve anche una
+  checklist di integrazione scritta nei documenti di continuità** — Ogni nuova
+  capacità importante va legata nello stesso passaggio a:
+  1) semantic registry
+  2) capability registry
+  3) communication layer se manda messaggi
+  4) provider entry point se deve essere leggibile/usabile dall'AI
+  5) docs di handoff/progress/backlog/learnings.
+  Altrimenti la prossima chat o il prossimo sviluppo rompono il filo.
+
+- [2026-02-28] **Quando sai già qual è il prossimo Pareto step, scrivilo nei
+  file di continuità prima di cambiare chat** — Lasciare solo una lista di cose
+  fatte non basta. Serve dichiarare anche:
+  1) obiettivo finale
+  2) vincoli non negoziabili
+  3) primo prossimo passo ad alto valore.
+  In questo stato del repo il prossimo step giusto è il send manuale via
+  `Gmail` delle mail cliente sui cambi stato preventivo, non nuove superfici AI
+  sparse.
+
+- [2026-02-28] **Se il CRM deve diventare AI-driven, i significati di tipi,
+  stati, categorie, date e formule non devono vivere sparsi nei form** —
+  La mossa giusta è creare un registry semantico condiviso con:
+  1) dizionari leggibili
+  2) descrizioni d'uso
+  3) regole di calcolo riusabili
+  4) un entry point unico dal data provider.
+  Così UI, fiscale e AI leggono la stessa definizione.
+
+- [2026-02-28] **Se in futuro la chat AI dovrà usare tutto il sito, non basta
+  sapere i campi: deve esistere anche un catalogo esplicito di pagine, modali,
+  azioni e route** — Il layer giusto non è un prompt lungo ma un capability
+  registry versionato nel repo. Ogni feature nuova va aggiunta lì, altrimenti
+  la chat unificata non saprà davvero cosa può fare.
+
+- [2026-02-28] **Le mail cliente sui cambi stato non vanno scritte dentro le
+  pagine o nei click handler** — Serve un layer di template condivisi con:
+  1) policy di invio per stato
+  2) blocchi comuni
+  3) parti dinamiche
+  4) controllo dei dati mancanti prima dell'invio.
+  Solo dopo ha senso agganciare il provider reale, in questo caso `Gmail`.
+
+- [2026-02-28] **Quando un ramo comunicativo è fuori direzione prodotto, va
+  rimosso dal repo fino in fondo** — Se `Postmark` non è più il canale scelto,
+  non basta smettere di usarlo: bisogna togliere function, config Supabase, env
+  e UI relative, altrimenti l’AI futura continuerà a considerarlo una capacità
+  valida del sistema.
+
+- [2026-02-28] **Separare sempre canali cliente e canali interni** — In questo
+  progetto:
+  1) `Gmail` = mail cliente outbound
+  2) `CallMeBot` = notifiche interne ad alta priorità
+  Mischiare i due canali crea automazioni sbagliate e semantica debole.
+
+- [2026-02-28] **`is_taxable = false` non è solo una regola fiscale: è anche
+  una guardia sugli automatismi comunicativi** — Se un flusso coinvolge servizi
+  non tassabili, nessuna mail automatica deve partire. Il blocco va messo nel
+  layer template/capability, non ricordato a mano quando si implementa il send.
+
+- [2026-02-28] **Il flag `is_taxable` sui servizi deve cambiare solo la base
+  fiscale, non i KPI operativi** — Il valore del lavoro resta
+  `fee_shooting + fee_editing + fee_other - discount`; il flag tassabile decide
+  solo se quel valore entra in `fatturatoLordoYtd` e nel resto del modello
+  fiscale. Se lo usi anche per i KPI business, falsi margini e concentrazione
+  clienti.
+
+- [2026-02-28] **Se l'obiettivo finale è unificare l'AI, le card AI sparse
+  nelle pagine vanno trattate come superfici transitorie** — Quando una feature
+  AI è utile oggi ma l'obiettivo di prodotto è una UX unica, la scelta giusta
+  è:
+  1) consolidare prima semantic layer e casi d'uso validi
+  2) evitare di aggiungere nuove entry point AI senza forte motivo
+  3) progettare i consumer attuali come ponti verso l'unificazione, non come
+     architettura finale
+
+- [2026-02-28] **Se una fase comincia a sembrare infinita, va scritta una
+  stop line esplicita nei documenti di continuità** — Non basta dire
+  "facciamo slice piccoli": senza un punto di arrivo si continua ad aprire
+  lavoro nuovo per inerzia. Pattern corretto:
+  1) dichiarare cosa è già abbastanza
+  2) dichiarare cosa manca davvero
+  3) dichiarare che tutto il resto è `v2`, non continuazione obbligatoria
+
+- [2026-02-28] **Gli smoke autenticati del progetto remoto vanno fatti con uno
+  script dedicato, non ricostruendo ogni volta il flusso a mano** — La
+  procedura stabile ora è:
+  1) `node scripts/auth-smoke-user.mjs create`
+  2) usare le credenziali restituite nello smoke browser o REST
+  3) `node scripts/auth-smoke-user.mjs cleanup --user-id <id>`
+  Lo script risolve da solo la `service_role` via Supabase CLI, crea un utente
+  confermato, aspetta la riga `sales`, verifica il login password e fa cleanup
+  nell'ordine corretto `sales -> auth.users`.
+
+- [2026-02-28] **Negli smoke browser locali di questo CRM bisogna usare sempre
+  le route con `#`** — Questa app gira in hash routing sul runtime locale.
+  Quindi dopo il login i percorsi da aprire nei click-test devono essere in
+  forma `http://127.0.0.1:4173/#/...`, non `http://127.0.0.1:4173/...`.
+  Esempio corretto:
+  `http://127.0.0.1:4173/#/quotes/<id>/show`.
+  Esempio sbagliato:
+  `http://127.0.0.1:4173/quotes/<id>/show`.
+
+- [2026-02-28] **Negli smoke browser locali conviene lasciare stabilizzare la
+  dashboard subito dopo il login prima di saltare a una route profonda** —
+  Se si naviga troppo presto, alcune richieste Supabase (`/auth/v1/user` o
+  asset storage) possono risultare `ERR_ABORTED` e sporcare la console senza
+  essere un bug reale della feature testata. Pattern pratico:
+  1) login
+  2) attendere l'atterraggio su `#/`
+  3) aspettare ancora pochi secondi
+  4) solo dopo aprire `/#/...`
+
+- [2026-02-28] **Per chiudere il caso semplice `cliente -> pagamento`, la
+  mossa giusta è spesso riusare il form esistente con query param, non creare
+  un altro dialog** — Quando il dato minimo davvero necessario è solo
+  `client_id`, il quick path migliore è un bottone che porta a
+  `/payments/create?client_id=...`. Così il caso wedding o cliente semplice
+  diventa veloce senza duplicare validazioni, campi o logica del modulo
+  pagamenti.
+
+- [2026-02-28] **Prima di inventare un nuovo flow commerciale, conviene spesso
+  rendere leggibile sul record sorgente il legame che esiste gia** — Nel
+  backbone `quote -> payment`, il prossimo passo giusto non era creare subito
+  automazioni o moduli nuovi, ma far vedere nel preventivo cosa è gia
+  collegato: ricevuto, aperto, differenza residua e lista pagamenti. Questo
+  migliora il controllo reale senza forzare un processo più pesante.
+
+- [2026-02-28] **Quando apri una seconda base semantica nel dashboard, il
+  primo consumer non-AI deve riusare lo stesso context builder dell'AI e
+  vivere in una card separata** — Sullo storico `incassi`, la mossa giusta non
+  era toccare KPI o grafici basati su `compensi`, ma aggiungere una card
+  dedicata alimentata da `getHistoricalCashInflowContext()`. Così resta una
+  sola fonte di verità e si evitano widget ibridi con etichette ambigue tipo
+  `fatturato`.
+
 - [2026-02-28] **Quando aggiungi una nuova Edge Function usata dal frontend,
   non basta deployare il file: va aggiunta anche in `supabase/config.toml` se
   il progetto usa `verify_jwt = false` sulle function UI-invoked** — Il primo
@@ -121,8 +258,8 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   fonte di verità per cliente e progetto, ma con pulizia dei link incoerenti se
   il cliente cambia dopo** — Il compromesso giusto per ridurre click senza
   accumulare stati impossibili è:
-  - seleziono il preventivo -> precompilo cliente/progetto
-  - cambio cliente in modo incompatibile -> pulisco `quote_id` / `project_id`
+- seleziono il preventivo -> precompilo cliente/progetto
+- cambio cliente in modo incompatibile -> pulisco `quote_id` / `project_id`
 
 - [2026-02-28] **Per un prodotto che vuole diventare `AI-driving`, il prompt
   tuning ha valore solo come hardening minimo anti-bufala** — Dopo i primi casi

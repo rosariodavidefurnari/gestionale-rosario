@@ -232,6 +232,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/quotes/quotePaymentsSummary.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/quotes/quoteItems.ts",
           "type": "registry:component"
         },
@@ -241,6 +245,10 @@
         },
         {
           "path": "src/components/atomic-crm/quotes/QuoteShow.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/quotes/QuotePaymentsSection.tsx",
           "type": "registry:component"
         },
         {
@@ -705,6 +713,10 @@
         },
         {
           "path": "src/components/atomic-crm/dashboard/DashboardHistoricalCategoryMixChart.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowCard.tsx",
           "type": "registry:component"
         },
         {

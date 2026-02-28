@@ -7,18 +7,57 @@ Last updated: 2026-02-28
 Prepare the CRM for a historical dashboard and future AI analysis by introducing:
 
 - a semantic analytics layer,
+- an operational semantic backbone for CRM fields and shared formulas,
 - aggregate Supabase views,
 - a dedicated `Storico` dashboard mode,
+- a path toward one unified AI experience instead of scattered page-level AI
+  surfaces,
 - and continuity docs that survive chat/session resets.
+
+## Final Product Goal
+
+The real destination is not "more AI cards".
+
+The real destination is:
+
+- one unified AI chat that can read and eventually operate across the whole
+  CRM,
+- backed by strong semantic definitions for fields, states, dates, formulas,
+  tools, pages, modals, and business actions,
+- so the AI can avoid writing in the wrong place, using the wrong workflow, or
+  inventing false meanings.
+
+This means the current page-level AI widgets are only temporary bridges.
+Current work should keep strengthening semantics, business links, and shared
+registries instead of multiplying isolated AI entry points.
+
+## Non-Negotiable Rules
+
+- customer outbound email direction:
+  - `Gmail`
+- internal high-priority notification direction:
+  - `CallMeBot`
+- old inbound branch:
+  - `Postmark` removed from the repo and must stay removed unless product
+    direction changes explicitly
+- communication safety rule:
+  - if a flow includes services with `is_taxable = false`, automatic customer
+    emails must never be sent
+- local browser smoke routes:
+  - always use hash routing:
+    - `http://127.0.0.1:4173/#/...`
 
 ## How To Resume In A New Chat
 
 Use a prompt like this:
 
 ```text
-Leggi docs/historical-analytics-handoff.md, docs/historical-analytics-backlog.md e doc/src/content/docs/developers/historical-analytics-ai-ready.mdx.
-Poi continua dal primo punto aperto del backlog, senza ridefinire l'architettura già approvata.
-Se fai cambi strutturali, aggiorna anche i file di handoff/backlog/learnings/progress.
+Leggi docs/historical-analytics-handoff.md, docs/historical-analytics-backlog.md, doc/src/content/docs/developers/historical-analytics-ai-ready.mdx, progress.md e learnings.md.
+Considera come obiettivo finale una chat AI unificata su tutto il CRM, ma senza aggiungere nuove AI sparse: prima vanno mantenute solide semantica, workflow e dati.
+Non ridefinire l'architettura già approvata.
+Continua dal primo punto aperto del backlog.
+Se aggiungi o cambi una feature, aggiorna sempre semantic registry, capability registry, eventuale communication layer, test e docs di continuità.
+Ricorda i vincoli di prodotto: Gmail per mail cliente, CallMeBot per alert interni urgenti, nessuna mail automatica se ci sono servizi con is_taxable = false.
 ```
 
 Minimal reading order for a new session:
@@ -28,6 +67,42 @@ Minimal reading order for a new session:
 3. `doc/src/content/docs/developers/historical-analytics-ai-ready.mdx`
 4. `progress.md`
 5. `learnings.md`
+
+## Mandatory Integration Checklist For New Features
+
+If a new feature changes real CRM behavior, it is not considered integrated
+until the relevant items below are updated too:
+
+1. database shape / migration / view / function if business data changes
+2. shared semantic meaning in `crmSemanticRegistry` if new states, types,
+   categories, formulas, dates, or descriptions are introduced
+3. shared capability meaning in `crmCapabilityRegistry` if a new page, route,
+   modal, tool, or business action appears
+4. communication rules/templates if the feature can send customer or internal
+   notifications
+5. provider entry points if the frontend or future AI needs one stable access
+   method
+6. tests for the new invariant or user-visible behavior
+7. continuity docs:
+   - `docs/historical-analytics-handoff.md`
+   - `docs/historical-analytics-backlog.md`
+   - `progress.md`
+   - `learnings.md`
+
+This checklist exists because the future unified AI must know every important
+surface and rule of the CRM, not guess them from scattered components.
+
+## Immediate Pareto Next Step
+
+The next high-value step is:
+
+- wire manual quote-status customer email sending through `Gmail SMTP`,
+- reusing `quoteStatusEmailTemplates`,
+- without automatic sending,
+- and preserving the hard safety rule for `is_taxable = false`.
+
+Do not open new scattered AI surfaces before this kind of real workflow
+integration.
 
 ## Parallel Track Started: Commercial Backbone
 
@@ -43,6 +118,59 @@ the CRM for future `AI-driving` behavior:
   - reduce clicks and keep the UX guided,
   - but do not introduce forced automations when multiple interpretations are
     possible.
+
+## Stop Line For This Phase
+
+This phase is not supposed to generate endless slices.
+
+The intended finish line is:
+
+- `Storico` stable on the approved semantic split:
+  - `compensi`
+  - `incassi`
+- `Annuale` AI limited to the already approved `annual_operations` scope
+- commercial flow solid on the real cases now needed:
+  - `client -> payment`
+  - `quote -> payment`
+  - `quote -> project -> payment`
+- no forced `quote` or `project` when the job is simpler than that
+
+Treat as already sufficient for this phase:
+
+- the current `Storico` AI path
+- the current `Storico` non-AI cash-inflow path
+- the current `Annuale` AI operational path
+- the current client/quote/project/payment links already validated on the real
+  UI
+
+Treat as still acceptable in this phase:
+
+- keeping tests aligned with the shipped widgets
+- closing at most one more small commercial gap if it improves real data
+  quality or guided UX
+
+Treat as `v2`, not as mandatory continuation of this phase:
+
+- full-page AI over all of `Annuale`
+- global conversational AI across the CRM
+- more dashboard cards without a strong clarity gain
+- workflow bureaucracy that creates records no one really needs
+
+## Strategic AI UX Goal
+
+Another fundamental product goal is now explicit:
+
+- remove the AI interfaces currently scattered across individual pages,
+- converge toward one unified AI experience,
+- preserve the useful capabilities already shipped,
+- and do that without regressions in clarity or ease of use.
+
+Practical consequence for new work:
+
+- do not add new AI entry points casually just because a page can host one,
+- prefer semantic/context work that can later feed a unified AI shell,
+- and treat the current page-level AI cards as transitional surfaces, not as
+  the desired end state.
 
 ## What Was Completed
 
@@ -125,6 +253,67 @@ Purpose:
 - expose a structured context object for future AI analysis,
 - prevent the AI from inferring business semantics from raw tables.
 
+### Capability registry and customer-email foundation added
+
+New library files:
+
+- `src/lib/semantics/crmCapabilityRegistry.ts`
+- `src/lib/semantics/crmCapabilityRegistry.test.ts`
+- `src/lib/communications/quoteStatusEmailTemplates.ts`
+- `src/lib/communications/quoteStatusEmailTemplates.test.ts`
+
+Purpose:
+
+- give the future unified AI one explicit catalog of:
+  - pages
+  - resources
+  - dialogs
+  - actions
+  - route conventions
+- avoid making the AI guess what the CRM can or cannot do
+- introduce one shared email-template layer for quote status updates instead of
+  writing customer emails ad hoc in page components
+
+Current behavior:
+
+- the capability registry now declares:
+  - main CRM resources
+  - hash-route conventions
+  - important dialogs such as:
+    - quote create/show/edit
+    - create project from quote
+    - quick episode
+    - quick payment
+  - important business actions such as:
+    - drag-and-drop quote status change
+    - create payment from quote
+    - create payment from client
+    - create project from quote
+- the quote-status email layer now declares:
+  - per-status send policy:
+    - `never`
+    - `manual`
+    - `recommended`
+  - shared dynamic sections
+  - HTML + plain-text rendering
+  - missing-field detection before sending
+  - and a hard safety rule:
+    - if the flow includes services with `is_taxable = false`, automatic email
+      send must stay blocked
+
+Outbound provider decision:
+
+- outbound customer-status emails should target `Gmail`, not `Postmark`
+- the current foundation is provider-agnostic on purpose
+- the actual Gmail transport is still pending credentials and final auth method
+  choice
+
+Important note:
+
+- the old inbound `postmark` branch has now been removed from the repo
+- customer-facing outbound communication should go through `Gmail`
+- high-priority internal alerts should target `CallMeBot`
+
 Current behavior:
 
 - the AI context now includes `meta`, `metrics`, `series`, `qualityFlags`, and
@@ -176,7 +365,59 @@ Current behavior:
 - the current year is still marked as `YTD`,
 - the custom provider now exposes
   `dataProvider.getHistoricalCashInflowContext()`,
-- but the existing `Storico` UI still does not render this resource directly.
+- and future or current consumers can reuse one shared semantic context without
+  reading raw `payments`.
+
+### Operational semantic backbone added
+
+Migration created and pushed remotely on `2026-02-28`:
+
+- `supabase/migrations/20260228220000_add_service_taxability_and_operational_semantics.sql`
+
+New shared semantic pieces:
+
+- `src/lib/semantics/crmSemanticRegistry.ts`
+- `src/lib/semantics/crmSemanticRegistry.test.ts`
+- `dataProvider.getCrmSemanticRegistry()`
+
+Configuration additions:
+
+- `operationalConfig.defaultKmRate`
+- descriptions on configurable `quoteServiceTypes`
+- descriptions on configurable `serviceTypeChoices`
+
+Operational rules now centralized:
+
+- fixed dictionaries now carry AI-readable descriptions for:
+  - client types
+  - acquisition sources
+  - project categories / statuses / TV shows
+  - quote statuses
+  - payment types / methods / statuses
+- shared formulas now cover:
+  - service net value
+  - taxable service net value
+  - travel reimbursement
+  - date-range interpretation via `all_day`
+
+Behavioral changes:
+
+- `services` now expose `is_taxable`
+- service create/edit flows default `is_taxable = true`
+- service and expense forms use one configurable km rate default
+- quick TV episode creation uses the same km-rate rule and marks services as
+  taxable by default
+- the fiscal model now treats `is_taxable` as a fiscal-base switch only:
+  - fiscal KPIs use taxable service revenue
+  - business-health KPIs keep using full operational revenue
+
+Purpose:
+
+- let future AI read domain meanings from one place instead of guessing from
+  raw columns,
+- support future AI write flows with clearer target fields and rules,
+- and prevent drift between UI calculations, fiscal calculations, and AI
+  interpretation.
 
 Remote validation completed on `2026-02-28`:
 
@@ -258,6 +499,45 @@ Important operational note:
 - root cause was not the prompt or the provider method,
 - root cause was missing `verify_jwt = false` entries for the new function
   slugs in `supabase/config.toml`,
+
+### Historical cash-inflow non-AI surface added
+
+New frontend/UI pieces:
+
+- `src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowCard.tsx`
+- `src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowCard.test.tsx`
+
+Purpose:
+
+- give `Storico` a first plain visual surface for `incassi` without requiring
+  an AI question first,
+- reuse the same semantic context already used by the AI card,
+- keep received cash explicitly separate from competence-based widgets.
+
+Current behavior:
+
+- `Storico` now renders one dedicated non-AI card for historical `incassi`,
+- the card shows:
+  - total historical cash received
+  - latest closed-year cash received
+  - the latest yearly rows with payment/project/client counts
+  - the first semantic caveat from the shared context
+- the card is full-width and intentionally sits outside:
+  - competence KPI/chart blocks
+  - AI cards
+- no competence KPI/chart label was changed or mixed with cash wording.
+
+Validation completed on `2026-02-28`:
+
+- `npm run typecheck`
+- `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowAiCard.test.tsx src/lib/analytics/buildHistoricalCashInflowContext.test.ts`
+
+Observed test coverage:
+
+- ready state
+- empty state
+- error state + retry
+- `Storico` parent render including the new card
 - redeploy after adding those entries fixed the browser path.
 
 ### Annual dashboard normalization completed before any AI rollout there
@@ -438,10 +718,99 @@ Runtime issue discovered and fixed during real browser validation:
     - `src/components/atomic-crm/misc/referenceSearch.ts`
   - moved client/project lookups that need name search to explicit
     `name@ilike`
-  - applied in:
-    - `QuoteInputs`
-    - `QuoteList`
-    - `TaskFormContent`
+- applied in:
+  - `QuoteInputs`
+  - `QuoteList`
+  - `TaskFormContent`
+
+### Commercial backbone slice 3 now implemented
+
+What was added:
+
+- no new migration was needed
+- quote show now includes a dedicated `Pagamenti collegati` section
+- the section reads linked rows through the existing `payment.quote_id`
+  relation
+- the section now shows:
+  - received total
+  - open registered total
+  - remaining amount still not linked to payments
+  - direct list of linked payments with date/status/type
+
+Important scope decision:
+
+- this is still a lightweight UX slice, not a new invoicing module
+- quote and project remain optional domain objects
+- no automatic status transition was introduced
+- the goal is:
+  - make the quote a clearer control point for commercial follow-up
+  - without forcing extra workflow on simple jobs
+
+Validation completed on `2026-02-28`:
+
+- `npm run typecheck`
+- `npm test -- --run src/components/atomic-crm/quotes/quotePaymentsSummary.test.ts src/components/atomic-crm/quotes/QuotePaymentsSection.test.tsx src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/quotes/quoteProjectLinking.test.ts src/components/atomic-crm/quotes/quoteItems.test.ts`
+- authenticated browser smoke on the local Vite runtime:
+  - login with a temporary smoke user
+  - open the hash route:
+    - `http://127.0.0.1:4173/#/quotes/<id>/show`
+  - verify the real quote detail renders:
+    - `Pagamenti collegati`
+    - `Ricevuto`
+    - `Da ricevere gia registrato`
+    - `Ancora da collegare`
+    - linked payment rows `Acconto` and `Saldo`
+  - observed browser result:
+    - `0` console errors
+    - `0` page errors
+    - `0` request failures
+
+Covered behavior:
+
+- linked-payment summary by status
+- remaining amount vs quote total
+- empty state
+- non-blocking error state
+- real browser render on the authenticated quote show path
+
+### Commercial backbone slice 4 now implemented
+
+What was added:
+
+- no new migration was needed
+- client show now includes a direct `Nuovo pagamento` entry point
+- the button reuses the existing payment create form with only:
+  - `client_id` prefilled
+- supporting helpers now exist for the simple path too:
+  - `buildPaymentCreateDefaultsFromClient()`
+  - `buildPaymentCreatePathFromClient()`
+
+Important scope decision:
+
+- this slice exists exactly for the lightweight cases where a project would be
+  unnecessary overhead
+- no new dialog or duplicate payment form was introduced
+- the goal is:
+  - make `client -> payment` as real and explicit as the quote-driven paths
+  - while keeping the same payment form and validation logic
+
+Validation completed on `2026-02-28`:
+
+- `npm run typecheck`
+- `npm test -- --run src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/quotes/QuotePaymentsSection.test.tsx src/components/atomic-crm/quotes/quotePaymentsSummary.test.ts`
+- authenticated browser smoke on the local Vite runtime:
+  - login with a temporary smoke user
+  - open the hash route:
+    - `http://127.0.0.1:4173/#/clients/<id>/show`
+  - click:
+    - `Nuovo pagamento`
+  - verify redirect to:
+    - `http://127.0.0.1:4173/#/payments/create?client_id=<id>`
+  - verify the real payment form already shows the selected client
+  - observed browser result:
+    - `0` console errors
+    - `0` page errors
+    - `0` request failures
 
 ### Annual operations drill-down now implemented
 
@@ -597,6 +966,7 @@ Runtime issues discovered and fixed during the browser smoke:
 - `src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx`
 - `src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx`
 - `src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx`
+- `src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowCard.test.tsx`
 - `src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts`
 - `src/lib/analytics/buildAnnualOperationsContext.test.ts`
 - `src/components/atomic-crm/dashboard/DashboardAnnualAiSummaryCard.test.tsx`
@@ -620,6 +990,7 @@ Covered today:
 - YoY `N/D` UI rendering,
 - guided summary trigger/render,
 - suggested-question trigger/render for the historical AI card,
+- historical cash-inflow non-AI card ready/empty/error states,
 - annual current-year YTD exclusion of future services,
 - annual net-of-discount basis consistency,
 - annual fiscal/business-health selected-year filtering,
@@ -657,6 +1028,32 @@ Successful commands:
   - `Annuale` AI card
   - `Storico` free-question path
   - itemized quote create/show flow
+
+Operational helper now available for future authenticated smokes:
+
+- `node scripts/auth-smoke-user.mjs create`
+- `node scripts/auth-smoke-user.mjs cleanup --user-id <id>`
+
+Important local browser note:
+
+- this CRM uses hash routing on the local Vite runtime
+- for authenticated browser smokes, open routes in the form:
+  - `http://127.0.0.1:4173/#/...`
+- example:
+  - `http://127.0.0.1:4173/#/quotes/<id>/show`
+- do not use:
+  - `http://127.0.0.1:4173/quotes/<id>/show`
+
+Purpose:
+
+- stop rebuilding temporary-user auth flows from scratch in every session,
+- keep the remote smoke path fast and repeatable,
+- centralize the correct sequence:
+  - resolve `service_role` via CLI
+  - create confirmed user
+  - wait for `sales`
+  - verify password login
+  - cleanup `sales -> auth.users`
 
 ### Remote verification completed on linked project
 
@@ -861,15 +1258,14 @@ Stable rollback note:
   commit before investigating forward again.
 
 1. Keep the new historical / annual / commercial tests updated whenever the
-   widgets evolve.
-2. Only if useful, add a small non-AI surface for historical `incassi` while
-   keeping it separate from `compensi`.
-3. Only if useful after review, polish prompt/copy or markdown presentation of
-   the historical or annual AI cards further.
-4. Only later, if useful, evolve the current single-turn cards into a
-   conversational assistant flow.
-5. Only later, if the product scope changes, revisit FakeRest/demo historical
-   support.
+   current widgets evolve.
+2. Re-check whether any real workflow hole is still left after the now-closed
+   `client -> payment`, `quote -> payment`, and `quote -> project -> payment`
+   paths.
+3. If no real gap is left after that review, stop this phase and treat new
+   ideas as `v2`.
+4. Only later, if useful, polish prompt/copy or markdown presentation further.
+5. Only later, if product scope changes, revisit broader AI/chat or FakeRest.
 
 ## Quick Resume Checklist
 
@@ -881,5 +1277,5 @@ Stable rollback note:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
   - keeping historical, annual and commercial tests aligned with future widget changes
-  - optional non-AI surface for historical `incassi`
-  - optional AI card readability polish
+  - checking whether the commercial base is now enough on the three target paths
+  - otherwise closing the phase and deferring new ideas to `v2`

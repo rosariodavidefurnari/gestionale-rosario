@@ -39,6 +39,53 @@ If the AI reads raw tables directly, it will make predictable mistakes:
 
 The fix is to introduce a semantic layer between raw data and interpretation.
 
+## Operational Semantic Registry
+
+Historical semantics are not enough on their own if the product goal is to let
+future AI read CRM data and also write information into the correct resource.
+
+The CRM therefore also needs one operational semantic registry for the domain
+fields that already drive the product.
+
+The registry should expose:
+
+- dictionaries:
+  - client types
+  - acquisition sources
+  - project categories
+  - project statuses
+  - project TV shows
+  - quote statuses
+  - quote service types
+  - service types
+  - payment types
+  - payment methods
+  - payment statuses
+- field meanings:
+  - date fields
+  - description / notes fields
+- shared rules:
+  - service net value
+  - taxable service net value
+  - travel reimbursement
+  - date-range interpretation via `all_day`
+
+Implementation note as of `2026-02-28`:
+
+- the registry now exists in `src/lib/semantics/crmSemanticRegistry.ts`
+- the provider now exposes `dataProvider.getCrmSemanticRegistry()`
+- `operationalConfig.defaultKmRate` is now the shared default rule for travel
+  reimbursement across services, expenses, and quick TV episode creation
+- `services.is_taxable` now marks whether a service contributes to the fiscal
+  base in addition to its normal operational value
+
+This matters because an AI assistant should not infer meanings such as:
+
+- whether `Wedding` is a quote type, a project category, or both
+- whether `bonifico` is a payment method or a payment status
+- whether `notes` and `description` are interchangeable
+- whether a non-taxable service should still count as operational work value
+
 ## Canonical Terms
 
 The following terms are normative. The dashboard, SQL views, tests, and future AI layer must all use the same meaning.
@@ -102,6 +149,10 @@ The historical dashboard should initially show:
 - `Compensi per anno`,
 - `Mix categorie per anno`,
 - `Top clienti all-time`.
+
+If `Incassi` are shown in the historical dashboard, they must use a separate
+clearly labeled card and must never replace or relabel the competence-based
+KPIs/charts.
 
 ## KPI Contract
 
@@ -169,7 +220,9 @@ Phase 2 optional views:
 Implementation note as of `2026-02-28`:
 
 - `analytics_yearly_cash_inflow` now exists as a semantic resource,
-- but it is intentionally not merged into the first `Storico` UI release,
+- `Storico` now exposes that resource through:
+  - one separate non-AI card
+  - one separate AI card
 - because `compensi` and `incassi` must remain visually and semantically
   separate.
 
@@ -706,6 +759,8 @@ Current implementation choice:
     - a guided summary via `dataProvider.generateHistoricalAnalyticsSummary()`,
     - and a single-turn question flow via
       `dataProvider.askHistoricalAnalyticsQuestion()`,
+- a separate non-AI card now exists for historical `incassi`, driven by:
+    - `dataProvider.getHistoricalCashInflowContext()`
 - a second separate AI card now exists for historical `incassi`, driven by:
     - `dataProvider.getHistoricalCashInflowContext()`
     - `dataProvider.generateHistoricalCashInflowSummary()`

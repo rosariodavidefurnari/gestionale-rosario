@@ -5,14 +5,368 @@
 🟢 Dashboard storico AI-ready stabile, AI operativa su `Annuale` chiusa sul
 solo contesto `annual_operations`, e ponte storico lato pagamenti ora chiuso
 anche come consumer utente reale: gli `incassi` hanno una resource semantica
-dedicata e una card AI separata in `Storico`, validata nel browser reale sia
-nel riepilogo guidato sia nella domanda libera. Anche il backbone commerciale
-minimo `Preventivo -> Progetto -> Pagamento` resta chiuso sul runtime reale,
-con quick payment senza progetto e foundation `quote_items` già validati.
-Prossimo passo sensato: solo hardening o prossima espansione mirata, non un
-nuovo refactor dell'architettura.
+dedicata, una card AI separata e adesso anche una piccola card non-AI in
+`Storico`. Anche il backbone commerciale minimo
+`Preventivo -> Progetto -> Pagamento` resta chiuso sul runtime reale, con
+quick payment senza progetto, foundation `quote_items` già validati e ora
+anche un riepilogo pagamenti direttamente nel dettaglio preventivo e un accesso
+diretto `cliente -> pagamento` per i casi semplici senza progetto. Questa fase
+ora ha una linea d’arrivo esplicita: tenere stabile ciò che c’è, e solo se
+resta un buco vero chiudere al massimo un ultimo slice commerciale minimo.
+Dopo quello, nuove idee vanno trattate come `v2`, non come espansione infinita
+della stessa fase. Obiettivo strategico già fissato per il seguito: smettere
+di avere AI sparse nelle pagine e unificarle in una UX unica, mantenendo le
+funzioni utili già chiuse e senza regressioni. Nel frattempo la base semantica
+operativa è stata rafforzata: ora esiste un registry condiviso per tipi,
+stati, categorie, fonti, date, descrizioni, metodo pagamento, logica km e
+tassabilità dei servizi. In più è partita una seconda foundation necessaria
+per la chat AI unificata futura: un catalogo esplicito delle capacità del CRM
+e una base condivisa per le mail cliente sui cambi di stato preventivo, con
+target outbound `Gmail`. Il vecchio ramo inbound `Postmark` è stato rimosso e
+le notifiche interne ad alta priorità puntano ora a `CallMeBot`. Il prossimo
+passo Pareto fissato è collegare l'invio manuale mail cliente dei cambi stato
+preventivo via `Gmail`, senza automatismi e rispettando il blocco
+`is_taxable = false`.
 
 ## Last Session
+
+### Sessione 51 (2026-02-28, continuità blindata per nuova chat)
+
+- Completed:
+  - **Handoff rinforzato per ripartenza senza perdita di contesto**:
+    - obiettivo finale esplicitato:
+      - chat AI unificata su tutto il CRM
+      - prima solidità funzionale e semantica
+    - vincoli prodotto esplicitati:
+      - `Gmail` per mail cliente outbound
+      - `CallMeBot` per alert interni urgenti
+      - `Postmark` rimosso
+      - nessuna mail automatica se ci sono servizi con `is_taxable = false`
+    - checklist obbligatoria scritta:
+      - semantic registry
+      - capability registry
+      - communication layer
+      - provider entry points
+      - test
+      - docs di continuità
+  - **Primo prossimo step chiarito**:
+    - prossimo Pareto step:
+      - invio manuale mail cliente sui cambi stato preventivo via `Gmail SMTP`
+    - non aprire nuove superfici AI sparse prima di quel collegamento reale
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/communications/quoteStatusEmailTemplates.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts src/components/atomic-crm/dashboard/fiscalModel.test.ts src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts src/lib/analytics/buildAnnualOperationsContext.test.ts src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/quotes/QuotePaymentsSection.test.tsx src/components/atomic-crm/quotes/quotePaymentsSummary.test.ts src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx`
+
+- Decisions:
+  - una feature nuova non è considerata integrata se aggiorna solo la UI
+  - la continuità di sviluppo per la nuova chat va trattata come parte del
+    lavoro, non come nota opzionale
+
+### Sessione 50 (2026-02-28, rimozione Postmark e direzione CallMeBot)
+
+- Completed:
+  - **Postmark eliminato dal repo**:
+    - rimossa tutta la function:
+      - `supabase/functions/postmark/*`
+    - rimossa entry da:
+      - `supabase/config.toml`
+    - rimossa la UI profilo per `Email in entrata`
+    - rimossa la variabile locale `VITE_INBOUND_EMAIL`
+  - **Direzione notifiche interne fissata**:
+    - `CallMeBot` diventa il canale per notifiche interne ad alta priorità
+    - aggiornato il capability registry con:
+      - provider
+      - use case
+      - env richieste
+      - regole d’uso
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/communications/quoteStatusEmailTemplates.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts`
+
+- Decisions:
+  - niente più inbound email via `Postmark`
+  - `Gmail` resta il target per mail cliente outbound
+  - `CallMeBot` è il target per alert interni urgenti, non per messaggi cliente
+
+### Sessione 48 (2026-02-28, base semantica operativa condivisa)
+
+- Completed:
+  - **Base semantica operativa aggiunta per AI e backbone commerciale**:
+    - nuovo registry condiviso:
+      - `buildCrmSemanticRegistry()`
+      - `dataProvider.getCrmSemanticRegistry()`
+    - dizionari con descrizioni su:
+      - tipi cliente
+      - fonte acquisizione
+      - categorie/stati progetto
+      - stati preventivo
+      - tipi/metodi/stati pagamento
+      - tipi preventivo e tipi servizio configurabili
+    - regole condivise su:
+      - `KM percorsi * Tariffa KM`
+      - valore netto servizio
+      - valore fiscale tassabile
+      - lettura delle date con `all_day`
+  - **Tassabilità servizio resa esplicita**:
+    - nuova migration:
+      - `20260228220000_add_service_taxability_and_operational_semantics.sql`
+    - nuovo campo:
+      - `services.is_taxable`
+    - form servizi allineato con default `true`
+    - quick episode TV allineato con default tassabile
+  - **Tariffa km centralizzata**:
+    - nuova config:
+      - `operationalConfig.defaultKmRate`
+    - servizi, spese e quick episode usano la stessa tariffa predefinita
+  - **Separazione corretta tra operativo e fiscale**:
+    - il modello fiscale usa solo i servizi tassabili per la base fiscale
+    - i KPI business continuano a leggere tutto il valore operativo
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/semantics/crmSemanticRegistry.test.ts src/components/atomic-crm/dashboard/fiscalModel.test.ts src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts src/lib/analytics/buildAnnualOperationsContext.test.ts`
+  - `npx supabase db push`
+
+- Decisions:
+  - la base semantica non deve vivere sparsa tra form, liste e prompt
+  - per l'AI futura, significati e formule vanno letti da un entry point
+    condiviso
+  - `is_taxable` decide la base fiscale, non il valore operativo del lavoro
+
+### Sessione 49 (2026-02-28, catalogo capacità CRM e foundation mail stato preventivo)
+
+- Completed:
+  - **Catalogo capacità CRM per AI futura aggiunto**:
+    - nuovo registry:
+      - `buildCrmCapabilityRegistry()`
+    - dichiara:
+      - risorse principali
+      - pagine principali
+      - route hash
+      - modali/dialog chiave
+      - azioni business importanti
+      - checklist obbligatoria quando si aggiunge una nuova feature
+  - **Foundation template mail per cambi stato preventivo aggiunta**:
+    - nuovo builder:
+      - `buildQuoteStatusEmailTemplate()`
+    - supporta:
+      - policy per stato:
+        - `never`
+        - `manual`
+        - `recommended`
+      - output `html` e `text`
+      - blocchi condivisi
+      - campi dinamici mancanti
+      - blocco automatico obbligatorio se il flusso include servizi con
+        `is_taxable = false`
+  - **Direzione provider fissata**:
+    - per le mail cliente outbound il target e' `Gmail`
+    - il layer attuale resta provider-agnostico finché non arrivano credenziali
+      e trasporto reale
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/communications/quoteStatusEmailTemplates.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`
+
+- Decisions:
+  - se una funzione del sito non è dichiarata in un registry leggibile, la chat
+    AI futura non può usarla in modo affidabile
+  - le mail cliente non devono nascere come testo sparso dentro page component
+  - `Postmark` nel repo va considerato separato dal futuro outbound cliente:
+    l’obiettivo dichiarato è `Gmail`
+  - `is_taxable = false` diventa anche una guardia comunicativa:
+    nessuna mail automatica deve partire in questi casi
+
+### Sessione 47 (2026-02-28, quick path cliente -> pagamento)
+
+- Completed:
+  - **Chiuso il percorso leggero `cliente -> pagamento`**:
+    - nuovo helper condiviso:
+      - `buildPaymentCreateDefaultsFromClient()`
+      - `buildPaymentCreatePathFromClient()`
+    - nuovo accesso diretto nel dettaglio cliente:
+      - `Nuovo pagamento`
+    - il bottone riusa il form pagamenti già esistente con `client_id`
+      precompilato
+  - **Base commerciale rafforzata senza nuovi oggetti**:
+    - nessuna migration nuova
+    - nessun dialog duplicato
+    - nessun progetto obbligatorio per i casi semplici
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/quotes/QuotePaymentsSection.test.tsx src/components/atomic-crm/quotes/quotePaymentsSummary.test.ts`
+  - smoke browser autenticato locale su `2026-02-28`:
+    - login reale
+    - apertura `http://127.0.0.1:4173/#/clients/<id>/show`
+    - click su `Nuovo pagamento`
+    - arrivo su `http://127.0.0.1:4173/#/payments/create?client_id=<id>`
+    - cliente già presente nel form
+    - `0` console errors
+    - `0` page errors
+    - `0` request failures
+
+- Decisions:
+  - il caso semplice senza progetto ora ha un percorso esplicito e leggero
+    dentro la UI reale
+  - questo è un candidato forte a ultimo slice commerciale minimo della fase
+
+### Sessione 46 (2026-02-28, click-test browser chiuso per pagamenti collegati)
+
+- Completed:
+  - **Click-test browser reale chiuso sul dettaglio preventivo**:
+    - login con utente smoke creato dallo script dedicato
+    - apertura route hash corretta:
+      - `http://127.0.0.1:4173/#/quotes/<id>/show`
+    - verifica del blocco:
+      - `Pagamenti collegati`
+      - `Ricevuto`
+      - `Da ricevere gia registrato`
+      - `Ancora da collegare`
+      - link `Acconto`
+      - link `Saldo`
+  - **Verifica numerica chiusa sul caso smoke**:
+    - preventivo da `1000,00 €`
+    - `200,00 €` ricevuti
+    - `300,00 €` in attesa
+    - `500,00 €` ancora da collegare
+
+- Validation:
+  - `npm run typecheck`
+  - smoke browser autenticato locale su `2026-02-28`
+  - `0` console errors
+  - `0` page errors
+  - `0` request failures
+
+- Decisions:
+  - il riepilogo pagamenti nel preventivo è ora chiuso anche sul percorso UI
+    reale, non solo via test unitari
+  - per gli smoke browser locali va usata la route hash `/#/...` e va lasciato
+    stabilizzare il post-login prima di aprire una route profonda
+
+### Sessione 45 (2026-02-28, workflow stabile per smoke autenticati)
+
+- Completed:
+  - **Procedura auth smoke resa riusabile nel repo**:
+    - nuovo script:
+      - `scripts/auth-smoke-user.mjs`
+    - comandi supportati:
+      - `create`
+      - `cleanup`
+  - **Flusso stabilizzato**:
+    - recupera `service_role` dal Supabase CLI del progetto linkato
+    - crea utente confermato
+    - aspetta la riga `sales`
+    - verifica login con password reale
+    - pulisce in ordine corretto:
+      - `sales`
+      - `auth.users`
+
+- Validation:
+  - `node scripts/auth-smoke-user.mjs create`
+  - `node scripts/auth-smoke-user.mjs cleanup --user-id <id>`
+
+- Decisions:
+  - per gli smoke autenticati futuri non si riparte più da zero
+  - la strada standard nel repo è lo script dedicato, non one-off improvvisati
+
+- Notes:
+  - per gli smoke browser locali di questa app bisogna usare sempre route con
+    `#`
+  - formato corretto:
+    - `http://127.0.0.1:4173/#/...`
+  - esempio corretto:
+    - `http://127.0.0.1:4173/#/quotes/<id>/show`
+  - esempio sbagliato:
+    - `http://127.0.0.1:4173/quotes/<id>/show`
+  - la creazione/login/cleanup utente smoke resta chiusa e ripetibile con lo
+    script dedicato
+
+### Sessione 44 (2026-02-28, riepilogo pagamenti dentro il preventivo)
+
+- Completed:
+  - **Nuova visibilità commerciale nel dettaglio preventivo**:
+    - nuova sezione:
+      - `QuotePaymentsSection`
+    - nuovo helper:
+      - `buildQuotePaymentsSummary()`
+    - il preventivo ora mostra:
+      - totale ricevuto
+      - totale aperto già registrato
+      - differenza ancora non collegata a pagamenti
+      - lista pagamenti collegati
+  - **Backbone commerciale rafforzato senza burocrazia nuova**:
+    - nessuna migration nuova
+    - nessun oggetto obbligatorio nuovo
+    - il link già esistente `payment.quote_id` viene finalmente reso utile
+      anche sul lato preventivo
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/quotes/quotePaymentsSummary.test.ts src/components/atomic-crm/quotes/QuotePaymentsSection.test.tsx src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/quotes/quoteProjectLinking.test.ts src/components/atomic-crm/quotes/quoteItems.test.ts`
+  - smoke browser autenticato locale su `2026-02-28`:
+    - login reale
+    - apertura `http://127.0.0.1:4173/#/quotes/<id>/show`
+    - blocco `Pagamenti collegati` visibile
+    - `0` console errors
+    - `0` page errors
+    - `0` request failures
+
+- Decisions:
+  - il prossimo slice commerciale deve continuare a valorizzare link già
+    esistenti prima di introdurre flussi più pesanti
+  - il preventivo resta opzionale, ma se esiste deve diventare un punto di
+    controllo vero e non solo un PDF travestito da record
+
+- Notes:
+  - il riepilogo usa importi firmati:
+    - `rimborso` sottrae
+    - gli altri tipi pagamento sommano
+  - il testo è volutamente semplice:
+    - `Ricevuto`
+    - `Da ricevere gia registrato`
+    - `Ancora da collegare`
+
+- Next action:
+  - scegliere il prossimo slice commerciale minimo
+  - evitando di aggiungere automazioni pesanti senza un vantaggio dati chiaro
+
+### Sessione 43 (2026-02-28, vista non-AI storica per incassi)
+
+- Completed:
+  - **Primo consumer non-AI degli `incassi` storici aggiunto**:
+    - nuova card:
+      - `DashboardHistoricalCashInflowCard`
+    - integrazione dentro `Storico`
+    - riuso del context condiviso:
+      - `dataProvider.getHistoricalCashInflowContext()`
+  - **Separazione di prodotto preservata**:
+    - la card nuova parla solo di soldi già ricevuti
+    - i KPI e grafici storici esistenti restano basati su `compensi`
+    - nessun widget storico è stato trasformato in vista mista
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowAiCard.test.tsx src/lib/analytics/buildHistoricalCashInflowContext.test.ts`
+
+- Decisions:
+  - il primo consumer non-AI degli `incassi` resta una card dedicata, non
+    entra nella riga KPI o nei grafici storici esistenti
+  - il consumer non-AI usa lo stesso context semantico già usato dal consumer
+    AI, così non nasce una seconda definizione di `incassi`
+
+- Notes:
+  - nella lista anni la cifra ora è mostrata in valuta piena, non compatta
+  - le etichette conteggio sono state rese leggibili anche al singolare:
+    - `1 pagamento ricevuto`
+    - `1 progetto`
+    - `1 cliente`
+
+- Next action:
+  - tenere allineati test e context se la card evolve
+  - poi scegliere il prossimo slice commerciale minimo
 
 ### Sessione 42 (2026-02-28, consumer AI storico per incassi)
 
@@ -1777,7 +2131,6 @@ nuovo refactor dell'architettura.
 - 4 vulnerabilità npm (1 moderate, 3 high) — da valutare con `npm audit`
 - Warnings Vitest su promise non awaited in supabaseAdapter.spec.ts (codice upstream)
 - Verificare che signup sia disabilitato anche nel **Supabase Dashboard remoto**
-- Edge Function `postmark` crasha (manca secrets Postmark — non prioritaria)
 - 3 errori lint pre-esistenti (useGetOne condizionale in ExpenseShow/PaymentShow, mergeTranslations inutilizzato in i18nProvider)
 
 ## Certezze (sessione 12)
