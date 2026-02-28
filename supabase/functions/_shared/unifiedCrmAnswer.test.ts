@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { validateUnifiedCrmAnswerPayload } from "./unifiedCrmAnswer.ts";
+import {
+  buildUnifiedCrmSuggestedActions,
+  validateUnifiedCrmAnswerPayload,
+} from "./unifiedCrmAnswer.ts";
 
 describe("unifiedCrmAnswer", () => {
   it("validates a read-only launcher payload", () => {
@@ -39,5 +42,53 @@ describe("unifiedCrmAnswer", () => {
     });
 
     expect(result.error).toContain("scope read-only atteso");
+  });
+
+  it("builds deterministic handoff suggestions for payment questions", () => {
+    const actions = buildUnifiedCrmSuggestedActions({
+      question: "Chi mi deve ancora pagare?",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          routePrefix: "/#/",
+        },
+        snapshot: {
+          recentClients: [
+            {
+              clientId: "client-1",
+            },
+          ],
+          openQuotes: [
+            {
+              quoteId: "quote-1",
+            },
+          ],
+          activeProjects: [
+            {
+              projectId: "project-1",
+            },
+          ],
+          pendingPayments: [
+            {
+              paymentId: "payment-1",
+            },
+          ],
+          recentExpenses: [],
+        },
+        registries: {
+          semantic: {},
+          capability: {},
+        },
+      },
+    });
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        resource: "payments",
+        kind: "show",
+        href: "/#/payments/payment-1/show",
+      }),
+    );
+    expect(actions.some((action) => action.href === "/#/payments")).toBe(true);
   });
 });

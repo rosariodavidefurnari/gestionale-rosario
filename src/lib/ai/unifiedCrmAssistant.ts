@@ -9,9 +9,25 @@ export const unifiedCrmSuggestedQuestions = [
   "Che cosa emerge dalle spese recenti?",
 ] as const;
 
+export type UnifiedCrmSuggestedAction = {
+  id: string;
+  kind: "page" | "list" | "show";
+  resource:
+    | "dashboard"
+    | "clients"
+    | "quotes"
+    | "projects"
+    | "payments"
+    | "expenses";
+  label: string;
+  description: string;
+  href: string;
+};
+
 export type UnifiedCrmAnswer = {
   question: string;
   model: string;
   generatedAt: string;
   answerMarkdown: string;
+  suggestedActions: UnifiedCrmSuggestedAction[];
 };

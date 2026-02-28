@@ -191,12 +191,31 @@ The general CRM answer step is now closed too:
     read-only/write-confirmation boundary
   - smoke user cleaned after verification
 
+The guided route-handoff step is now closed too:
+
+- unified launcher answers now include structured `suggestedActions`
+- the handoff targets stay on existing approved CRM surfaces:
+  - record show routes
+  - resource list routes
+  - dashboard
+- routes are built deterministically from the shared snapshot + hash route
+  prefix, not generated free-form by the model
+- runtime verification is now closed too on `qvdmzhyzpyaveniirsmo`:
+  - `unified_crm_answer` redeployed
+  - authenticated smoke question `Chi mi deve ancora pagare?` returned HTTP
+    `200`
+  - response included one grounded answer plus handoff actions for:
+    - `payments show`
+    - `payments list`
+    - `clients show`
+  - smoke user cleaned after verification
+
 The next open priority is:
 
-- use grounded launcher answers to produce the first guided handoff toward
-  existing CRM routes/dialogs or approved actions
+- evolve from generic route handoff to the first action-oriented commercial
+  handoff on already approved surfaces
 - keep the interaction in the same floating shell
-- do not give the general CRM chat direct write execution yet
+- still do not give the general CRM chat direct write execution
 
 Why this comes next:
 
@@ -204,8 +223,9 @@ Why this comes next:
   - a real invoice workflow
   - a real CRM-wide read snapshot
 - a real CRM-wide read-only answer flow
-- the next Pareto gain is therefore not another raw Q&A surface, but a first
-  practical handoff from grounded answer to existing CRM actions
+- a first practical route handoff from grounded answer to existing CRM surfaces
+- the next Pareto gain is therefore not another raw Q&A surface, but a more
+  useful commercial handoff toward already approved actions
 - the semantic/capability backbone is already strong enough for this next step
 
 Not the next step by default:
@@ -216,6 +236,7 @@ Not the next step by default:
 - broader automation after the manual path is already stable
 - direct write execution from the general CRM Q&A flow
 - automatic invoice writes without explicit confirmation
+- letting the model invent raw URLs or unsupported routes
 
 ## Stop Line For This Phase
 

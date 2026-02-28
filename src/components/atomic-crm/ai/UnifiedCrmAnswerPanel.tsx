@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { Bot, Loader2, Sparkles } from "lucide-react";
+import { ArrowRight, Bot, Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useDataProvider, useNotify } from "ra-core";
 
@@ -31,11 +31,13 @@ const formatGeneratedAt = (value: string) => {
 type UnifiedCrmAnswerPanelProps = {
   context: UnifiedCrmReadContext | null;
   selectedModel: string;
+  onNavigate?: () => void;
 };
 
 export const UnifiedCrmAnswerPanel = ({
   context,
   selectedModel,
+  onNavigate,
 }: UnifiedCrmAnswerPanelProps) => {
   const dataProvider = useDataProvider<CrmDataProvider>();
   const notify = useNotify();
@@ -69,6 +71,7 @@ export const UnifiedCrmAnswerPanel = ({
   });
 
   const trimmedQuestion = question.trim();
+  const suggestedActions = answer?.suggestedActions ?? [];
 
   const submitQuestion = (nextQuestion = question) => {
     const trimmed = nextQuestion.trim();
@@ -165,6 +168,41 @@ export const UnifiedCrmAnswerPanel = ({
             <Markdown className="text-sm leading-6 [&_h2]:mt-4 [&_h2]:text-sm [&_h2]:font-semibold [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:font-semibold">
               {answer.answerMarkdown}
             </Markdown>
+
+            {suggestedActions.length > 0 ? (
+              <div className="space-y-3 rounded-lg border border-dashed bg-muted/20 px-3 py-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Azioni suggerite</p>
+                  <p className="text-xs text-muted-foreground">
+                    Handoff verso route gia approvate del CRM. Nessuna scrittura
+                    parte direttamente da qui.
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {suggestedActions.map((action) => (
+                    <Button
+                      key={action.id}
+                      asChild
+                      variant="outline"
+                      className="h-auto justify-between px-3 py-3 text-left"
+                    >
+                      <a href={action.href} onClick={onNavigate}>
+                        <span className="space-y-1">
+                          <span className="block text-sm font-medium">
+                            {action.label}
+                          </span>
+                          <span className="block text-xs text-muted-foreground">
+                            {action.description}
+                          </span>
+                        </span>
+                        <ArrowRight className="size-4 shrink-0" />
+                      </a>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="rounded-xl border border-dashed px-4 py-6 text-sm text-muted-foreground">

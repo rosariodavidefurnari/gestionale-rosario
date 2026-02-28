@@ -267,7 +267,7 @@ export const buildCrmSemanticRegistry = (
         scope: "clients + quotes + projects + payments + expenses",
         freshnessField: "generatedAt",
         meaning:
-          "Il contesto CRM-wide del launcher unificato e' una snapshot read-only dei moduli core; sia la snapshot sia le risposte AI che la usano restano di sola lettura e ogni futura scrittura deve passare da un workflow dedicato con conferma esplicita.",
+          "Il contesto CRM-wide del launcher unificato e' una snapshot read-only dei moduli core; sia la snapshot sia le risposte AI che la usano restano di sola lettura, gli handoff successivi possono solo puntare a route o superfici gia approvate, e ogni futura scrittura deve passare da un workflow dedicato con conferma esplicita.",
       },
     },
   };

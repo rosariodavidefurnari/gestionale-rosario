@@ -187,6 +187,8 @@ describe("UnifiedAiLauncher", () => {
         openQuotes: [
           {
             quoteId: "quote-1",
+            clientId: "client-1",
+            projectId: "project-1",
             clientName: "Mario Rossi",
             projectName: "Wedding Mario",
             amount: 1200,
@@ -198,6 +200,7 @@ describe("UnifiedAiLauncher", () => {
         activeProjects: [
           {
             projectId: "project-1",
+            clientId: "client-1",
             projectName: "Wedding Mario",
             clientName: "Mario Rossi",
             status: "in_corso",
@@ -208,6 +211,8 @@ describe("UnifiedAiLauncher", () => {
         pendingPayments: [
           {
             paymentId: "payment-1",
+            clientId: "client-1",
+            projectId: "project-1",
             clientName: "Mario Rossi",
             projectName: "Wedding Mario",
             amount: 800,
@@ -219,6 +224,8 @@ describe("UnifiedAiLauncher", () => {
         recentExpenses: [
           {
             expenseId: "expense-1",
+            clientId: null,
+            projectId: null,
             clientName: null,
             projectName: null,
             amount: 300,
@@ -276,6 +283,24 @@ describe("UnifiedAiLauncher", () => {
       generatedAt: "2026-02-28T22:05:00.000Z",
       answerMarkdown:
         "## Risposta breve\nTutto sotto controllo.\n\n## Dati usati\n- 1 preventivo aperto.\n- 1 pagamento pendente.",
+      suggestedActions: [
+        {
+          id: "open-first-pending-payment",
+          kind: "show",
+          resource: "payments",
+          label: "Apri il pagamento piu urgente",
+          description: "Vai al dettaglio del pagamento pendente.",
+          href: "/#/payments/payment-1/show",
+        },
+        {
+          id: "open-dashboard",
+          kind: "page",
+          resource: "dashboard",
+          label: "Apri la dashboard",
+          description: "Torna al quadro generale.",
+          href: "/#/",
+        },
+      ],
     });
 
     renderLauncher();
@@ -305,6 +330,13 @@ describe("UnifiedAiLauncher", () => {
     );
 
     expect(await screen.findByText("Tutto sotto controllo.")).toBeInTheDocument();
+    expect(await screen.findByText("Azioni suggerite")).toBeInTheDocument();
+    expect(screen.getByText("Apri il pagamento piu urgente")).toBeInTheDocument();
+    expect(
+      screen
+        .getByText("Apri il pagamento piu urgente")
+        .closest("a"),
+    ).toHaveAttribute("href", "/#/payments/payment-1/show");
   });
 
   it("uploads files, generates a draft, and confirms the import", async () => {

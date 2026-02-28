@@ -192,12 +192,36 @@ The next Pareto step is now closed too:
   - the answer used real CRM counts/totals and repeated the write boundary
   - smoke user cleaned after verification
 
+The next Pareto step is now closed too:
+
+- grounded launcher answers now return the first structured handoff suggestions
+  toward existing CRM routes
+- the suggested actions are built deterministically from the shared snapshot and
+  the approved hash route prefix, not invented by the model
+- the launcher now lets the user jump from one grounded answer to:
+  - record detail routes
+  - resource list routes
+  - dashboard
+- runtime verification is now closed too on the linked remote project:
+  - `unified_crm_answer` redeployed remotely on `qvdmzhyzpyaveniirsmo`
+  - authenticated smoke question `Chi mi deve ancora pagare?` returned HTTP
+    `200`
+  - the response included:
+    - grounded markdown answer
+    - `suggestedActions` for `payments show`, `payments list`, `client show`
+  - smoke user cleaned after verification
+
 The next high-value step is now:
 
-- turn grounded launcher answers into the first guided handoff toward existing
-  CRM actions/routes,
-- still inside the same global shell,
-- still without direct execution or free writes from the general CRM chat.
+- upgrade those handoff suggestions from generic route jumps to the first
+  action-oriented commercial handoff on already approved surfaces
+- prioritize existing approved actions such as:
+  - `quote_show`
+  - `quote_create_payment`
+  - `client_create_payment`
+  - `project_quick_payment`
+- still inside the same global shell
+- still without direct execution or free writes from the general CRM chat
 
 Do not open new scattered AI surfaces while doing this. The launcher, the
 separate Gemini setting, and the existing semantic/capability foundations are

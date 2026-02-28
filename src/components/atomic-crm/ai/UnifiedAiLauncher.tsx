@@ -309,6 +309,7 @@ export const UnifiedAiLauncher = () => {
         <UnifiedCrmAnswerPanel
           context={readContext ?? null}
           selectedModel={selectedAnswerModel}
+          onNavigate={() => setOpen(false)}
         />
 
         <div className="rounded-2xl border bg-background p-4 shadow-sm">

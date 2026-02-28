@@ -10,6 +10,16 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se una risposta AI deve portare l'utente a una route reale del
+  CRM, i link non vanno lasciati inventare al modello** — Nel launcher
+  unificato il pattern corretto e' fare rispondere il modello solo sui dati e
+  costruire poi gli handoff in modo deterministico con:
+  1) `routePrefix`
+  2) record id presenti nello snapshot
+  3) superfici gia approvate nel CRM
+  Cosi' eviti URL hallucinated e tieni allineati answer flow, capability
+  registry e navigazione reale.
+
 - [2026-03-01] **Se il launcher mostra gia una snapshot condivisa, il primo
   answer flow deve usare proprio quella snapshot e non ricostruirne un'altra
   lato function** — Nel launcher unificato il pattern corretto e' passare la

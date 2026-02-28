@@ -5,6 +5,7 @@ import { AuthMiddleware, UserMiddleware } from "../_shared/authentication.ts";
 import { corsHeaders, OptionsMiddleware } from "../_shared/cors.ts";
 import { getUserSale } from "../_shared/getUserSale.ts";
 import {
+  buildUnifiedCrmSuggestedActions,
   validateUnifiedCrmAnswerPayload,
 } from "../_shared/unifiedCrmAnswer.ts";
 import { createErrorResponse } from "../_shared/utils.ts";
@@ -33,6 +34,7 @@ Non inventare dati mancanti.
 Non fingere di aver letto tabelle o moduli che non sono nel contesto.
 Se la domanda richiede dati fuori dalla snapshot, dillo chiaramente.
 Se la domanda chiede di creare, modificare, inviare o cancellare qualcosa, spiega chiaramente che questo flow e solo read-only e che le scritture devono passare da workflow dedicati con conferma esplicita.
+Non scrivere URL, route o istruzioni di navigazione tecniche dentro il markdown: gli handoff verso il CRM vengono aggiunti separatamente dal sistema.
 Scrivi in italiano semplice, senza gergo tecnico inutile.
 Rispondi in markdown semplice, con queste sezioni:
 
@@ -71,6 +73,11 @@ async function answerUnifiedCrmQuestion(req: Request, currentUserSale: unknown) 
       : defaultAnalysisModel;
 
   try {
+    const suggestedActions = buildUnifiedCrmSuggestedActions({
+      question,
+      context,
+    });
+
     const response = await openai.responses.create({
       model: selectedModel,
       instructions,
@@ -96,6 +103,7 @@ async function answerUnifiedCrmQuestion(req: Request, currentUserSale: unknown) 
           model: selectedModel,
           generatedAt: new Date().toISOString(),
           answerMarkdown,
+          suggestedActions,
         },
       }),
       {

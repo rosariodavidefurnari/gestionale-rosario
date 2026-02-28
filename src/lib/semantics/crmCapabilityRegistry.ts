@@ -276,7 +276,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "ask_unified_crm_question",
       label: "Chiedi al CRM nella chat unificata",
       description:
-        "Invia una domanda read-only sul CRM core usando la stessa snapshot mostrata nel launcher e restituisce una risposta grounded senza scrivere nel CRM.",
+        "Invia una domanda read-only sul CRM core usando la stessa snapshot mostrata nel launcher e restituisce una risposta grounded con possibili handoff verso route gia approvate, senza scrivere nel CRM.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
       actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
       requiredFields: [
@@ -285,6 +285,15 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
         "aiConfig.historicalAnalysisModel",
       ],
       sideEffects: ["invoke modello testuale read-only"],
+    },
+    {
+      id: "follow_unified_crm_handoff",
+      label: "Segui handoff del launcher unificato",
+      description:
+        "Apre dal launcher una route gia approvata del CRM suggerita dalla risposta AI, senza eseguire direttamente azioni di scrittura.",
+      sourceFile: "src/components/atomic-crm/ai/UnifiedCrmAnswerPanel.tsx",
+      actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
+      requiredFields: ["answer.suggestedActions[].href"],
     },
     {
       id: "invoice_import_extract",

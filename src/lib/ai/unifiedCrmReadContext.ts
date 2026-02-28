@@ -86,6 +86,8 @@ export type UnifiedCrmReadContext = {
     }>;
     openQuotes: Array<{
       quoteId: string;
+      clientId: string | null;
+      projectId: string | null;
       clientName: string;
       projectName: string | null;
       amount: number;
@@ -95,6 +97,7 @@ export type UnifiedCrmReadContext = {
     }>;
     activeProjects: Array<{
       projectId: string;
+      clientId: string | null;
       projectName: string;
       clientName: string | null;
       status: string;
@@ -103,6 +106,8 @@ export type UnifiedCrmReadContext = {
     }>;
     pendingPayments: Array<{
       paymentId: string;
+      clientId: string | null;
+      projectId: string | null;
       clientName: string | null;
       projectName: string | null;
       amount: number;
@@ -112,6 +117,8 @@ export type UnifiedCrmReadContext = {
     }>;
     recentExpenses: Array<{
       expenseId: string;
+      clientId: string | null;
+      projectId: string | null;
       clientName: string | null;
       projectName: string | null;
       amount: number;
@@ -218,6 +225,8 @@ export const buildUnifiedCrmReadContext = ({
       })),
       openQuotes: openQuotes.slice(0, 5).map((quote) => ({
         quoteId: String(quote.id),
+        clientId: quote.client_id ? String(quote.client_id) : null,
+        projectId: quote.project_id ? String(quote.project_id) : null,
         clientName: getClientName(clientById, quote.client_id) ?? "Cliente non trovato",
         projectName: getProjectName(projectById, quote.project_id ?? null),
         amount: Number(quote.amount ?? 0),
@@ -227,6 +236,7 @@ export const buildUnifiedCrmReadContext = ({
       })),
       activeProjects: activeProjects.slice(0, 5).map((project) => ({
         projectId: String(project.id),
+        clientId: project.client_id ? String(project.client_id) : null,
         projectName: project.name,
         clientName: getClientName(clientById, project.client_id),
         status: project.status,
@@ -235,6 +245,8 @@ export const buildUnifiedCrmReadContext = ({
       })),
       pendingPayments: pendingPayments.slice(0, 5).map((payment) => ({
         paymentId: String(payment.id),
+        clientId: payment.client_id ? String(payment.client_id) : null,
+        projectId: payment.project_id ? String(payment.project_id) : null,
         clientName: getClientName(clientById, payment.client_id),
         projectName: getProjectName(projectById, payment.project_id ?? null),
         amount: Number(payment.amount ?? 0),
@@ -244,6 +256,8 @@ export const buildUnifiedCrmReadContext = ({
       })),
       recentExpenses: recentExpenses.slice(0, 5).map((expense) => ({
         expenseId: String(expense.id),
+        clientId: expense.client_id ? String(expense.client_id) : null,
+        projectId: expense.project_id ? String(expense.project_id) : null,
         clientName: getClientName(clientById, expense.client_id ?? null),
         projectName: getProjectName(projectById, expense.project_id ?? null),
         amount: Number(expense.amount ?? 0),

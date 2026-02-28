@@ -68,6 +68,9 @@ describe("crmSemanticRegistry", () => {
     expect(registry.rules.unifiedAiReadContext.meaning).toContain(
       "conferma esplicita",
     );
+    expect(registry.rules.unifiedAiReadContext.meaning).toContain(
+      "route o superfici gia approvate",
+    );
   });
 
   it("uses km and taxable helpers consistently", () => {

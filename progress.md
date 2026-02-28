@@ -49,11 +49,52 @@ contesto CRM-wide per il primo vero answer flow AI di lettura generale, sempre
 read-only. La policy prodotto e' adesso esplicita anche nei documenti e nei
 registry: prima lettura generale del CRM, poi eventualmente write assistito
 solo con conferma esplicita, mai scrittura autonoma libera. Il prossimo passo
-Pareto non e' un'altra AI sparsa, ma il primo handoff guidato dalle risposte
-del launcher verso azioni/route gia approvate del CRM, ancora senza
-esecuzione diretta.
+Pareto dentro la stessa shell e' ora chiuso anche lui: le risposte del
+launcher propongono handoff strutturati verso route gia approvate del CRM. Il
+prossimo passo non e' un'altra AI sparsa, ma alzare quel handoff da semplice
+salto di route al primo handoff commerciale orientato ad azioni gia approvate,
+sempre senza esecuzione diretta dalla chat generale.
 
 ## Last Session
+
+### Sessione 59 (2026-03-01, handoff guidato da answer flow a route CRM)
+
+- Completed:
+  - **Le risposte del launcher ora accompagnano anche al punto giusto del CRM**:
+    - `unified_crm_answer` ora restituisce anche:
+      - `suggestedActions`
+    - le azioni suggerite sono renderizzate dentro il pannello answer del
+      launcher
+    - click su una suggestion chiude la shell e porta alla route suggerita
+  - **Handoff reso deterministicamente coerente col CRM**:
+    - i link non sono generati dal modello
+    - vengono costruiti da:
+      - `routePrefix`
+      - record id nello snapshot read-only
+    - supportano:
+      - dashboard
+      - resource list
+      - record show
+  - **Registry e continuita' riallineati nello stesso passaggio**:
+    - capability registry aggiornato con:
+      - `follow_unified_crm_handoff`
+    - semantic registry rafforzato sul fatto che gli handoff possono puntare
+      solo a superfici gia approvate
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx src/lib/ai/unifiedCrmReadContext.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts supabase/functions/_shared/unifiedCrmAnswer.test.ts`
+  - `npx supabase functions deploy unified_crm_answer --project-ref qvdmzhyzpyaveniirsmo --no-verify-jwt`
+  - smoke autenticato remoto riuscito su `unified_crm_answer` con domanda
+    `Chi mi deve ancora pagare?` e ritorno reale di `suggestedActions`
+
+- Decisions:
+  - le route suggerite dal launcher vanno costruite deterministicamente dal
+    sistema, non inventate dal modello
+  - il primo handoff della chat generale resta su superfici esistenti
+    `read-only` o comunque gia approvate, senza esecuzione diretta
+  - il prossimo passo Pareto e' il primo handoff commerciale orientato ad
+    azioni gia approvate, non un nuovo consumer AI separato
 
 ### Sessione 58 (2026-03-01, answer flow AI read-only nel launcher unificato)
 
