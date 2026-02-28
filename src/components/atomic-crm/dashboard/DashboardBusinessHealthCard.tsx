@@ -146,19 +146,19 @@ export const DashboardBusinessHealthCard = ({
 );
 
 const ConversionBadge = ({ rate }: { rate: number }) => {
-  if (rate >= 50) return <Badge variant="default">Ottimo</Badge>;
+  if (rate >= 50) return <Badge variant="success">Ottimo</Badge>;
   if (rate >= 30) return <Badge variant="secondary">Buono</Badge>;
   return <Badge variant="outline">Basso</Badge>;
 };
 
 const DsoBadge = ({ days }: { days: number }) => {
-  if (days <= 30) return <Badge variant="default">Ottimo</Badge>;
+  if (days <= 30) return <Badge variant="success">Ottimo</Badge>;
   if (days <= 60) return <Badge variant="secondary">Nella norma</Badge>;
   return <Badge variant="destructive">Critico</Badge>;
 };
 
 const ConcentrationBadge = ({ pct }: { pct: number }) => {
-  if (pct < 50) return <Badge variant="default">Sano</Badge>;
+  if (pct < 50) return <Badge variant="success">Sano</Badge>;
   if (pct < 80) return <Badge variant="secondary">Moderato</Badge>;
   return <Badge variant="destructive">Rischio alto</Badge>;
 };

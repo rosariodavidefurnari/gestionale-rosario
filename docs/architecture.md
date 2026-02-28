@@ -34,6 +34,7 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 | DateTime Range Support (all_day pattern) | Implementato su 4 moduli | sessione 16 |
 | Simulatore Fiscale + KPI Salute Aziendale | Implementato | sessione 17 |
 | Navigazione per anno Dashboard | Implementata | sessione 18 |
+| Colori semantici Dashboard (success/warning badge + progress) | Implementati | sessione 18 |
 | Typecheck | 0 errori | sessione 18 |
 | Build produzione (`npm run build`) | OK | sessione 18 |
 | Test | 42/42 passati | sessione 18 |

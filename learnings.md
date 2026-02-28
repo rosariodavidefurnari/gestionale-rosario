@@ -482,3 +482,8 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   `payment_date` (la data effettiva del pagamento), con fallback a `created_at`. I preventivi si filtrano
   per `created_at`. Un pagamento non ricevuto di un anno passato resta visibile solo in quell'anno — è un
   dato storico (credito perso), non operativo.
+
+- [2026-02-28] **Colori semantici: estendere Badge e Progress, non index.css** — Per aggiungere verde/ambra
+  alla dashboard, il pattern del progetto è: varianti CVA nei componenti UI (badge.tsx, progress.tsx), NON
+  CSS custom properties in index.css. Badge: `success` (green-600) e `warning` (amber-600). Progress:
+  prop `variant` con CVA. Usare amber-600 (non 500) per contrasto AA su testo bianco.

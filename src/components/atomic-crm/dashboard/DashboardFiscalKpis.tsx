@@ -13,6 +13,12 @@ import { Progress } from "@/components/ui/progress";
 import { formatCurrency, formatCurrencyPrecise } from "./dashboardModel";
 import type { FiscalKpis, FiscalWarning } from "./fiscalModel";
 
+const getCeilingVariant = (pct: number) => {
+  if (pct >= 90) return "destructive" as const;
+  if (pct >= 70) return "warning" as const;
+  return "success" as const;
+};
+
 export const DashboardFiscalKpis = ({
   fiscalKpis,
   warnings,
@@ -48,7 +54,7 @@ export const DashboardFiscalKpis = ({
             {formatCurrency(fiscalKpis.redditoNettoStimato)}
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Badge variant="secondary">
+            <Badge variant={fiscalKpis.percentualeNetto >= 60 ? "success" : "secondary"}>
               {Math.round(fiscalKpis.percentualeNetto)}% netto
             </Badge>
             <span>{reliabilityLabel}</span>
@@ -123,6 +129,7 @@ export const DashboardFiscalKpis = ({
           </div>
           <Progress
             value={Math.min(100, fiscalKpis.percentualeUtilizzoTetto)}
+            variant={getCeilingVariant(fiscalKpis.percentualeUtilizzoTetto)}
             className="h-2"
           />
           <p className="text-xs text-muted-foreground">

@@ -70,6 +70,12 @@ export const MobileDashboard = () => {
   );
 };
 
+const getCeilingVariant = (pct: number) => {
+  if (pct >= 90) return "destructive" as const;
+  if (pct >= 70) return "warning" as const;
+  return "success" as const;
+};
+
 const MobileFiscalKpis = ({ fiscal }: { fiscal: FiscalModel }) => {
   const { fiscalKpis, deadlines } = fiscal;
   const nextDeadline = deadlines.find((d) => !d.isPast);
@@ -126,6 +132,7 @@ const MobileFiscalKpis = ({ fiscal }: { fiscal: FiscalModel }) => {
         <CardContent className="px-4 space-y-2">
           <Progress
             value={Math.min(100, fiscalKpis.percentualeUtilizzoTetto)}
+            variant={getCeilingVariant(fiscalKpis.percentualeUtilizzoTetto)}
             className="h-2"
           />
           <p className="text-xs text-muted-foreground">

@@ -86,7 +86,7 @@ export const DashboardAlertsCard = ({
 const PaymentAlertRow = ({ payment }: { payment: PaymentAlert }) => {
   const urgencyConfig = {
     overdue: { badge: "destructive" as const, label: "Scaduto", icon: <AlertTriangle className="h-3 w-3" /> },
-    due_soon: { badge: "secondary" as const, label: "In scadenza", icon: <Clock className="h-3 w-3" /> },
+    due_soon: { badge: "warning" as const, label: "In scadenza", icon: <Clock className="h-3 w-3" /> },
     pending: { badge: "outline" as const, label: "In attesa", icon: null },
   };
   const config = urgencyConfig[payment.urgency];

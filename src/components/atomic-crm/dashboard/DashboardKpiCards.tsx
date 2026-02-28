@@ -113,7 +113,7 @@ const DeltaBadge = ({
   }
 
   const Icon = direction === "up" ? ArrowUpRight : ArrowDownRight;
-  const variant = direction === "up" ? "secondary" : "destructive";
+  const variant = direction === "up" ? "success" : "destructive";
   const prefix = direction === "up" ? "+" : "";
 
   return (

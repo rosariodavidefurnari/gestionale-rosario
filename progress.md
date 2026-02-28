@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-🟢 Navigazione per anno nella Dashboard. Typecheck 0 errori, build OK, 42/42 test.
+🟢 Colori semantici nella Dashboard. Typecheck 0 errori, build OK.
 
 ## Last Session
 
-### Sessione 18 (2026-02-28, Navigazione per anno Dashboard)
+### Sessione 18 (2026-02-28, Navigazione per anno + Colori Dashboard)
 
 - Completed:
   - **Year selector UI**: chevron `← 2025 →` con freccia destra disabilitata su anno corrente
@@ -21,13 +21,25 @@
   - **Titolo dinamico**: "Fiscale & Salute Aziendale" (corrente) vs "Riepilogo Fiscale 2025" (passato)
   - **Error handling**: validazione anno (>= 2000, <= anno corrente), Number.isFinite check, freccia destra disabilitata
   - **Verifica**: Typecheck 0 errori, build OK, 42/42 test passati
+  - **Colori semantici dashboard**: Badge success (verde) e warning (ambra) aggiunti a badge.tsx; Progress con prop variant (success/warning/destructive)
+  - **KPI trend positivo**: badge verde (era grigio)
+  - **Alert "In scadenza"**: badge ambra (era grigio) — triade ambra→rosso→outline
+  - **Tetto forfettario**: progress bar verde < 70%, ambra 70-90%, rosso > 90% (desktop + mobile)
+  - **Badge % netto**: verde se ≥ 60%
+  - **BusinessHealth "Ottimo"/"Sano"**: badge verde (era blu generico)
 
 - Files modified:
   - `src/components/atomic-crm/dashboard/dashboardModel.ts` (year param, selectedYear, isCurrentYear, referenceDate, filtro pagamenti/preventivi per anno)
   - `src/components/atomic-crm/dashboard/fiscalModel.ts` (year param, monthsOfData condizionale)
   - `src/components/atomic-crm/dashboard/useDashboardData.ts` (year param passthrough)
   - `src/components/atomic-crm/dashboard/Dashboard.tsx` (YearSelector, state, visibilità condizionale)
-  - `src/components/atomic-crm/dashboard/DashboardFiscalKpis.tsx` (isCurrentYear prop, label dinamiche)
+  - `src/components/atomic-crm/dashboard/DashboardFiscalKpis.tsx` (isCurrentYear prop, label dinamiche, colori tetto + badge netto)
+  - `src/components/atomic-crm/dashboard/DashboardAlertsCard.tsx` (due_soon warning badge)
+  - `src/components/atomic-crm/dashboard/DashboardBusinessHealthCard.tsx` (badge success per stati positivi)
+  - `src/components/atomic-crm/dashboard/DashboardKpiCards.tsx` (trend positivo success badge)
+  - `src/components/atomic-crm/dashboard/MobileDashboard.tsx` (progress bar tetto colorata)
+  - `src/components/ui/badge.tsx` (varianti success + warning)
+  - `src/components/ui/progress.tsx` (prop variant con CVA)
 
 - Decisions:
   - Per anni passati nascondere completamente (non avvisi) i componenti forward-looking
