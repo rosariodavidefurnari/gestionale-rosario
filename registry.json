@@ -148,6 +148,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/settings/AISettingsSection.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/services/serviceTypes.ts",
           "type": "registry:component"
         },
@@ -612,6 +616,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/useHistoricalDashboardData.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/useDashboardData.ts",
           "type": "registry:component"
         },
@@ -621,6 +629,10 @@
         },
         {
           "path": "src/components/atomic-crm/dashboard/dashboardModel.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/dashboardHistoryModel.ts",
           "type": "registry:component"
         },
         {
@@ -660,6 +672,30 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/DashboardHistoricalTopClientsCard.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardHistoricalRevenueChart.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardHistoricalKpis.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardHistoricalCategoryMixChart.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardHistorical.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/DashboardFiscalKpis.tsx",
           "type": "registry:component"
         },
@@ -677,6 +713,10 @@
         },
         {
           "path": "src/components/atomic-crm/dashboard/DashboardAtecoChart.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardAnnual.tsx",
           "type": "registry:component"
         },
         {
