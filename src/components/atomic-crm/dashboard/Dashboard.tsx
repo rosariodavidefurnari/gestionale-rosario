@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { AlertTriangle, ChevronLeft, ChevronRight, RefreshCw, Settings } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Settings,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";

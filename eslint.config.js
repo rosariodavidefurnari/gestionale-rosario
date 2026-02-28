@@ -7,12 +7,23 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+const eslintIgnores = [
+  "dist/**",
+  "build/**",
+  "lib/**",
+  "esm/**",
+  ".astro/**",
+  "**/node_modules/**",
+  "prism.js",
+  "packages/create-react-admin/templates/**",
+  ".github/**",
+];
+
 export default tseslint.config(
-  { ignores: ["dist"] },
+  { ignores: eslintIgnores },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
-    ignores: ["**/node_modules/**", "**/dist/**", "**/.astro/**"],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,

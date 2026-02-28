@@ -99,16 +99,31 @@ const ExpenseDetails = ({
   return (
     <div className="space-y-2 max-w-sm">
       {isCredit ? (
-        <DetailRow label="Valore credito" value={`EUR ${eur(record.amount ?? 0)}`} />
+        <DetailRow
+          label="Valore credito"
+          value={`EUR ${eur(record.amount ?? 0)}`}
+        />
       ) : isKm ? (
         <>
-          <DetailRow label="Km percorsi" value={String(record.km_distance ?? 0)} />
-          <DetailRow label="Tariffa km" value={`EUR ${eur(record.km_rate ?? 0.19)}`} />
+          <DetailRow
+            label="Km percorsi"
+            value={String(record.km_distance ?? 0)}
+          />
+          <DetailRow
+            label="Tariffa km"
+            value={`EUR ${eur(record.km_rate ?? 0.19)}`}
+          />
         </>
       ) : (
         <>
-          <DetailRow label="Importo base" value={`EUR ${eur(record.amount ?? 0)}`} />
-          <DetailRow label="Ricarico" value={`${record.markup_percent ?? 0}%`} />
+          <DetailRow
+            label="Importo base"
+            value={`EUR ${eur(record.amount ?? 0)}`}
+          />
+          <DetailRow
+            label="Ricarico"
+            value={`${record.markup_percent ?? 0}%`}
+          />
         </>
       )}
       <div className="border-t pt-2 flex justify-between font-bold text-sm">

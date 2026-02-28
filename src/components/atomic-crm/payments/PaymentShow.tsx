@@ -39,14 +39,17 @@ const PaymentShowContent = () => {
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-2xl font-bold">
-                  {paymentTypeLabels[record.payment_type]} — EUR {eur(record.amount)}
+                  {paymentTypeLabels[record.payment_type]} — EUR{" "}
+                  {eur(record.amount)}
                 </h2>
                 <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
                   <PaymentStatusBadge status={record.status} />
                   {record.payment_date && (
                     <span className="flex items-center gap-1">
                       <Calendar className="size-3" />
-                      {new Date(record.payment_date).toLocaleDateString("it-IT")}
+                      {new Date(record.payment_date).toLocaleDateString(
+                        "it-IT",
+                      )}
                     </span>
                   )}
                   {client && (

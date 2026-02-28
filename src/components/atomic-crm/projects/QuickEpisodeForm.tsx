@@ -13,17 +13,33 @@ export interface FeeDefaults {
 }
 
 /** Pre-fill fees based on tv_show type */
-export const getDefaultFees = (
-  tvShow?: string | null,
-): FeeDefaults => {
+export const getDefaultFees = (tvShow?: string | null): FeeDefaults => {
   switch (tvShow) {
     case "gustare_sicilia":
-      return { fee_shooting: 233, fee_editing: 311, fee_other: 0, service_type: "riprese_montaggio", km_rate: 0.19 };
+      return {
+        fee_shooting: 233,
+        fee_editing: 311,
+        fee_other: 0,
+        service_type: "riprese_montaggio",
+        km_rate: 0.19,
+      };
     case "bella_tra_i_fornelli":
     case "vale_il_viaggio":
-      return { fee_shooting: 233, fee_editing: 156, fee_other: 0, service_type: "riprese_montaggio", km_rate: 0.19 };
+      return {
+        fee_shooting: 233,
+        fee_editing: 156,
+        fee_other: 0,
+        service_type: "riprese_montaggio",
+        km_rate: 0.19,
+      };
     default:
-      return { fee_shooting: 0, fee_editing: 0, fee_other: 0, service_type: "riprese_montaggio", km_rate: 0.19 };
+      return {
+        fee_shooting: 0,
+        fee_editing: 0,
+        fee_other: 0,
+        service_type: "riprese_montaggio",
+        km_rate: 0.19,
+      };
   }
 };
 
@@ -46,7 +62,12 @@ interface Props {
   onCancel: () => void;
 }
 
-export const QuickEpisodeForm = ({ defaults, saving, onSubmit, onCancel }: Props) => {
+export const QuickEpisodeForm = ({
+  defaults,
+  saving,
+  onSubmit,
+  onCancel,
+}: Props) => {
   const [serviceDate, setServiceDate] = useState("");
   const [feeShooting, setFeeShooting] = useState(defaults.fee_shooting);
   const [feeEditing, setFeeEditing] = useState(defaults.fee_editing);
@@ -81,31 +102,70 @@ export const QuickEpisodeForm = ({ defaults, saving, onSubmit, onCancel }: Props
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
           <Label htmlFor="ep-date">Data *</Label>
-          <Input id="ep-date" type="date" value={serviceDate} onChange={(e) => setServiceDate(e.target.value)} required />
+          <Input
+            id="ep-date"
+            type="date"
+            value={serviceDate}
+            onChange={(e) => setServiceDate(e.target.value)}
+            required
+          />
         </div>
         <div>
           <Label htmlFor="ep-shooting">Riprese (EUR)</Label>
-          <Input id="ep-shooting" type="number" step="0.01" value={feeShooting} onChange={(e) => setFeeShooting(Number(e.target.value))} />
+          <Input
+            id="ep-shooting"
+            type="number"
+            step="0.01"
+            value={feeShooting}
+            onChange={(e) => setFeeShooting(Number(e.target.value))}
+          />
         </div>
         <div>
           <Label htmlFor="ep-editing">Montaggio (EUR)</Label>
-          <Input id="ep-editing" type="number" step="0.01" value={feeEditing} onChange={(e) => setFeeEditing(Number(e.target.value))} />
+          <Input
+            id="ep-editing"
+            type="number"
+            step="0.01"
+            value={feeEditing}
+            onChange={(e) => setFeeEditing(Number(e.target.value))}
+          />
         </div>
         <div>
           <Label htmlFor="ep-other">Altro (EUR)</Label>
-          <Input id="ep-other" type="number" step="0.01" value={feeOther} onChange={(e) => setFeeOther(Number(e.target.value))} />
+          <Input
+            id="ep-other"
+            type="number"
+            step="0.01"
+            value={feeOther}
+            onChange={(e) => setFeeOther(Number(e.target.value))}
+          />
         </div>
         <div>
           <Label htmlFor="ep-km">Km</Label>
-          <Input id="ep-km" type="number" step="1" value={kmDistance} onChange={(e) => setKmDistance(Number(e.target.value))} />
+          <Input
+            id="ep-km"
+            type="number"
+            step="1"
+            value={kmDistance}
+            onChange={(e) => setKmDistance(Number(e.target.value))}
+          />
         </div>
         <div className="col-span-2">
           <Label htmlFor="ep-location">Località</Label>
-          <Input id="ep-location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="es. Catania" />
+          <Input
+            id="ep-location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="es. Catania"
+          />
         </div>
         <div className="col-span-2">
           <Label htmlFor="ep-notes">Note</Label>
-          <Input id="ep-notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+          <Input
+            id="ep-notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
         </div>
       </div>
 
@@ -116,7 +176,9 @@ export const QuickEpisodeForm = ({ defaults, saving, onSubmit, onCancel }: Props
         </div>
         {kmDistance > 0 && (
           <div className="flex justify-between">
-            <span>Km ({kmDistance} × €{kmRate})</span>
+            <span>
+              Km ({kmDistance} × €{kmRate})
+            </span>
             <span className="font-medium">€{kmCost.toFixed(2)}</span>
           </div>
         )}
@@ -128,7 +190,12 @@ export const QuickEpisodeForm = ({ defaults, saving, onSubmit, onCancel }: Props
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={saving}
+        >
           Annulla
         </Button>
         <Button type="submit" disabled={saving || !serviceDate}>

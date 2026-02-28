@@ -99,10 +99,7 @@ const ClientDetails = ({ record }: { record: Client }) => (
         <InfoRow icon={<Mail className="size-4" />} value={record.email} />
       )}
       {record.address && (
-        <InfoRow
-          icon={<MapPin className="size-4" />}
-          value={record.address}
-        />
+        <InfoRow icon={<MapPin className="size-4" />} value={record.address} />
       )}
       {record.tax_id && (
         <InfoRow

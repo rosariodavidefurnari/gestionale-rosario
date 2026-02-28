@@ -78,7 +78,13 @@ export const QuoteCreate = ({ open }: { open: boolean }) => {
           Compila i campi per creare un nuovo preventivo
         </DialogDescription>
         <Create resource="quotes" mutationOptions={{ onSuccess }}>
-          <Form defaultValues={{ index: 0, status: "primo_contatto", all_day: true }}>
+          <Form
+            defaultValues={{
+              index: 0,
+              status: "primo_contatto",
+              all_day: true,
+            }}
+          >
             <QuoteInputs />
             <FormToolbar>
               <SaveButton />

@@ -56,15 +56,8 @@ export const DashboardAtecoChart = ({
               tickFormatter={(v: number) => formatCurrency(v)}
               fontSize={12}
             />
-            <YAxis
-              type="category"
-              dataKey="name"
-              width={120}
-              fontSize={12}
-            />
-            <Tooltip
-              formatter={(value: number) => formatCurrency(value)}
-            />
+            <YAxis type="category" dataKey="name" width={120} fontSize={12} />
+            <Tooltip formatter={(value: number) => formatCurrency(value)} />
             <Legend />
             <Bar
               dataKey="Fatturato"

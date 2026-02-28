@@ -52,22 +52,13 @@ export const ProjectListContent = () => {
   );
 };
 
-const ProjectRow = ({
-  project,
-  link,
-}: {
-  project: Project;
-  link: string;
-}) => {
+const ProjectRow = ({ project, link }: { project: Project; link: string }) => {
   const { data: client } = useGetOne("clients", { id: project.client_id });
 
   return (
     <TableRow className="cursor-pointer hover:bg-muted/50">
       <TableCell>
-        <Link
-          to={link}
-          className="font-medium text-primary hover:underline"
-        >
+        <Link to={link} className="font-medium text-primary hover:underline">
           {project.name}
         </Link>
       </TableCell>
@@ -93,11 +84,14 @@ const ProjectRow = ({
 };
 
 const categoryBadgeColors: Record<string, string> = {
-  produzione_tv: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  produzione_tv:
+    "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   spot: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
   wedding: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
-  evento_privato: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  sviluppo_web: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  evento_privato:
+    "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  sviluppo_web:
+    "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
 };
 
 export const ProjectCategoryBadge = ({ category }: { category: string }) => (
@@ -109,7 +103,8 @@ export const ProjectCategoryBadge = ({ category }: { category: string }) => (
 const statusBadgeColors: Record<string, string> = {
   in_corso: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   completato: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-  in_pausa: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+  in_pausa:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
   cancellato: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 

@@ -94,7 +94,11 @@ const ProjectDetails = ({ record }: { record: Project }) => (
         <InfoRow
           icon={<Calendar className="size-4" />}
           label="Periodo"
-          value={formatDateRange(record.start_date, record.end_date, record.all_day)}
+          value={formatDateRange(
+            record.start_date,
+            record.end_date,
+            record.all_day,
+          )}
         />
       )}
       {record.budget != null && record.budget > 0 && (
@@ -154,8 +158,16 @@ const ProjectFinancials = ({ projectId }: { projectId: string }) => {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-      <MetricCard icon={<Hash className="size-4" />} label="Servizi" value={String(totalServices)} />
-      <MetricCard icon={<Euro className="size-4" />} label="Compensi" value={eur(totalFees)} />
+      <MetricCard
+        icon={<Hash className="size-4" />}
+        label="Servizi"
+        value={String(totalServices)}
+      />
+      <MetricCard
+        icon={<Euro className="size-4" />}
+        label="Compensi"
+        value={eur(totalFees)}
+      />
       <MetricCard
         icon={<Car className="size-4" />}
         label="Spese"
@@ -177,7 +189,11 @@ const ProjectFinancials = ({ projectId }: { projectId: string }) => {
         icon={<Wallet className="size-4" />}
         label="Da incassare"
         value={eur(balanceDue)}
-        className={balanceDue > 0 ? "text-orange-600 font-bold" : "text-green-600 font-bold"}
+        className={
+          balanceDue > 0
+            ? "text-orange-600 font-bold"
+            : "text-green-600 font-bold"
+        }
       />
     </div>
   );

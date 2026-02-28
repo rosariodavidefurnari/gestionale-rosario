@@ -48,11 +48,7 @@ const PaymentIdentityInputs = () => (
       />
     </ReferenceInput>
     <ReferenceInput source="project_id" reference="projects">
-      <SelectInput
-        label="Progetto"
-        optionText="name"
-        helperText={false}
-      />
+      <SelectInput label="Progetto" optionText="name" helperText={false} />
     </ReferenceInput>
   </div>
 );
@@ -65,9 +61,7 @@ const PaymentDetailInputs = () => (
       label="Tipo"
       choices={paymentTypeChoices}
       optionText={(choice: { id: string; name: string }) => (
-        <span title={paymentTypeDescriptions[choice.id]}>
-          {choice.name}
-        </span>
+        <span title={paymentTypeDescriptions[choice.id]}>{choice.name}</span>
       )}
       validate={required()}
       helperText={false}

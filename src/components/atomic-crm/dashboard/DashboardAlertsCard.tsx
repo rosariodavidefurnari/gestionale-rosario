@@ -1,4 +1,9 @@
-import { AlertTriangle, CalendarClock, Clock, MessageCircleQuestion } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarClock,
+  Clock,
+  MessageCircleQuestion,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +25,9 @@ export const DashboardAlertsCard = ({
   <Card className="gap-0">
     <CardHeader className="px-4 pb-3">
       <CardTitle className="text-base">Scadenze e alert</CardTitle>
-      <p className="text-xs text-muted-foreground">Pagamenti, lavori e preventivi senza risposta</p>
+      <p className="text-xs text-muted-foreground">
+        Pagamenti, lavori e preventivi senza risposta
+      </p>
     </CardHeader>
     <CardContent className="px-4 pb-4 space-y-5">
       <AlertSection
@@ -48,11 +55,19 @@ export const DashboardAlertsCard = ({
               <p className="font-medium">
                 {service.allDay
                   ? formatDayMonth(service.serviceDate)
-                  : formatDateRange(service.serviceDate, service.serviceEnd, false)} · {service.projectName}
+                  : formatDateRange(
+                      service.serviceDate,
+                      service.serviceEnd,
+                      false,
+                    )}{" "}
+                · {service.projectName}
               </p>
               <p className="text-xs text-muted-foreground">
-                {service.clientName} · {prettifyServiceType(service.serviceType)} ·
-                {service.daysAhead === 0 ? " oggi" : ` tra ${service.daysAhead}g`}
+                {service.clientName} ·{" "}
+                {prettifyServiceType(service.serviceType)} ·
+                {service.daysAhead === 0
+                  ? " oggi"
+                  : ` tra ${service.daysAhead}g`}
               </p>
             </div>
           ))
@@ -69,9 +84,13 @@ export const DashboardAlertsCard = ({
         {alerts.unansweredQuotes.length ? (
           alerts.unansweredQuotes.map((quote) => (
             <div key={quote.id} className="text-sm">
-              <p className="font-medium truncate">{quote.clientName} · {quote.description}</p>
+              <p className="font-medium truncate">
+                {quote.clientName} · {quote.description}
+              </p>
               <p className="text-xs text-muted-foreground">
-                {formatDayMonth(quote.sentDate)} · {quote.daysWaiting}g · {quoteStatusLabels[quote.status] ?? quote.status} · {formatCompactCurrency(quote.amount)}
+                {formatDayMonth(quote.sentDate)} · {quote.daysWaiting}g ·{" "}
+                {quoteStatusLabels[quote.status] ?? quote.status} ·{" "}
+                {formatCompactCurrency(quote.amount)}
               </p>
             </div>
           ))
@@ -85,8 +104,16 @@ export const DashboardAlertsCard = ({
 
 const PaymentAlertRow = ({ payment }: { payment: PaymentAlert }) => {
   const urgencyConfig = {
-    overdue: { badge: "destructive" as const, label: "Scaduto", icon: <AlertTriangle className="h-3 w-3" /> },
-    due_soon: { badge: "warning" as const, label: "In scadenza", icon: <Clock className="h-3 w-3" /> },
+    overdue: {
+      badge: "destructive" as const,
+      label: "Scaduto",
+      icon: <AlertTriangle className="h-3 w-3" />,
+    },
+    due_soon: {
+      badge: "warning" as const,
+      label: "In scadenza",
+      icon: <Clock className="h-3 w-3" />,
+    },
     pending: { badge: "outline" as const, label: "In attesa", icon: null },
   };
   const config = urgencyConfig[payment.urgency];
@@ -108,7 +135,12 @@ const PaymentAlertRow = ({ payment }: { payment: PaymentAlert }) => {
       <div className="min-w-0">
         <p className="font-medium truncate">
           {payment.clientName}
-          {detail && <span className="font-normal text-muted-foreground"> · {detail}</span>}
+          {detail && (
+            <span className="font-normal text-muted-foreground">
+              {" "}
+              · {detail}
+            </span>
+          )}
         </p>
         <p className="text-xs text-muted-foreground flex items-center gap-1">
           {config.icon}
@@ -139,7 +171,9 @@ const AlertSection = ({
       <p className="text-sm font-medium flex-1">{title}</p>
       {count > 0 && <Badge variant="outline">{count}</Badge>}
     </div>
-    <div className="space-y-2 rounded-lg border bg-muted/20 p-3">{children}</div>
+    <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+      {children}
+    </div>
   </section>
 );
 

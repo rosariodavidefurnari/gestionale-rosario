@@ -56,7 +56,11 @@ const ServiceIdentityInputs = () => {
         source="service_end"
         label="Data fine"
         validate={(value: string, allValues: Record<string, unknown>) => {
-          if (value && allValues.service_date && value < (allValues.service_date as string)) {
+          if (
+            value &&
+            allValues.service_date &&
+            value < (allValues.service_date as string)
+          ) {
             return "La data fine non può essere prima della data inizio";
           }
         }}
@@ -141,7 +145,10 @@ const ServiceKmInputs = () => {
       <div className="text-sm font-medium px-1">
         Rimborso km:{" "}
         <span className="font-bold">
-          EUR {kmReimbursement.toLocaleString("it-IT", { minimumFractionDigits: 2 })}
+          EUR{" "}
+          {kmReimbursement.toLocaleString("it-IT", {
+            minimumFractionDigits: 2,
+          })}
         </span>
       </div>
     </div>

@@ -41,13 +41,7 @@ export type Client = {
   email?: string;
   address?: string;
   tax_id?: string;
-  source?:
-    | "instagram"
-    | "facebook"
-    | "passaparola"
-    | "google"
-    | "altro"
-    | null;
+  source?: "instagram" | "facebook" | "passaparola" | "google" | "altro" | null;
   notes?: string;
   tags: Identifier[];
   created_at: string;
@@ -128,7 +122,12 @@ export type Payment = {
   project_id?: Identifier | null;
   quote_id?: Identifier | null;
   payment_date?: string;
-  payment_type: "acconto" | "saldo" | "parziale" | "rimborso_spese" | "rimborso";
+  payment_type:
+    | "acconto"
+    | "saldo"
+    | "parziale"
+    | "rimborso_spese"
+    | "rimborso";
   amount: number;
   method?: "bonifico" | "contanti" | "paypal" | "altro" | null;
   invoice_ref?: string;
@@ -141,7 +140,12 @@ export type Expense = {
   project_id?: Identifier | null;
   client_id?: Identifier | null;
   expense_date: string;
-  expense_type: "spostamento_km" | "acquisto_materiale" | "noleggio" | "altro" | "credito_ricevuto";
+  expense_type:
+    | "spostamento_km"
+    | "acquisto_materiale"
+    | "noleggio"
+    | "altro"
+    | "credito_ricevuto";
   km_distance?: number;
   km_rate?: number;
   amount?: number;

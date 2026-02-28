@@ -1,11 +1,6 @@
 import { format, isValid } from "date-fns";
 import { FileDown } from "lucide-react";
-import {
-  ShowBase,
-  useGetOne,
-  useRecordContext,
-  useRedirect,
-} from "ra-core";
+import { ShowBase, useGetOne, useRecordContext, useRedirect } from "ra-core";
 import { useState } from "react";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { EditButton } from "@/components/admin/edit-button";
@@ -119,7 +114,11 @@ const QuoteShowContent = () => {
         {record.event_start && (
           <InfoField
             label="Evento"
-            value={formatDateRange(record.event_start, record.event_end, record.all_day)}
+            value={formatDateRange(
+              record.event_start,
+              record.event_end,
+              record.all_day,
+            )}
           />
         )}
         {record.sent_date && isValid(new Date(record.sent_date)) && (
@@ -173,9 +172,7 @@ const InfoField = ({
   children?: React.ReactNode;
 }) => (
   <div className="flex flex-col">
-    <span className="text-xs text-muted-foreground tracking-wide">
-      {label}
-    </span>
+    <span className="text-xs text-muted-foreground tracking-wide">{label}</span>
     {children ?? <span className="text-sm">{value}</span>}
   </div>
 );

@@ -31,12 +31,20 @@ export const ServiceListContent = () => {
           <TableHead className="w-24">Data</TableHead>
           <TableHead>Progetto</TableHead>
           <TableHead>Tipo</TableHead>
-          <TableHead className="text-right hidden md:table-cell">Riprese</TableHead>
-          <TableHead className="text-right hidden md:table-cell">Montaggio</TableHead>
-          <TableHead className="text-right hidden lg:table-cell">Altro</TableHead>
+          <TableHead className="text-right hidden md:table-cell">
+            Riprese
+          </TableHead>
+          <TableHead className="text-right hidden md:table-cell">
+            Montaggio
+          </TableHead>
+          <TableHead className="text-right hidden lg:table-cell">
+            Altro
+          </TableHead>
           <TableHead className="text-right">Totale</TableHead>
           <TableHead className="text-right hidden lg:table-cell">Km</TableHead>
-          <TableHead className="hidden xl:table-cell">Localit&agrave;</TableHead>
+          <TableHead className="hidden xl:table-cell">
+            Localit&agrave;
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -56,30 +64,32 @@ export const ServiceListContent = () => {
   );
 };
 
-const ServiceRow = ({
-  service,
-  link,
-}: {
-  service: Service;
-  link: string;
-}) => {
+const ServiceRow = ({ service, link }: { service: Service; link: string }) => {
   const { data: project } = useGetOne("projects", { id: service.project_id });
   const { serviceTypeChoices } = useConfigurationContext();
   const total =
-    service.fee_shooting + service.fee_editing + service.fee_other - service.discount;
+    service.fee_shooting +
+    service.fee_editing +
+    service.fee_other -
+    service.discount;
 
   return (
     <TableRow className="cursor-pointer hover:bg-muted/50">
       <TableCell className="text-sm">
         <Link to={link} className="text-primary hover:underline">
-          {formatDateRange(service.service_date, service.service_end, service.all_day)}
+          {formatDateRange(
+            service.service_date,
+            service.service_end,
+            service.all_day,
+          )}
         </Link>
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">
         {project?.name ?? ""}
       </TableCell>
       <TableCell className="text-sm">
-        {serviceTypeChoices.find((t) => t.value === service.service_type)?.label ?? service.service_type}
+        {serviceTypeChoices.find((t) => t.value === service.service_type)
+          ?.label ?? service.service_type}
       </TableCell>
       <TableCell className="text-right text-sm hidden md:table-cell">
         {eur(service.fee_shooting)}

@@ -52,8 +52,10 @@ export const ClientFinancialSummary = ({ record }: { record: Client }) => {
     );
   }
 
-  const totalFees = financials?.reduce((s, f) => s + toNum(f.total_fees), 0) ?? 0;
-  const totalKmCost = financials?.reduce((s, f) => s + toNum(f.total_km_cost), 0) ?? 0;
+  const totalFees =
+    financials?.reduce((s, f) => s + toNum(f.total_fees), 0) ?? 0;
+  const totalKmCost =
+    financials?.reduce((s, f) => s + toNum(f.total_km_cost), 0) ?? 0;
 
   // Non-km expenses: credits subtract, others add (with markup)
   const totalExpenses =
@@ -66,10 +68,11 @@ export const ClientFinancialSummary = ({ record }: { record: Client }) => {
 
   const totalOwed = totalFees + totalKmCost + totalExpenses;
   // Rimborsi subtract from total paid
-  const totalPaid = payments?.reduce((s, p) => {
-    const amt = toNum(p.amount);
-    return p.payment_type === "rimborso" ? s - amt : s + amt;
-  }, 0) ?? 0;
+  const totalPaid =
+    payments?.reduce((s, p) => {
+      const amt = toNum(p.amount);
+      return p.payment_type === "rimborso" ? s - amt : s + amt;
+    }, 0) ?? 0;
   const balanceDue = totalOwed - totalPaid;
 
   return (

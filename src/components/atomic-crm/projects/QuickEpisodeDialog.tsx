@@ -10,7 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Clapperboard } from "lucide-react";
 import type { Project } from "../types";
-import { QuickEpisodeForm, getDefaultFees, type EpisodeFormData } from "./QuickEpisodeForm";
+import {
+  QuickEpisodeForm,
+  getDefaultFees,
+  type EpisodeFormData,
+} from "./QuickEpisodeForm";
 
 interface QuickEpisodeDialogProps {
   record: Project;

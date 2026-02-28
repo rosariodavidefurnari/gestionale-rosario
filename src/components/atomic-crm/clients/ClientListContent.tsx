@@ -34,7 +34,10 @@ export const ClientListContent = () => {
       </TableHeader>
       <TableBody>
         {data.map((client) => (
-          <TableRow key={client.id} className="cursor-pointer hover:bg-muted/50">
+          <TableRow
+            key={client.id}
+            className="cursor-pointer hover:bg-muted/50"
+          >
             <TableCell>
               <Link
                 to={createPath({
@@ -67,18 +70,19 @@ export const ClientListContent = () => {
 };
 
 const clientTypeBadgeColors: Record<string, string> = {
-  produzione_tv: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  azienda_locale: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  privato_wedding: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
-  privato_evento: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  produzione_tv:
+    "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  azienda_locale:
+    "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  privato_wedding:
+    "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
+  privato_evento:
+    "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   web: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
 };
 
 export const ClientTypeBadge = ({ type }: { type: string }) => (
-  <Badge
-    variant="outline"
-    className={clientTypeBadgeColors[type] ?? ""}
-  >
+  <Badge variant="outline" className={clientTypeBadgeColors[type] ?? ""}>
     {clientTypeLabels[type] ?? type}
   </Badge>
 );

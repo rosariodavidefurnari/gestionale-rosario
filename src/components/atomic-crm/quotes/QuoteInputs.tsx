@@ -55,7 +55,11 @@ export const QuoteInputs = () => {
         source="event_end"
         label="Data fine evento"
         validate={(value: string, allValues: Record<string, unknown>) => {
-          if (value && allValues.event_start && value < (allValues.event_start as string)) {
+          if (
+            value &&
+            allValues.event_start &&
+            value < (allValues.event_start as string)
+          ) {
             return "La data fine non può essere prima della data inizio";
           }
         }}
@@ -95,7 +99,11 @@ export const QuoteInputs = () => {
         source="sent_date"
         label="Data invio preventivo"
         validate={(value: string, allValues: Record<string, unknown>) => {
-          if (!value && allValues.status && allValues.status !== "primo_contatto") {
+          if (
+            !value &&
+            allValues.status &&
+            allValues.status !== "primo_contatto"
+          ) {
             return "Obbligatoria per questo stato";
           }
         }}
@@ -107,13 +115,21 @@ export const QuoteInputs = () => {
         label="Data risposta"
         validate={(value: string, allValues: Record<string, unknown>) => {
           const needsResponse = [
-            "accettato", "acconto_ricevuto", "in_lavorazione",
-            "completato", "saldato", "rifiutato",
+            "accettato",
+            "acconto_ricevuto",
+            "in_lavorazione",
+            "completato",
+            "saldato",
+            "rifiutato",
           ];
           if (!value && needsResponse.includes(allValues.status as string)) {
             return "Obbligatoria per questo stato";
           }
-          if (value && allValues.sent_date && value < (allValues.sent_date as string)) {
+          if (
+            value &&
+            allValues.sent_date &&
+            value < (allValues.sent_date as string)
+          ) {
             return "La data risposta non può essere prima della data invio";
           }
         }}

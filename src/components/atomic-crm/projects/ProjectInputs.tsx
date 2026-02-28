@@ -99,12 +99,20 @@ const ProjectDateBudgetInputs = () => {
         label="Tutto il giorno"
         defaultValue={true}
       />
-      <DateComponent source="start_date" label="Data inizio" helperText={false} />
+      <DateComponent
+        source="start_date"
+        label="Data inizio"
+        helperText={false}
+      />
       <DateComponent
         source="end_date"
         label="Data fine prevista"
         validate={(value: string, allValues: Record<string, unknown>) => {
-          if (value && allValues.start_date && value < (allValues.start_date as string)) {
+          if (
+            value &&
+            allValues.start_date &&
+            value < (allValues.start_date as string)
+          ) {
             return "La data fine non può essere prima della data inizio";
           }
         }}

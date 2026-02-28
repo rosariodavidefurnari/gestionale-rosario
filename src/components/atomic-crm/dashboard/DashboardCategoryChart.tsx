@@ -42,13 +42,19 @@ export const DashboardCategoryChart = ({
               margin={{ top: 8, right: 20, left: 12, bottom: 8 }}
               barCategoryGap={12}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} strokeOpacity={0.12} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                horizontal={false}
+                strokeOpacity={0.12}
+              />
               <XAxis
                 type="number"
                 tickLine={false}
                 axisLine={false}
                 fontSize={12}
-                tickFormatter={(value) => formatCompactCurrency(value as number)}
+                tickFormatter={(value) =>
+                  formatCompactCurrency(value as number)
+                }
               />
               <YAxis
                 type="category"
@@ -58,10 +64,16 @@ export const DashboardCategoryChart = ({
                 axisLine={false}
                 fontSize={12}
               />
-              <Tooltip content={<CategoryTooltip />} cursor={{ fill: "rgba(148,163,184,0.12)" }} />
+              <Tooltip
+                content={<CategoryTooltip />}
+                cursor={{ fill: "rgba(148,163,184,0.12)" }}
+              />
               <Bar dataKey="revenue" radius={[0, 6, 6, 0]}>
                 {data.map((item, index) => (
-                  <Cell key={item.category} fill={colors[index % colors.length]} />
+                  <Cell
+                    key={item.category}
+                    fill={colors[index % colors.length]}
+                  />
                 ))}
               </Bar>
             </BarChart>
@@ -79,7 +91,9 @@ const CategoryTooltip = ({ active, payload }: any) => {
   return (
     <div className="rounded-lg border bg-background px-3 py-2 shadow-sm">
       <p className="text-xs text-muted-foreground mb-1">{item.label}</p>
-      <p className="text-sm font-medium">{formatCompactCurrency(item.revenue)}</p>
+      <p className="text-sm font-medium">
+        {formatCompactCurrency(item.revenue)}
+      </p>
     </div>
   );
 };

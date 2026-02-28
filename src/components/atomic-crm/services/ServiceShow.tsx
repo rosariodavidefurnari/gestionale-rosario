@@ -26,7 +26,10 @@ const ServiceShowContent = () => {
   if (isPending || !record) return null;
 
   const total =
-    record.fee_shooting + record.fee_editing + record.fee_other - record.discount;
+    record.fee_shooting +
+    record.fee_editing +
+    record.fee_other -
+    record.discount;
   const kmReimbursement = record.km_distance * record.km_rate;
 
   return (
@@ -60,13 +63,15 @@ const ServiceHeader = ({ record }: { record: Service }) => {
   return (
     <div className="flex items-start justify-between">
       <div>
-        <h2 className="text-2xl font-bold">
-          {serviceLabel}
-        </h2>
+        <h2 className="text-2xl font-bold">{serviceLabel}</h2>
         <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
           <span className="flex items-center gap-1">
             <Calendar className="size-3" />
-            {formatDateRange(record.service_date, record.service_end, record.all_day)}
+            {formatDateRange(
+              record.service_date,
+              record.service_end,
+              record.all_day,
+            )}
           </span>
           {project && (
             <Link
@@ -98,13 +103,7 @@ const ServiceHeader = ({ record }: { record: Service }) => {
   );
 };
 
-const ServiceFees = ({
-  record,
-  total,
-}: {
-  record: Service;
-  total: number;
-}) => (
+const ServiceFees = ({ record, total }: { record: Service; total: number }) => (
   <div className="space-y-2">
     <h6 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
       Compensi
@@ -115,12 +114,8 @@ const ServiceFees = ({
     {record.fee_editing > 0 && (
       <FeeRow label="Montaggio" value={record.fee_editing} />
     )}
-    {record.fee_other > 0 && (
-      <FeeRow label="Altro" value={record.fee_other} />
-    )}
-    {record.discount > 0 && (
-      <FeeRow label="Sconto" value={-record.discount} />
-    )}
+    {record.fee_other > 0 && <FeeRow label="Altro" value={record.fee_other} />}
+    {record.discount > 0 && <FeeRow label="Sconto" value={-record.discount} />}
     <div className="border-t pt-2 flex justify-between font-bold">
       <span>Totale</span>
       <span>EUR {eur(total)}</span>
@@ -140,7 +135,10 @@ const ServiceKmDetails = ({
       Spostamento
     </h6>
     <FeeRow label="Km percorsi" value={record.km_distance} suffix="" />
-    <FeeRow label={`Tariffa (EUR ${eur(record.km_rate)}/km)`} value={kmReimbursement} />
+    <FeeRow
+      label={`Tariffa (EUR ${eur(record.km_rate)}/km)`}
+      value={kmReimbursement}
+    />
     {record.notes && (
       <>
         <h6 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide pt-3">

@@ -133,8 +133,16 @@ const quotePipelineOrder = [
   "perso",
 ] as const;
 
-const quoteClosedForOpenKpi = new Set(["saldato", "rifiutato", "perso", "completato"]);
-const unansweredQuoteStatuses = new Set(["preventivo_inviato", "in_trattativa"]);
+const quoteClosedForOpenKpi = new Set([
+  "saldato",
+  "rifiutato",
+  "perso",
+  "completato",
+]);
+const unansweredQuoteStatuses = new Set([
+  "preventivo_inviato",
+  "in_trattativa",
+]);
 
 export const formatCurrency = (value: number) =>
   value.toLocaleString("it-IT", {
@@ -201,7 +209,9 @@ const addDays = (date: Date, days: number) => {
 
 const diffDays = (from: Date, to: Date) => {
   const msPerDay = 1000 * 60 * 60 * 24;
-  return Math.floor((toStartOfDay(to).valueOf() - toStartOfDay(from).valueOf()) / msPerDay);
+  return Math.floor(
+    (toStartOfDay(to).valueOf() - toStartOfDay(from).valueOf()) / msPerDay,
+  );
 };
 
 const monthKey = (date: Date) =>
@@ -275,27 +285,41 @@ export const buildDashboardModel = ({
   );
   const previousMonthKey = monthKey(previousMonthDate);
 
-  const monthlyTotals = new Map<string, { revenue: number; totalKm: number; kmCost: number }>();
+  const monthlyTotals = new Map<
+    string,
+    { revenue: number; totalKm: number; kmCost: number }
+  >();
   const categoryTotals = new Map<string, number>();
 
   for (const row of monthlyRevenueRows) {
     const rowDate = new Date(row.month);
     if (Number.isNaN(rowDate.valueOf())) continue;
     const key = monthKey(rowDate);
-    const bucket = monthlyTotals.get(key) ?? { revenue: 0, totalKm: 0, kmCost: 0 };
+    const bucket = monthlyTotals.get(key) ?? {
+      revenue: 0,
+      totalKm: 0,
+      kmCost: 0,
+    };
     bucket.revenue += toNumber(row.revenue);
     bucket.totalKm += toNumber(row.total_km);
     bucket.kmCost += toNumber(row.km_cost);
     monthlyTotals.set(key, bucket);
 
     if (rowDate.getFullYear() === selectedYear) {
-      categoryTotals.set(row.category, (categoryTotals.get(row.category) ?? 0) + toNumber(row.revenue));
+      categoryTotals.set(
+        row.category,
+        (categoryTotals.get(row.category) ?? 0) + toNumber(row.revenue),
+      );
     }
   }
 
   const revenueTrend = getSortedMonthStarts(12, referenceDate).map((date) => {
     const key = monthKey(date);
-    const values = monthlyTotals.get(key) ?? { revenue: 0, totalKm: 0, kmCost: 0 };
+    const values = monthlyTotals.get(key) ?? {
+      revenue: 0,
+      totalKm: 0,
+      kmCost: 0,
+    };
     return {
       monthKey: key,
       label: monthLabel(date),
@@ -317,17 +341,22 @@ export const buildDashboardModel = ({
 
   const monthlyRevenueDeltaPct =
     previousMonthTotals.revenue > 0
-      ? ((currentMonthTotals.revenue - previousMonthTotals.revenue) / previousMonthTotals.revenue) * 100
+      ? ((currentMonthTotals.revenue - previousMonthTotals.revenue) /
+          previousMonthTotals.revenue) *
+        100
       : currentMonthTotals.revenue > 0
         ? 100
         : null;
 
-  const annualRevenue = Array.from(monthlyTotals.entries()).reduce((sum, [key, value]) => {
-    if (key.startsWith(`${selectedYear}-`)) {
-      return sum + value.revenue;
-    }
-    return sum;
-  }, 0);
+  const annualRevenue = Array.from(monthlyTotals.entries()).reduce(
+    (sum, [key, value]) => {
+      if (key.startsWith(`${selectedYear}-`)) {
+        return sum + value.revenue;
+      }
+      return sum;
+    },
+    0,
+  );
 
   // Filter payments and quotes by selected year
   const yearPayments = payments.filter((payment) => {
@@ -340,15 +369,21 @@ export const buildDashboardModel = ({
 
   // Exclude refunds from pending alerts (refunds are outgoing, not incoming)
   const pendingPayments = yearPayments.filter(
-    (payment) => payment.status !== "ricevuto" && payment.payment_type !== "rimborso",
+    (payment) =>
+      payment.status !== "ricevuto" && payment.payment_type !== "rimborso",
   );
   const pendingPaymentsTotal = pendingPayments.reduce(
     (sum, payment) => sum + toNumber(payment.amount),
     0,
   );
 
-  const openQuotes = yearQuotes.filter((quote) => !quoteClosedForOpenKpi.has(quote.status));
-  const openQuotesAmount = openQuotes.reduce((sum, quote) => sum + toNumber(quote.amount), 0);
+  const openQuotes = yearQuotes.filter(
+    (quote) => !quoteClosedForOpenKpi.has(quote.status),
+  );
+  const openQuotesAmount = openQuotes.reduce(
+    (sum, quote) => sum + toNumber(quote.amount),
+    0,
+  );
 
   const quotePipelineSeed = new Map<string, QuotePipelinePoint>(
     quotePipelineOrder.map((status) => [
@@ -369,10 +404,16 @@ export const buildDashboardModel = ({
     bucket.amount += toNumber(quote.amount);
   }
 
-  const quotePipeline = quotePipelineOrder.map((status) => quotePipelineSeed.get(status)!);
+  const quotePipeline = quotePipelineOrder.map(
+    (status) => quotePipelineSeed.get(status)!,
+  );
 
-  const projectById = new Map(projects.map((project) => [String(project.id), project]));
-  const clientById = new Map(clients.map((client) => [String(client.id), client]));
+  const projectById = new Map(
+    projects.map((project) => [String(project.id), project]),
+  );
+  const clientById = new Map(
+    clients.map((client) => [String(client.id), client]),
+  );
 
   const topClientRevenue = new Map<string, number>();
   for (const service of services) {
@@ -407,12 +448,18 @@ export const buildDashboardModel = ({
     .map((payment) => {
       const paymentDate = payment.payment_date;
       const parsedDate = paymentDate ? new Date(paymentDate) : null;
-      const validDate = parsedDate && !Number.isNaN(parsedDate.valueOf()) ? parsedDate : null;
-      const clientName = clientById.get(String(payment.client_id))?.name ?? "Cliente";
-      const project = payment.project_id ? projectById.get(String(payment.project_id)) : undefined;
+      const validDate =
+        parsedDate && !Number.isNaN(parsedDate.valueOf()) ? parsedDate : null;
+      const clientName =
+        clientById.get(String(payment.client_id))?.name ?? "Cliente";
+      const project = payment.project_id
+        ? projectById.get(String(payment.project_id))
+        : undefined;
       const daysOffset = validDate ? diffDays(today, validDate) : undefined;
-      const isOverdue = payment.status === "scaduto" || (daysOffset != null && daysOffset < 0);
-      const isDueSoon = daysOffset != null && daysOffset >= 0 && daysOffset <= 14;
+      const isOverdue =
+        payment.status === "scaduto" || (daysOffset != null && daysOffset < 0);
+      const isDueSoon =
+        daysOffset != null && daysOffset >= 0 && daysOffset <= 14;
       const urgency: PaymentAlert["urgency"] = isOverdue
         ? "overdue"
         : isDueSoon
@@ -445,7 +492,9 @@ export const buildDashboardModel = ({
       const daysAhead = diffDays(today, date);
       if (daysAhead < 0 || daysAhead > 14) return null;
       const project = projectById.get(String(service.project_id));
-      const clientName = project ? clientById.get(String(project.client_id))?.name ?? "Cliente" : "Cliente";
+      const clientName = project
+        ? (clientById.get(String(project.client_id))?.name ?? "Cliente")
+        : "Cliente";
       return {
         id: String(service.id),
         serviceDate: service.service_date,

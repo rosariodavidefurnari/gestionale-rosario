@@ -49,12 +49,7 @@ export const defaultFiscalConfig: FiscalConfig = {
       atecoCode: "731102",
       description: "Marketing e servizi pubblicitari",
       coefficienteReddititivita: 78,
-      linkedCategories: [
-        "produzione_tv",
-        "spot",
-        "wedding",
-        "evento_privato",
-      ],
+      linkedCategories: ["produzione_tv", "spot", "wedding", "evento_privato"],
     },
     {
       atecoCode: "621000",

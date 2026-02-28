@@ -54,7 +54,11 @@ export const DashboardFiscalKpis = ({
             {formatCurrency(fiscalKpis.redditoNettoStimato)}
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Badge variant={fiscalKpis.percentualeNetto >= 60 ? "success" : "secondary"}>
+            <Badge
+              variant={
+                fiscalKpis.percentualeNetto >= 60 ? "success" : "secondary"
+              }
+            >
               {Math.round(fiscalKpis.percentualeNetto)}% netto
             </Badge>
             <span>{reliabilityLabel}</span>
@@ -77,9 +81,7 @@ export const DashboardFiscalKpis = ({
             )}
           </div>
           <div className="text-xs text-muted-foreground space-y-0.5">
-            <p>
-              INPS: {formatCurrencyPrecise(fiscalKpis.stimaInpsAnnuale)}
-            </p>
+            <p>INPS: {formatCurrencyPrecise(fiscalKpis.stimaInpsAnnuale)}</p>
             <p>
               Imposta {fiscalKpis.aliquotaSostitutiva}%:{" "}
               {formatCurrencyPrecise(fiscalKpis.stimaImpostaAnnuale)}

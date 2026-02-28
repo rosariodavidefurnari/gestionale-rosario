@@ -42,9 +42,7 @@ const ExpenseIdentityInputs = () => (
       label="Tipo"
       choices={expenseTypeChoices}
       optionText={(choice: { id: string; name: string }) => (
-        <span title={expenseTypeDescriptions[choice.id]}>
-          {choice.name}
-        </span>
+        <span title={expenseTypeDescriptions[choice.id]}>{choice.name}</span>
       )}
       validate={required()}
       helperText={false}
@@ -68,19 +66,9 @@ const ExpenseAmountInputs = () => {
       <h6 className="text-lg font-semibold">
         {isCredit ? "Credito" : "Importo"}
       </h6>
-      {isCredit ? (
-        <CreditSection />
-      ) : isKm ? (
-        <KmSection />
-      ) : (
-        <AmountSection />
-      )}
+      {isCredit ? <CreditSection /> : isKm ? <KmSection /> : <AmountSection />}
       <TextInput source="description" label="Descrizione" helperText={false} />
-      <TextInput
-        source="invoice_ref"
-        label="Rif. Fattura"
-        helperText={false}
-      />
+      <TextInput source="invoice_ref" label="Rif. Fattura" helperText={false} />
     </div>
   );
 };

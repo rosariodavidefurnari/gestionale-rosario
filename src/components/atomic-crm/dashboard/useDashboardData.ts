@@ -1,7 +1,14 @@
 import { useMemo } from "react";
 import { useGetList } from "ra-core";
 
-import type { Client, Expense, Payment, Project, Quote, Service } from "../types";
+import type {
+  Client,
+  Expense,
+  Payment,
+  Project,
+  Quote,
+  Service,
+} from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import {
   buildDashboardModel,

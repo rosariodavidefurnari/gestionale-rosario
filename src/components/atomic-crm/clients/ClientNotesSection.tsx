@@ -28,11 +28,15 @@ export const ClientNotesSection = () => {
     data: notes,
     isPending,
     refetch,
-  } = useGetList<ClientNote>("client_notes", {
-    pagination: { page: 1, perPage: 100 },
-    sort: { field: "date", order: "DESC" },
-    filter: { client_id: record?.id },
-  }, { enabled: !!record?.id });
+  } = useGetList<ClientNote>(
+    "client_notes",
+    {
+      pagination: { page: 1, perPage: 100 },
+      sort: { field: "date", order: "DESC" },
+      filter: { client_id: record?.id },
+    },
+    { enabled: !!record?.id },
+  );
 
   const listContext = useList({
     data: notes,

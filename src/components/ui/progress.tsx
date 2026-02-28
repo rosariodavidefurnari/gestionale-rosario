@@ -4,22 +4,19 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
-const progressIndicatorVariants = cva(
-  "h-full w-full flex-1 transition-all",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary",
-        success: "bg-green-600 dark:bg-green-500",
-        warning: "bg-amber-500 dark:bg-amber-400",
-        destructive: "bg-destructive",
-      },
+const progressIndicatorVariants = cva("h-full w-full flex-1 transition-all", {
+  variants: {
+    variant: {
+      default: "bg-primary",
+      success: "bg-green-600 dark:bg-green-500",
+      warning: "bg-amber-500 dark:bg-amber-400",
+      destructive: "bg-destructive",
     },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+})
 
 function Progress({
   className,

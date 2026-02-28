@@ -26,8 +26,8 @@ export const FiscalSettingsSection = () => {
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Parametri per il calcolo di tasse e contributi nel Regime Forfettario.
-        I dati sono usati nel simulatore fiscale della dashboard.
+        Parametri per il calcolo di tasse e contributi nel Regime Forfettario. I
+        dati sono usati nel simulatore fiscale della dashboard.
       </p>
 
       {/* ATECO Profiles */}

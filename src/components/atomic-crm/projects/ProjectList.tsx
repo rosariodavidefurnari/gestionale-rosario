@@ -54,10 +54,7 @@ const ProjectListActions = () => (
   </TopToolbar>
 );
 
-const exporter: Exporter<Project> = async (
-  records,
-  fetchRelatedRecords,
-) => {
+const exporter: Exporter<Project> = async (records, fetchRelatedRecords) => {
   const clients = await fetchRelatedRecords<Client>(
     records,
     "client_id",

@@ -254,12 +254,8 @@ const QuotePDFDocument = ({
         </View>
         <View>
           <Text style={styles.quoteLabel}>PREVENTIVO</Text>
-          <Text style={styles.quoteNumber}>
-            {fmtQuoteId(String(quote.id))}
-          </Text>
-          <Text style={styles.quoteNumber}>
-            Stato: {statusLabel}
-          </Text>
+          <Text style={styles.quoteNumber}>{fmtQuoteId(String(quote.id))}</Text>
+          <Text style={styles.quoteNumber}>Stato: {statusLabel}</Text>
         </View>
       </View>
 
@@ -270,7 +266,9 @@ const QuotePDFDocument = ({
         <View style={styles.infoBlock}>
           <Text style={styles.infoLabel}>Cliente</Text>
           <Text style={styles.infoBold}>{client?.name ?? "—"}</Text>
-          {client?.address && <Text style={styles.infoText}>{client.address}</Text>}
+          {client?.address && (
+            <Text style={styles.infoText}>{client.address}</Text>
+          )}
           {client?.email && <Text style={styles.infoText}>{client.email}</Text>}
           {client?.phone && <Text style={styles.infoText}>{client.phone}</Text>}
           {client?.tax_id && (
@@ -284,7 +282,12 @@ const QuotePDFDocument = ({
           </Text>
           {quote.event_start && (
             <Text style={styles.infoText}>
-              Evento: {formatDateLong(quote.event_start, quote.event_end, quote.all_day)}
+              Evento:{" "}
+              {formatDateLong(
+                quote.event_start,
+                quote.event_end,
+                quote.all_day,
+              )}
             </Text>
           )}
           {quote.sent_date && (
@@ -317,9 +320,7 @@ const QuotePDFDocument = ({
           <Text style={[{ fontSize: 10 }, styles.colDesc]}>
             {quote.description || "Servizio professionale"}
           </Text>
-          <Text style={[{ fontSize: 10 }, styles.colType]}>
-            {serviceLabel}
-          </Text>
+          <Text style={[{ fontSize: 10 }, styles.colType]}>{serviceLabel}</Text>
           <Text style={[{ fontSize: 10 }, styles.colAmount]}>
             {fmtCurrency(quote.amount)}
           </Text>

@@ -28,9 +28,7 @@ export const DashboardBusinessHealthCard = ({
         <Target className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
         <div className="flex-1 space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">
-              Conversione preventivi
-            </span>
+            <span className="text-sm font-medium">Conversione preventivi</span>
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold">
                 {Math.round(health.quoteConversionRate)}%
@@ -49,15 +47,11 @@ export const DashboardBusinessHealthCard = ({
         <Clock className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
         <div className="flex-1 space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">
-              Tempi medi di incasso
-            </span>
+            <span className="text-sm font-medium">Tempi medi di incasso</span>
             <div className="flex items-center gap-2">
               {health.dso != null ? (
                 <>
-                  <span className="text-sm font-semibold">
-                    {health.dso}g
-                  </span>
+                  <span className="text-sm font-semibold">{health.dso}g</span>
                   <DsoBadge days={health.dso} />
                 </>
               ) : (
@@ -78,9 +72,7 @@ export const DashboardBusinessHealthCard = ({
         <Users className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
         <div className="flex-1 space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">
-              Concentrazione clienti
-            </span>
+            <span className="text-sm font-medium">Concentrazione clienti</span>
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold">
                 {Math.round(health.clientConcentration)}%
@@ -119,15 +111,11 @@ export const DashboardBusinessHealthCard = ({
         <div className="flex items-start gap-3">
           <BarChart3 className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
           <div className="flex-1 space-y-2">
-            <span className="text-sm font-medium">
-              Margine per categoria
-            </span>
+            <span className="text-sm font-medium">Margine per categoria</span>
             <div className="space-y-1.5">
               {health.marginPerCategory.map((cat) => (
                 <div key={cat.category} className="flex items-center gap-2">
-                  <span className="text-xs w-24 truncate">
-                    {cat.label}
-                  </span>
+                  <span className="text-xs w-24 truncate">{cat.label}</span>
                   <Progress
                     value={Math.max(0, Math.min(100, cat.margin))}
                     className="h-1.5 flex-1"

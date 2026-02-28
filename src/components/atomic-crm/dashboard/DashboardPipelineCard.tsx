@@ -11,7 +11,10 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { formatCompactCurrency, type QuotePipelinePoint } from "./dashboardModel";
+import {
+  formatCompactCurrency,
+  type QuotePipelinePoint,
+} from "./dashboardModel";
 
 const positiveStatuses = new Set([
   "accettato",
@@ -33,7 +36,9 @@ export const DashboardPipelineCard = ({
     <Card className="gap-0">
       <CardHeader className="px-4 pb-3">
         <CardTitle className="text-base">Pipeline preventivi</CardTitle>
-        <p className="text-xs text-muted-foreground">Numero trattative per stato</p>
+        <p className="text-xs text-muted-foreground">
+          Numero trattative per stato
+        </p>
       </CardHeader>
       <CardContent className="px-2 pb-2">
         {!chartData.length ? (
@@ -49,8 +54,18 @@ export const DashboardPipelineCard = ({
                 margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
                 barCategoryGap={8}
               >
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} strokeOpacity={0.12} />
-                <XAxis type="number" tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  horizontal={false}
+                  strokeOpacity={0.12}
+                />
+                <XAxis
+                  type="number"
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={12}
+                  allowDecimals={false}
+                />
                 <YAxis
                   type="category"
                   dataKey="label"
@@ -59,10 +74,16 @@ export const DashboardPipelineCard = ({
                   axisLine={false}
                   fontSize={11}
                 />
-                <Tooltip content={<PipelineTooltip />} cursor={{ fill: "rgba(148,163,184,0.12)" }} />
+                <Tooltip
+                  content={<PipelineTooltip />}
+                  cursor={{ fill: "rgba(148,163,184,0.12)" }}
+                />
                 <Bar dataKey="count" radius={[0, 6, 6, 0]}>
                   {chartData.map((item) => (
-                    <Cell key={item.status} fill={getPipelineColor(item.status)} />
+                    <Cell
+                      key={item.status}
+                      fill={getPipelineColor(item.status)}
+                    />
                   ))}
                 </Bar>
               </BarChart>
@@ -82,7 +103,9 @@ const PipelineTooltip = ({ active, payload }: any) => {
     <div className="rounded-lg border bg-background px-3 py-2 shadow-sm">
       <p className="text-xs text-muted-foreground mb-1">{item.label}</p>
       <p className="text-sm font-medium">{item.count} preventivi</p>
-      <p className="text-xs text-muted-foreground">Valore: {formatCompactCurrency(item.amount)}</p>
+      <p className="text-xs text-muted-foreground">
+        Valore: {formatCompactCurrency(item.amount)}
+      </p>
     </div>
   );
 };

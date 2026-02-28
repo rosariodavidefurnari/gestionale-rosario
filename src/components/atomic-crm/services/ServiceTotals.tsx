@@ -6,7 +6,11 @@ export const ServiceTotals = () => {
   const feeOther = useWatch({ name: "fee_other" }) ?? 0;
   const discount = useWatch({ name: "discount" }) ?? 0;
 
-  const total = Number(feeShooting) + Number(feeEditing) + Number(feeOther) - Number(discount);
+  const total =
+    Number(feeShooting) +
+    Number(feeEditing) +
+    Number(feeOther) -
+    Number(discount);
 
   return (
     <div className="text-sm font-medium px-1 pt-1 border-t">

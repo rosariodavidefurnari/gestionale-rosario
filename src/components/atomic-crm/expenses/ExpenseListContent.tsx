@@ -63,13 +63,7 @@ export const ExpenseListContent = () => {
   );
 };
 
-const ExpenseRow = ({
-  expense,
-  link,
-}: {
-  expense: Expense;
-  link: string;
-}) => {
+const ExpenseRow = ({ expense, link }: { expense: Expense; link: string }) => {
   const { data: project } = useGetOne("projects", {
     id: expense.project_id ?? "",
     enabled: !!expense.project_id,

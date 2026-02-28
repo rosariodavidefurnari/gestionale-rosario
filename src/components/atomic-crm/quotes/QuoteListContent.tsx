@@ -9,11 +9,7 @@ import { quoteStatuses } from "./quotesTypes";
 import { getQuotesByStatus, type QuotesByStatus } from "./stages";
 
 export const QuoteListContent = () => {
-  const {
-    data: unorderedQuotes,
-    isPending,
-    refetch,
-  } = useListContext<Quote>();
+  const { data: unorderedQuotes, isPending, refetch } = useListContext<Quote>();
   const dataProvider = useDataProvider();
 
   const [quotesByStatus, setQuotesByStatus] = useState<QuotesByStatus>(
@@ -138,9 +134,7 @@ const updateQuoteStatus = async (
     if (source.index > destinationIndex) {
       await Promise.all([
         ...columnQuotes
-          .filter(
-            (q) => q.index >= destinationIndex && q.index < source.index,
-          )
+          .filter((q) => q.index >= destinationIndex && q.index < source.index)
           .map((q) =>
             dataProvider.update("quotes", {
               id: q.id,
@@ -157,9 +151,7 @@ const updateQuoteStatus = async (
     } else {
       await Promise.all([
         ...columnQuotes
-          .filter(
-            (q) => q.index <= destinationIndex && q.index > source.index,
-          )
+          .filter((q) => q.index <= destinationIndex && q.index > source.index)
           .map((q) =>
             dataProvider.update("quotes", {
               id: q.id,
@@ -188,8 +180,7 @@ const updateQuoteStatus = async (
           filter: { status: destination.status },
         }),
       ]);
-    const destinationIndex =
-      destination.index ?? destinationQuotes.length + 1;
+    const destinationIndex = destination.index ?? destinationQuotes.length + 1;
 
     await Promise.all([
       ...sourceQuotes

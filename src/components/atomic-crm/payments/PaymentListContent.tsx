@@ -54,13 +54,7 @@ export const PaymentListContent = () => {
   );
 };
 
-const PaymentRow = ({
-  payment,
-  link,
-}: {
-  payment: Payment;
-  link: string;
-}) => {
+const PaymentRow = ({ payment, link }: { payment: Payment; link: string }) => {
   const { data: client } = useGetOne("clients", { id: payment.client_id });
   const { data: project } = useGetOne("projects", {
     id: payment.project_id ?? "",
@@ -100,7 +94,8 @@ const PaymentRow = ({
 
 const statusBadgeColors: Record<string, string> = {
   ricevuto: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-  in_attesa: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+  in_attesa:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
   scaduto: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 

@@ -7,9 +7,5 @@ export const TasksListEmpty = () => {
 
   if (total) return null;
 
-  return (
-    <p className="text-sm">
-      I tuoi promemoria appariranno qui.
-    </p>
-  );
+  return <p className="text-sm">I tuoi promemoria appariranno qui.</p>;
 };

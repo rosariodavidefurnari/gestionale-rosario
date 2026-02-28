@@ -26,7 +26,9 @@ export const ClientListFilter = () => {
           <Input
             placeholder="Cerca nome..."
             className="pl-8"
-            value={(filterValues["name@ilike"] as string)?.replace(/%/g, "") ?? ""}
+            value={
+              (filterValues["name@ilike"] as string)?.replace(/%/g, "") ?? ""
+            }
             onChange={handleSearchChange}
           />
         </div>
@@ -55,10 +57,7 @@ export const ClientListFilter = () => {
           ))}
         </FilterSection>
 
-        <FilterSection
-          icon={<Megaphone className="size-4" />}
-          label="Fonte"
-        >
+        <FilterSection icon={<Megaphone className="size-4" />} label="Fonte">
           {clientSourceChoices.map((source) => (
             <FilterBadge
               key={source.id}

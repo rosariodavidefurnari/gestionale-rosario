@@ -210,15 +210,14 @@ export const buildFiscalModel = ({
   const currentMonth = isSelectedCurrentYear ? now.getMonth() + 1 : 12;
   const monthsOfData = Math.max(1, currentMonth);
 
-  const projectById = new Map(
-    projects.map((p) => [String(p.id), p]),
-  );
-  const clientById = new Map(
-    clients.map((c) => [String(c.id), c]),
-  );
+  const projectById = new Map(projects.map((p) => [String(p.id), p]));
+  const clientById = new Map(clients.map((c) => [String(c.id), c]));
 
   // Build category → ATECO profile mapping
-  const categoryToProfile = new Map<string, (typeof fiscalConfig.taxProfiles)[0]>();
+  const categoryToProfile = new Map<
+    string,
+    (typeof fiscalConfig.taxProfiles)[0]
+  >();
   for (const profile of fiscalConfig.taxProfiles) {
     for (const cat of profile.linkedCategories) {
       categoryToProfile.set(cat, profile);
@@ -308,23 +307,17 @@ export const buildFiscalModel = ({
     0,
     redditoLordoForfettario - stimaInpsAnnuale,
   );
-  const stimaImpostaAnnuale =
-    redditoImponibile * (aliquotaSostitutiva / 100);
+  const stimaImpostaAnnuale = redditoImponibile * (aliquotaSostitutiva / 100);
   const redditoNettoStimato =
     fatturatoLordoYtd - stimaInpsAnnuale - stimaImpostaAnnuale;
   const percentualeNetto =
-    fatturatoLordoYtd > 0
-      ? (redditoNettoStimato / fatturatoLordoYtd) * 100
-      : 0;
-  const accantonamentoMensile =
-    (stimaInpsAnnuale + stimaImpostaAnnuale) / 12;
+    fatturatoLordoYtd > 0 ? (redditoNettoStimato / fatturatoLordoYtd) * 100 : 0;
+  const accantonamentoMensile = (stimaInpsAnnuale + stimaImpostaAnnuale) / 12;
   const tettoFatturato =
     fiscalConfig.tettoFatturato > 0 ? fiscalConfig.tettoFatturato : 85000;
   const distanzaDalTetto = tettoFatturato - fatturatoLordoYtd;
   const percentualeUtilizzoTetto =
-    tettoFatturato > 0
-      ? (fatturatoLordoYtd / tettoFatturato) * 100
-      : 0;
+    tettoFatturato > 0 ? (fatturatoLordoYtd / tettoFatturato) * 100 : 0;
 
   // ── ATECO breakdown ───────────────────────────────────────────────
 
@@ -398,9 +391,7 @@ export const buildFiscalModel = ({
   }
   const dso =
     dsoValues.length > 0
-      ? Math.round(
-          dsoValues.reduce((a, b) => a + b, 0) / dsoValues.length,
-        )
+      ? Math.round(dsoValues.reduce((a, b) => a + b, 0) / dsoValues.length)
       : null;
 
   // Client concentration (top 3 / total)
@@ -435,15 +426,13 @@ export const buildFiscalModel = ({
   if (distanzaDalTetto < 0 && fatturatoLordoYtd < 100000) {
     warnings.push({
       type: "ceiling_exceeded",
-      message:
-        "Tetto superato: uscita dal forfettario dall'anno prossimo",
+      message: "Tetto superato: uscita dal forfettario dall'anno prossimo",
     });
   }
   if (fatturatoLordoYtd >= 100000) {
     warnings.push({
       type: "ceiling_critical",
-      message:
-        "Superamento 100K: uscita IMMEDIATA dal regime forfettario",
+      message: "Superamento 100K: uscita IMMEDIATA dal regime forfettario",
     });
   }
 
@@ -508,8 +497,7 @@ const buildDeadlines = ({
 
   // Acconto thresholds for imposta sostitutiva
   const hasDoubleAcconto = stimaImpostaAnnuale > 257.52;
-  const hasSingleAcconto =
-    stimaImpostaAnnuale >= 51.65 && !hasDoubleAcconto;
+  const hasSingleAcconto = stimaImpostaAnnuale >= 51.65 && !hasDoubleAcconto;
 
   // June 30 deadline
   const juneDate = new Date(currentYear, 5, 30); // month is 0-indexed

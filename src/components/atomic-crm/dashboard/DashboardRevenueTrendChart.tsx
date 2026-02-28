@@ -10,7 +10,10 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { formatCompactCurrency, type RevenueTrendPoint } from "./dashboardModel";
+import {
+  formatCompactCurrency,
+  type RevenueTrendPoint,
+} from "./dashboardModel";
 
 export const DashboardRevenueTrendChart = ({
   data,
@@ -20,7 +23,9 @@ export const DashboardRevenueTrendChart = ({
   <Card className="gap-0">
     <CardHeader className="px-4 pb-3">
       <CardTitle className="text-base">Andamento fatturato mensile</CardTitle>
-      <p className="text-xs text-muted-foreground">Ultimi 12 mesi (compensi lordi)</p>
+      <p className="text-xs text-muted-foreground">
+        Ultimi 12 mesi (compensi lordi)
+      </p>
     </CardHeader>
     <CardContent className="px-2 pb-2">
       {data.every((item) => item.revenue === 0) ? (
@@ -28,15 +33,29 @@ export const DashboardRevenueTrendChart = ({
       ) : (
         <div className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 10, right: 12, left: 4, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.18} />
-              <XAxis dataKey="label" tickLine={false} axisLine={false} fontSize={12} />
+            <LineChart
+              data={data}
+              margin={{ top: 10, right: 12, left: 4, bottom: 4 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                strokeOpacity={0.18}
+              />
+              <XAxis
+                dataKey="label"
+                tickLine={false}
+                axisLine={false}
+                fontSize={12}
+              />
               <YAxis
                 tickLine={false}
                 axisLine={false}
                 width={64}
                 fontSize={12}
-                tickFormatter={(value) => formatCompactCurrency(value as number)}
+                tickFormatter={(value) =>
+                  formatCompactCurrency(value as number)
+                }
               />
               <Tooltip content={<RevenueTooltip />} />
               <Line
@@ -62,7 +81,9 @@ const RevenueTooltip = ({ active, payload, label }: any) => {
   return (
     <div className="rounded-lg border bg-background px-3 py-2 shadow-sm">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className="text-sm font-medium">{formatCompactCurrency(point.revenue)}</p>
+      <p className="text-sm font-medium">
+        {formatCompactCurrency(point.revenue)}
+      </p>
       <p className="text-xs text-muted-foreground">
         Rimborso km: {formatCompactCurrency(point.kmCost)}
       </p>

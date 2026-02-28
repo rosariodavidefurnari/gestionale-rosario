@@ -15,7 +15,11 @@ import { Euro } from "lucide-react";
 import type { Project } from "../types";
 
 const eur = (n: number) =>
-  n.toLocaleString("it-IT", { style: "currency", currency: "EUR", minimumFractionDigits: 2 });
+  n.toLocaleString("it-IT", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 2,
+  });
 
 const toNum = (v: unknown) => {
   const n = Number(v);
@@ -164,7 +168,9 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
           <Separator className="my-1" />
           <div className="flex justify-between font-bold">
             <span>Da incassare</span>
-            <span className={balanceDue > 0 ? "text-orange-600" : "text-green-600"}>
+            <span
+              className={balanceDue > 0 ? "text-orange-600" : "text-green-600"}
+            >
               {eur(balanceDue)}
             </span>
           </div>
@@ -247,7 +253,12 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={saving}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={saving}
+            >
               Annulla
             </Button>
             <Button type="submit" disabled={saving || amount <= 0}>

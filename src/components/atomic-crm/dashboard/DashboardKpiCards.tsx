@@ -25,7 +25,8 @@ export const DashboardKpiCards = ({
   compact?: boolean;
 }) => {
   const delta = kpis.monthlyRevenueDeltaPct;
-  const deltaDirection = delta == null ? null : delta > 0 ? "up" : delta < 0 ? "down" : "flat";
+  const deltaDirection =
+    delta == null ? null : delta > 0 ? "up" : delta < 0 ? "down" : "flat";
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -36,10 +37,15 @@ export const DashboardKpiCards = ({
         footer={
           <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
             <span>
-              Km mese: {Math.round(kpis.monthlyKm)} ({formatCompactCurrency(kpis.monthlyKmCost)})
+              Km mese: {Math.round(kpis.monthlyKm)} (
+              {formatCompactCurrency(kpis.monthlyKmCost)})
             </span>
             {deltaDirection ? (
-              <DeltaBadge direction={deltaDirection} value={delta} compact={compact} />
+              <DeltaBadge
+                direction={deltaDirection}
+                value={delta}
+                compact={compact}
+              />
             ) : (
               <Badge variant="secondary">N/D</Badge>
             )}
@@ -92,7 +98,10 @@ const KpiCard = ({
     </CardHeader>
     <CardContent className="px-4 space-y-2">
       <div className="text-2xl font-semibold tracking-tight">{value}</div>
-      {footer ?? (subtitle ? <p className="text-xs text-muted-foreground">{subtitle}</p> : null)}
+      {footer ??
+        (subtitle ? (
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
+        ) : null)}
     </CardContent>
   </Card>
 );
@@ -120,8 +129,7 @@ const DeltaBadge = ({
     <Badge variant={variant} className="gap-1">
       <Icon className="h-3 w-3" />
       {prefix}
-      {Math.round(value)}%
-      {!compact ? " vs mese prec." : ""}
+      {Math.round(value)}%{!compact ? " vs mese prec." : ""}
     </Badge>
   );
 };
