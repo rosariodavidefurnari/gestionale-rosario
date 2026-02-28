@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildQuoteSearchFilter,
   buildPaymentPatchFromQuote,
   shouldClearProjectForClient,
   shouldClearQuoteForClient,
@@ -55,5 +56,12 @@ describe("paymentLinking", () => {
         clientId: "client-2",
       }),
     ).toBe(false);
+  });
+
+  it("builds a quote reference search filter on the quote description", () => {
+    expect(buildQuoteSearchFilter("  Diego TV  ")).toEqual({
+      "description@ilike": "%Diego TV%",
+    });
+    expect(buildQuoteSearchFilter("   ")).toEqual({});
   });
 });

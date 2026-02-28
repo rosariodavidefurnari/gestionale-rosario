@@ -30,6 +30,11 @@ export const buildPaymentPatchFromQuote = ({
   return patch;
 };
 
+export const buildQuoteSearchFilter = (searchText: string) => {
+  const trimmed = searchText.trim();
+  return trimmed ? { "description@ilike": `%${trimmed}%` } : {};
+};
+
 export const shouldClearQuoteForClient = ({
   quote,
   clientId,

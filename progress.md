@@ -3,14 +3,125 @@
 ## Current Phase
 
 🟢 Dashboard storico AI-ready stabile e nuova AI operativa su `Annuale`
-implementata sul solo contesto `annual_operations`, con hardening minimo
-anti-bufala sulle domande libere. Prossimo passo: chiudere il click-test
-browser di Annuale e poi spostare il focus dal prompt tuning al rollout
-`AI-driving` fondato su semantic layer e tool contract. In parallelo è partito
-il primo slice della spina dorsale commerciale `Preventivo -> Progetto ->
-Pagamento`, necessario prima di estendere l'AI al CRM intero.
+implementata sul solo contesto `annual_operations`, con click-test browser
+chiuso anche sul runtime reale. Anche il free-question path di `Storico` è ora
+browser-validato, e il primo slice della spina dorsale commerciale
+`Preventivo -> Progetto -> Pagamento` è validato sul percorso autenticato.
+Prossimo passo: scegliere il prossimo slice commerciale minimo senza riaprire
+l'architettura approvata, tenendo come eventuale lavoro secondario solo il
+polish della UI AI.
 
 ## Last Session
+
+### Sessione 35 (2026-02-28, storico free-question browser validation)
+
+- Completed:
+  - **Click-test browser del free-question path di `Storico` chiuso**:
+    - login autenticato su runtime locale Vite contro il Supabase remoto del
+      repo
+    - apertura tab `Storico`
+    - inserimento manuale di una domanda libera nel textarea
+    - invio della richiesta dalla UI reale
+    - risposta AI renderizzata correttamente in browser
+  - **Evidenza raccolta sul comportamento reale**:
+    - modello usato: `gpt-5.2`
+    - risposta in italiano semplice
+    - contenuto ancorato ai dati storici visibili
+    - nessun errore console emerso nel flusso Q&A
+
+- Validation:
+  - click-test browser autenticato OK su `2026-02-28`
+  - utente temporaneo creato via `service_role` e poi pulito
+  - domanda usata nel test:
+    - `Quali anni sono andati meglio e per quale motivo, spiegato in modo semplice?`
+  - risposta osservata:
+    - identificazione del `2025` come anno migliore rispetto al `2024`
+    - motivazione principale legata alla crescita della `produzione TV`
+
+- Decisions:
+  - il free-question path di `Storico` è ora considerato chiuso anche lato
+    browser, non solo via test e smoke remoto
+  - il prossimo task primario diventa la scelta del prossimo slice commerciale
+    minimo
+
+- Notes:
+  - per pulire utenti temporanei creati via admin API sul progetto remoto
+    conviene cancellare prima la riga dipendente in `sales` e poi l'utente auth,
+    altrimenti il vincolo FK blocca la delete
+  - per il toggle `Annuale | Storico` è più robusto usare il locator basato su
+    `aria-label` nelle smoke browser future
+
+- Next action:
+  - scegliere il prossimo slice commerciale minimo:
+    - `smart-link / quick payment` dal preventivo
+    - oppure `quote_items`
+  - solo se utile dopo review:
+    - polish prompt/markdown delle card AI
+
+### Sessione 34 (2026-02-28, browser validation + runtime fixes)
+
+- Completed:
+  - **Click-test browser commerciale chiuso sul percorso reale**:
+    - creato progetto da un preventivo senza `project_id`
+    - verificato il ritorno del link progetto nella scheda preventivo
+    - aperto `PaymentCreate`
+    - selezionato il preventivo collegato
+    - verificato l'allineamento automatico di:
+      - cliente
+      - progetto
+    - salvato un pagamento e verificata la presenza dei link a:
+      - progetto
+      - preventivo
+  - **Click-test browser Annuale AI chiuso**:
+    - generata la spiegazione guidata su `Annuale`
+    - inviata una domanda suggerita
+    - verificato che la risposta resti nel perimetro operativo
+  - **Bug runtime emersi dallo smoke e corretti**:
+    - `CreateProjectFromQuoteDialog` assumeva che `useCreate(..., { returnPromise: true })`
+      restituisse sempre `{ data }`
+    - nel runtime reale arrivava invece il record diretto
+    - fix:
+      - normalizzazione del risultato mutation prima di leggere `id`
+    - il lookup preventivi nel form pagamenti usava il filtro generico `q`
+    - nel runtime reale il resource `quotes` non rendeva trovabile in modo
+      affidabile la descrizione appena creata
+    - fix:
+      - ricerca esplicita su `description@ilike`
+  - **Test di regressione aggiunti**:
+    - `CreateProjectFromQuoteDialog.test.tsx`
+    - `paymentLinking.test.ts` esteso per il filtro ricerca preventivo
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/quotes/CreateProjectFromQuoteDialog.test.tsx src/components/atomic-crm/quotes/quoteProjectLinking.test.ts src/components/atomic-crm/payments/paymentLinking.test.ts` OK
+  - totale: `8` test verdi
+  - smoke browser autenticato OK su `2026-02-28`:
+    - runtime locale Vite contro il Supabase remoto configurato dal repo
+    - utente temporaneo creato via `service_role`
+    - record temporanei creati e poi puliti
+    - commercial chain `Quote -> Project -> Payment` verificata
+    - `Annuale` AI summary + suggested question verificate
+
+- Decisions:
+  - non riaprire ora l'architettura commerciale oltre il grafo minimo già
+    approvato
+  - mantenere `Annuale` AI sul solo contesto `annual_operations`
+  - spostare il prossimo sforzo AI lato browser sul free-question path di
+    `Storico`
+
+- Notes:
+  - il repo gira in hash routing (`/#/`), dettaglio utile per futuri smoke
+    browser automatizzati
+  - per i test remoti con dati temporanei conviene sempre creare record con
+    prefisso univoco e pulirli a fine run
+  - la baseline stabile pubblicata resta `83a3308` finché l'utente non chiede
+    commit/push
+
+- Next action:
+  - click-test browser del free-question path in `Storico`
+  - poi scegliere il prossimo slice commerciale minimo:
+    - `smart-link / quick payment` dal preventivo
+    - oppure `quote_items`
 
 ### Sessione 30 (2026-02-28, annual semantic normalization)
 

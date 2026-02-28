@@ -40,6 +40,11 @@ type ProjectFormState = {
   notes: string;
 };
 
+const getMutationRecord = <T extends object>(result: T | { data: T }) =>
+  result && typeof result === "object" && "data" in result
+    ? result.data
+    : result;
+
 const getErrorMessage = (error: unknown, fallback: string) =>
   error && typeof error === "object" && "message" in error && error.message
     ? String(error.message)
@@ -147,7 +152,7 @@ export const CreateProjectFromQuoteDialog = ({
     setSaving(true);
 
     try {
-      const createdProject = await create(
+      const createdProjectResult = await create(
         "projects",
         {
           data: {
@@ -166,13 +171,20 @@ export const CreateProjectFromQuoteDialog = ({
         },
         { returnPromise: true },
       );
+      const createdProject = getMutationRecord(createdProjectResult);
+
+      if (!createdProject?.id) {
+        throw new Error(
+          "Progetto creato, ma la risposta non contiene un id valido.",
+        );
+      }
 
       try {
         await update(
           "quotes",
           {
             id: quote.id,
-            data: { project_id: createdProject.data.id },
+            data: { project_id: createdProject.id },
             previousData: quote,
           },
           { returnPromise: true },

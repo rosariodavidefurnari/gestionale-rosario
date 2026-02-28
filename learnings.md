@@ -10,6 +10,29 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Negli smoke remoti con utenti temporanei creati via admin API,
+  la cleanup va fatta `sales` -> `auth.users`** — Sul progetto remoto, la
+  cancellazione diretta dell'utente auth fallisce con vincolo
+  `sales_user_id_fkey` se esiste ancora la riga dipendente in `sales`. Per
+  evitare utenti sporchi nei test browser autenticati, eliminare prima il
+  record `sales` e solo dopo l'utente in `auth.users`.
+
+- [2026-02-28] **Con `useCreate(..., { returnPromise: true })` non assumere
+  sempre la shape `{ data }` nel runtime reale** — Nel dialog
+  `CreateProjectFromQuoteDialog` il progetto veniva creato davvero, ma il link
+  al preventivo falliva perché il codice leggeva `createdProject.data.id`.
+  Nello smoke browser reale la mutation risolveva invece il record diretto.
+  Quando un flusso dipende dall'id appena creato, normalizzare esplicitamente
+  il risultato prima di usarlo.
+
+- [2026-02-28] **Nei `ReferenceInput` Supabase con lookup critico usare un
+  `filterToQuery` esplicito, non il fallback generico `q`** — Nel form
+  pagamenti, il preventivo appena creato non risultava trovabile in modo
+  affidabile cercando per descrizione finché l'autocomplete usava il filtro
+  di default. Per lookup business-critical conviene dichiarare il campo vero,
+  per esempio `description@ilike`, invece di sperare che il resource supporti
+  bene `q`.
+
 - [2026-02-28] **Prima di rendere un CRM `AI-driving`, chiudi la spina dorsale
   commerciale minima con link espliciti tra moduli** — In questo repo, il primo
   salto di qualità non è stato "più AI", ma introdurre un collegamento nativo

@@ -282,6 +282,55 @@ Important scope decision:
 - this was the smallest safe slice to strengthen module integration before
   broader AI expansion.
 
+### Browser click-tests now completed on both active tracks
+
+What was verified in the real authenticated UI on `2026-02-28`:
+
+- commercial backbone:
+  - opened a quote without `project_id`
+  - created a project from `CreateProjectFromQuoteDialog`
+  - verified the quote now exposes the linked project CTA
+  - opened payment create
+  - selected the linked quote
+  - verified autofill/alignment of:
+    - `client_id`
+    - `project_id`
+  - saved a payment and verified payment show renders links to:
+    - the project
+    - the quote
+- annual AI track:
+  - opened `Annuale`
+  - generated the guided explanation
+  - submitted one suggested question
+  - verified the answer stayed in the operational scope and did not drift into:
+    - fiscal simulation
+    - alert snapshot wording
+- historical AI follow-up:
+  - opened `Storico`
+  - typed a free question manually instead of using only suggested prompts
+  - verified the answer rendered in-browser with model `gpt-5.2`
+  - verified the wording stayed in plain Italian and remained grounded in the
+    visible historical data
+  - no browser console errors were observed during the free-question path
+
+Runtime issues discovered and fixed during the browser smoke:
+
+- `CreateProjectFromQuoteDialog` assumed `useCreate(..., { returnPromise: true })`
+  always returned `{ data }`
+- in the real runtime it resolved to the record directly, so quote linking
+  failed on `createdProject.data.id`
+- fix applied:
+  - normalize the mutation result before reading the created project id
+  - added regression test:
+    - `src/components/atomic-crm/quotes/CreateProjectFromQuoteDialog.test.tsx`
+- `PaymentInputs` used the generic autocomplete `q` search for quotes
+- on the Supabase `quotes` resource this did not reliably find the quote by
+  description during the real browser flow
+- fix applied:
+  - added a quote-specific `filterToQuery` on `description@ilike`
+  - added regression coverage in:
+    - `src/components/atomic-crm/payments/paymentLinking.test.ts`
+
 ### Tests added
 
 - `src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
@@ -291,6 +340,9 @@ Important scope decision:
 - `src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts`
 - `src/lib/analytics/buildAnnualOperationsContext.test.ts`
 - `src/components/atomic-crm/dashboard/DashboardAnnualAiSummaryCard.test.tsx`
+- `src/components/atomic-crm/quotes/quoteProjectLinking.test.ts`
+- `src/components/atomic-crm/payments/paymentLinking.test.ts`
+- `src/components/atomic-crm/quotes/CreateProjectFromQuoteDialog.test.tsx`
 
 Covered today:
 
@@ -311,6 +363,8 @@ Covered today:
 - annual fiscal/business-health selected-year filtering,
 - annual AI context caveats and metric serialization,
 - annual AI card summary/question triggers.
+- quote -> project linking from direct `useCreate` mutation result.
+- quote autocomplete search in the payment form by description.
 
 ## Validation Done
 
@@ -330,6 +384,10 @@ Successful commands:
 - `npx supabase functions deploy historical_analytics_answer --project-ref qvdmzhyzpyaveniirsmo`
 - `npx supabase functions deploy annual_operations_summary --project-ref qvdmzhyzpyaveniirsmo`
 - `npx supabase functions deploy annual_operations_answer --project-ref qvdmzhyzpyaveniirsmo`
+- authenticated browser smoke on the local Vite runtime against the linked
+  Supabase project for:
+  - `Quote -> Project -> Payment`
+  - `Annuale` AI card
 
 ### Remote verification completed on linked project
 
@@ -400,8 +458,8 @@ Inference from the repository policies:
   - the visible answer remains aligned with the approved semantics,
 - therefore the guided historical AI summary flow is now verified both at
   remote runtime level and at browser click-path level,
-- the new free-question flow is verified at remote runtime level, but in this
-  session it was not click-tested manually in the browser.
+- the new free-question flow is now also verified on the real authenticated
+  browser path with a typed question, not only by remote smoke.
 - after the plain-language prompt rewrite, the remote function was redeployed
   and returned a simpler answer starting with:
   - `## In breve`
@@ -415,6 +473,10 @@ Inference from the repository policies:
   - the summary started with `## In breve`,
   - the answer started with `## Risposta breve`,
   - and the answer did not drift into fiscal simulation wording.
+- a later authenticated browser smoke on `2026-02-28` also verified both live
+  click-paths end-to-end with temporary records/users and cleanup after the run:
+  - commercial chain `Quote -> Project -> Payment`
+  - annual AI guided summary + one suggested question
 
 ### Remote AI runtime note
 
@@ -511,8 +573,11 @@ Impact:
 - The browser output is now understandable for non-expert users, but markdown
   readability may still deserve further polish only if product wants a denser
   or more scannable layout.
-- The free-question path was smoke-tested remotely but not manually click-tested
-  in the browser during this session.
+- Temporary remote auth smoke users created via admin APIs require cleanup in
+  this order on the linked project:
+  - delete the dependent `sales` row first
+  - then delete the auth user
+  - otherwise `sales_user_id_fkey` blocks the auth-user deletion
 
 ## Recommended Next Session Order
 
@@ -523,17 +588,17 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Manually click-test the new Annuale AI card in the browser and collect
-   evidence.
-2. Only if useful after review, manually click-test the new free-question path
-   in the Storico browser flow and collect evidence.
-3. Only if useful after review, polish prompt/copy or markdown presentation of
+1. Choose the next small commercial backbone slice without reopening the
+   architecture:
+   - `smart-link / quick payment` from quote
+   - or `quote_items` as builder foundation
+2. Only if useful after review, polish prompt/copy or markdown presentation of
    the historical or annual AI cards further.
-4. Keep the new historical and annual semantic tests updated whenever the
+3. Keep the new historical and annual semantic tests updated whenever the
    widgets evolve.
-5. Only later, if useful, evolve the current single-turn cards into a
+4. Only later, if useful, evolve the current single-turn cards into a
    conversational assistant flow.
-6. Only later, if the product scope changes, revisit FakeRest/demo historical
+5. Only later, if the product scope changes, revisit FakeRest/demo historical
    support.
 
 ## Quick Resume Checklist
@@ -545,7 +610,6 @@ Stable rollback note:
 - Read the backlog:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
-  - browser click-test of the Annuale AI card
-  - optional browser click-test of the free-question path
+  - choosing the next narrow commercial backbone slice
   - optional AI card readability polish
   - keeping historical and annual semantic tests aligned with future widget changes

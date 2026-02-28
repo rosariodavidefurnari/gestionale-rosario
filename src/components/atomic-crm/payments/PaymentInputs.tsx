@@ -18,6 +18,7 @@ import {
   paymentStatusChoices,
 } from "./paymentTypes";
 import {
+  buildQuoteSearchFilter,
   buildPaymentPatchFromQuote,
   shouldClearProjectForClient,
   shouldClearQuoteForClient,
@@ -127,6 +128,7 @@ const LinkedQuoteInput = () => {
         helperText={false}
         placeholder="Seleziona un preventivo"
         parse={toOptionalIdentifier}
+        filterToQuery={buildQuoteSearchFilter}
         optionText={(quote?: Quote) => {
           if (!quote) return "Preventivo";
           const description = quote.description?.trim() || "Preventivo";

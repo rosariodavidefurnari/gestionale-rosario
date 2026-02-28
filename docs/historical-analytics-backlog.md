@@ -31,7 +31,11 @@ The implementation is now functionally closed for v1:
 - the AI summary card has basic readability polish applied,
 - and the historical AI surface now supports both guided summary and a
   single-turn free question constrained to historical data and already verified
-  by authenticated remote smoke.
+  by authenticated remote smoke and real browser click-test.
+- the commercial backbone slice `Quote -> Project -> Payment` is now
+  browser-validated too,
+- and the `Annuale` AI card is now browser-validated on the real authenticated
+  UI path.
 
 The next work is optional refinement or future expansion, not a missing core
 piece of the shipped flow.
@@ -268,69 +272,73 @@ Ask the new session to:
   - this is only the first integration slice
   - `quote_items` and full quote-builder automation are still open future work
 
+### Browser click-test of the commercial flow completed
+
+- Real authenticated browser smoke completed on `2026-02-28`
+- Verified end-to-end path:
+  - quote without `project_id`
+  - project creation from quote
+  - linked project visible back on the quote
+  - payment creation with quote-driven alignment of client/project
+  - payment show visibility for both linked project and linked quote
+- Runtime fixes discovered and applied during the smoke:
+  - `CreateProjectFromQuoteDialog` now supports direct mutation records, not
+    only `{ data }`
+  - quote autocomplete in `PaymentInputs` now searches explicitly on
+    `description@ilike`
+- Added regression coverage:
+  - `CreateProjectFromQuoteDialog.test.tsx`
+  - `paymentLinking.test.ts`
+
+### Browser click-test of the Annuale AI flow completed
+
+- Real authenticated browser smoke completed on `2026-02-28`
+- Verified path:
+  - open `Annuale`
+  - generate the guided explanation
+  - submit one suggested question
+  - confirm the answer stays inside the operational context
+    without drifting into fiscal simulation or alert wording
+
+### Browser click-test of the Storico free-question flow completed
+
+- Real authenticated browser click-test completed on `2026-02-28`
+- Verified path:
+  - open `Storico`
+  - type a manual free question in the textarea
+  - submit the request from the real UI
+  - verify the answer renders correctly in the browser runtime
+- Evidence collected:
+  - answer returned on model `gpt-5.2`
+  - wording stayed in plain Italian and grounded itself in visible historical
+    year/category data
+  - no browser console errors were observed during the Q&A path
+
 ## Priority 1
 
-### Browser click-test of the new quote/project/payment flow
+### Choose the next commercial backbone slice
 
 Why:
 
-- the first commercial backbone slice is implemented and typechecked,
-- the remote migration is applied,
-- but the new UX path has not yet been manually click-tested in the browser.
+- slice 1 is now implemented and browser-validated,
+- so the next commercial step should stay narrow and explicit instead of
+  reopening the architecture.
 
 Tasks:
 
-- open a quote without `project_id`,
-- create a project from the quote dialog,
-- verify the quote now shows the linked project,
-- open payment create/edit and verify quote selection aligns client/project.
+- choose only one near-term slice:
+  - `smart-link / quick payment` from quote
+  - or `quote_items` as builder foundation
+- keep the same rule:
+  - reduce clicks,
+  - but avoid forced automations with ambiguous interpretation.
 
 Acceptance:
 
-- the commercial chain `Quote -> Project -> Payment` is proven usable in the
-  real UI, not only in code.
+- the next commercial increment is clearly scoped without diluting the current
+  stable chain.
 
 ## Priority 2
-
-### Optional browser click-test of the Annuale AI flow
-
-Why:
-
-- the new annual AI flow is covered by tests and authenticated remote smoke,
-- but in this session it was not manually click-tested in the browser.
-
-Tasks:
-
-- open `Annuale`,
-- generate the guided explanation,
-- submit one suggested question,
-- verify the answer stays in the operational scope.
-
-Acceptance:
-
-- the annual AI flow is verified in the real browser runtime, not only in
-  tests/remoto.
-
-## Priority 3
-
-### Optional browser click-test of the free-question path
-
-Why:
-
-- the new Q&A flow is verified by tests and authenticated remote smoke,
-- but in this session it was not manually click-tested in the browser.
-
-Tasks:
-
-- open `Storico`,
-- type or click a suggested question,
-- verify the answer renders correctly in the real browser runtime.
-
-Acceptance:
-
-- the free-question path is verified in the real UI, not only in tests/remoto.
-
-## Priority 3
 
 ### Optional prompt / markdown polish of the AI card
 
@@ -350,7 +358,7 @@ Acceptance:
 - the generated summary/answer is easier to scan without changing business
   logic.
 
-## Priority 4
+## Priority 3
 
 ### Keep the new UI tests updated if widgets evolve
 
@@ -370,7 +378,7 @@ Acceptance:
 
 - regressions in copy or semantic rendering keep getting caught before shipping.
 
-## Priority 5
+## Priority 4
 
 ### Revisit FakeRest/demo only if scope changes
 
