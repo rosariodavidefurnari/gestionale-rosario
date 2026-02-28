@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useGetList } from "ra-core";
 
-import type { Client, Payment, Project, Quote, Service } from "../types";
+import type { Client, Expense, Payment, Project, Quote, Service } from "../types";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 import {
   buildDashboardModel,
   type DashboardModel,
@@ -11,6 +12,8 @@ import {
 const LARGE_PAGE = { page: 1, perPage: 1000 };
 
 export const useDashboardData = () => {
+  const { fiscalConfig } = useConfigurationContext();
+
   const monthlyRevenueQuery = useGetList<MonthlyRevenueRow>("monthly_revenue", {
     pagination: { page: 1, perPage: 500 },
     sort: { field: "month", order: "DESC" },
@@ -41,6 +44,11 @@ export const useDashboardData = () => {
     sort: { field: "created_at", order: "DESC" },
   });
 
+  const expensesQuery = useGetList<Expense>("expenses", {
+    pagination: LARGE_PAGE,
+    sort: { field: "expense_date", order: "DESC" },
+  });
+
   const isPending = [
     monthlyRevenueQuery,
     paymentsQuery,
@@ -48,6 +56,7 @@ export const useDashboardData = () => {
     servicesQuery,
     projectsQuery,
     clientsQuery,
+    expensesQuery,
   ].some((query) => query.isPending);
 
   const error =
@@ -56,7 +65,8 @@ export const useDashboardData = () => {
     quotesQuery.error ||
     servicesQuery.error ||
     projectsQuery.error ||
-    clientsQuery.error;
+    clientsQuery.error ||
+    expensesQuery.error;
 
   const data = useMemo<DashboardModel | null>(() => {
     if (
@@ -65,7 +75,8 @@ export const useDashboardData = () => {
       !quotesQuery.data ||
       !servicesQuery.data ||
       !projectsQuery.data ||
-      !clientsQuery.data
+      !clientsQuery.data ||
+      !expensesQuery.data
     ) {
       return null;
     }
@@ -77,9 +88,13 @@ export const useDashboardData = () => {
       services: servicesQuery.data,
       projects: projectsQuery.data,
       clients: clientsQuery.data,
+      expenses: expensesQuery.data,
+      fiscalConfig,
     });
   }, [
     clientsQuery.data,
+    expensesQuery.data,
+    fiscalConfig,
     monthlyRevenueQuery.data,
     paymentsQuery.data,
     projectsQuery.data,
@@ -98,6 +113,7 @@ export const useDashboardData = () => {
       void servicesQuery.refetch();
       void projectsQuery.refetch();
       void clientsQuery.refetch();
+      void expensesQuery.refetch();
     },
   };
 };

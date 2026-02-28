@@ -1,8 +1,17 @@
 import { format } from "date-fns";
 import { it as itLocale } from "date-fns/locale";
 
-import type { Client, Payment, Project, Quote, Service } from "../types";
+import type {
+  Client,
+  Expense,
+  FiscalConfig,
+  Payment,
+  Project,
+  Quote,
+  Service,
+} from "../types";
 import { quoteStatusLabels } from "../quotes/quotesTypes";
+import { buildFiscalModel, type FiscalModel } from "./fiscalModel";
 
 export type MonthlyRevenueRow = {
   id?: string | number;
@@ -20,6 +29,7 @@ export type DashboardModel = {
   quotePipeline: QuotePipelinePoint[];
   topClients: TopClientPoint[];
   alerts: DashboardAlerts;
+  fiscal: FiscalModel | null;
 };
 
 export type DashboardKpis = {
@@ -227,6 +237,8 @@ export const buildDashboardModel = ({
   services,
   projects,
   clients,
+  expenses,
+  fiscalConfig,
 }: {
   monthlyRevenueRows: MonthlyRevenueRow[];
   payments: Payment[];
@@ -234,6 +246,8 @@ export const buildDashboardModel = ({
   services: Service[];
   projects: Project[];
   clients: Client[];
+  expenses: Expense[];
+  fiscalConfig?: FiscalConfig;
 }): DashboardModel => {
   const now = new Date();
   const today = toStartOfDay(now);
@@ -441,6 +455,18 @@ export const buildDashboardModel = ({
     .sort((a, b) => b.daysWaiting - a.daysWaiting)
     .slice(0, 6);
 
+  const fiscal = fiscalConfig
+    ? buildFiscalModel({
+        services,
+        expenses,
+        payments,
+        quotes,
+        projects,
+        clients,
+        fiscalConfig,
+      })
+    : null;
+
   return {
     kpis: {
       monthlyRevenue: currentMonthTotals.revenue,
@@ -463,5 +489,6 @@ export const buildDashboardModel = ({
       upcomingServices,
       unansweredQuotes,
     },
+    fiscal,
   };
 };
