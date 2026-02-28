@@ -10,6 +10,49 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Per un prodotto che vuole diventare `AI-driving`, il prompt
+  tuning ha valore solo come hardening minimo anti-bufala** — Dopo i primi casi
+  reali su `Annuale`, migliorare il prompt aiutava ma non cambiava la natura del
+  sistema. La parte durevole resta: contesto semantico corretto, tool contract,
+  drill-down affidabili. Il prompting va usato per bloccare le derive evidenti,
+  non come leva principale di prodotto.
+
+- [2026-02-28] **Per domande libere ambigue conviene introdurre una
+  reinterpretazione server-side prima del modello** — Nel Q&A annuale, frasi
+  come `Qual è il punto più debole da controllare?` spingevano il modello verso
+  diagnosi troppo assertive. Una riformulazione interna guidata dal contesto
+  (`segnale più fragile visibile nei dati`, `non trattare gli zeri come
+  problemi automatici`) ha corretto il comportamento meglio di un semplice
+  ritocco del prompt generale.
+
+- [2026-02-28] **Se una funzione appena deployata non viene trovata, verificare
+  subito `supabase functions list` invece di fidarsi del solo messaggio finale
+  del deploy** — Nel rollout di `annual_operations_summary`, il CLI ha stampato
+  un esito apparentemente positivo ma la funzione non risultava davvero tra le
+  function attive del progetto. Il controllo con `functions list` ha evitato di
+  inseguire falsi bug nel codice applicativo.
+
+- [2026-02-28] **Per i campi `asOfDate` business-critical non usare
+  `toISOString().slice(0, 10)` se la semantica è locale** — Nel model
+  annuale, con timer fissato al `2026-02-28` in Europa/Roma, `toISOString()`
+  riportava `2026-02-27` in test a causa della conversione UTC. Per date di
+  business che devono rappresentare il giorno locale, serve un helper
+  `YYYY-MM-DD` costruito con `getFullYear/getMonth/getDate`.
+
+- [2026-02-28] **Una dashboard annuale non è automaticamente AI-ready solo
+  perché “sembra ordinata”** — In `Annuale` convivevano nello stesso schermo:
+  valore del lavoro, incassi attesi, pipeline e simulazione fiscale. Prima di
+  esporre l'AI bisogna separare i blocchi semantici e normalizzare la base dei
+  ricavi; altrimenti il modello tende a fondere numeri veri ma di natura
+  diversa in una spiegazione sbagliata.
+
+- [2026-02-28] **Per una vista mista, il primo consumer AI va limitato al
+  sottoinsieme semanticamente piu pulito** — In `Annuale` la scelta corretta
+  non e stata “spiega tutta la pagina”, ma costruire un contesto
+  `annual_operations` che includesse solo lavoro dell'anno, categorie, clienti,
+  pagamenti da ricevere e preventivi aperti, lasciando fuori alert giornalieri
+  e simulazione fiscale.
+
 - [2026-02-28] **Quando estendi un flow AI già stabile, aggiungi una Edge
   Function separata invece di mutare quella esistente** — Per introdurre le
   domande libere sullo storico senza rischiare regressioni sul riepilogo già

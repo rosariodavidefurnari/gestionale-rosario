@@ -36,6 +36,14 @@ The implementation is now functionally closed for v1:
 The next work is optional refinement or future expansion, not a missing core
 piece of the shipped flow.
 
+Cross-surface note:
+
+- `Storico` is AI-enabled end-to-end.
+- `Annuale` now has a first AI-enabled flow too, but only on the dedicated
+  `annual_operations` context.
+- `Annuale` is still **not** AI-enabled as a whole page: alert snapshot and
+  fiscal simulation remain deliberately outside that context.
+
 ## How To Use This Backlog In A New Chat
 
 Ask the new session to:
@@ -172,7 +180,101 @@ Ask the new session to:
   - root cause was missing remote deploy, not broken code
   - redeploy fixed it immediately
 
+### Annual dashboard semantic normalization added
+
+- Removed the annual runtime dependency on `monthly_revenue` for KPI/chart/core
+  operational calculations
+- Annual operational numbers now derive from `services` directly with one
+  consistent basis:
+  - fee net of discount
+- For the current year:
+  - future services later in the year are excluded from operational totals
+  - the chart window is the selected-year window up to today, not trailing 12
+    months
+- The annual UI now explains the meaning of each block more clearly:
+  - value of work
+  - cash expected
+  - pipeline potential
+  - fiscal simulation
+- `BusinessHealth` metrics now respect the selected year for:
+  - quote conversion rate
+  - weighted pipeline value
+  - DSO
+- Added defensive migration:
+  - `20260228150000_normalize_monthly_revenue_net_basis.sql`
+- Added tests:
+  - `dashboardAnnualModel.test.ts`
+- Important scope note:
+  - this did **not** make `Annuale` AI-ready as a single context
+  - it only made the operational core stable enough for a future
+    `annual_operations` context
+
+### Annual operations AI flow added
+
+- Added context builder:
+  - `buildAnnualOperationsContext()`
+- Added provider methods:
+  - `getAnnualOperationsAnalyticsContext(year)`
+  - `generateAnnualOperationsAnalyticsSummary(year)`
+  - `askAnnualOperationsQuestion(year, question)`
+- Added Edge Functions:
+  - `annual_operations_summary`
+  - `annual_operations_answer`
+- Added UI consumer:
+  - `DashboardAnnualAiSummaryCard`
+- Added tests:
+  - `buildAnnualOperationsContext.test.ts`
+  - `DashboardAnnualAiSummaryCard.test.tsx`
+- Added remote deploy + authenticated smoke on `2026-02-28`:
+  - year used in smoke: `2025`
+  - summary returned `200 OK`
+  - answer returned `200 OK`
+  - model resolved to `gpt-5.2`
+  - output stayed in the operational domain and did not drift into fiscal
+    simulation
+- Important scope rule preserved:
+  - Annuale AI reads only `annual_operations`
+  - it does not include the fiscal simulator
+  - it does not include current-day alerts
+
+### Annuale hardening applied after real user answers
+
+- Added shared guidance helper:
+  - `supabase/functions/_shared/annualOperationsAiGuidance.ts`
+- Added internal question reframing before the annual Q&A OpenAI call
+- Tightened suggested questions so they reflect:
+  - closed year vs current year
+- Re-tested remotely on the problematic 2025 question set
+- Scope decision:
+  - keep only minimal anti-bufala prompt hardening
+  - do not keep polishing this temporary UI indefinitely
+  - move future effort toward `AI-driving` foundations:
+    - semantic layer
+    - tool contract
+    - drill-down data contracts
+
 ## Priority 1
+
+### Optional browser click-test of the Annuale AI flow
+
+Why:
+
+- the new annual AI flow is covered by tests and authenticated remote smoke,
+- but in this session it was not manually click-tested in the browser.
+
+Tasks:
+
+- open `Annuale`,
+- generate the guided explanation,
+- submit one suggested question,
+- verify the answer stays in the operational scope.
+
+Acceptance:
+
+- the annual AI flow is verified in the real browser runtime, not only in
+  tests/remoto.
+
+## Priority 2
 
 ### Optional browser click-test of the free-question path
 
@@ -191,7 +293,7 @@ Acceptance:
 
 - the free-question path is verified in the real UI, not only in tests/remoto.
 
-## Priority 2
+## Priority 3
 
 ### Optional prompt / markdown polish of the AI card
 
@@ -211,7 +313,7 @@ Acceptance:
 - the generated summary/answer is easier to scan without changing business
   logic.
 
-## Priority 3
+## Priority 4
 
 ### Keep the new UI tests updated if widgets evolve
 
@@ -224,13 +326,14 @@ Why:
 Tasks:
 
 - when historical widgets change, update the UI tests in the same branch,
-- keep coverage for empty/error/YTD/YoY semantics and the AI card actions.
+- keep coverage for empty/error/YTD/YoY semantics and the AI card actions,
+- keep the new annual semantic tests aligned with future changes to `Annuale`.
 
 Acceptance:
 
 - regressions in copy or semantic rendering keep getting caught before shipping.
 
-## Priority 4
+## Priority 5
 
 ### Revisit FakeRest/demo only if scope changes
 
@@ -249,13 +352,15 @@ Acceptance:
 - demo mode does not expose a broken historical tab if the product scope starts
   caring about demo parity.
 
-## Priority 5
+## Priority 6
 
 ### Expand analytics surface / assistant UX
 
 Only after the base is stable:
 
 - add `incassi` historical views,
+- keep `Annuale` AI scoped to `annual_operations` until dedicated contexts are
+  designed for alerts/fiscal,
 - add `YTD vs same period last year`,
 - add client concentration historical KPIs,
 - add category trend commentary for the future AI assistant,

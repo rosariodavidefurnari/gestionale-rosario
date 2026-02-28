@@ -129,12 +129,124 @@ Current behavior:
   memory between turns,
 - there is still no multi-turn conversational assistant/chat flow in the UI.
 
+### Annual dashboard normalization completed before any AI rollout there
+
+Important constraint discovered after the historical flow shipped:
+
+- `Annuale` was not semantically safe enough for AI as-is,
+- it mixed operational revenue, pending cash collection, quote pipeline,
+  current alerts, and fiscal simulation in one screen,
+- and some parts did not even share the same revenue basis or selected-year
+  filter.
+
+Fixes now applied in code:
+
+- annual operational revenue is derived directly from `services`, not from the
+  aggregated `monthly_revenue` view,
+- the same net-of-discount basis is now used consistently for:
+  - annual KPI totals,
+  - annual chart,
+  - category mix,
+  - top clients,
+- the current year is now read as `finora`:
+  - future services later in the same year are excluded from the operational
+    totals,
+  - and the annual chart now shows the selected-year window only, not a
+    trailing-12-month mix,
+- the fiscal/business-health block now filters correctly on the selected year
+  for:
+  - quote conversion rate,
+  - weighted pipeline value,
+  - DSO,
+- the fiscal UI copy now explicitly frames that section as simulation, not
+  definitive accounting truth,
+- a defensive migration was added:
+  - `supabase/migrations/20260228150000_normalize_monthly_revenue_net_basis.sql`
+  - this normalizes `monthly_revenue` to the same net-of-discount basis for any
+    future consumer that still queries the view.
+- operational note:
+  - the current annual runtime no longer depends on that view,
+  - so this migration was committed for schema continuity but was not required
+    for the client-side runtime validation in this session.
+
+What this means for future AI work:
+
+- `Annuale` is still not a single AI-ready blob,
+- but the operational core is now much safer to expose as a dedicated
+  `annual_operations` context,
+- while `alerts` and `fiscal_simulation` should remain separate contexts.
+
+### Annual operations AI flow now implemented
+
+What was added:
+
+- context builder:
+  - `src/lib/analytics/buildAnnualOperationsContext.ts`
+- annual AI response types:
+  - `src/lib/analytics/annualAnalysis.ts`
+- provider methods:
+  - `getAnnualOperationsAnalyticsContext(year)`
+  - `generateAnnualOperationsAnalyticsSummary(year)`
+  - `askAnnualOperationsQuestion(year, question)`
+- UI card:
+  - `src/components/atomic-crm/dashboard/DashboardAnnualAiSummaryCard.tsx`
+- server-side OpenAI functions:
+  - `supabase/functions/annual_operations_summary/index.ts`
+  - `supabase/functions/annual_operations_answer/index.ts`
+
+Scope decision locked in code:
+
+- the Annuale AI card reads only the operational yearly context,
+- it does **not** include:
+  - fiscal simulation,
+  - current-day alerts,
+- and it resets its local AI state when the selected year changes, so old
+  summaries do not bleed into another year view.
+
+### Annuale Q&A hardening after real user transcripts
+
+After the first real user transcripts on `2025`, one important correction was
+applied:
+
+- the issue was no longer raw data correctness,
+- the issue was interpretive drift:
+  - treating `0` as an automatic anomaly,
+  - speaking too absolutely about a single client,
+  - and using wording like `quest'anno` / `futuro` even when the selected year
+    was already closed.
+
+Fixes now applied:
+
+- added shared guidance builder:
+  - `supabase/functions/_shared/annualOperationsAiGuidance.ts`
+- added server-side question reframing for ambiguous prompts:
+  - a vague user question is internally restated in a safer form before the
+    OpenAI call
+- tightened annual suggested questions in the UI so they depend on:
+  - selected `year`
+  - `isCurrentYear`
+- the annual guardrail copy now states more explicitly that:
+  - non-demonstrable claims must be called out,
+  - and a zero value is not an automatic problem.
+
+Decision:
+
+- stop investing heavily in prompt polish for this temporary UI,
+- keep only the minimum anti-bufala hardening,
+- move the main effort toward the future `AI-driving` architecture:
+  - semantic layer,
+  - tool contract,
+  - module-by-module drill-down.
+
 ### Tests added
 
 - `src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
 - `src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx`
 - `src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx`
 - `src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx`
+- `src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts`
+- `src/lib/analytics/buildAnnualOperationsContext.test.ts`
+- `src/components/atomic-crm/dashboard/DashboardAnnualAiSummaryCard.test.tsx`
 
 Covered today:
 
@@ -149,7 +261,12 @@ Covered today:
 - widget-level empty states,
 - YoY `N/D` UI rendering,
 - guided summary trigger/render,
-- suggested-question trigger/render for the historical AI card.
+- suggested-question trigger/render for the historical AI card,
+- annual current-year YTD exclusion of future services,
+- annual net-of-discount basis consistency,
+- annual fiscal/business-health selected-year filtering,
+- annual AI context caveats and metric serialization,
+- annual AI card summary/question triggers.
 
 ## Validation Done
 
@@ -159,12 +276,16 @@ Successful commands:
 - `npm test -- --run src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
 - `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
 - `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
+- `npm test -- --run src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
+- `npm test -- --run src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts src/lib/analytics/buildAnnualOperationsContext.test.ts src/components/atomic-crm/dashboard/DashboardAnnualAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
 - `npx supabase db push`
 - `curl` verification against remote PostgREST with the linked project `service_role`
   key
 - `npx supabase secrets set OPENAI_API_KEY ... SB_PUBLISHABLE_KEY ... --project-ref qvdmzhyzpyaveniirsmo`
 - `npx supabase functions deploy historical_analytics_summary --project-ref qvdmzhyzpyaveniirsmo`
 - `npx supabase functions deploy historical_analytics_answer --project-ref qvdmzhyzpyaveniirsmo`
+- `npx supabase functions deploy annual_operations_summary --project-ref qvdmzhyzpyaveniirsmo`
+- `npx supabase functions deploy annual_operations_answer --project-ref qvdmzhyzpyaveniirsmo`
 
 ### Remote verification completed on linked project
 
@@ -242,6 +363,14 @@ Inference from the repository policies:
   - `## In breve`
   - plain wording like `valore del lavoro`, `anno in corso fino a oggi`, and
     `crescita rispetto all'anno prima`
+- a later authenticated remote smoke also verified the new annual AI flow on
+  the same linked project for year `2025`:
+  - `annual_operations_summary` returned `200 OK`,
+  - `annual_operations_answer` returned `200 OK`,
+  - both used model `gpt-5.2`,
+  - the summary started with `## In breve`,
+  - the answer started with `## Risposta breve`,
+  - and the answer did not drift into fiscal simulation wording.
 
 ### Remote AI runtime note
 
@@ -274,16 +403,30 @@ Additional runtime note for the Q&A flow:
   - `npx supabase functions deploy historical_analytics_answer --project-ref qvdmzhyzpyaveniirsmo`
 - re-test immediately after deploy returned `200 OK`.
 
+Additional runtime note for the annual flow:
+
+- the first smoke invocation of `annual_operations_summary` failed with
+  `404 Requested function was not found`,
+- root cause: although the CLI initially printed a deploy-looking output, the
+  function did not actually appear in `supabase functions list`,
+- fix applied:
+  - verify active remote functions with
+    `npx supabase functions list --project-ref qvdmzhyzpyaveniirsmo`
+  - redeploy `annual_operations_summary`
+- re-test immediately after the second deploy returned `200 OK`.
+
 ## Environment Blockers
 
 ### Supabase migration state
 
 - Remote state:
 
-- the historical analytics migration was pushed successfully to the linked remote project:
+- the linked remote project `qvdmzhyzpyaveniirsmo` now has both relevant
+  analytics migrations applied:
   - `project_ref: qvdmzhyzpyaveniirsmo`
-  - applied migration:
+  - applied migrations:
     - `20260228133000_historical_analytics_views.sql`
+    - `20260228150000_normalize_monthly_revenue_net_basis.sql`
 
 - Local state:
 
@@ -318,6 +461,9 @@ Impact:
   explicitly de-prioritized for the current product scope.
 - The assistant-ready payload exists, and a single-turn historical Q&A flow now
   exists, but no multi-turn conversational chat flow exists yet.
+- `Annuale` still needs a dedicated AI context builder before any OpenAI
+  consumer is added there; this is now done only for `annual_operations`, not
+  for alerts/fiscal.
 - The browser output is now understandable for non-expert users, but markdown
   readability may still deserve further polish only if product wants a denser
   or more scannable layout.
@@ -333,14 +479,17 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Only if useful after review, manually click-test the new free-question path
-   in the browser and collect evidence.
-2. Only if useful after review, polish prompt/copy or markdown presentation of
-   the AI card further.
-3. Keep the new historical UI tests updated whenever the widgets evolve.
-4. Only later, if useful, evolve the current single-turn card into a
+1. Manually click-test the new Annuale AI card in the browser and collect
+   evidence.
+2. Only if useful after review, manually click-test the new free-question path
+   in the Storico browser flow and collect evidence.
+3. Only if useful after review, polish prompt/copy or markdown presentation of
+   the historical or annual AI cards further.
+4. Keep the new historical and annual semantic tests updated whenever the
+   widgets evolve.
+5. Only later, if useful, evolve the current single-turn cards into a
    conversational assistant flow.
-5. Only later, if the product scope changes, revisit FakeRest/demo historical
+6. Only later, if the product scope changes, revisit FakeRest/demo historical
    support.
 
 ## Quick Resume Checklist
@@ -352,6 +501,7 @@ Stable rollback note:
 - Read the backlog:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
+  - browser click-test of the Annuale AI card
   - optional browser click-test of the free-question path
   - optional AI card readability polish
-  - keeping historical UI tests aligned with future widget changes
+  - keeping historical and annual semantic tests aligned with future widget changes

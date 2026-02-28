@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
+  type DashboardMeta,
   formatCompactCurrency,
   type CategoryBreakdownPoint,
 } from "./dashboardModel";
@@ -20,15 +21,19 @@ const colors = ["#0ea5e9", "#14b8a6", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 export const DashboardCategoryChart = ({
   data,
+  meta,
   year,
 }: {
   data: CategoryBreakdownPoint[];
+  meta: DashboardMeta;
   year: number;
 }) => (
   <Card className="gap-0">
     <CardHeader className="px-4 pb-3">
-      <CardTitle className="text-base">Fatturato per categoria</CardTitle>
-      <p className="text-xs text-muted-foreground">Totale anno {year}</p>
+      <CardTitle className="text-base">Categorie nell'anno</CardTitle>
+      <p className="text-xs text-muted-foreground">
+        {meta.operationsPeriodLabel} · valore del lavoro netto sconti
+      </p>
     </CardHeader>
     <CardContent className="px-2 pb-2">
       {!data.length || data.every((item) => item.revenue === 0) ? (

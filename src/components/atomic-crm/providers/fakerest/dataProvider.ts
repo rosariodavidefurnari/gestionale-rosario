@@ -12,6 +12,11 @@ import { authProvider, USER_STORAGE_KEY } from "./authProvider";
 import generateData from "./dataGenerator";
 import { withSupabaseFilterAdapter } from "./internal/supabaseAdapter";
 import type { AnalyticsContext } from "@/lib/analytics/buildAnalyticsContext";
+import type { AnnualOperationsContext } from "@/lib/analytics/buildAnnualOperationsContext";
+import type {
+  AnnualOperationsAnalyticsAnswer,
+  AnnualOperationsAnalyticsSummary,
+} from "@/lib/analytics/annualAnalysis";
 import type {
   HistoricalAnalyticsAnswer,
   HistoricalAnalyticsSummary,
@@ -125,16 +130,34 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
       "Historical analytics AI context is not available in the FakeRest provider.",
     );
   },
+  getAnnualOperationsAnalyticsContext:
+    async (): Promise<AnnualOperationsContext> => {
+      throw new Error(
+        "Annual operations AI context is not available in the FakeRest provider.",
+      );
+    },
   generateHistoricalAnalyticsSummary:
     async (): Promise<HistoricalAnalyticsSummary> => {
       throw new Error(
         "Historical analytics AI summary is not available in the FakeRest provider.",
       );
     },
+  generateAnnualOperationsAnalyticsSummary:
+    async (): Promise<AnnualOperationsAnalyticsSummary> => {
+      throw new Error(
+        "Annual operations AI summary is not available in the FakeRest provider.",
+      );
+    },
   askHistoricalAnalyticsQuestion:
     async (): Promise<HistoricalAnalyticsAnswer> => {
       throw new Error(
         "Historical analytics AI questions are not available in the FakeRest provider.",
+      );
+    },
+  askAnnualOperationsQuestion:
+    async (): Promise<AnnualOperationsAnalyticsAnswer> => {
+      throw new Error(
+        "Annual operations AI questions are not available in the FakeRest provider.",
       );
     },
 };

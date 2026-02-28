@@ -34,10 +34,10 @@ export const DashboardFiscalKpis = ({
       (w) => w.type === "ceiling_exceeded" || w.type === "ceiling_critical",
     );
   const reliabilityLabel = !isCurrentYear
-    ? "Consuntivo anno completo"
+    ? "Simulazione su anno completo"
     : fiscalKpis.monthsOfData < 3
-      ? "Stima preliminare"
-      : `Stima basata su ${fiscalKpis.monthsOfData} mesi`;
+      ? "Simulazione preliminare"
+      : `Simulazione basata su ${fiscalKpis.monthsOfData} mesi`;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -45,7 +45,7 @@ export const DashboardFiscalKpis = ({
       <Card className="gap-3 py-4">
         <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
           <CardTitle className="text-sm font-medium">
-            {isCurrentYear ? "Reddito netto stimato" : "Reddito netto"}
+            Reddito netto stimato
           </CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -70,7 +70,7 @@ export const DashboardFiscalKpis = ({
       <Card className="gap-3 py-4">
         <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
           <CardTitle className="text-sm font-medium">
-            {isCurrentYear ? "Stima tasse annuali" : "Tasse annuali"}
+            Stima tasse annuali
           </CardTitle>
           <Calculator className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -95,8 +95,8 @@ export const DashboardFiscalKpis = ({
         <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
           <CardTitle className="text-sm font-medium">
             {isCurrentYear
-              ? "Accantonamento mensile"
-              : "Accantonamento medio mensile"}
+              ? "Accantonamento mensile consigliato"
+              : "Accantonamento medio mensile teorico"}
           </CardTitle>
           <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -105,7 +105,7 @@ export const DashboardFiscalKpis = ({
             {formatCurrencyPrecise(fiscalKpis.accantonamentoMensile)}
           </div>
           <p className="text-xs text-muted-foreground">
-            Da accantonare ogni mese per tasse e contributi
+            Importo da tenere da parte per tasse e contributi stimati
           </p>
         </CardContent>
       </Card>

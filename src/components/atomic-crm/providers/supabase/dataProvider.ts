@@ -6,10 +6,22 @@ import {
   type Identifier,
   type ResourceCallbacks,
 } from "ra-core";
-import type { RAFile, Sale, SalesFormData, SignUpData } from "../../types";
+import type {
+  Client,
+  Expense,
+  Payment,
+  Project,
+  Quote,
+  RAFile,
+  Sale,
+  SalesFormData,
+  Service,
+  SignUpData,
+} from "../../types";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import { getIsInitialized } from "./authProvider";
 import { supabase } from "./supabase";
+import { buildDashboardModel } from "../../dashboard/dashboardModel";
 import {
   buildDashboardHistoryModel,
   type AnalyticsClientLifetimeCompetenceRevenueRow,
@@ -21,6 +33,14 @@ import {
   buildAnalyticsContext,
   type AnalyticsContext,
 } from "@/lib/analytics/buildAnalyticsContext";
+import {
+  buildAnnualOperationsContext,
+  type AnnualOperationsContext,
+} from "@/lib/analytics/buildAnnualOperationsContext";
+import {
+  type AnnualOperationsAnalyticsAnswer,
+  type AnnualOperationsAnalyticsSummary,
+} from "@/lib/analytics/annualAnalysis";
 import {
   defaultHistoricalAnalysisModel,
   type HistoricalAnalyticsAnswer,
@@ -54,37 +74,43 @@ const baseDataProvider = supabaseDataProvider({
     .set("project_financials", ["project_id"]),
 });
 
+const LARGE_PAGE = { page: 1, perPage: 1000 };
+
 const getHistoricalAnalyticsContextFromViews = async () => {
-  const [metaResponse, yearlyRevenueResponse, categoryMixResponse, topClientsResponse] =
-    await Promise.all([
-      baseDataProvider.getOne<AnalyticsHistoryMetaRow>("analytics_history_meta", {
-        id: 1,
-      }),
-      baseDataProvider.getList<AnalyticsYearlyCompetenceRevenueRow>(
-        "analytics_yearly_competence_revenue",
-        {
-          pagination: { page: 1, perPage: 200 },
-          sort: { field: "year", order: "ASC" },
-          filter: {},
-        },
-      ),
-      baseDataProvider.getList<AnalyticsYearlyCompetenceRevenueByCategoryRow>(
-        "analytics_yearly_competence_revenue_by_category",
-        {
-          pagination: { page: 1, perPage: 1000 },
-          sort: { field: "year", order: "ASC" },
-          filter: {},
-        },
-      ),
-      baseDataProvider.getList<AnalyticsClientLifetimeCompetenceRevenueRow>(
-        "analytics_client_lifetime_competence_revenue",
-        {
-          pagination: { page: 1, perPage: 10 },
-          sort: { field: "lifetime_revenue", order: "DESC" },
-          filter: {},
-        },
-      ),
-    ]);
+  const [
+    metaResponse,
+    yearlyRevenueResponse,
+    categoryMixResponse,
+    topClientsResponse,
+  ] = await Promise.all([
+    baseDataProvider.getOne<AnalyticsHistoryMetaRow>("analytics_history_meta", {
+      id: 1,
+    }),
+    baseDataProvider.getList<AnalyticsYearlyCompetenceRevenueRow>(
+      "analytics_yearly_competence_revenue",
+      {
+        pagination: { page: 1, perPage: 200 },
+        sort: { field: "year", order: "ASC" },
+        filter: {},
+      },
+    ),
+    baseDataProvider.getList<AnalyticsYearlyCompetenceRevenueByCategoryRow>(
+      "analytics_yearly_competence_revenue_by_category",
+      {
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: "year", order: "ASC" },
+        filter: {},
+      },
+    ),
+    baseDataProvider.getList<AnalyticsClientLifetimeCompetenceRevenueRow>(
+      "analytics_client_lifetime_competence_revenue",
+      {
+        pagination: { page: 1, perPage: 10 },
+        sort: { field: "lifetime_revenue", order: "DESC" },
+        filter: {},
+      },
+    ),
+  ]);
 
   const historyModel = buildDashboardHistoryModel({
     meta: metaResponse.data,
@@ -102,6 +128,60 @@ const getConfiguredHistoricalAnalysisModel = async () => {
   return (
     config.aiConfig?.historicalAnalysisModel ?? defaultHistoricalAnalysisModel
   );
+};
+
+const getAnnualOperationsContextFromResources = async (year: number) => {
+  const [
+    paymentsResponse,
+    quotesResponse,
+    servicesResponse,
+    projectsResponse,
+    clientsResponse,
+    expensesResponse,
+  ] = await Promise.all([
+    baseDataProvider.getList<Payment>("payments", {
+      pagination: LARGE_PAGE,
+      sort: { field: "payment_date", order: "ASC" },
+      filter: {},
+    }),
+    baseDataProvider.getList<Quote>("quotes", {
+      pagination: LARGE_PAGE,
+      sort: { field: "updated_at", order: "DESC" },
+      filter: {},
+    }),
+    baseDataProvider.getList<Service>("services", {
+      pagination: LARGE_PAGE,
+      sort: { field: "service_date", order: "DESC" },
+      filter: {},
+    }),
+    baseDataProvider.getList<Project>("projects", {
+      pagination: LARGE_PAGE,
+      sort: { field: "created_at", order: "DESC" },
+      filter: {},
+    }),
+    baseDataProvider.getList<Client>("clients", {
+      pagination: LARGE_PAGE,
+      sort: { field: "created_at", order: "DESC" },
+      filter: {},
+    }),
+    baseDataProvider.getList<Expense>("expenses", {
+      pagination: LARGE_PAGE,
+      sort: { field: "expense_date", order: "DESC" },
+      filter: {},
+    }),
+  ]);
+
+  const model = buildDashboardModel({
+    payments: paymentsResponse.data,
+    quotes: quotesResponse.data,
+    services: servicesResponse.data,
+    projects: projectsResponse.data,
+    clients: clientsResponse.data,
+    expenses: expensesResponse.data,
+    year,
+  });
+
+  return buildAnnualOperationsContext(model);
 };
 
 const dataProviderWithCustomMethods = {
@@ -221,6 +301,11 @@ const dataProviderWithCustomMethods = {
   async getHistoricalAnalyticsContext(): Promise<AnalyticsContext> {
     return getHistoricalAnalyticsContextFromViews();
   },
+  async getAnnualOperationsAnalyticsContext(
+    year: number,
+  ): Promise<AnnualOperationsContext> {
+    return getAnnualOperationsContextFromResources(year);
+  },
   async generateHistoricalAnalyticsSummary(): Promise<HistoricalAnalyticsSummary> {
     const [context, model] = await Promise.all([
       getHistoricalAnalyticsContextFromViews(),
@@ -249,6 +334,41 @@ const dataProviderWithCustomMethods = {
       throw new Error(
         errorDetails?.message ||
           "Impossibile generare l'analisi AI dello storico",
+      );
+    }
+
+    return data.data;
+  },
+  async generateAnnualOperationsAnalyticsSummary(
+    year: number,
+  ): Promise<AnnualOperationsAnalyticsSummary> {
+    const [context, model] = await Promise.all([
+      getAnnualOperationsContextFromResources(year),
+      getConfiguredHistoricalAnalysisModel(),
+    ]);
+
+    const { data, error } = await supabase.functions.invoke<{
+      data: AnnualOperationsAnalyticsSummary;
+    }>("annual_operations_summary", {
+      method: "POST",
+      body: {
+        context,
+        model,
+      },
+    });
+
+    if (!data || error) {
+      console.error("generateAnnualOperationsAnalyticsSummary.error", error);
+      const errorDetails = await (async () => {
+        try {
+          return (await error?.context?.json()) ?? {};
+        } catch {
+          return {};
+        }
+      })();
+      throw new Error(
+        errorDetails?.message ||
+          "Impossibile generare l'analisi AI della vista Annuale",
       );
     }
 
@@ -291,6 +411,49 @@ const dataProviderWithCustomMethods = {
       throw new Error(
         errorDetails?.message ||
           "Impossibile ottenere una risposta AI sullo storico",
+      );
+    }
+
+    return data.data;
+  },
+  async askAnnualOperationsQuestion(
+    year: number,
+    question: string,
+  ): Promise<AnnualOperationsAnalyticsAnswer> {
+    const trimmedQuestion = question.trim();
+
+    if (!trimmedQuestion) {
+      throw new Error("Scrivi una domanda prima di inviare la richiesta.");
+    }
+
+    const [context, model] = await Promise.all([
+      getAnnualOperationsContextFromResources(year),
+      getConfiguredHistoricalAnalysisModel(),
+    ]);
+
+    const { data, error } = await supabase.functions.invoke<{
+      data: AnnualOperationsAnalyticsAnswer;
+    }>("annual_operations_answer", {
+      method: "POST",
+      body: {
+        context,
+        question: trimmedQuestion,
+        model,
+      },
+    });
+
+    if (!data || error) {
+      console.error("askAnnualOperationsQuestion.error", error);
+      const errorDetails = await (async () => {
+        try {
+          return (await error?.context?.json()) ?? {};
+        } catch {
+          return {};
+        }
+      })();
+      throw new Error(
+        errorDetails?.message ||
+          "Impossibile ottenere una risposta AI sulla vista Annuale",
       );
     }
 

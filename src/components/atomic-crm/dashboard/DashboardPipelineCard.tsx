@@ -37,7 +37,7 @@ export const DashboardPipelineCard = ({
       <CardHeader className="px-4 pb-3">
         <CardTitle className="text-base">Pipeline preventivi</CardTitle>
         <p className="text-xs text-muted-foreground">
-          Numero trattative per stato
+          Opportunità dell'anno selezionato per stato
         </p>
       </CardHeader>
       <CardContent className="px-2 pb-2">

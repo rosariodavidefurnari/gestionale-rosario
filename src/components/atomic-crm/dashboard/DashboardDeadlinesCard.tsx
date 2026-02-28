@@ -20,7 +20,7 @@ export const DashboardDeadlinesCard = ({
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <CalendarClock className="h-4 w-4" />
-            Scadenze fiscali
+            Scadenze fiscali stimate
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -47,7 +47,7 @@ export const DashboardDeadlinesCard = ({
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <CalendarClock className="h-4 w-4" />
-            Scadenze fiscali
+            Scadenze fiscali stimate
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground text-center py-6">
@@ -62,7 +62,7 @@ export const DashboardDeadlinesCard = ({
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <CalendarClock className="h-4 w-4" />
-          Scadenze fiscali
+          Scadenze fiscali stimate
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

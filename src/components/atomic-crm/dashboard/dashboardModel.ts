@@ -23,6 +23,7 @@ export type MonthlyRevenueRow = {
 };
 
 export type DashboardModel = {
+  meta: DashboardMeta;
   kpis: DashboardKpis;
   revenueTrend: RevenueTrendPoint[];
   categoryBreakdown: CategoryBreakdownPoint[];
@@ -30,9 +31,25 @@ export type DashboardModel = {
   topClients: TopClientPoint[];
   alerts: DashboardAlerts;
   fiscal: FiscalModel | null;
+  qualityFlags: AnnualQualityFlag[];
   selectedYear: number;
   isCurrentYear: boolean;
 };
+
+export type DashboardMeta = {
+  selectedYear: number;
+  isCurrentYear: boolean;
+  asOfDate: string;
+  asOfDateLabel: string;
+  operationsPeriodLabel: string;
+  monthlyReferenceLabel: string;
+};
+
+export type AnnualQualityFlag =
+  | "partial_current_year"
+  | "future_services_excluded"
+  | "alerts_current_snapshot"
+  | "fiscal_simulation";
 
 export type DashboardKpis = {
   monthlyRevenue: number;
@@ -201,6 +218,13 @@ const toNumber = (value: unknown) => {
 const toStartOfDay = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
+const toLocalISODate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const addDays = (date: Date, days: number) => {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
@@ -219,6 +243,9 @@ const monthKey = (date: Date) =>
 
 const monthLabel = (date: Date) =>
   format(date, "MMM yy", { locale: itLocale }).replace(".", "");
+
+const monthLabelShort = (date: Date) =>
+  format(date, "MMM", { locale: itLocale }).replace(".", "");
 
 const getServiceNetRevenue = (service: Service) =>
   toNumber(service.fee_shooting) +
@@ -243,7 +270,6 @@ const getSortedMonthStarts = (count: number, referenceDate?: Date) => {
 };
 
 export const buildDashboardModel = ({
-  monthlyRevenueRows,
   payments,
   quotes,
   services,
@@ -253,7 +279,6 @@ export const buildDashboardModel = ({
   fiscalConfig,
   year,
 }: {
-  monthlyRevenueRows: MonthlyRevenueRow[];
   payments: Payment[];
   quotes: Quote[];
   services: Service[];
@@ -285,35 +310,72 @@ export const buildDashboardModel = ({
   );
   const previousMonthKey = monthKey(previousMonthDate);
 
+  const asOfDate = toLocalISODate(today);
+  const asOfDateLabel = today.toLocaleDateString("it-IT");
   const monthlyTotals = new Map<
     string,
     { revenue: number; totalKm: number; kmCost: number }
   >();
   const categoryTotals = new Map<string, number>();
+  const qualityFlags: AnnualQualityFlag[] = [
+    "alerts_current_snapshot",
+    "fiscal_simulation",
+  ];
+  const pushQualityFlag = (flag: AnnualQualityFlag) => {
+    if (!qualityFlags.includes(flag)) {
+      qualityFlags.push(flag);
+    }
+  };
+  const operationsProjectById = new Map(
+    projects.map((project) => [String(project.id), project]),
+  );
+  let futureServicesExcludedCount = 0;
 
-  for (const row of monthlyRevenueRows) {
-    const rowDate = new Date(row.month);
-    if (Number.isNaN(rowDate.valueOf())) continue;
-    const key = monthKey(rowDate);
+  for (const service of services) {
+    if (!service.service_date) continue;
+    const serviceDate = new Date(service.service_date);
+    if (Number.isNaN(serviceDate.valueOf())) continue;
+    if (serviceDate.getFullYear() !== selectedYear) continue;
+    if (isSelectedCurrentYear && toStartOfDay(serviceDate) > today) {
+      futureServicesExcludedCount += 1;
+      continue;
+    }
+
+    const project = operationsProjectById.get(String(service.project_id));
+    if (!project) continue;
+
+    const revenue = getServiceNetRevenue(service);
+    const key = monthKey(serviceDate);
     const bucket = monthlyTotals.get(key) ?? {
       revenue: 0,
       totalKm: 0,
       kmCost: 0,
     };
-    bucket.revenue += toNumber(row.revenue);
-    bucket.totalKm += toNumber(row.total_km);
-    bucket.kmCost += toNumber(row.km_cost);
+    bucket.revenue += revenue;
+    bucket.totalKm += toNumber(service.km_distance);
+    bucket.kmCost += toNumber(service.km_distance) * toNumber(service.km_rate);
     monthlyTotals.set(key, bucket);
 
-    if (rowDate.getFullYear() === selectedYear) {
-      categoryTotals.set(
-        row.category,
-        (categoryTotals.get(row.category) ?? 0) + toNumber(row.revenue),
-      );
-    }
+    categoryTotals.set(
+      project.category,
+      (categoryTotals.get(project.category) ?? 0) + revenue,
+    );
   }
 
-  const revenueTrend = getSortedMonthStarts(12, referenceDate).map((date) => {
+  if (isSelectedCurrentYear) {
+    pushQualityFlag("partial_current_year");
+  }
+  if (futureServicesExcludedCount > 0) {
+    pushQualityFlag("future_services_excluded");
+  }
+
+  const lastVisibleMonthIndex = isSelectedCurrentYear ? now.getMonth() : 11;
+  const visibleMonths = Array.from(
+    { length: lastVisibleMonthIndex + 1 },
+    (_, index) => new Date(selectedYear, index, 1),
+  );
+
+  const revenueTrend = visibleMonths.map((date) => {
     const key = monthKey(date);
     const values = monthlyTotals.get(key) ?? {
       revenue: 0,
@@ -340,13 +402,15 @@ export const buildDashboardModel = ({
   };
 
   const monthlyRevenueDeltaPct =
-    previousMonthTotals.revenue > 0
-      ? ((currentMonthTotals.revenue - previousMonthTotals.revenue) /
-          previousMonthTotals.revenue) *
-        100
-      : currentMonthTotals.revenue > 0
-        ? 100
-        : null;
+    previousMonthDate.getFullYear() !== selectedYear
+      ? null
+      : previousMonthTotals.revenue > 0
+        ? ((currentMonthTotals.revenue - previousMonthTotals.revenue) /
+            previousMonthTotals.revenue) *
+          100
+        : currentMonthTotals.revenue > 0
+          ? 100
+          : null;
 
   const annualRevenue = Array.from(monthlyTotals.entries()).reduce(
     (sum, [key, value]) => {
@@ -408,16 +472,18 @@ export const buildDashboardModel = ({
     (status) => quotePipelineSeed.get(status)!,
   );
 
-  const projectById = new Map(
-    projects.map((project) => [String(project.id), project]),
-  );
+  const projectById = operationsProjectById;
   const clientById = new Map(
     clients.map((client) => [String(client.id), client]),
   );
 
   const topClientRevenue = new Map<string, number>();
   for (const service of services) {
-    if (!isCurrentYear(service.service_date, selectedYear)) continue;
+    if (!service.service_date) continue;
+    const serviceDate = new Date(service.service_date);
+    if (Number.isNaN(serviceDate.valueOf())) continue;
+    if (serviceDate.getFullYear() !== selectedYear) continue;
+    if (isSelectedCurrentYear && toStartOfDay(serviceDate) > today) continue;
     const project = projectById.get(String(service.project_id));
     if (!project) continue;
     const clientId = String(project.client_id);
@@ -545,7 +611,25 @@ export const buildDashboardModel = ({
       })
     : null;
 
+  const periodStartLabel = monthLabelShort(new Date(selectedYear, 0, 1));
+  const periodEndLabel = monthLabelShort(
+    new Date(selectedYear, lastVisibleMonthIndex, 1),
+  );
+  const operationsPeriodLabel =
+    periodStartLabel === periodEndLabel
+      ? `${periodEndLabel} ${selectedYear}`
+      : `${periodStartLabel}-${periodEndLabel} ${selectedYear}`;
+  const monthlyReferenceLabel = monthLabel(referenceDate);
+
   return {
+    meta: {
+      selectedYear,
+      isCurrentYear: isSelectedCurrentYear,
+      asOfDate,
+      asOfDateLabel,
+      operationsPeriodLabel,
+      monthlyReferenceLabel,
+    },
     kpis: {
       monthlyRevenue: currentMonthTotals.revenue,
       previousMonthRevenue: previousMonthTotals.revenue,
@@ -568,6 +652,7 @@ export const buildDashboardModel = ({
       unansweredQuotes,
     },
     fiscal,
+    qualityFlags,
     selectedYear,
     isCurrentYear: isSelectedCurrentYear,
   };

@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 import { Welcome } from "./Welcome";
 import { DashboardAlertsCard } from "./DashboardAlertsCard";
+import { DashboardAnnualAiSummaryCard } from "./DashboardAnnualAiSummaryCard";
 import { DashboardAtecoChart } from "./DashboardAtecoChart";
 import { DashboardBusinessHealthCard } from "./DashboardBusinessHealthCard";
 import { DashboardCategoryChart } from "./DashboardCategoryChart";
@@ -51,16 +52,31 @@ export const DashboardAnnual = () => {
         isCurrentYear={isCurrentYear}
       />
 
-      <DashboardKpiCards kpis={data.kpis} year={data.selectedYear} />
+      <AnnualReadingGuide
+        year={data.selectedYear}
+        isCurrentYear={data.isCurrentYear}
+        asOfDateLabel={data.meta.asOfDateLabel}
+      />
+
+      <DashboardAnnualAiSummaryCard year={data.selectedYear} />
+
+      <DashboardKpiCards
+        kpis={data.kpis}
+        meta={data.meta}
+        year={data.selectedYear}
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <DashboardRevenueTrendChart
           data={data.revenueTrend}
+          meta={data.meta}
+          qualityFlags={data.qualityFlags}
           year={data.selectedYear}
           isCurrentYear={isCurrentYear}
         />
         <DashboardCategoryChart
           data={data.categoryBreakdown}
+          meta={data.meta}
           year={data.selectedYear}
         />
       </div>
@@ -70,6 +86,7 @@ export const DashboardAnnual = () => {
           <DashboardPipelineCard data={data.quotePipeline} />
           <DashboardTopClientsCard
             data={data.topClients}
+            meta={data.meta}
             year={data.selectedYear}
           />
         </div>
@@ -80,9 +97,15 @@ export const DashboardAnnual = () => {
         <>
           <h2 className="text-xl font-semibold mt-2">
             {isCurrentYear
-              ? "Fiscale & Salute Aziendale"
-              : `Riepilogo Fiscale ${selectedYear}`}
+              ? "Simulazione fiscale & salute aziendale"
+              : `Simulazione fiscale ${selectedYear}`}
           </h2>
+
+          <p className="text-xs text-muted-foreground -mt-3">
+            Questa parte usa ipotesi fiscali e configurazione del regime
+            forfettario: trattala come simulazione, non come dichiarazione
+            definitiva.
+          </p>
 
           {isCurrentYear && data.fiscal.warnings.length > 0 && (
             <div className="space-y-2">
@@ -175,6 +198,36 @@ const YearSelector = ({
       <ChevronRight className="h-4 w-4" />
     </Button>
   </div>
+);
+
+const AnnualReadingGuide = ({
+  year,
+  isCurrentYear,
+  asOfDateLabel,
+}: {
+  year: number;
+  isCurrentYear: boolean;
+  asOfDateLabel: string;
+}) => (
+  <Card className="gap-0">
+    <CardContent className="px-4 py-4 space-y-2 text-sm">
+      <p className="font-medium">Come leggere Annuale</p>
+      <p className="text-muted-foreground">
+        Qui vedi il valore del lavoro dell'anno scelto al netto degli sconti,
+        non gli incassi.
+      </p>
+      <p className="text-muted-foreground">
+        {isCurrentYear
+          ? `${year} è letto finora al ${asOfDateLabel}: i servizi futuri dell'anno sono esclusi dai totali operativi.`
+          : `${year} viene letto sull'intero anno, da gennaio a dicembre.`}
+      </p>
+      <p className="text-muted-foreground">
+        Pagamenti da ricevere e preventivi aperti hanno un significato diverso:
+        i primi sono incassi attesi, i secondi sono opportunità ancora da
+        chiudere. Il blocco fiscale sotto è una simulazione.
+      </p>
+    </CardContent>
+  </Card>
 );
 
 const DashboardAnnualError = ({ onRetry }: { onRetry: () => void }) => (

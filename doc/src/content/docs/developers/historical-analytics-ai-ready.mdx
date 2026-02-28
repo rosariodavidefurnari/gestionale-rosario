@@ -442,7 +442,25 @@ order by lifetime_revenue desc, c.name asc;
 
 ## Why These Views Are Better Than Raw Fetching
 
-The current annual dashboard loads multiple raw resources client-side. That is acceptable for a small operational dashboard, but it is a weak base for historical analytics and future AI features.
+The current annual dashboard still loads multiple operational resources
+client-side. That is acceptable for a small operational dashboard, but it is a
+weak base for historical analytics and future AI features unless its semantics
+are normalized first.
+
+As of `2026-02-28`, one important normalization step has already been applied:
+
+- the annual operational revenue runtime no longer depends on `monthly_revenue`
+  for KPI/chart/core calculations,
+- it now derives those values directly from `services`,
+- using one consistent net-of-discount basis,
+- and it treats the current year as `finora`, excluding future services later
+  in the same year from operational totals.
+
+That does **not** make the whole `Annuale` screen AI-ready yet.
+
+It only makes the future `annual_operations` context much safer to build,
+because the operational block is now more coherent. `alerts` and
+`fiscal_simulation` should still be modeled as separate semantic contexts.
 
 The aggregate views above solve four problems:
 
@@ -598,14 +616,14 @@ Current implementation choice:
 - the end-user consumer is a manual `Analisi AI` card in the `Storico`
   dashboard,
 - the same card now supports both:
-  - a guided summary via `dataProvider.generateHistoricalAnalyticsSummary()`,
-  - and a single-turn question flow via
-    `dataProvider.askHistoricalAnalyticsQuestion()`,
+    - a guided summary via `dataProvider.generateHistoricalAnalyticsSummary()`,
+    - and a single-turn question flow via
+      `dataProvider.askHistoricalAnalyticsQuestion()`,
 - the free-question flow is intentionally constrained:
-  - historical data only,
-  - no multi-turn memory,
-  - `300` character limit,
-  - suggested question chips to help non-expert users start,
+    - historical data only,
+    - no multi-turn memory,
+    - `300` character limit,
+    - suggested question chips to help non-expert users start,
 - the question flow uses a separate Edge Function
   `historical_analytics_answer` so the already stable summary flow can evolve
   independently,
@@ -614,20 +632,43 @@ Current implementation choice:
 - the visible UX now also includes a plain-language translation layer for
   non-expert users, so the dashboard does not require finance jargon literacy.
 
+Annual operational AI rollout:
+
+- `Annuale` is still **not** exposed to AI as a single mixed context.
+- only the operational yearly subset is now AI-enabled through:
+    - `src/lib/analytics/buildAnnualOperationsContext.ts`
+    - `dataProvider.getAnnualOperationsAnalyticsContext(year)`
+    - `dataProvider.generateAnnualOperationsAnalyticsSummary(year)`
+    - `dataProvider.askAnnualOperationsQuestion(year, question)`
+- the corresponding server-side consumers are:
+    - `annual_operations_summary`
+    - `annual_operations_answer`
+- this context intentionally includes only:
+    - yearly work value,
+    - category mix,
+    - top clients,
+    - pending payments,
+    - open quotes / pipeline,
+- and it intentionally excludes:
+    - fiscal simulation,
+    - current-day alerts.
+- the annual AI card therefore answers only within the `annual_operations`
+  domain, and must reset its local AI state when the selected year changes.
+
 ## Remote Runtime Verification
 
 Verified on `2026-02-28` against the linked project
 `qvdmzhyzpyaveniirsmo`:
 
 - authenticated reads to:
-  - `analytics_history_meta`
-  - `analytics_yearly_competence_revenue`
-  - `analytics_yearly_competence_revenue_by_category`
+    - `analytics_history_meta`
+    - `analytics_yearly_competence_revenue`
+    - `analytics_yearly_competence_revenue_by_category`
 - derived values remained aligned with the semantic contract:
-  - `2024 = EUR 3,118`
-  - `2025 = EUR 20,582`
-  - `2026 = YTD al 28/02/2026`
-  - `YoY = 2025 vs 2024 = +560%`
+    - `2024 = EUR 3,118`
+    - `2025 = EUR 20,582`
+    - `2026 = YTD al 28/02/2026`
+    - `YoY = 2025 vs 2024 = +560%`
 - the first OpenAI function consumer
   `historical_analytics_summary` returned `200 OK`,
 - the selected model resolved to `gpt-5.2`,
@@ -635,25 +676,33 @@ Verified on `2026-02-28` against the linked project
   caveats.
 - a second authenticated runtime smoke on the same project also verified the
   single-turn question flow:
-  - `historical_analytics_answer` returned `200 OK`,
-  - the example question `Perché il 2025 è andato meglio del 2024?` produced
-    the expected sections:
-    - `## Risposta breve`
-    - `## Perché lo dico`
-    - `## Cosa controllare adesso`
-  - the answer avoided raw `YTD` / `YoY` jargon and stayed in plain Italian.
+    - `historical_analytics_answer` returned `200 OK`,
+    - the example question `Perché il 2025 è andato meglio del 2024?` produced
+      the expected sections:
+        - `## Risposta breve`
+        - `## Perché lo dico`
+        - `## Cosa controllare adesso`
+    - the answer avoided raw `YTD` / `YoY` jargon and stayed in plain Italian.
 - browser evidence collected the same day also confirms the real UI path:
-  - the `Storico` tab renders the historical dashboard correctly,
-  - the AI card renders a generated answer in-browser,
-  - and the visible answer stays aligned with the same semantic contract.
+    - the `Storico` tab renders the historical dashboard correctly,
+    - the AI card renders a generated answer in-browser,
+    - and the visible answer stays aligned with the same semantic contract.
 - in this session the new free-question path was verified by authenticated
   remote smoke, but not manually click-tested in the browser.
+- a separate authenticated remote smoke on the same date also verified the
+  annual operational flow:
+    - year used in smoke: `2025`,
+    - `annual_operations_summary` returned `200 OK`,
+    - `annual_operations_answer` returned `200 OK`,
+    - the selected model resolved to `gpt-5.2`,
+    - and the answer stayed inside the operational scope without drifting into
+      fiscal simulation.
 
 Operational note:
 
 - the remote Edge runtime needs both:
-  - `OPENAI_API_KEY`
-  - `SB_PUBLISHABLE_KEY`
+    - `OPENAI_API_KEY`
+    - `SB_PUBLISHABLE_KEY`
 - and the shared auth middleware should still fall back to `SUPABASE_ANON_KEY`
   for resilience when `SB_PUBLISHABLE_KEY` is not present.
 

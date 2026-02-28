@@ -37,7 +37,8 @@ export const DashboardBusinessHealthCard = ({
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            {health.quotesAccepted}/{health.quotesTotal} accettati
+            {health.quotesAccepted}/{health.quotesTotal} accettati nell'anno
+            selezionato
           </p>
         </div>
       </div>
@@ -64,6 +65,9 @@ export const DashboardBusinessHealthCard = ({
               )}
             </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Calcolati sui pagamenti ricevuti nell'anno selezionato
+          </p>
         </div>
       </div>
 
@@ -85,7 +89,7 @@ export const DashboardBusinessHealthCard = ({
             className="h-1.5"
           />
           <p className="text-xs text-muted-foreground">
-            Fatturato top 3 clienti su totale
+            Valore del lavoro top 3 clienti su totale anno
           </p>
         </div>
       </div>
@@ -101,7 +105,7 @@ export const DashboardBusinessHealthCard = ({
             </span>
           </div>
           <p className="text-xs text-muted-foreground">
-            Valore atteso da preventivi aperti
+            Valore atteso dai preventivi aperti dell'anno selezionato
           </p>
         </div>
       </div>

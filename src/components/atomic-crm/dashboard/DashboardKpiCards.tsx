@@ -14,15 +14,18 @@ import {
   formatCompactCurrency,
   formatCurrency,
   formatCurrencyPrecise,
+  type DashboardMeta,
   type DashboardKpis,
 } from "./dashboardModel";
 
 export const DashboardKpiCards = ({
   kpis,
+  meta,
   year,
   compact = false,
 }: {
   kpis: DashboardKpis;
+  meta: DashboardMeta;
   year: number;
   compact?: boolean;
 }) => {
@@ -33,46 +36,54 @@ export const DashboardKpiCards = ({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       <KpiCard
-        title="Fatturato mese"
+        title="Valore del lavoro del mese"
         value={formatCurrency(kpis.monthlyRevenue)}
         icon={<Euro className="h-4 w-4" />}
         footer={
-          <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>
-              Km mese: {Math.round(kpis.monthlyKm)} (
-              {formatCompactCurrency(kpis.monthlyKmCost)})
-            </span>
-            {deltaDirection ? (
-              <DeltaBadge
-                direction={deltaDirection}
-                value={delta}
-                compact={compact}
-              />
-            ) : (
-              <Badge variant="secondary">N/D</Badge>
-            )}
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground">
+              Rif. {meta.monthlyReferenceLabel} · netto sconti, non incassi
+            </div>
+            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span>
+                Km mese: {Math.round(kpis.monthlyKm)} (
+                {formatCompactCurrency(kpis.monthlyKmCost)})
+              </span>
+              {deltaDirection ? (
+                <DeltaBadge
+                  direction={deltaDirection}
+                  value={delta}
+                  compact={compact}
+                />
+              ) : (
+                <Badge variant="secondary">N/D</Badge>
+              )}
+            </div>
           </div>
         }
       />
       <KpiCard
-        title="Fatturato anno"
+        title="Valore del lavoro dell'anno"
         value={formatCurrency(kpis.annualRevenue)}
         icon={<Wallet className="h-4 w-4" />}
-        subtitle={`Anno ${year}`}
+        subtitle={`${meta.operationsPeriodLabel} · netto sconti, non incassi`}
       />
       <KpiCard
-        title="Pagamenti in attesa"
+        title="Pagamenti da ricevere"
         value={formatCurrency(kpis.pendingPaymentsTotal)}
         icon={<Clock3 className="h-4 w-4" />}
-        subtitle={`${kpis.pendingPaymentsCount} pagamenti non ricevuti`}
+        subtitle={`${kpis.pendingPaymentsCount} pagamenti attesi: incassi, non lavoro svolto`}
       />
       <KpiCard
         title="Preventivi aperti"
         value={`${kpis.openQuotesCount}`}
         icon={<FileText className="h-4 w-4" />}
         footer={
-          <div className="text-xs text-muted-foreground">
-            Valore aperto: {formatCurrencyPrecise(kpis.openQuotesAmount)}
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <div>
+              Valore aperto: {formatCurrencyPrecise(kpis.openQuotesAmount)}
+            </div>
+            <div>Pipeline potenziale, non ricavo già acquisito</div>
           </div>
         }
       />

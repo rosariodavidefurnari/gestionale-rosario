@@ -2,9 +2,203 @@
 
 ## Current Phase
 
-🟢 Dashboard storico AI-ready implementato, verificato sul remoto e nel browser, con test UI base aggiunti, linguaggio tradotto per non esperti e nuovo flusso single-turn `fai una domanda` verificato da remoto. Prossimo passo: solo click-test browser opzionale del nuovo Q&A o future estensioni richieste dal prodotto.
+🟢 Dashboard storico AI-ready stabile e nuova AI operativa su `Annuale`
+implementata sul solo contesto `annual_operations`, con hardening minimo
+anti-bufala sulle domande libere. Prossimo passo: chiudere il click-test
+browser di Annuale e poi spostare il focus dal prompt tuning al rollout
+`AI-driving` fondato su semantic layer e tool contract.
 
 ## Last Session
+
+### Sessione 30 (2026-02-28, annual semantic normalization)
+
+- Completed:
+  - **Base ricavi Annuale unificata**:
+    - il runtime annuale non usa più `monthly_revenue` per calcolare KPI,
+      grafico, categorie e top clienti
+    - questi blocchi ora derivano tutti dai `services`
+    - stessa base ovunque: fee nette di sconto
+  - **Anno corrente letto come finora**:
+    - i servizi futuri dell'anno corrente vengono esclusi dai totali operativi
+    - il grafico annuale mostra ora solo i mesi dell'anno selezionato
+      realmente nel perimetro (`gen-feb` per `2026` al `28/02/2026`, non più
+      trailing 12 months)
+  - **Semantica esplicita in UI**:
+    - aggiunta card `Come leggere Annuale`
+    - KPI e chart riscritti per distinguere:
+      - valore del lavoro
+      - incassi attesi
+      - pipeline potenziale
+      - simulazione fiscale
+  - **Fiscale/business health riallineati**:
+    - `quoteConversionRate`, `weightedPipelineValue` e `DSO` filtrano davvero
+      sull'anno selezionato
+    - `weightedPipelineValue` non conta più i preventivi già vinti come
+      opportunità ancora aperte
+    - copy fiscale resa meno assertiva: simulazione, non consuntivo fiscale
+  - **Migrazione difensiva aggiunta**:
+    - nuova migration
+      `20260228150000_normalize_monthly_revenue_net_basis.sql`
+    - normalizza anche la view `monthly_revenue` alla stessa base netta di
+      sconto per evitare usi futuri ambigui
+  - **Test annuali aggiunti**:
+    - `dashboardAnnualModel.test.ts`
+    - copre esclusione servizi futuri, base netta coerente e filtri fiscali
+      sullo `selectedYear`
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts` OK
+  - totale: `17` test verdi
+
+- Decisions:
+  - `Annuale` non va ancora collegata direttamente all'AI come blocco unico
+  - Il prossimo consumer AI corretto deve nascere solo sul sottoinsieme
+    `annual_operations`
+  - `alerts` e `fiscal_simulation` restano semanticamente separati e vanno
+    trattati come contesti distinti
+
+- Notes:
+  - Nessun deploy remoto necessario per il runtime attuale: il refactor annuale
+    gira client-side sui `services`
+  - La migration sulla view `monthly_revenue` è presente nel repo ma non ancora
+    pushata al progetto remoto in questa sessione
+  - La baseline stabile già pushata resta `5ed2a10` finché l'utente non chiede
+    un nuovo commit/push
+
+- Next action:
+  - costruire `annual_operations` context AI-ready
+  - solo dopo valutare una card AI in `Annuale`
+
+### Sessione 31 (2026-02-28, annual operations AI flow)
+
+- Completed:
+  - **Migration remota applicata**:
+    - `20260228150000_normalize_monthly_revenue_net_basis.sql`
+      pushata sul progetto remoto
+  - **Context AI-safe per Annuale aggiunto**:
+    - creato `buildAnnualOperationsContext()`
+    - include solo la parte operativa dell'anno scelto:
+      - valore del lavoro
+      - categorie
+      - top clienti
+      - pagamenti da ricevere
+      - preventivi aperti
+    - esclude esplicitamente:
+      - simulazione fiscale
+      - alert giornalieri
+  - **Primo consumer Annuale aggiunto**:
+    - nuova card `DashboardAnnualAiSummaryCard`
+    - summary guidato
+    - domanda libera single-turn
+    - reset automatico quando cambia anno selezionato
+  - **Provider ed Edge Functions Annuale aggiunti**:
+    - `getAnnualOperationsAnalyticsContext(year)`
+    - `generateAnnualOperationsAnalyticsSummary(year)`
+    - `askAnnualOperationsQuestion(year, question)`
+    - nuove function remote:
+      - `annual_operations_summary`
+      - `annual_operations_answer`
+  - **Mobile incluso**:
+    - la card AI annuale compare anche nel dashboard mobile
+  - **Test aggiunti**:
+    - `buildAnnualOperationsContext.test.ts`
+    - `DashboardAnnualAiSummaryCard.test.tsx`
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts src/lib/analytics/buildAnnualOperationsContext.test.ts src/components/atomic-crm/dashboard/DashboardAnnualAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts` OK
+  - totale: `21` test verdi
+  - `npx supabase db push` OK
+  - deploy remoto OK:
+    - `annual_operations_summary`
+    - `annual_operations_answer`
+  - smoke remoto autenticato OK sul progetto `qvdmzhyzpyaveniirsmo`
+    - year `2025`
+    - summary `200` con `## In breve`
+    - answer `200` con `## Risposta breve`
+    - modello `gpt-5.2`
+    - nessun riferimento spurio al fiscale nella risposta operativa
+
+- Decisions:
+  - `Annuale` non viene passato all'AI come pagina unica
+  - il solo blocco operativo viene esposto come `annual_operations`
+  - fiscale e alert restano volutamente separati anche se visibili nella stessa
+    schermata
+
+- Notes:
+  - il primo smoke remoto ha rivelato che `annual_operations_summary` non era
+    realmente presente sul remoto nonostante un primo deploy CLI sembrasse
+    riuscito
+  - la verifica con `supabase functions list` ha mostrato l'assenza reale
+  - un secondo deploy della summary ha risolto il problema
+  - in questa sessione non e stato eseguito un click-test browser del nuovo
+    flusso AI su `Annuale`
+  - la baseline stabile già pushata resta `5ed2a10` finché l'utente non chiede
+    commit/push
+
+- Next action:
+  - click-test browser di `Annuale`
+  - poi decidere la prossima sezione da rendere AI-safe (`Pagamenti` e la
+    candidata migliore)
+
+### Sessione 32 (2026-02-28, annual hardening and AI-driving refocus)
+
+- Completed:
+  - **Hardening minimo del Q&A annuale**:
+    - aggiunto helper condiviso
+      `annualOperationsAiGuidance.ts`
+    - regole esplicite contro:
+      - frasi assolute
+      - interpretazioni negative automatiche sui valori a `0`
+      - confusione tra anno chiuso e situazione attuale dell'azienda
+    - le domande ambigue vengono ora riformulate internamente prima della
+      chiamata al modello
+  - **Suggerimenti UI Annuale resi meno ambigui**:
+    - niente più `quest'anno` fisso anche quando l'anno selezionato è chiuso
+    - le domande suggerite ora dipendono da `year` e `isCurrentYear`
+  - **Validazione remota sui casi reali utente**:
+    - redeploy di `annual_operations_summary`
+    - redeploy di `annual_operations_answer`
+    - smoke autenticato ripetuto sulle domande reali del 2025:
+      - `Qual è il punto più debole da controllare?`
+      - `Cosa raccontano pagamenti e preventivi aperti?`
+      - `Cosa sta trainando quest'anno?`
+      - `Da chi arriva il valore del lavoro?`
+    - il testo risultante è rientrato nei binari attesi:
+      - niente diagnosi automatiche da valori a `0`
+      - niente riferimenti a `oggi` / `futuro` su anno chiuso
+      - tono più prudente sui clienti dominanti
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run supabase/functions/_shared/annualOperationsAiGuidance.test.ts src/components/atomic-crm/dashboard/DashboardAnnualAiSummaryCard.test.tsx src/lib/analytics/buildAnnualOperationsContext.test.ts src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts` OK
+  - totale: `9` test verdi
+  - deploy remoto aggiornato OK:
+    - `annual_operations_summary`
+    - `annual_operations_answer`
+  - smoke remoto autenticato OK sui casi reali utente
+
+- Decisions:
+  - fermare ulteriore prompt tuning fine sulla card `Annuale`
+  - mantenere solo un hardening minimo anti-bufala
+  - spostare il focus delle prossime sessioni dal copy/prompt al rollout
+    `AI-driving` del sistema:
+    - semantic layer
+    - tool contract
+    - moduli AI-safe
+
+- Notes:
+  - il problema residuo più concreto non è il prompt, ma l'assenza di
+    drill-down strutturato per alcuni dati annuali aggregati, per esempio i
+    dettagli dei `pagamenti da ricevere`
+  - la baseline stabile già pushata resta `5ed2a10` finché l'utente non chiede
+    commit/push
+
+- Next action:
+  - click-test browser finale della card AI di `Annuale`
+  - poi definire il piano architetturale `AI-driving` e il prossimo modulo
+    semantico/tool-safe, con `Pagamenti` come candidato naturale
 
 ### Sessione 29 (2026-02-28, historical Q&A single-turn)
 

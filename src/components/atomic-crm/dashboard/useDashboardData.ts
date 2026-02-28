@@ -10,21 +10,12 @@ import type {
   Service,
 } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
-import {
-  buildDashboardModel,
-  type DashboardModel,
-  type MonthlyRevenueRow,
-} from "./dashboardModel";
+import { buildDashboardModel, type DashboardModel } from "./dashboardModel";
 
 const LARGE_PAGE = { page: 1, perPage: 1000 };
 
 export const useDashboardData = (year?: number) => {
   const { fiscalConfig } = useConfigurationContext();
-
-  const monthlyRevenueQuery = useGetList<MonthlyRevenueRow>("monthly_revenue", {
-    pagination: { page: 1, perPage: 500 },
-    sort: { field: "month", order: "DESC" },
-  });
 
   const paymentsQuery = useGetList<Payment>("payments", {
     pagination: LARGE_PAGE,
@@ -57,7 +48,6 @@ export const useDashboardData = (year?: number) => {
   });
 
   const isPending = [
-    monthlyRevenueQuery,
     paymentsQuery,
     quotesQuery,
     servicesQuery,
@@ -67,7 +57,6 @@ export const useDashboardData = (year?: number) => {
   ].some((query) => query.isPending);
 
   const error =
-    monthlyRevenueQuery.error ||
     paymentsQuery.error ||
     quotesQuery.error ||
     servicesQuery.error ||
@@ -77,7 +66,6 @@ export const useDashboardData = (year?: number) => {
 
   const data = useMemo<DashboardModel | null>(() => {
     if (
-      !monthlyRevenueQuery.data ||
       !paymentsQuery.data ||
       !quotesQuery.data ||
       !servicesQuery.data ||
@@ -89,7 +77,6 @@ export const useDashboardData = (year?: number) => {
     }
 
     return buildDashboardModel({
-      monthlyRevenueRows: monthlyRevenueQuery.data,
       payments: paymentsQuery.data,
       quotes: quotesQuery.data,
       services: servicesQuery.data,
@@ -103,7 +90,6 @@ export const useDashboardData = (year?: number) => {
     clientsQuery.data,
     expensesQuery.data,
     fiscalConfig,
-    monthlyRevenueQuery.data,
     paymentsQuery.data,
     projectsQuery.data,
     quotesQuery.data,
@@ -116,7 +102,6 @@ export const useDashboardData = (year?: number) => {
     isPending,
     error,
     refetch: () => {
-      void monthlyRevenueQuery.refetch();
       void paymentsQuery.refetch();
       void quotesQuery.refetch();
       void servicesQuery.refetch();

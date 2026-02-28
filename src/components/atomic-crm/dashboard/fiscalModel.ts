@@ -132,13 +132,10 @@ const ACCEPTED_STATUSES = new Set([
   "saldato",
 ]);
 
-const OPEN_QUOTE_STATUSES = new Set([
+const WEIGHTED_PIPELINE_STATUSES = new Set([
   "primo_contatto",
   "preventivo_inviato",
   "in_trattativa",
-  "accettato",
-  "acconto_ricevuto",
-  "in_lavorazione",
 ]);
 
 const categoryLabels: Record<string, string> = {
@@ -176,6 +173,13 @@ const diffDays = (from: Date, to: Date) => {
   );
 };
 
+const isInYear = (value: string | undefined, year: number) => {
+  if (!value) return false;
+  const date = new Date(value);
+  if (Number.isNaN(date.valueOf())) return false;
+  return date.getFullYear() === year;
+};
+
 // ── Main builder ──────────────────────────────────────────────────────
 
 export const buildFiscalModel = ({
@@ -209,6 +213,12 @@ export const buildFiscalModel = ({
   // Past years have 12 months of complete data; current year uses months elapsed
   const currentMonth = isSelectedCurrentYear ? now.getMonth() + 1 : 12;
   const monthsOfData = Math.max(1, currentMonth);
+  const yearPayments = payments.filter((payment) =>
+    isInYear(payment.payment_date ?? payment.created_at, currentYear),
+  );
+  const yearQuotes = quotes.filter((quote) =>
+    isInYear(quote.created_at, currentYear),
+  );
 
   const projectById = new Map(projects.map((p) => [String(p.id), p]));
   const clientById = new Map(clients.map((c) => [String(c.id), c]));
@@ -368,8 +378,8 @@ export const buildFiscalModel = ({
     .sort((a, b) => b.revenue - a.revenue);
 
   // Quote conversion rate
-  const quotesTotal = quotes.length;
-  const quotesAccepted = quotes.filter((q) =>
+  const quotesTotal = yearQuotes.length;
+  const quotesAccepted = yearQuotes.filter((q) =>
     ACCEPTED_STATUSES.has(q.status),
   ).length;
   const quoteConversionRate =
@@ -377,7 +387,7 @@ export const buildFiscalModel = ({
 
   // DSO (Days Sales Outstanding)
   const dsoValues: number[] = [];
-  for (const payment of payments) {
+  for (const payment of yearPayments) {
     if (payment.status !== "ricevuto" || !payment.payment_date) continue;
     if (!payment.project_id) continue;
     const payDate = new Date(payment.payment_date);
@@ -406,7 +416,9 @@ export const buildFiscalModel = ({
     totalRevenue > 0 ? (top3Revenue / totalRevenue) * 100 : 0;
 
   // Weighted pipeline value
-  const openQuotes = quotes.filter((q) => OPEN_QUOTE_STATUSES.has(q.status));
+  const openQuotes = yearQuotes.filter((q) =>
+    WEIGHTED_PIPELINE_STATUSES.has(q.status),
+  );
   const conversionFactor = quoteConversionRate / 100;
   const weightedPipelineValue = openQuotes.reduce(
     (sum, q) => sum + toNumber(q.amount) * conversionFactor,

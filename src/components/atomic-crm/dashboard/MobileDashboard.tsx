@@ -18,6 +18,7 @@ import MobileHeader from "../layout/MobileHeader";
 import { MobileContent } from "../layout/MobileContent";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { DashboardHistorical } from "./DashboardHistorical";
+import { DashboardAnnualAiSummaryCard } from "./DashboardAnnualAiSummaryCard";
 import { formatCurrency, formatCurrencyPrecise } from "./dashboardModel";
 import type { FiscalModel } from "./fiscalModel";
 import { Welcome } from "./Welcome";
@@ -123,7 +124,13 @@ const MobileAnnualDashboard = () => {
   return (
     <div className="space-y-4">
       {import.meta.env.VITE_IS_DEMO === "true" ? <Welcome /> : null}
-      <DashboardKpiCards kpis={data.kpis} year={data.selectedYear} compact />
+      <DashboardKpiCards
+        kpis={data.kpis}
+        meta={data.meta}
+        year={data.selectedYear}
+        compact
+      />
+      <DashboardAnnualAiSummaryCard year={data.selectedYear} />
       {data.fiscal && <MobileFiscalKpis fiscal={data.fiscal} />}
     </div>
   );
@@ -145,7 +152,7 @@ const MobileFiscalKpis = ({ fiscal }: { fiscal: FiscalModel }) => {
       <Card className="gap-2 py-3">
         <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
           <CardTitle className="text-sm font-medium">
-            Accantonamento mensile
+            Accantonamento mensile consigliato
           </CardTitle>
           <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -161,7 +168,7 @@ const MobileFiscalKpis = ({ fiscal }: { fiscal: FiscalModel }) => {
         <Card className="gap-2 py-3">
           <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
             <CardTitle className="text-sm font-medium">
-              Prossima scadenza
+              Prossima scadenza stimata
             </CardTitle>
             <CalendarClock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -184,7 +191,7 @@ const MobileFiscalKpis = ({ fiscal }: { fiscal: FiscalModel }) => {
       <Card className="gap-2 py-3">
         <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
           <CardTitle className="text-sm font-medium">
-            Tetto forfettario
+            Tetto forfettario stimato
           </CardTitle>
           <Shield className="h-4 w-4 text-muted-foreground" />
         </CardHeader>

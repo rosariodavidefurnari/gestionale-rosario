@@ -26,7 +26,7 @@ export const DashboardAlertsCard = ({
     <CardHeader className="px-4 pb-3">
       <CardTitle className="text-base">Scadenze e alert</CardTitle>
       <p className="text-xs text-muted-foreground">
-        Pagamenti, lavori e preventivi senza risposta
+        Fotografia di oggi: pagamenti, lavori vicini e preventivi senza risposta
       </p>
     </CardHeader>
     <CardContent className="px-4 pb-4 space-y-5">

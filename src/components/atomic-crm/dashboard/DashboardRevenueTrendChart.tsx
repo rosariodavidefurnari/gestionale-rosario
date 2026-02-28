@@ -12,26 +12,39 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
   formatCompactCurrency,
+  type AnnualQualityFlag,
+  type DashboardMeta,
   type RevenueTrendPoint,
 } from "./dashboardModel";
 
 export const DashboardRevenueTrendChart = ({
   data,
+  meta,
+  qualityFlags,
   year,
   isCurrentYear,
 }: {
   data: RevenueTrendPoint[];
+  meta: DashboardMeta;
+  qualityFlags: AnnualQualityFlag[];
   year: number;
   isCurrentYear: boolean;
 }) => (
   <Card className="gap-0">
     <CardHeader className="px-4 pb-3">
-      <CardTitle className="text-base">Andamento fatturato mensile</CardTitle>
+      <CardTitle className="text-base">
+        Andamento del lavoro nell'anno
+      </CardTitle>
       <p className="text-xs text-muted-foreground">
         {isCurrentYear
-          ? "Ultimi 12 mesi (compensi lordi)"
-          : `Gen-Dic ${year} (compensi lordi)`}
+          ? `${meta.operationsPeriodLabel} · netto sconti, finora`
+          : `${meta.operationsPeriodLabel} · netto sconti`}
       </p>
+      {qualityFlags.includes("future_services_excluded") ? (
+        <p className="text-xs text-muted-foreground">
+          I servizi futuri oltre il {meta.asOfDateLabel} sono esclusi.
+        </p>
+      ) : null}
     </CardHeader>
     <CardContent className="px-2 pb-2">
       {data.every((item) => item.revenue === 0) ? (
