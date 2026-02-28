@@ -232,6 +232,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/quotes/quoteItems.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/quotes/index.tsx",
           "type": "registry:component"
         },
@@ -461,6 +465,10 @@
         },
         {
           "path": "src/components/atomic-crm/misc/unsupportedDomains.const.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/misc/referenceSearch.ts",
           "type": "registry:component"
         },
         {
