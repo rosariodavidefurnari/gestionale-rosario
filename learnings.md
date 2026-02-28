@@ -10,6 +10,21 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Quando estendi un flow AI già stabile, aggiungi una Edge
+  Function separata invece di mutare quella esistente** — Per introdurre le
+  domande libere sullo storico senza rischiare regressioni sul riepilogo già
+  validato, la scelta più sicura è stata creare `historical_analytics_answer`
+  separata da `historical_analytics_summary`. Questo mantiene rollback e smoke
+  test molto più chiari.
+
+- [2026-02-28] **Le assertion sui `useMutation` di React Query vanno spesso
+  fatte con `waitFor`, non in modo sincrono dopo il click** — Nel test della
+  card AI le chiamate a `generateHistoricalAnalyticsSummary()` e
+  `askHistoricalAnalyticsQuestion()` risultavano a `0` subito dopo
+  `fireEvent.click`, anche se il componente funzionava. Qui il fix corretto non
+  era cambiare il codice applicativo, ma aspettare il scheduling async della
+  mutation con `await waitFor(...)`.
+
 - [2026-02-28] **Dashboard corretto ma incomprensibile = feature fallita** —
   Anche con semantica giusta, view corrette e AI funzionante, il valore per il
   titolare resta quasi nullo se la UI parla come un analyst. In questo

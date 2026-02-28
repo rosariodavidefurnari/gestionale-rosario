@@ -595,8 +595,20 @@ Current implementation choice:
   historical dashboard model,
 - and it adds human-readable caveats so a future AI consumer does not need to
   infer warnings from raw flags alone.
-- the first end-user consumer is a manual `Analisi AI` card in the `Storico`
+- the end-user consumer is a manual `Analisi AI` card in the `Storico`
   dashboard,
+- the same card now supports both:
+  - a guided summary via `dataProvider.generateHistoricalAnalyticsSummary()`,
+  - and a single-turn question flow via
+    `dataProvider.askHistoricalAnalyticsQuestion()`,
+- the free-question flow is intentionally constrained:
+  - historical data only,
+  - no multi-turn memory,
+  - `300` character limit,
+  - suggested question chips to help non-expert users start,
+- the question flow uses a separate Edge Function
+  `historical_analytics_answer` so the already stable summary flow can evolve
+  independently,
 - and the OpenAI model is configured from Settings via a dropdown, with
   `gpt-5.2` as the default.
 - the visible UX now also includes a plain-language translation layer for
@@ -621,10 +633,21 @@ Verified on `2026-02-28` against the linked project
 - the selected model resolved to `gpt-5.2`,
 - and the generated markdown summary correctly preserved the YTD / closed-year
   caveats.
+- a second authenticated runtime smoke on the same project also verified the
+  single-turn question flow:
+  - `historical_analytics_answer` returned `200 OK`,
+  - the example question `Perché il 2025 è andato meglio del 2024?` produced
+    the expected sections:
+    - `## Risposta breve`
+    - `## Perché lo dico`
+    - `## Cosa controllare adesso`
+  - the answer avoided raw `YTD` / `YoY` jargon and stayed in plain Italian.
 - browser evidence collected the same day also confirms the real UI path:
   - the `Storico` tab renders the historical dashboard correctly,
   - the AI card renders a generated answer in-browser,
   - and the visible answer stays aligned with the same semantic contract.
+- in this session the new free-question path was verified by authenticated
+  remote smoke, but not manually click-tested in the browser.
 
 Operational note:
 

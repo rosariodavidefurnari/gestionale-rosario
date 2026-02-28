@@ -23,6 +23,7 @@ import {
 } from "@/lib/analytics/buildAnalyticsContext";
 import {
   defaultHistoricalAnalysisModel,
+  type HistoricalAnalyticsAnswer,
   type HistoricalAnalyticsSummary,
 } from "@/lib/analytics/historicalAnalysis";
 
@@ -248,6 +249,48 @@ const dataProviderWithCustomMethods = {
       throw new Error(
         errorDetails?.message ||
           "Impossibile generare l'analisi AI dello storico",
+      );
+    }
+
+    return data.data;
+  },
+  async askHistoricalAnalyticsQuestion(
+    question: string,
+  ): Promise<HistoricalAnalyticsAnswer> {
+    const trimmedQuestion = question.trim();
+
+    if (!trimmedQuestion) {
+      throw new Error("Scrivi una domanda prima di inviare la richiesta.");
+    }
+
+    const [context, model] = await Promise.all([
+      getHistoricalAnalyticsContextFromViews(),
+      getConfiguredHistoricalAnalysisModel(),
+    ]);
+
+    const { data, error } = await supabase.functions.invoke<{
+      data: HistoricalAnalyticsAnswer;
+    }>("historical_analytics_answer", {
+      method: "POST",
+      body: {
+        context,
+        question: trimmedQuestion,
+        model,
+      },
+    });
+
+    if (!data || error) {
+      console.error("askHistoricalAnalyticsQuestion.error", error);
+      const errorDetails = await (async () => {
+        try {
+          return (await error?.context?.json()) ?? {};
+        } catch {
+          return {};
+        }
+      })();
+      throw new Error(
+        errorDetails?.message ||
+          "Impossibile ottenere una risposta AI sullo storico",
       );
     }
 

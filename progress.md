@@ -2,9 +2,67 @@
 
 ## Current Phase
 
-🟢 Dashboard storico AI-ready implementato, verificato sul remoto e nel browser, con test UI base aggiunti e linguaggio tradotto per non esperti. Prossimo passo: solo polish opzionale o future estensioni richieste dal prodotto.
+🟢 Dashboard storico AI-ready implementato, verificato sul remoto e nel browser, con test UI base aggiunti, linguaggio tradotto per non esperti e nuovo flusso single-turn `fai una domanda` verificato da remoto. Prossimo passo: solo click-test browser opzionale del nuovo Q&A o future estensioni richieste dal prodotto.
 
 ## Last Session
+
+### Sessione 29 (2026-02-28, historical Q&A single-turn)
+
+- Completed:
+  - **Domande libere sullo storico aggiunte**:
+    - nuovo metodo `dataProvider.askHistoricalAnalyticsQuestion()`
+    - nuovo tipo `HistoricalAnalyticsAnswer`
+    - nuove domande suggerite whitelisted per il tab `Storico`
+  - **Edge Function separata per non rompere la baseline stabile**:
+    - creata `historical_analytics_answer`
+    - prompt vincolato a italiano semplice
+    - risposta strutturata in `Risposta breve`, `Perché lo dico`,
+      `Cosa controllare adesso`
+    - limite domanda `300` caratteri
+  - **Card AI estesa senza trasformarla in chat generale**:
+    - textarea `Fai una domanda su questi numeri`
+    - chip con domande suggerite
+    - guardrail esplicito: solo dati storici visibili
+    - stesso componente mantiene anche `Spiegami lo storico`
+  - **Copertura test aggiornata**:
+    - aggiunto `DashboardHistoricalAiSummaryCard.test.tsx`
+    - verificati sia il flusso summary sia il flusso domanda suggerita
+  - **Deploy remoto chiuso**:
+    - `historical_analytics_answer` deployata su
+      `qvdmzhyzpyaveniirsmo`
+    - smoke autenticato end-to-end OK con utente temporaneo
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts` OK
+  - authenticated remote smoke di `historical_analytics_answer` OK
+    - status `200`
+    - model `gpt-5.2`
+    - output con `## Risposta breve`
+    - niente raw `YTD` / `YoY`
+
+- Decisions:
+  - La modalità giusta per questo prodotto non è una chat libera su tutto il
+    CRM, ma un Q&A vincolato ai dati storici già validati
+  - Il nuovo Q&A resta single-turn e separato dal summary per proteggere la
+    baseline già stabile
+  - Il linguaggio semplice resta requisito di prodotto anche nelle risposte a
+    domanda libera
+
+- Notes:
+  - Il primo smoke remoto ha fallito con `Requested function was not found`
+    perché la nuova Edge Function non era ancora deployata sul progetto
+  - Dopo `npx supabase functions deploy historical_analytics_answer --project-ref qvdmzhyzpyaveniirsmo`
+    il re-test è passato subito
+  - In questa sessione non è stato eseguito il click-test browser del nuovo
+    campo domanda libera
+  - La baseline stabile già pushata resta `237ccbc` finché l'utente non chiede
+    un nuovo commit/push
+
+- Next action:
+  - opzionale: click-test browser del nuovo Q&A nel tab `Storico`
+  - opzionale: piccolo polish di copy/layout della risposta AI
+  - altrimenti nessun blocco tecnico aperto sul perimetro storico v1
 
 ### Sessione 28 (2026-02-28, plain-language UX layer)
 

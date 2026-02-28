@@ -24,10 +24,14 @@ layer:
 The implementation is now functionally closed for v1:
 
 - remote data/runtime verified,
-- authenticated browser path verified,
+- authenticated browser path verified for the historical dashboard and guided AI
+  summary,
 - baseline UI tests added for the historical widgets,
 - visible dashboard copy translated into plain Italian for non-expert users,
-- and the AI summary card has basic readability polish applied.
+- the AI summary card has basic readability polish applied,
+- and the historical AI surface now supports both guided summary and a
+  single-turn free question constrained to historical data and already verified
+  by authenticated remote smoke.
 
 The next work is optional refinement or future expansion, not a missing core
 piece of the shipped flow.
@@ -139,7 +143,55 @@ Ask the new session to:
   translating any unavoidable technical term immediately
 - Remote function redeployed after the prompt rewrite
 
+### Historical free-question flow added
+
+- Added provider method:
+  - `dataProvider.askHistoricalAnalyticsQuestion()`
+- Added separate Edge Function to preserve the already stable summary flow:
+  - `historical_analytics_answer`
+- Extended the existing AI card with:
+  - textarea input
+  - suggested question chips
+  - guardrail copy explaining that the AI only uses the visible historical data
+  - single-turn answer rendering
+- Added AI-card component tests covering:
+  - guided summary flow still working
+  - suggested-question flow
+  - disabled submit on empty question
+- Deployed `historical_analytics_answer` to
+  `qvdmzhyzpyaveniirsmo`
+- Authenticated remote smoke test completed on `2026-02-28`:
+  - temporary authenticated user created on `qvdmzhyzpyaveniirsmo`
+  - authenticated reads to the historical views succeeded
+  - `historical_analytics_answer` returned `200 OK`
+  - model resolved to `gpt-5.2`
+  - output started with `## Risposta breve`
+  - output avoided raw `YTD` / `YoY` wording
+- Important operational note:
+  - the first smoke failed with `Requested function was not found`
+  - root cause was missing remote deploy, not broken code
+  - redeploy fixed it immediately
+
 ## Priority 1
+
+### Optional browser click-test of the free-question path
+
+Why:
+
+- the new Q&A flow is verified by tests and authenticated remote smoke,
+- but in this session it was not manually click-tested in the browser.
+
+Tasks:
+
+- open `Storico`,
+- type or click a suggested question,
+- verify the answer renders correctly in the real browser runtime.
+
+Acceptance:
+
+- the free-question path is verified in the real UI, not only in tests/remoto.
+
+## Priority 2
 
 ### Optional prompt / markdown polish of the AI card
 
@@ -152,13 +204,14 @@ Tasks:
 
 - only if useful after UI review, tighten prompt formatting or card typography,
 - keep the semantic rules unchanged,
-- avoid introducing a chat flow at this stage.
+- avoid introducing a multi-turn chat flow at this stage.
 
 Acceptance:
 
-- the generated summary is easier to scan without changing the business logic.
+- the generated summary/answer is easier to scan without changing business
+  logic.
 
-## Priority 2
+## Priority 3
 
 ### Keep the new UI tests updated if widgets evolve
 
@@ -171,13 +224,13 @@ Why:
 Tasks:
 
 - when historical widgets change, update the UI tests in the same branch,
-- keep coverage for empty/error/YTD/YoY semantics.
+- keep coverage for empty/error/YTD/YoY semantics and the AI card actions.
 
 Acceptance:
 
 - regressions in copy or semantic rendering keep getting caught before shipping.
 
-## Priority 3
+## Priority 4
 
 ### Revisit FakeRest/demo only if scope changes
 
@@ -196,7 +249,7 @@ Acceptance:
 - demo mode does not expose a broken historical tab if the product scope starts
   caring about demo parity.
 
-## Priority 4
+## Priority 5
 
 ### Expand analytics surface / assistant UX
 
@@ -206,7 +259,8 @@ Only after the base is stable:
 - add `YTD vs same period last year`,
 - add client concentration historical KPIs,
 - add category trend commentary for the future AI assistant,
-- optionally evolve the current summary card into a conversational assistant.
+- optionally evolve the current single-turn AI card into a multi-turn
+  conversational assistant.
 
 ## Non-Negotiable Rules
 

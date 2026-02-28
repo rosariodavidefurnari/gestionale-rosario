@@ -12,7 +12,10 @@ import { authProvider, USER_STORAGE_KEY } from "./authProvider";
 import generateData from "./dataGenerator";
 import { withSupabaseFilterAdapter } from "./internal/supabaseAdapter";
 import type { AnalyticsContext } from "@/lib/analytics/buildAnalyticsContext";
-import type { HistoricalAnalyticsSummary } from "@/lib/analytics/historicalAnalysis";
+import type {
+  HistoricalAnalyticsAnswer,
+  HistoricalAnalyticsSummary,
+} from "@/lib/analytics/historicalAnalysis";
 
 const baseDataProvider = fakeRestDataProvider(generateData(), true, 300);
 
@@ -126,6 +129,12 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
     async (): Promise<HistoricalAnalyticsSummary> => {
       throw new Error(
         "Historical analytics AI summary is not available in the FakeRest provider.",
+      );
+    },
+  askHistoricalAnalyticsQuestion:
+    async (): Promise<HistoricalAnalyticsAnswer> => {
+      throw new Error(
+        "Historical analytics AI questions are not available in the FakeRest provider.",
       );
     },
 };

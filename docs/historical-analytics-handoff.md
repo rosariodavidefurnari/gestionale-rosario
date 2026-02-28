@@ -91,6 +91,7 @@ Provider entry point added:
 
 - `dataProvider.getHistoricalAnalyticsContext()`
 - `dataProvider.generateHistoricalAnalyticsSummary()`
+- `dataProvider.askHistoricalAnalyticsQuestion()`
 
 First end-user consumer added:
 
@@ -99,6 +100,7 @@ First end-user consumer added:
 OpenAI server-side integration added:
 
 - edge function: `supabase/functions/historical_analytics_summary/index.ts`
+- edge function: `supabase/functions/historical_analytics_answer/index.ts`
 - settings section: `src/components/atomic-crm/settings/AISettingsSection.tsx`
 
 Purpose:
@@ -114,19 +116,25 @@ Current behavior:
 - the first delivery surface is the custom data-provider method above,
 - the historical dashboard now has a manual `Analisi AI` card that calls the
   edge function only on user action,
+- the same card now supports both:
+  - a guided summary flow,
+  - and a single-turn free question flow constrained to historical data only,
 - the chosen model is configured in Settings and defaults to `gpt-5.2`,
 - the visible dashboard copy is now translated into plain Italian for a
   non-expert business owner,
 - the AI prompt now explicitly avoids jargon and explains terms like `YTD`,
   `YoY`, and `competenza` in simpler language,
 - the AI card now renders markdown lists with clearer bullets and spacing,
-- there is still no conversational assistant/chat flow in the UI.
+- the Q&A flow includes suggested questions, a `300` character limit, and no
+  memory between turns,
+- there is still no multi-turn conversational assistant/chat flow in the UI.
 
 ### Tests added
 
 - `src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
 - `src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx`
 - `src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx`
+- `src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx`
 
 Covered today:
 
@@ -139,7 +147,9 @@ Covered today:
 - contextual YoY warning rendering,
 - widget-level error states,
 - widget-level empty states,
-- YoY `N/D` UI rendering.
+- YoY `N/D` UI rendering,
+- guided summary trigger/render,
+- suggested-question trigger/render for the historical AI card.
 
 ## Validation Done
 
@@ -148,11 +158,13 @@ Successful commands:
 - `npm run typecheck`
 - `npm test -- --run src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
 - `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
+- `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
 - `npx supabase db push`
 - `curl` verification against remote PostgREST with the linked project `service_role`
   key
 - `npx supabase secrets set OPENAI_API_KEY ... SB_PUBLISHABLE_KEY ... --project-ref qvdmzhyzpyaveniirsmo`
 - `npx supabase functions deploy historical_analytics_summary --project-ref qvdmzhyzpyaveniirsmo`
+- `npx supabase functions deploy historical_analytics_answer --project-ref qvdmzhyzpyaveniirsmo`
 
 ### Remote verification completed on linked project
 
@@ -202,14 +214,29 @@ Inference from the repository policies:
   - the selected model resolved to `gpt-5.2`,
   - and the generated markdown summary correctly framed `2026` as `YTD` and
     `2025 vs 2024` as the closed-year comparison,
+- this session also verified the new single-turn Q&A flow end-to-end with a
+  temporary authenticated remote user:
+  - authenticated reads to the historical views succeeded,
+  - `historical_analytics_answer` returned `200 OK`,
+  - the selected model resolved to `gpt-5.2`,
+  - an example question `Perché il 2025 è andato meglio del 2024?` returned the
+    expected sections:
+    - `## Risposta breve`
+    - `## Perché lo dico`
+    - `## Cosa controllare adesso`
+  - the generated answer avoided raw `YTD` / `YoY` jargon and instead used
+    plain wording such as `valore del lavoro attribuito a quell'anno` and
+    `crescita rispetto all'anno prima`,
 - browser evidence collected on `2026-02-28` also confirms the real
   authenticated UI path:
   - the `Storico` dashboard renders KPIs, charts, top clients, and context
     cards correctly,
   - the `Analisi AI dello storico` card renders a generated answer in-browser,
   - the visible answer remains aligned with the approved semantics,
-- therefore the first historical AI flow is now verified both at remote runtime
-  level and at browser click-path level.
+- therefore the guided historical AI summary flow is now verified both at
+  remote runtime level and at browser click-path level,
+- the new free-question flow is verified at remote runtime level, but in this
+  session it was not click-tested manually in the browser.
 - after the plain-language prompt rewrite, the remote function was redeployed
   and returned a simpler answer starting with:
   - `## In breve`
@@ -236,6 +263,16 @@ Fix actually applied:
   - `OPENAI_API_KEY`
 - the function was redeployed after the auth fix,
 - and the remote smoke test passed afterwards.
+
+Additional runtime note for the Q&A flow:
+
+- the first authenticated smoke invocation of `historical_analytics_answer`
+  returned `404 Requested function was not found`,
+- the root cause was simple: the new function existed locally but had not yet
+  been deployed to the linked Supabase project,
+- fix applied:
+  - `npx supabase functions deploy historical_analytics_answer --project-ref qvdmzhyzpyaveniirsmo`
+- re-test immediately after deploy returned `200 OK`.
 
 ## Environment Blockers
 
@@ -279,11 +316,13 @@ Impact:
 
 - FakeRest/demo historical resources remain unimplemented, but this is now
   explicitly de-prioritized for the current product scope.
-- The assistant-ready payload exists, but no conversational chat flow exists
-  yet.
+- The assistant-ready payload exists, and a single-turn historical Q&A flow now
+  exists, but no multi-turn conversational chat flow exists yet.
 - The browser output is now understandable for non-expert users, but markdown
   readability may still deserve further polish only if product wants a denser
   or more scannable layout.
+- The free-question path was smoke-tested remotely but not manually click-tested
+  in the browser during this session.
 
 ## Recommended Next Session Order
 
@@ -294,12 +333,14 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Only if useful after review, polish prompt/copy or markdown presentation of
+1. Only if useful after review, manually click-test the new free-question path
+   in the browser and collect evidence.
+2. Only if useful after review, polish prompt/copy or markdown presentation of
    the AI card further.
-2. Keep the new historical UI tests updated whenever the widgets evolve.
-3. Only later, if useful, evolve the summary card into a conversational
-   assistant flow.
-4. Only later, if the product scope changes, revisit FakeRest/demo historical
+3. Keep the new historical UI tests updated whenever the widgets evolve.
+4. Only later, if useful, evolve the current single-turn card into a
+   conversational assistant flow.
+5. Only later, if the product scope changes, revisit FakeRest/demo historical
    support.
 
 ## Quick Resume Checklist
@@ -311,5 +352,6 @@ Stable rollback note:
 - Read the backlog:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
+  - optional browser click-test of the free-question path
   - optional AI card readability polish
   - keeping historical UI tests aligned with future widget changes

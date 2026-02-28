@@ -165,3 +165,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.historical_analytics_summary]
 verify_jwt = false
+[functions.historical_analytics_answer]
+verify_jwt = false
