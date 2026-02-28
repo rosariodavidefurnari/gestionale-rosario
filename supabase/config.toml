@@ -175,3 +175,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.quote_status_email_send]
 verify_jwt = false
+[functions.invoice_import_extract]
+verify_jwt = false

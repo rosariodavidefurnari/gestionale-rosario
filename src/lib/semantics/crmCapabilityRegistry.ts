@@ -264,6 +264,26 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       requiredFields: [],
     },
     {
+      id: "invoice_import_extract",
+      label: "Analizza fatture nella chat AI",
+      description:
+        "Carica PDF, scansioni o foto nella chat AI unificata e genera una proposta strutturata orientata a payments o expenses.",
+      sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
+      actsOn: ["payments", "expenses", "clients", "projects"],
+      requiredFields: ["files", "aiConfig.invoiceExtractionModel"],
+      sideEffects: ["upload temporaneo file", "invoke Gemini", "pulizia upload temporanei"],
+    },
+    {
+      id: "invoice_import_confirm",
+      label: "Conferma import fatture nel CRM",
+      description:
+        "Conferma la proposta corretta in chat e crea record reali su payments o expenses.",
+      sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
+      actsOn: ["payments", "expenses", "clients", "projects"],
+      requiredFields: ["draft.records", "conferma utente"],
+      sideEffects: ["crea record CRM"],
+    },
+    {
       id: "quote_drag_change_status",
       label: "Sposta preventivo tra stati",
       description:

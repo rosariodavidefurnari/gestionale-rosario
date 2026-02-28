@@ -72,6 +72,12 @@ export type CrmSemanticRegistry = {
       automaticBlockerField: "services.is_taxable";
       meaning: string;
     };
+    invoiceImport: {
+      customerInvoiceResource: "payments";
+      supplierInvoiceResource: "expenses";
+      confirmationRule: string;
+      meaning: string;
+    };
   };
 };
 
@@ -243,6 +249,14 @@ export const buildCrmSemanticRegistry = (
         automaticBlockerField: "services.is_taxable",
         meaning:
           "Le mail cliente sui cambi stato preventivo restano manuali e il residuo mostrato al cliente guarda solo gli incassi gia ricevuti; ogni invio automatico va bloccato se esistono servizi con is_taxable = false.",
+      },
+      invoiceImport: {
+        customerInvoiceResource: "payments",
+        supplierInvoiceResource: "expenses",
+        confirmationRule:
+          "nessuna scrittura nel CRM prima della conferma esplicita utente",
+        meaning:
+          "L'import fatture nella chat AI unificata deve proporre record strutturati e poi mappare le fatture cliente su payments e le fatture/costi fornitore su expenses solo dopo conferma utente.",
       },
     },
   };

@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Se la chat AI propone record con cliente e progetto
+  correggibili, la coerenza tra i due va protetta nel draft prima della
+  conferma** — Nel launcher fatture non basta filtrare i progetti nel select:
+  bisogna anche bloccare i mismatch `clientId/projectId`, azzerare il progetto
+  quando il cliente cambia e riallineare il cliente quando l’utente sceglie un
+  progetto specifico. Altrimenti la bozza sembra valida ma può scrivere link
+  incoerenti nel CRM.
+
 - [2026-02-28] **Quando aggiungi un nuovo campo nested dentro `aiConfig`,
   serve un merge esplicito dei default o i config persistiti vecchi lo
   perdono** — La merge superficiale `...defaultConfiguration, ...config` non

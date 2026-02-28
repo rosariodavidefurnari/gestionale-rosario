@@ -51,6 +51,18 @@ import {
   type HistoricalAnalyticsAnswer,
   type HistoricalAnalyticsSummary,
 } from "@/lib/analytics/historicalAnalysis";
+import { defaultInvoiceExtractionModel } from "@/lib/ai/invoiceExtractionModel";
+import type {
+  GenerateInvoiceImportDraftRequest,
+  InvoiceImportConfirmation,
+  InvoiceImportDraft,
+  InvoiceImportFileHandle,
+  InvoiceImportWorkspace,
+} from "@/lib/ai/invoiceImport";
+import {
+  buildInvoiceImportWorkspace,
+  confirmInvoiceImportDraftWithCreate,
+} from "@/lib/ai/invoiceImportProvider";
 import {
   buildCrmSemanticRegistry,
   type CrmSemanticRegistry,
@@ -168,6 +180,43 @@ const getConfiguredHistoricalAnalysisModel = async () => {
     config.aiConfig?.historicalAnalysisModel ?? defaultHistoricalAnalysisModel
   );
 };
+
+const getConfiguredInvoiceExtractionModel = async () => {
+  const { data } = await baseDataProvider.getOne("configuration", { id: 1 });
+  const config = (data?.config as ConfigurationContextValue | undefined) ?? {};
+  return (
+    config.aiConfig?.invoiceExtractionModel ?? defaultInvoiceExtractionModel
+  );
+};
+
+const getInvoiceImportWorkspaceFromResources =
+  async (): Promise<InvoiceImportWorkspace> => {
+    const [clientsResponse, projectsResponse] = await Promise.all([
+      baseDataProvider.getList<Client>("clients", {
+        pagination: LARGE_PAGE,
+        sort: { field: "name", order: "ASC" },
+        filter: {},
+      }),
+      baseDataProvider.getList<Project>("projects", {
+        pagination: LARGE_PAGE,
+        sort: { field: "name", order: "ASC" },
+        filter: {},
+      }),
+    ]);
+
+    return buildInvoiceImportWorkspace({
+      clients: clientsResponse.data.map((client) => ({
+        id: client.id,
+        name: client.name,
+        email: client.email ?? null,
+      })),
+      projects: projectsResponse.data.map((project) => ({
+        id: project.id,
+        name: project.name,
+        client_id: project.client_id,
+      })),
+    });
+  };
 
 const getQuoteStatusEmailContextFromResources = async (quoteId: Identifier) => {
   const quoteResponse = await baseDataProvider.getOne<Quote>("quotes", {
@@ -392,6 +441,55 @@ const dataProviderWithCustomMethods = {
   async getCrmSemanticRegistry(): Promise<CrmSemanticRegistry> {
     const config = await this.getConfiguration();
     return buildCrmSemanticRegistry(config);
+  },
+  async getInvoiceImportWorkspace(): Promise<InvoiceImportWorkspace> {
+    return getInvoiceImportWorkspaceFromResources();
+  },
+  async uploadInvoiceImportFiles(
+    files: File[],
+  ): Promise<InvoiceImportFileHandle[]> {
+    return Promise.all(files.map((file) => uploadInvoiceImportFile(file)));
+  },
+  async generateInvoiceImportDraft(
+    request: Omit<GenerateInvoiceImportDraftRequest, "model">,
+  ): Promise<InvoiceImportDraft> {
+    const model = await getConfiguredInvoiceExtractionModel();
+
+    const { data, error } = await supabase.functions.invoke<{
+      data: InvoiceImportDraft;
+    }>("invoice_import_extract", {
+      method: "POST",
+      body: {
+        ...request,
+        model,
+      },
+    });
+
+    if (!data || error) {
+      console.error("generateInvoiceImportDraft.error", error);
+      const errorDetails = await (async () => {
+        try {
+          return (await error?.context?.json()) ?? {};
+        } catch {
+          return {};
+        }
+      })();
+      throw new Error(
+        errorDetails?.message ||
+          "Impossibile estrarre i dati fattura nella chat AI",
+      );
+    }
+
+    return data.data;
+  },
+  async confirmInvoiceImportDraft(
+    draft: InvoiceImportDraft,
+  ): Promise<InvoiceImportConfirmation> {
+    return confirmInvoiceImportDraftWithCreate({
+      draft,
+      create: (resource, params) =>
+        baseDataProvider.create(resource, params as never),
+    });
   },
   async getQuoteStatusEmailContext(
     quoteId: Identifier,
@@ -721,6 +819,30 @@ export const dataProvider = withLifecycleCallbacks(
   dataProviderWithCustomMethods,
   lifeCycleCallbacks,
 ) as CrmDataProvider;
+
+const uploadInvoiceImportFile = async (
+  file: File,
+): Promise<InvoiceImportFileHandle> => {
+  const fileParts = file.name.split(".");
+  const fileExt = fileParts.length > 1 ? `.${file.name.split(".").pop()}` : "";
+  const filePath = `ai-invoice-imports/${crypto.randomUUID()}${fileExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("attachments")
+    .upload(filePath, file);
+
+  if (uploadError) {
+    console.error("invoiceImportUpload.error", uploadError);
+    throw new Error("Impossibile caricare il file fattura");
+  }
+
+  return {
+    path: filePath,
+    name: file.name,
+    mimeType: file.type || "application/octet-stream",
+    sizeBytes: file.size,
+  };
+};
 
 const uploadToBucket = async (fi: RAFile) => {
   if (!fi.src.startsWith("blob:") && !fi.src.startsWith("data:")) {

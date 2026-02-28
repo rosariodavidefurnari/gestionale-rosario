@@ -55,6 +55,12 @@ describe("crmSemanticRegistry", () => {
     expect(registry.rules.quoteStatusEmail.outstandingDueFormula).toContain(
       "status = 'ricevuto'",
     );
+    expect(registry.rules.invoiceImport.customerInvoiceResource).toBe(
+      "payments",
+    );
+    expect(registry.rules.invoiceImport.confirmationRule).toContain(
+      "conferma esplicita",
+    );
   });
 
   it("uses km and taxable helpers consistently", () => {

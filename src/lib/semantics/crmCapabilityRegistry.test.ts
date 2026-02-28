@@ -33,6 +33,12 @@ describe("crmCapabilityRegistry", () => {
       ),
     ).toBe(true);
     expect(
+      registry.actions.some((action) => action.id === "invoice_import_extract"),
+    ).toBe(true);
+    expect(
+      registry.actions.some((action) => action.id === "invoice_import_confirm"),
+    ).toBe(true);
+    expect(
       registry.pages.some(
         (page) =>
           page.id === "settings" &&

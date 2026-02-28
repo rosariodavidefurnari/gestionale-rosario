@@ -121,16 +121,40 @@ The next Pareto step is now closed too:
 - older persisted configs keep working because nested AI defaults now merge
   safely instead of replacing the whole `aiConfig` object
 
+The next Pareto step is now closed too:
+
+- the unified launcher now supports the first real invoice workflow using
+  `@google/genai`,
+- mixed upload now works for `PDF` digitali + scansioni/foto,
+- the chat now returns one structured proposal editable directly in the same
+  shell before saving,
+- confirmation now writes only into existing CRM resources:
+  - `payments`
+  - `expenses`
+- semantic registry, capability registry, provider entry points, tests, and
+  continuity docs were updated in the same pass
+- runtime verification is now closed too on the linked remote project:
+  - `GEMINI_API_KEY` set on `qvdmzhyzpyaveniirsmo`
+  - `invoice_import_extract` deployed remotely
+  - authenticated smoke on mixed files (`customer.pdf` + `supplier.png`)
+    returned:
+    - one `payments` draft
+    - one `expenses` draft
+  - the corrected proposal was then confirmed into real remote
+    `payments` / `expenses`
+  - smoke user and smoke CRM data were cleaned after verification
+
 The next high-value step is now:
 
-- implement the first vertical slice inside the unified launcher using
-  `@google/genai`,
-- support mixed invoice upload (`PDF` digitali + scansioni/foto),
-- return one structured proposal the user can correct directly in chat,
-- and write into CRM resources only after explicit confirmation.
+- make the unified launcher read the core CRM consciously, not only invoices,
+- starting from one shared read context over the existing registries and core
+  resources (`clients`, `quotes`, `projects`, `payments`, `expenses`),
+- so the next AI evolution strengthens the single launcher instead of opening
+  new scattered page-level AI surfaces.
 
-Do not open new scattered AI surfaces while doing this. The launcher and the
-separate Gemini setting are now the approved entry points for invoice AI work.
+Do not open new scattered AI surfaces while doing this. The launcher, the
+separate Gemini setting, and the existing semantic/capability foundations are
+now the approved entry points for the next AI work too.
 
 ## Parallel Track Started: Commercial Backbone
 

@@ -32,11 +32,75 @@ deploy function, secret `SMTP_*` e invoke autenticato hanno restituito un
 `accepted` reale con risposta SMTP `250 OK`. Da lì in poi il primo ponte
 corretto verso la chat unificata è adesso chiuso come launcher globale
 flottante, disponibile da tutto il CRM senza route dedicata. Il prossimo passo
-Pareto resta dentro la stessa shell: la configurazione Gemini separata è ora
-chiusa con default `gemini-2.5-pro`, quindi il prossimo lavoro è finalmente la
-vertical slice fatture miste con conferma utente.
+Pareto dentro la stessa shell è adesso chiuso davvero anche sul workflow
+fatture: la configurazione Gemini separata resta su default
+`gemini-2.5-pro`, il launcher accetta `PDF` + scansioni/foto, restituisce una
+bozza strutturata correggibile in chat e conferma solo su esplicita azione
+utente verso `payments` / `expenses`. Anche questa parte è ora verificata sul
+runtime remoto con `invoice_import_extract` deployata, smoke autenticato su
+file misti e cleanup finale. Il prossimo lavoro ad alto valore non è un’altra
+AI sparsa, ma rendere la stessa shell capace di leggere in modo coerente il
+CRM core attraverso il backbone semantico già approvato.
 
 ## Last Session
+
+### Sessione 56 (2026-02-28, vertical slice fatture mista chiusa e verificata)
+
+- Completed:
+  - **Primo workflow reale della chat AI unificata chiuso dentro il launcher**:
+    - upload misto:
+      - `PDF` digitali
+      - scansioni/foto
+    - estrazione strutturata via `@google/genai`
+    - bozza modificabile direttamente nella stessa shell
+    - conferma esplicita verso:
+      - `payments`
+      - `expenses`
+  - **Provider, semantica e capability allineati nello stesso passaggio**:
+    - nuovi entry point:
+      - `getInvoiceImportWorkspace()`
+      - `uploadInvoiceImportFiles()`
+      - `generateInvoiceImportDraft()`
+      - `confirmInvoiceImportDraft()`
+    - registry semantico aggiornato con:
+      - mapping fattura cliente -> `payments`
+      - mapping fattura fornitore -> `expenses`
+      - nessuna scrittura prima della conferma utente
+    - capability registry aggiornato con:
+      - azioni di estrazione e conferma import fatture
+  - **Runtime remoto chiuso sul progetto collegato**:
+    - secret:
+      - `GEMINI_API_KEY`
+    - function deployata:
+      - `invoice_import_extract`
+    - smoke autenticato riuscito con:
+      - `customer.pdf`
+      - `supplier.png`
+    - draft remoto ottenuto con:
+      - 1 record `payments`
+      - 1 record `expenses`
+    - conferma remota riuscita su record reali poi ripuliti
+  - **Hardening UX/consistenza aggiunto prima della chiusura**:
+    - il draft ora blocca mismatch `cliente/progetto`
+    - la selezione progetto riallinea il cliente coerente
+    - il file input permette di ricaricare lo stesso file senza dover chiudere
+      il launcher
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx src/lib/ai/invoiceImport.test.ts src/lib/ai/invoiceImportProvider.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts supabase/functions/_shared/invoiceImportExtract.test.ts`
+  - `npm run registry:gen`
+  - `npx supabase secrets set GEMINI_API_KEY=... --project-ref qvdmzhyzpyaveniirsmo`
+  - `npx supabase functions deploy invoice_import_extract --project-ref qvdmzhyzpyaveniirsmo --no-verify-jwt`
+  - invoke autenticato riuscito su `invoice_import_extract` con scrittura smoke
+    confermata e poi ripulita
+
+- Decisions:
+  - il primo use case reale della chat unificata resta dentro il launcher
+    globale, non in una nuova pagina
+  - il write path fatture resta confermato dall’utente e non va automatizzato
+  - il prossimo step Pareto non è un’altra mini-AI verticale, ma la prima base
+    di lettura CRM-wide dentro la stessa shell
 
 ### Sessione 55 (2026-02-28, setting Gemini separato per estrazione fatture)
 

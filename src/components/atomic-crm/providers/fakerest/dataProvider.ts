@@ -20,6 +20,17 @@ import type { CrmDataProvider } from "../types";
 import { authProvider, USER_STORAGE_KEY } from "./authProvider";
 import generateData from "./dataGenerator";
 import { withSupabaseFilterAdapter } from "./internal/supabaseAdapter";
+import type {
+  GenerateInvoiceImportDraftRequest,
+  InvoiceImportConfirmation,
+  InvoiceImportDraft,
+  InvoiceImportFileHandle,
+  InvoiceImportWorkspace,
+} from "@/lib/ai/invoiceImport";
+import {
+  buildInvoiceImportWorkspace,
+  confirmInvoiceImportDraftWithCreate,
+} from "@/lib/ai/invoiceImportProvider";
 import type { AnalyticsContext } from "@/lib/analytics/buildAnalyticsContext";
 import type { AnnualOperationsContext } from "@/lib/analytics/buildAnnualOperationsContext";
 import type { HistoricalCashInflowContext } from "@/lib/analytics/buildHistoricalCashInflowContext";
@@ -151,6 +162,57 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
     const config = await dataProvider.getConfiguration();
     return buildCrmSemanticRegistry(config);
   },
+  getInvoiceImportWorkspace: async (): Promise<InvoiceImportWorkspace> => {
+    const [clientsResponse, projectsResponse] = await Promise.all([
+      baseDataProvider.getList<Client>("clients", {
+        filter: {},
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: "name", order: "ASC" },
+      }),
+      baseDataProvider.getList<Project>("projects", {
+        filter: {},
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: "name", order: "ASC" },
+      }),
+    ]);
+
+    return buildInvoiceImportWorkspace({
+      clients: clientsResponse.data.map((client) => ({
+        id: client.id,
+        name: client.name,
+        email: client.email ?? null,
+      })),
+      projects: projectsResponse.data.map((project) => ({
+        id: project.id,
+        name: project.name,
+        client_id: project.client_id,
+      })),
+    });
+  },
+  uploadInvoiceImportFiles: async (
+    files: File[],
+  ): Promise<InvoiceImportFileHandle[]> =>
+    files.map((file) => ({
+      path: `fakerest://${crypto.randomUUID()}/${file.name}`,
+      name: file.name,
+      mimeType: file.type || "application/octet-stream",
+      sizeBytes: file.size,
+    })),
+  generateInvoiceImportDraft: async (
+    _request: Omit<GenerateInvoiceImportDraftRequest, "model">,
+  ): Promise<InvoiceImportDraft> => {
+    throw new Error(
+      "Invoice import AI is not available in the FakeRest provider.",
+    );
+  },
+  confirmInvoiceImportDraft: async (
+    draft: InvoiceImportDraft,
+  ): Promise<InvoiceImportConfirmation> =>
+    confirmInvoiceImportDraftWithCreate({
+      draft,
+      create: (resource, params) =>
+        baseDataProvider.create(resource, params as never),
+    }),
   getQuoteStatusEmailContext: async (
     quoteId: string | number,
   ): Promise<QuoteStatusEmailContext> => {

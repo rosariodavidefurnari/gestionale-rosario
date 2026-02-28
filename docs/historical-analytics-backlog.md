@@ -130,20 +130,47 @@ The separate settings step is now closed too:
   - `gemini-2.5-pro`
 - old persisted configs now keep the new nested AI default safely
 
+The invoice vertical-slice step is now closed too:
+
+- the unified launcher now supports mixed invoice ingestion with
+  `@google/genai`
+- upload accepts:
+  - `PDF` digitali
+  - scansioni/foto con layout variabili
+- the assistant now returns one structured proposal editable directly in the
+  same chat shell before saving
+- explicit confirmation now writes only into existing CRM resources:
+  - `payments`
+  - `expenses`
+- provider entry points now exist for:
+  - workspace read
+  - temp file upload
+  - draft extraction
+  - confirmed write
+- runtime verification is now closed too on `qvdmzhyzpyaveniirsmo`:
+  - `GEMINI_API_KEY` aligned
+  - `invoice_import_extract` deployed
+  - authenticated smoke with `customer.pdf` + `supplier.png` returned one
+    `payments` draft and one `expenses` draft
+  - the corrected proposal was then written into remote `payments` /
+    `expenses`
+  - smoke data cleaned after verification
+
 The next open priority is:
 
-- implement the first real unified-chat vertical slice there using
-  `@google/genai`:
-  mixed invoice ingestion (`PDF` digitali + scansioni/foto con layout
-  variabili), structured extraction proposal, direct user correction in chat,
-  and confirmed write into existing CRM resources.
+- start the first CRM-wide read context for the unified launcher, reusing the
+  semantic registry, capability registry, and stable provider entry points
+  across core resources
+- the target is one launcher that can read `clients`, `quotes`, `projects`,
+  `payments`, and `expenses` coherently before adding new write capabilities
 
 Why this comes next:
 
-- the launcher exists
-- the Gemini model setting is explicit and separate
-- the next value is therefore the first real user workflow inside the unified
-  chat, not more shell/config scaffolding
+- the invoice workflow is now real and runtime-verified
+- the next Pareto gain toward the final product goal is broader CRM awareness
+  inside the same launcher, not a second isolated AI trick
+- the semantic/capability backbone is already strong enough to start this read
+  context without reopening approved architecture decisions
 
 Not the next step by default:
 
@@ -151,6 +178,7 @@ Not the next step by default:
 - more page-level AI cards
 - more dashboard widgets
 - broader automation after the manual path is already stable
+- automatic invoice writes without explicit confirmation
 
 ## Stop Line For This Phase
 
