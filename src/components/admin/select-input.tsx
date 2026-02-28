@@ -16,7 +16,12 @@ import {
 import type { ComponentProps, ReactElement } from "react";
 import { useCallback, useEffect } from "react";
 
-import { FormError, FormField, FormLabel } from "@/components/admin/form";
+import {
+  FormControl,
+  FormError,
+  FormField,
+  FormLabel,
+} from "@/components/admin/form";
 import { InputHelperText } from "@/components/admin/input-helper-text";
 import {
   Select,
@@ -222,7 +227,13 @@ export const SelectInput = (props: SelectInputProps) => {
           </FormLabel>
         )}
         <div className="relative">
-          <Skeleton className="w-full h-9" />
+          <Select>
+            <FormControl>
+              <SelectTrigger id={id} name={field.name} disabled>
+                <Skeleton className="h-4 w-full" />
+              </SelectTrigger>
+            </FormControl>
+          </Select>
         </div>
         <InputHelperText helperText={helperText} />
         <FormError />
@@ -270,22 +281,26 @@ export const SelectInput = (props: SelectInputProps) => {
             value={field.value?.toString() || emptyValue}
             onValueChange={handleChangeWithCreateSupport}
           >
-            <SelectTrigger
-              className={cn("w-full transition-all hover:bg-accent")}
-              disabled={field.disabled}
-            >
-              <SelectValue placeholder={renderEmptyItemOption()} />
+            <FormControl>
+              <SelectTrigger
+                id={id}
+                className={cn("w-full transition-all hover:bg-accent")}
+                disabled={field.disabled}
+                name={field.name}
+              >
+                <SelectValue placeholder={renderEmptyItemOption()} />
 
-              {field.value && field.value !== emptyValue ? (
-                <div
-                  role="button"
-                  className="p-0 ml-auto pointer-events-auto hover:bg-transparent text-muted-foreground opacity-50 hover:opacity-100"
-                  onClick={handleReset}
-                >
-                  <X className="h-4 w-4" />
-                </div>
-              ) : null}
-            </SelectTrigger>
+                {field.value && field.value !== emptyValue ? (
+                  <div
+                    role="button"
+                    className="p-0 ml-auto pointer-events-auto hover:bg-transparent text-muted-foreground opacity-50 hover:opacity-100"
+                    onClick={handleReset}
+                  >
+                    <X className="h-4 w-4" />
+                  </div>
+                ) : null}
+              </SelectTrigger>
+            </FormControl>
             <SelectContent>
               {finalChoices?.map((choice) => {
                 if (!choice) return null;

@@ -6,6 +6,57 @@
 
 ## Last Session
 
+### Sessione 19 (2026-02-28, Stabilizzazione runtime e documentazione)
+
+- Completed:
+  - **Filtro periodo riusabile**: estratto `DateRangeFilter.tsx` per sidebar filtri di spese, pagamenti, progetti e servizi
+  - **Filtri data estesi**: aggiunti range date a Progetti, Preventivi e vista attività dashboard
+  - **Tooling repo pulita**: normalizzazione Prettier repo-wide, migrazione ignore dentro `eslint.config.js`, `make lint` tornato verde
+  - **Vitest future-proof**: aggiunti `await` alle `expect(...).resolves` in `supabaseAdapter.spec.ts`
+  - **Bug 406 su Spese/Pagamenti/Preventivi**: corretta la firma `useGetOne(resource, params, options)` per relazioni opzionali; eliminati fetch con id vuoto verso Supabase
+  - **Verifica runtime**: test verdi, build OK, smoke check frontend OK, verifica manuale pagina Spese con record con/senza progetto OK
+  - **Warning React nel registro lavori**: corretto `SelectInput` del campo `service_type` per leggere `label/value` invece dei default `name/id`
+  - **Documentazione aggiornata**: README + docs developer allineate a lint/test, registry hook e convenzioni dei date range filter
+
+- Decisions:
+  - Tenere separati i commit di feature, cleanup tooling, fix runtime e docs per rendere semplice l'eventuale revert
+  - Considerare `406 Not Acceptable` su `getOne` come segnale di `id` nullo/vuoto prima di ipotizzare problemi DB
+  - Per tutte le liste/config basate su `LabeledValue`, dichiarare `optionText="label"` e `optionValue="value"` quando si usa `SelectInput`
+
+- Files created:
+  - `src/components/atomic-crm/filters/DateRangeFilter.tsx`
+
+- Files modified:
+  - `src/components/atomic-crm/expenses/ExpenseListFilter.tsx`
+  - `src/components/atomic-crm/payments/PaymentListFilter.tsx`
+  - `src/components/atomic-crm/projects/ProjectListFilter.tsx`
+  - `src/components/atomic-crm/services/ServiceListFilter.tsx`
+  - `src/components/atomic-crm/quotes/QuoteList.tsx`
+  - `src/components/atomic-crm/tasks/TasksListContent.tsx`
+  - `src/components/atomic-crm/providers/fakerest/internal/supabaseAdapter.spec.ts`
+  - `src/components/atomic-crm/expenses/ExpenseListContent.tsx`
+  - `src/components/atomic-crm/expenses/ExpenseShow.tsx`
+  - `src/components/atomic-crm/payments/PaymentListContent.tsx`
+  - `src/components/atomic-crm/payments/PaymentShow.tsx`
+  - `src/components/atomic-crm/quotes/QuoteCard.tsx`
+  - `src/components/atomic-crm/quotes/QuoteShow.tsx`
+  - `src/components/atomic-crm/services/ServiceInputs.tsx`
+  - `README.md`
+  - `doc/src/content/docs/developers/architecture-choices.mdx`
+  - `doc/src/content/docs/developers/data-providers.mdx`
+  - `eslint.config.js`
+
+- Commits:
+  - `3d6d8af` `feat: unify date range filters across CRM lists`
+  - `fe23ada` `chore: update registry for date range filter`
+  - `e74a7f9` `chore: normalize formatting and lint config`
+  - `4cf6127` `test: await async expectations in supabase adapter specs`
+  - `8e31ee5` `fix: prevent invalid getOne requests for optional relations`
+  - `e450b18` `docs: update tooling and filter guidance`
+  - `4aca90e` `fix: use labeled values in service type select`
+
+- Next action: Push dei commit e smoke test trasversale su Preventivi/Pagamenti dopo deploy
+
 ### Sessione 18 (2026-02-28, Navigazione per anno + Colori Dashboard)
 
 - Completed:

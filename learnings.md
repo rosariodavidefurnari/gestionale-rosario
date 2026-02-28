@@ -10,6 +10,31 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **`useGetOne` di ra-core usa `options` come terzo argomento** — In
+  `ra-core@5.14.2` la firma corretta è `useGetOne(resource, params, options)`.
+  Mettere `enabled` dentro `params` non disabilita la query: il fetch parte lo
+  stesso con `id` vuoto e Supabase può rispondere `406 Not Acceptable` con
+  "Cannot coerce the result to a single JSON object". Pattern corretto per FK
+  opzionali: `useGetOne("projects", { id: record?.project_id }, { enabled: !!record?.project_id })`.
+
+- [2026-02-28] **Supabase `406` su `getOne` spesso indica `id` nullo o vuoto** —
+  Quando `ra-supabase` chiama `getOne()` senza un id valido, PostgREST genera
+  richieste tipo `/projects?` e risponde `406`. Se l'errore appare in liste o
+  show con relazioni opzionali, controllare subito i `useGetOne` sulle FK.
+
+- [2026-02-28] **Hooks prima dei guard return anche nei fix rapidi** — Spostare
+  `enabled` al posto giusto in `useGetOne` può far emergere warning ESLint già
+  presenti (`react-hooks/rules-of-hooks`) se il hook sta sotto `if (!record) return null`.
+  Pattern robusto: dichiarare SEMPRE i hook in cima e usare `record?.field` +
+  `enabled: !!record?.field`.
+
+- [2026-02-28] **`SelectInput` di shadcn-admin-kit assume `name/id` di default** —
+  Se le choices hanno forma `LabeledValue { value, label }`, bisogna passare
+  esplicitamente `optionText="label"` e `optionValue="value"`. Altrimenti il
+  select può mostrare warning React sulle `key`, usare valori `undefined` e
+  comportarsi male in edit. Questo vale in particolare per i campi configurabili
+  da Impostazioni (`taskTypes`, `quoteServiceTypes`, `serviceTypeChoices`).
+
 - [2026-02-25] **Atomic CRM ha già .claude/skills/** — Il repo originale include
   skill per frontend-dev e backend-dev con convenzioni precise (componenti admin,
   ra-core hooks, Edge Functions Deno). Non sovrascrivere mai questi file.
