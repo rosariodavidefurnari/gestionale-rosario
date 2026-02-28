@@ -15,6 +15,7 @@ import {
   type ConfigurationContextValue,
 } from "../root/ConfigurationContext";
 import { defaultConfiguration } from "../root/defaultConfiguration";
+import { FiscalSettingsSection } from "./FiscalSettingsSection";
 import { TagsSettingsSection } from "./TagsSettingsSection";
 
 const SECTIONS = [
@@ -24,6 +25,7 @@ const SECTIONS = [
   { id: "service-types", label: "Tipi servizio" },
   { id: "notes", label: "Note" },
   { id: "tasks", label: "Attività" },
+  { id: "fiscale", label: "Fiscale" },
 ];
 
 const transformFormValues = (data: Record<string, any>) => ({
@@ -35,6 +37,7 @@ const transformFormValues = (data: Record<string, any>) => ({
     noteStatuses: ensureValues(data.noteStatuses),
     quoteServiceTypes: ensureValues(data.quoteServiceTypes),
     serviceTypeChoices: ensureValues(data.serviceTypeChoices),
+    fiscalConfig: data.fiscalConfig,
   } as ConfigurationContextValue,
 });
 
@@ -93,6 +96,7 @@ const SettingsForm = () => {
       noteStatuses: config.noteStatuses,
       quoteServiceTypes: config.quoteServiceTypes,
       serviceTypeChoices: config.serviceTypeChoices,
+      fiscalConfig: config.fiscalConfig,
     }),
     [config],
   );
@@ -253,6 +257,16 @@ const SettingsFormFields = () => {
                 <TextInput source="label" label={false} />
               </SimpleFormIterator>
             </ArrayInput>
+          </CardContent>
+        </Card>
+
+        {/* Fiscal */}
+        <Card id="fiscale">
+          <CardContent className="space-y-4">
+            <h2 className="text-xl font-semibold text-muted-foreground">
+              Fiscale
+            </h2>
+            <FiscalSettingsSection />
           </CardContent>
         </Card>
       </div>
