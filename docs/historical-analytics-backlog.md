@@ -74,7 +74,12 @@ The implementation is now functionally closed for v1:
 - and a first product-capability / communication foundation now exists too:
   - `crmCapabilityRegistry`
   - `quoteStatusEmailTemplates`
-  - provider-agnostic mail rendering with `Gmail` as planned outbound target
+  - `quoteStatusEmailContext`
+  - `dataProvider.getQuoteStatusEmailContext()`
+  - `dataProvider.sendQuoteStatusEmail()`
+  - `quote_status_email_send`
+  - `SendQuoteStatusEmailDialog`
+  - manual Gmail SMTP send path from quote show
   - `CallMeBot` declared as the planned internal high-priority notification
     channel
 
@@ -103,26 +108,41 @@ Strategic product note:
 
 ## First Open Priority
 
-The next Pareto step is:
+The manual quote-status email step is now closed.
+It is also runtime-verified on the linked remote project:
 
-- manual customer email sending for quote status updates via `Gmail SMTP`,
-- built on top of `quoteStatusEmailTemplates`,
-- still blocking all automatic send paths when a flow includes services with
-  `is_taxable = false`.
+- `SMTP_*` secrets set on `qvdmzhyzpyaveniirsmo`
+- `quote_status_email_send` deployed remotely
+- authenticated invoke returned `accepted` with SMTP response `250 2.0.0 OK`
+- smoke user and smoke quote/client cleaned after verification
+
+The next open priority is:
+
+- introduce one unified AI launcher as a small floating button at whole-site
+  level, opening the same chat everywhere instead of adding a new route in the
+  main navigation,
+- add a separate settings field for the invoice-extraction model
+  (`gemini-2.5-pro` default),
+- then implement the first real unified-chat vertical slice there:
+  mixed invoice ingestion (`PDF` digitali + scansioni/foto con layout
+  variabili), structured extraction proposal, direct user correction in chat,
+  and confirmed write into existing CRM resources.
 
 Why this comes next:
 
-- the semantic and capability foundations already exist,
-- the communication direction is already decided,
-- it closes a real business workflow,
-- and it strengthens the future unified AI without adding one more scattered
-  AI surface.
+- product direction is now explicit:
+  - one unified AI experience, not another page-level AI surface
+- the commercial/mail foundation needed before that move is now technically
+  closed and remotely verified
+- invoice ingestion is the first high-value operational use case that justifies
+  the unified launcher
 
 Not the next step by default:
 
+- a new AI page in the main navigation
 - more page-level AI cards
 - more dashboard widgets
-- broader automation before the manual path is stable
+- broader automation after the manual path is already stable
 
 ## Stop Line For This Phase
 
@@ -287,6 +307,38 @@ Ask the new session to:
 - Validation completed on `2026-02-28`:
   - `npm run typecheck`
   - `npm test -- --run src/lib/communications/quoteStatusEmailTemplates.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`
+
+### Manual quote-status email sending via Gmail SMTP
+
+- Added shared context builder:
+  - `src/lib/communications/quoteStatusEmailContext.ts`
+- Added provider entry points:
+  - `dataProvider.getQuoteStatusEmailContext()`
+  - `dataProvider.sendQuoteStatusEmail()`
+- Added real UI entry point:
+  - `src/components/atomic-crm/quotes/SendQuoteStatusEmailDialog.tsx`
+- Added real transport:
+  - `supabase/functions/quote_status_email_send/index.ts`
+- Added current user-facing behavior:
+  - quote show now exposes `Invia mail cliente`
+  - the dialog previews subject/body before sending
+  - the send remains manual only
+  - the dialog reuses `quoteStatusEmailTemplates`
+  - the send is disabled when required fields are missing
+- Added semantic/capability continuity:
+  - capability registry now declares the manual send action and Gmail SMTP env
+  - semantic registry now declares the customer-facing residual formula:
+    - quote amount minus linked payments already `ricevuto`
+- Hard rule preserved:
+  - if linked services include `is_taxable = false`, automatic send remains
+    blocked
+  - no automatic customer send path was introduced in this slice
+- FakeRest continuity:
+  - the same provider entry points now exist in FakeRest too
+  - send stays mocked there, with no real email delivery
+- Validation completed on `2026-02-28`:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/communications/quoteStatusEmailTemplates.test.ts src/lib/communications/quoteStatusEmailContext.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts src/components/atomic-crm/quotes/SendQuoteStatusEmailDialog.test.tsx supabase/functions/_shared/quoteStatusEmailSend.test.ts`
 
 ### Explicit scope decision
 

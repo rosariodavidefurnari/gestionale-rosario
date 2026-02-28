@@ -37,6 +37,15 @@ describe("crmCapabilityRegistry", () => {
         rule.includes("is_taxable = false"),
       ),
     ).toBe(true);
+    expect(registry.communications.quoteStatusEmails.provider).toBe(
+      "gmail_smtp",
+    );
+    expect(registry.communications.quoteStatusEmails.requiredEnvKeys).toEqual([
+      "SMTP_HOST",
+      "SMTP_PORT",
+      "SMTP_USER",
+      "SMTP_PASS",
+    ]);
     expect(registry.communications.internalPriorityNotifications.provider).toBe(
       "callmebot",
     );
@@ -49,5 +58,8 @@ describe("crmCapabilityRegistry", () => {
     expect(
       registry.integrationChecklist.map((item) => item.id),
     ).toContain("communications");
+    expect(
+      registry.actions.some((action) => action.id === "quote_send_status_email"),
+    ).toBe(true);
   });
 });

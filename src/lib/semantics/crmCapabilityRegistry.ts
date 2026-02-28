@@ -38,9 +38,11 @@ export type CrmCapabilityRegistry = {
   }>;
   communications: {
     quoteStatusEmails: {
+      provider: "gmail_smtp";
       description: string;
       sharedBlocks: string[];
       safetyRules: string[];
+      requiredEnvKeys: string[];
       templates: typeof quoteStatusEmailTemplateDefinitions;
     };
     internalPriorityNotifications: {
@@ -282,6 +284,16 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       sideEffects: ["precompila client_id, quote_id e project_id se presente"],
     },
     {
+      id: "quote_send_status_email",
+      label: "Invia mail cliente stato preventivo",
+      description:
+        "Apre una preview manuale e invia via Gmail SMTP la mail cliente coerente con lo stato corrente del preventivo.",
+      sourceFile: "src/components/atomic-crm/quotes/SendQuoteStatusEmailDialog.tsx",
+      actsOn: ["quotes", "clients", "payments", "services"],
+      requiredFields: ["id", "status", "client_id"],
+      sideEffects: ["invia mail cliente via Gmail SMTP"],
+    },
+    {
       id: "client_create_payment",
       label: "Registra pagamento dal cliente",
       description: "Percorso leggero per i casi senza progetto o preventivo strutturato.",
@@ -311,6 +323,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
   ],
   communications: {
     quoteStatusEmails: {
+      provider: "gmail_smtp",
       description:
         "Template mail cliente per cambi stato preventivo con layout condiviso e policy di invio per stato.",
       sharedBlocks: [
@@ -323,6 +336,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       safetyRules: [
         "Se il flusso coinvolge servizi con is_taxable = false, l'invio automatico email deve restare sempre bloccato.",
       ],
+      requiredEnvKeys: ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS"],
       templates: quoteStatusEmailTemplateDefinitions,
     },
     internalPriorityNotifications: {

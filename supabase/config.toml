@@ -173,3 +173,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.annual_operations_answer]
 verify_jwt = false
+[functions.quote_status_email_send]
+verify_jwt = false

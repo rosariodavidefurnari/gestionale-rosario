@@ -94,15 +94,30 @@ surface and rule of the CRM, not guess them from scattered components.
 
 ## Immediate Pareto Next Step
 
-The next high-value step is:
+The previous Pareto step is now closed:
 
-- wire manual quote-status customer email sending through `Gmail SMTP`,
+- manual quote-status customer email sending now goes through `Gmail SMTP`,
 - reusing `quoteStatusEmailTemplates`,
-- without automatic sending,
-- and preserving the hard safety rule for `is_taxable = false`.
+- with one manual preview/send dialog in quote show,
+- and still preserving the hard safety rule for `is_taxable = false`.
+- runtime verification is now closed too on the linked remote project:
+  - `SMTP_*` secrets set on `qvdmzhyzpyaveniirsmo`
+  - `quote_status_email_send` deployed remotely
+  - authenticated invoke returned `accepted` with SMTP response `250 2.0.0 OK`
+  - smoke user and smoke data cleaned after verification
 
-Do not open new scattered AI surfaces before this kind of real workflow
-integration.
+The next high-value step is now:
+
+- introduce one unified AI launcher as a small floating entry point available
+  across the whole CRM,
+- keep it as one global surface instead of a new page in header/nav,
+- add a separate AI setting for invoice extraction model selection,
+- and only then implement the first vertical slice inside that same launcher:
+  mixed invoice upload (`PDF` digitali + scansioni/foto), structured proposal,
+  user correction in chat, and confirmed write into CRM resources.
+
+Do not open new scattered AI surfaces while doing this. The launcher must be
+the bridge toward one unified chat, not another isolated AI page.
 
 ## Parallel Track Started: Commercial Backbone
 
@@ -253,7 +268,7 @@ Purpose:
 - expose a structured context object for future AI analysis,
 - prevent the AI from inferring business semantics from raw tables.
 
-### Capability registry and customer-email foundation added
+### Capability registry and quote-status email flow added
 
 New library files:
 
@@ -261,6 +276,16 @@ New library files:
 - `src/lib/semantics/crmCapabilityRegistry.test.ts`
 - `src/lib/communications/quoteStatusEmailTemplates.ts`
 - `src/lib/communications/quoteStatusEmailTemplates.test.ts`
+- `src/lib/communications/quoteStatusEmailContext.ts`
+- `src/lib/communications/quoteStatusEmailContext.test.ts`
+
+New UI / function pieces:
+
+- `src/components/atomic-crm/quotes/SendQuoteStatusEmailDialog.tsx`
+- `src/components/atomic-crm/quotes/SendQuoteStatusEmailDialog.test.tsx`
+- `supabase/functions/quote_status_email_send/index.ts`
+- `supabase/functions/_shared/quoteStatusEmailSend.ts`
+- `supabase/functions/_shared/quoteStatusEmailSend.test.ts`
 
 Purpose:
 
@@ -281,11 +306,13 @@ Current behavior:
   - hash-route conventions
   - important dialogs such as:
     - quote create/show/edit
+    - send quote-status email
     - create project from quote
     - quick episode
     - quick payment
   - important business actions such as:
     - drag-and-drop quote status change
+    - manual quote-status customer email send
     - create payment from quote
     - create payment from client
     - create project from quote
@@ -300,13 +327,24 @@ Current behavior:
   - and a hard safety rule:
     - if the flow includes services with `is_taxable = false`, automatic email
       send must stay blocked
+- provider entry points now exist for UI or future AI reuse:
+  - `dataProvider.getQuoteStatusEmailContext()`
+  - `dataProvider.sendQuoteStatusEmail()`
+- quote show now exposes one manual `Invia mail cliente` dialog:
+  - subject/body preview
+  - optional custom message
+  - Gmail SMTP send on confirmation only
+  - disabled send when required fields are missing
+- the shared context now computes customer-facing payment meaning explicitly:
+  - `amountPaid` = only linked payments already `ricevuto`
+  - `amountDue` = quote amount minus only received linked payments
 
 Outbound provider decision:
 
 - outbound customer-status emails should target `Gmail`, not `Postmark`
-- the current foundation is provider-agnostic on purpose
-- the actual Gmail transport is still pending credentials and final auth method
-  choice
+- the actual transport is now wired through `Gmail SMTP`
+- current UX remains manual only:
+  - no automatic send path has been introduced
 
 Important note:
 

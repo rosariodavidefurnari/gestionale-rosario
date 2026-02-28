@@ -10,6 +10,33 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Quando una nuova Edge Function UI-invoked sembra deployata ma
+  risponde ancora “SMTP non configurato”, prima di dubitare del codice conviene
+  verificare subito i secret remoti con `supabase secrets list` e poi rifare
+  l’invoke autenticato** — Sul send Gmail il primo `invoke` remoto falliva con
+  `SMTP Gmail non configurato nelle Edge Functions` anche dopo un primo
+  `secrets set`. La chiusura corretta e' stata:
+  1) riallineare `SMTP_*`
+  2) verificare che i digest compaiano davvero nel progetto remoto
+  3) rifare l’invoke autenticato
+  4) considerare il trasporto validato solo quando arriva `accepted` con
+     risposta SMTP reale (`250 OK`).
+
+- [2026-02-28] **Per una mail cliente su stato preventivo, il “residuo” va
+  calcolato solo sui pagamenti collegati gia `ricevuto`, non su quelli solo
+  registrati** — Nel dettaglio preventivo esiste anche il riepilogo interno dei
+  pagamenti aperti, ma quello serve a capire cosa è gia collegato nel CRM.
+  Nel testo verso il cliente, invece, `amountDue` deve significare ancora da
+  incassare davvero. Quindi la formula corretta è:
+  `quote.amount - somma pagamenti collegati con status = ricevuto`.
+
+- [2026-02-28] **Quando una comunicazione cliente dipende da più moduli, il
+  page component non deve ricostruire da solo il contesto** — Per le mail stato
+  preventivo servono quote, client, project, payments, services e config.
+  Il punto giusto è un provider entry point condiviso
+  (`getQuoteStatusEmailContext`) che assembla il contesto una volta sola, così
+  UI attuale e AI futura non duplicano filtri e formule.
+
 - [2026-02-28] **Se una feature deve vivere bene nella futura chat AI
   unificata, la chiusura corretta non è solo codice + test: serve anche una
   checklist di integrazione scritta nei documenti di continuità** — Ogni nuova

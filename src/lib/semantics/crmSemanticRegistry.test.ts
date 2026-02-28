@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { buildCrmSemanticRegistry, calculateKmReimbursement, calculateTaxableServiceNetValue, getDefaultKmRate } from "./crmSemanticRegistry";
+import {
+  buildCrmSemanticRegistry,
+  calculateKmReimbursement,
+  calculateTaxableServiceNetValue,
+  getDefaultKmRate,
+} from "./crmSemanticRegistry";
 
 describe("crmSemanticRegistry", () => {
   it("builds a registry with dynamic service and quote semantics from configuration", () => {
@@ -44,6 +49,12 @@ describe("crmSemanticRegistry", () => {
         (item) => item.value === "bonifico" && item.label === "Bonifico",
       ),
     ).toBe(true);
+    expect(registry.rules.quoteStatusEmail.automaticBlockerField).toBe(
+      "services.is_taxable",
+    );
+    expect(registry.rules.quoteStatusEmail.outstandingDueFormula).toContain(
+      "status = 'ricevuto'",
+    );
   });
 
   it("uses km and taxable helpers consistently", () => {

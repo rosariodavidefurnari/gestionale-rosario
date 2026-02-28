@@ -5,7 +5,16 @@ import {
 } from "ra-core";
 import fakeRestDataProvider from "ra-data-fakerest";
 
-import type { Sale, SalesFormData, SignUpData } from "../../types";
+import type {
+  Client,
+  Payment,
+  Project,
+  Quote,
+  Sale,
+  SalesFormData,
+  Service,
+  SignUpData,
+} from "../../types";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import type { CrmDataProvider } from "../types";
 import { authProvider, USER_STORAGE_KEY } from "./authProvider";
@@ -26,6 +35,14 @@ import {
   buildCrmSemanticRegistry,
   type CrmSemanticRegistry,
 } from "@/lib/semantics/crmSemanticRegistry";
+import {
+  buildQuoteStatusEmailContext,
+  type QuoteStatusEmailContext,
+} from "@/lib/communications/quoteStatusEmailContext";
+import type {
+  QuoteStatusEmailSendRequest,
+  QuoteStatusEmailSendResponse,
+} from "@/lib/communications/quoteStatusEmailTemplates";
 
 const baseDataProvider = fakeRestDataProvider(generateData(), true, 300);
 
@@ -134,6 +151,49 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
     const config = await dataProvider.getConfiguration();
     return buildCrmSemanticRegistry(config);
   },
+  getQuoteStatusEmailContext: async (
+    quoteId: string | number,
+  ): Promise<QuoteStatusEmailContext> => {
+    const [{ data: quote }, configuration] = await Promise.all([
+      baseDataProvider.getOne<Quote>("quotes", { id: quoteId }),
+      dataProvider.getConfiguration(),
+    ]);
+
+    const [
+      clientResponse,
+      projectResponse,
+      paymentsResponse,
+      servicesResponse,
+    ] = await Promise.all([
+      quote.client_id
+        ? baseDataProvider.getOne<Client>("clients", { id: quote.client_id })
+        : Promise.resolve({ data: null }),
+      quote.project_id
+        ? baseDataProvider.getOne<Project>("projects", { id: quote.project_id })
+        : Promise.resolve({ data: null }),
+      baseDataProvider.getList<Payment>("payments", {
+        filter: { quote_id: quote.id },
+        pagination: { page: 1, perPage: 100 },
+        sort: { field: "payment_date", order: "DESC" },
+      }),
+      quote.project_id
+        ? baseDataProvider.getList<Service>("services", {
+            filter: { project_id: quote.project_id },
+            pagination: { page: 1, perPage: 1000 },
+            sort: { field: "service_date", order: "ASC" },
+          })
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    return buildQuoteStatusEmailContext({
+      quote,
+      client: clientResponse.data,
+      project: projectResponse.data,
+      payments: paymentsResponse.data,
+      services: servicesResponse.data,
+      configuration,
+    });
+  },
   getHistoricalAnalyticsContext: async (): Promise<AnalyticsContext> => {
     throw new Error(
       "Historical analytics AI context is not available in the FakeRest provider.",
@@ -187,6 +247,22 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
         "Annual operations AI questions are not available in the FakeRest provider.",
       );
     },
+  sendQuoteStatusEmail: async (
+    request: QuoteStatusEmailSendRequest,
+  ): Promise<QuoteStatusEmailSendResponse> => {
+    if (request.automatic && request.hasNonTaxableServices) {
+      throw new Error(
+        "Invio automatico vietato: il flusso include servizi con is_taxable = false.",
+      );
+    }
+
+    return {
+      messageId: "fakerest-quote-status-email",
+      accepted: request.to ? [request.to] : [],
+      rejected: [],
+      response: "FakeRest provider: no real email sent.",
+    };
+  },
 };
 
 const processConfigLogo = async (logo: any): Promise<string> => {

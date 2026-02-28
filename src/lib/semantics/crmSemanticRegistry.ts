@@ -67,6 +67,11 @@ export type CrmSemanticRegistry = {
       allDayField: "all_day";
       meaning: string;
     };
+    quoteStatusEmail: {
+      outstandingDueFormula: string;
+      automaticBlockerField: "services.is_taxable";
+      meaning: string;
+    };
   };
 };
 
@@ -231,6 +236,13 @@ export const buildCrmSemanticRegistry = (
         allDayField: "all_day",
         meaning:
           "Il flag all_day decide se le date vanno lette come giorno intero o come data/ora precisa.",
+      },
+      quoteStatusEmail: {
+        outstandingDueFormula:
+          "quote.amount - sum(linked payments where status = 'ricevuto')",
+        automaticBlockerField: "services.is_taxable",
+        meaning:
+          "Le mail cliente sui cambi stato preventivo restano manuali e il residuo mostrato al cliente guarda solo gli incassi gia ricevuti; ogni invio automatico va bloccato se esistono servizi con is_taxable = false.",
       },
     },
   };

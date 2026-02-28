@@ -23,12 +23,94 @@ tassabilità dei servizi. In più è partita una seconda foundation necessaria
 per la chat AI unificata futura: un catalogo esplicito delle capacità del CRM
 e una base condivisa per le mail cliente sui cambi di stato preventivo, con
 target outbound `Gmail`. Il vecchio ramo inbound `Postmark` è stato rimosso e
-le notifiche interne ad alta priorità puntano ora a `CallMeBot`. Il prossimo
-passo Pareto fissato è collegare l'invio manuale mail cliente dei cambi stato
-preventivo via `Gmail`, senza automatismi e rispettando il blocco
-`is_taxable = false`.
+le notifiche interne ad alta priorità puntano ora a `CallMeBot`. Anche il
+ponte reale verso le mail cliente è ora chiuso: il dettaglio preventivo espone
+un dialog unico di preview/send manuale via `Gmail SMTP`, costruito sopra
+`quoteStatusEmailTemplates`, con entry point provider espliciti e nessun
+automatismo introdotto. Questa parte adesso è chiusa anche sul runtime remoto:
+deploy function, secret `SMTP_*` e invoke autenticato hanno restituito un
+`accepted` reale con risposta SMTP `250 OK`. Il prossimo passo Pareto non è
+aprire una nuova pagina AI, ma introdurre il launcher globale flottante della
+chat unificata e usarlo per il primo caso ad alto valore: ingestione fatture
+miste con conferma utente.
 
 ## Last Session
+
+### Sessione 53 (2026-02-28, verifica remota reale del send Gmail)
+
+- Completed:
+  - **Trasporto Gmail verificato davvero sul progetto remoto**:
+    - secret `SMTP_*` allineati su `qvdmzhyzpyaveniirsmo`
+    - function deployata:
+      - `quote_status_email_send`
+    - invoke autenticato con utente smoke riuscito
+    - risposta provider:
+      - `accepted = ["rosariodavide.furnari@gmail.com"]`
+      - SMTP `250 2.0.0 OK`
+  - **Smoke data ripuliti dopo la verifica**:
+    - utente temporaneo eliminato
+    - client/quote smoke eliminati
+  - **Direzione del prossimo step chiarita nei documenti**:
+    - prossimo Pareto step:
+      - launcher AI globale flottante
+      - non una nuova pagina nel menu
+    - subito dopo:
+      - setting modello Gemini separato
+      - vertical slice ingestione fatture mista dentro la chat unificata
+
+- Validation:
+  - `npx supabase secrets set SMTP_* --project-ref qvdmzhyzpyaveniirsmo`
+  - `npx supabase functions deploy quote_status_email_send --project-ref qvdmzhyzpyaveniirsmo --no-verify-jwt`
+  - invoke autenticato riuscito su `quote_status_email_send`
+  - `npx supabase secrets list --project-ref qvdmzhyzpyaveniirsmo`
+
+- Decisions:
+  - il send Gmail non e' piu solo “implementato”: ora e' anche verificato su
+    runtime remoto
+  - il prossimo slice AI deve entrare da un launcher unico e flottante, non da
+    una nuova route dedicata
+  - il caso fatture va trattato come prima vertical slice della chat unificata,
+    non come feature AI sparsa
+### Sessione 52 (2026-02-28, invio manuale mail stato preventivo via Gmail)
+
+- Completed:
+  - **Invio manuale mail cliente chiuso sul dettaglio preventivo**:
+    - nuovo dialog:
+      - `SendQuoteStatusEmailDialog`
+    - visibile in `QuoteShow`
+    - preview soggetto/testo prima dell’invio
+    - messaggio opzionale editabile
+    - invio solo su conferma esplicita utente
+  - **Trasporto reale Gmail SMTP collegato**:
+    - nuova function:
+      - `quote_status_email_send`
+    - auth middleware coerente con le altre function UI-invoked
+    - `supabase/config.toml` aggiornato
+  - **Contesto mail reso riusabile per UI e AI futura**:
+    - nuovo builder:
+      - `buildQuoteStatusEmailContext()`
+    - nuovi provider entry point:
+      - `dataProvider.getQuoteStatusEmailContext()`
+      - `dataProvider.sendQuoteStatusEmail()`
+    - stesso entry point esposto anche in FakeRest con send mockato
+  - **Semantica e capability allineate nello stesso passaggio**:
+    - capability registry aggiornato con:
+      - azione manuale `quote_send_status_email`
+      - provider `gmail_smtp`
+      - env richieste `SMTP_*`
+    - semantic registry aggiornato con:
+      - formula residuo cliente:
+        - importo preventivo meno soli pagamenti collegati gia `ricevuto`
+      - guardia automatismi su `services.is_taxable`
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/communications/quoteStatusEmailTemplates.test.ts src/lib/communications/quoteStatusEmailContext.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts src/components/atomic-crm/quotes/SendQuoteStatusEmailDialog.test.tsx supabase/functions/_shared/quoteStatusEmailSend.test.ts`
+
+- Decisions:
+  - l’invio mail cliente sui cambi stato è chiuso come flusso manuale, non automatico
+  - il residuo mostrato nelle mail cliente deve guardare solo agli incassi gia ricevuti, non ai pagamenti soltanto registrati
+  - il prossimo default non è aggiungere un altro slice, ma riesaminare se la fase può fermarsi
 
 ### Sessione 51 (2026-02-28, continuità blindata per nuova chat)
 

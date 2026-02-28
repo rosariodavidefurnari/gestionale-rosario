@@ -22,15 +22,13 @@ import { quoteStatusLabels } from "./quotesTypes";
 import { downloadQuotePDF } from "./QuotePDF";
 import { formatDateRange } from "../misc/formatDateRange";
 import { canCreateProjectFromQuote } from "./quoteProjectLinking";
-import {
-  getQuoteItemLineTotal,
-  sanitizeQuoteItems,
-} from "./quoteItems";
+import { getQuoteItemLineTotal, sanitizeQuoteItems } from "./quoteItems";
 import { QuotePaymentsSection } from "./QuotePaymentsSection";
 import {
   buildPaymentCreatePathFromQuote,
   canCreatePaymentFromQuote,
 } from "../payments/paymentLinking";
+import { SendQuoteStatusEmailDialog } from "./SendQuoteStatusEmailDialog";
 
 export const QuoteShow = ({ open, id }: { open: boolean; id?: string }) => {
   const redirect = useRedirect();
@@ -132,6 +130,7 @@ const QuoteShowContent = () => {
               </Link>
             </Button>
           ) : null}
+          <SendQuoteStatusEmailDialog quote={record} />
           <EditButton />
           <DeleteButton />
         </div>
