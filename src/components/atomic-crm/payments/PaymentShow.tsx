@@ -22,14 +22,23 @@ export const PaymentShow = () => (
 
 const PaymentShowContent = () => {
   const { record, isPending, error } = useShowContext<Payment>();
+  const { data: client } = useGetOne(
+    "clients",
+    { id: record?.client_id },
+    { enabled: !!record?.client_id },
+  );
+  const { data: project } = useGetOne(
+    "projects",
+    {
+      id: record?.project_id,
+    },
+    {
+      enabled: !!record?.project_id,
+    },
+  );
+
   if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
-
-  const { data: client } = useGetOne("clients", { id: record.client_id });
-  const { data: project } = useGetOne("projects", {
-    id: record.project_id ?? "",
-    enabled: !!record.project_id,
-  } as any);
 
   return (
     <div className="mt-2 mb-2 flex gap-8">

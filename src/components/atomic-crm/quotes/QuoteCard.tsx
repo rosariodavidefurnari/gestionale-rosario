@@ -39,10 +39,15 @@ const QuoteCardContent = ({
 }) => {
   const redirect = useRedirect();
   const { quoteServiceTypes } = useConfigurationContext();
-  const { data: client } = useGetOne("clients", {
-    id: quote.client_id,
-    enabled: !!quote.client_id,
-  });
+  const { data: client } = useGetOne(
+    "clients",
+    {
+      id: quote.client_id,
+    },
+    {
+      enabled: !!quote.client_id,
+    },
+  );
 
   const handleClick = () => {
     redirect(`/quotes/${quote.id}/show`, undefined, undefined, undefined, {

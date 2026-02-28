@@ -48,10 +48,15 @@ const QuoteShowContent = () => {
   const { quoteServiceTypes } = useConfigurationContext();
   const [pdfLoading, setPdfLoading] = useState(false);
 
-  const { data: client } = useGetOne("clients", {
-    id: record?.client_id,
-    enabled: !!record?.client_id,
-  });
+  const { data: client } = useGetOne(
+    "clients",
+    {
+      id: record?.client_id,
+    },
+    {
+      enabled: !!record?.client_id,
+    },
+  );
 
   if (!record) return null;
 

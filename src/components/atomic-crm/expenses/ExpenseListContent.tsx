@@ -64,14 +64,24 @@ export const ExpenseListContent = () => {
 };
 
 const ExpenseRow = ({ expense, link }: { expense: Expense; link: string }) => {
-  const { data: project } = useGetOne("projects", {
-    id: expense.project_id ?? "",
-    enabled: !!expense.project_id,
-  } as any);
-  const { data: client } = useGetOne("clients", {
-    id: expense.client_id ?? "",
-    enabled: !!expense.client_id,
-  } as any);
+  const { data: project } = useGetOne(
+    "projects",
+    {
+      id: expense.project_id ?? undefined,
+    },
+    {
+      enabled: !!expense.project_id,
+    },
+  );
+  const { data: client } = useGetOne(
+    "clients",
+    {
+      id: expense.client_id ?? undefined,
+    },
+    {
+      enabled: !!expense.client_id,
+    },
+  );
   const total = computeTotal(expense);
 
   return (

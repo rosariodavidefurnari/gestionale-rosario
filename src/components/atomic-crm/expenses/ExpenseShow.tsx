@@ -31,13 +31,18 @@ export const ExpenseShow = () => (
 
 const ExpenseShowContent = () => {
   const { record, isPending, error } = useShowContext<Expense>();
+  const { data: project } = useGetOne(
+    "projects",
+    {
+      id: record?.project_id,
+    },
+    {
+      enabled: !!record?.project_id,
+    },
+  );
+
   if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
-
-  const { data: project } = useGetOne("projects", {
-    id: record.project_id ?? "",
-    enabled: !!record.project_id,
-  } as any);
 
   const total = computeTotal(record);
 

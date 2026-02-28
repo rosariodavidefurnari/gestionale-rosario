@@ -56,10 +56,15 @@ export const PaymentListContent = () => {
 
 const PaymentRow = ({ payment, link }: { payment: Payment; link: string }) => {
   const { data: client } = useGetOne("clients", { id: payment.client_id });
-  const { data: project } = useGetOne("projects", {
-    id: payment.project_id ?? "",
-    enabled: !!payment.project_id,
-  } as any);
+  const { data: project } = useGetOne(
+    "projects",
+    {
+      id: payment.project_id ?? undefined,
+    },
+    {
+      enabled: !!payment.project_id,
+    },
+  );
 
   return (
     <TableRow className="cursor-pointer hover:bg-muted/50">
