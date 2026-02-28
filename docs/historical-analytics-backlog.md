@@ -34,6 +34,8 @@ The implementation is now functionally closed for v1:
   by authenticated remote smoke and real browser click-test.
 - the commercial backbone slice `Quote -> Project -> Payment` is now
   browser-validated too,
+- the quote-driven quick-payment path is now browser-validated too, including
+  the case with no linked project,
 - and the `Annuale` AI card is now browser-validated on the real authenticated
   UI path.
 
@@ -310,33 +312,57 @@ Ask the new session to:
   - verify the answer renders correctly in the browser runtime
 - Evidence collected:
   - answer returned on model `gpt-5.2`
-  - wording stayed in plain Italian and grounded itself in visible historical
-    year/category data
-  - no browser console errors were observed during the Q&A path
+- wording stayed in plain Italian and grounded itself in visible historical
+  year/category data
+- no browser console errors were observed during the Q&A path
+
+### Quote quick-payment slice completed
+
+- Added a direct `Registra pagamento` CTA on the quote show page
+- The CTA opens `/payments/create` with prefilled:
+  - `quote_id`
+  - `client_id`
+  - `project_id` only when a linked project already exists
+- Scope rule kept explicit:
+  - quote is useful but not mandatory
+  - project is useful but not mandatory
+  - the quick-payment path must still work for simple cases like `wedding`
+    without forcing project creation
+- Real authenticated browser smoke completed on `2026-02-28`
+- Verified path:
+  - open a `wedding` quote with no linked project
+  - use `Registra pagamento`
+  - verify payment create opens with linked quote and client already aligned
+  - verify project remains empty instead of being forced
+  - save the payment successfully from the real UI
+- Added helper coverage for:
+  - quick-payment eligibility by quote status
+  - prefilled payment-create defaults from quote
+  - parsing defaults back from the create URL search params
 
 ## Priority 1
 
-### Choose the next commercial backbone slice
+### Start the `quote_items` foundation
 
 Why:
 
-- slice 1 is now implemented and browser-validated,
-- so the next commercial step should stay narrow and explicit instead of
-  reopening the architecture.
+- the narrow quick-payment slice is now implemented and browser-validated,
+- the next commercial gain now sits in structuring quote content more
+  explicitly, without reopening the approved backbone.
 
 Tasks:
 
-- choose only one near-term slice:
-  - `smart-link / quick payment` from quote
-  - or `quote_items` as builder foundation
-- keep the same rule:
-  - reduce clicks,
-  - but avoid forced automations with ambiguous interpretation.
+- define the smallest viable `quote_items` foundation,
+- keep quote/project optional at the domain level,
+- avoid jumping straight to a full quote builder or PDF automation,
+- preserve the rule:
+  - reduce clicks
+  - avoid forced automations with ambiguous interpretation
 
 Acceptance:
 
-- the next commercial increment is clearly scoped without diluting the current
-  stable chain.
+- the next commercial increment is clearly scoped as `quote_items` foundation,
+  not as a vague builder rewrite.
 
 ## Priority 2
 

@@ -6,12 +6,57 @@
 implementata sul solo contesto `annual_operations`, con click-test browser
 chiuso anche sul runtime reale. Anche il free-question path di `Storico` è ora
 browser-validato, e il primo slice della spina dorsale commerciale
-`Preventivo -> Progetto -> Pagamento` è validato sul percorso autenticato.
-Prossimo passo: scegliere il prossimo slice commerciale minimo senza riaprire
-l'architettura approvata, tenendo come eventuale lavoro secondario solo il
-polish della UI AI.
+`Preventivo -> Progetto -> Pagamento` è validato sul percorso autenticato. In
+più, il quick payment da preventivo è ora validato anche per il caso semplice
+senza progetto. Prossimo passo: aprire il foundation work di `quote_items`
+senza riaprire l'architettura approvata, tenendo come eventuale lavoro
+secondario solo il polish della UI AI.
 
 ## Last Session
+
+### Sessione 36 (2026-02-28, quick payment dal preventivo)
+
+- Completed:
+  - **Quick payment dal preventivo aggiunto**:
+    - nuova CTA `Registra pagamento` nella scheda preventivo
+    - apertura di `PaymentCreate` con prefill da query string
+    - preallineamento di:
+      - `quote_id`
+      - `client_id`
+      - `project_id` solo se il progetto esiste già
+  - **Regola di dominio resa esplicita**:
+    - il preventivo non diventa obbligatorio
+    - il progetto non diventa obbligatorio
+    - il percorso semplice `preventivo -> pagamento` resta valido per casi come
+      `wedding`
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/quotes/CreateProjectFromQuoteDialog.test.tsx src/components/atomic-crm/quotes/quoteProjectLinking.test.ts` OK
+  - totale: `11` test verdi
+  - smoke browser autenticato OK su `2026-02-28`:
+    - apertura di un preventivo `wedding` senza progetto
+    - click su `Registra pagamento`
+    - form pagamento aperto con preventivo e cliente già allineati
+    - progetto lasciato vuoto
+    - pagamento salvato con successo dalla UI reale
+
+- Decisions:
+  - `preventivo` e `progetto` restano acceleratori opzionali, non gateway
+    obbligatori
+  - il prossimo slice commerciale non è più il quick payment ma la foundation
+    `quote_items`
+
+- Notes:
+  - nei smoke browser su componenti `Select` Radix conviene usare locator per
+    ruolo/indice se il testo label contiene formattazioni accessibili variabili
+  - nello show del preventivo la CTA `Registra pagamento` è resa come link,
+    non come button
+
+- Next action:
+  - aprire il foundation work di `quote_items`
+  - solo se utile dopo review:
+    - polish prompt/markdown delle card AI
 
 ### Sessione 35 (2026-02-28, storico free-question browser validation)
 

@@ -270,11 +270,21 @@ What was added:
   - quote-driven autofill of `client_id`
   - quote-driven autofill of `project_id` when available
   - cleanup of incoherent links if the user changes the client afterward
+- quote show now also exposes a quick-payment CTA when the quote is already in
+  an operational status
+- quick payment pre-fills:
+  - linked quote
+  - linked client
+  - linked project only if it exists already
 - payment list/show now display the linked quote too
 
 Important scope decision:
 
 - this is **not** the full quote-builder plan,
+- quote and project remain optional domain objects:
+  - a simple case may still go through `client -> payment`
+  - or `quote -> payment`
+  - without forcing `project`
 - there are still no:
   - `quote_items`,
   - live PDF split editor,
@@ -298,6 +308,11 @@ What was verified in the real authenticated UI on `2026-02-28`:
   - saved a payment and verified payment show renders links to:
     - the project
     - the quote
+  - opened a `wedding` quote with no linked project
+  - used the quick-payment CTA directly from the quote
+  - verified payment create was prefilled with quote/client while leaving
+    project empty
+  - saved the payment successfully without creating a project
 - annual AI track:
   - opened `Annuale`
   - generated the guided explanation
@@ -588,10 +603,8 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Choose the next small commercial backbone slice without reopening the
-   architecture:
-   - `smart-link / quick payment` from quote
-   - or `quote_items` as builder foundation
+1. Start the smallest viable `quote_items` foundation without reopening the
+   architecture.
 2. Only if useful after review, polish prompt/copy or markdown presentation of
    the historical or annual AI cards further.
 3. Keep the new historical and annual semantic tests updated whenever the
@@ -610,6 +623,6 @@ Stable rollback note:
 - Read the backlog:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
-  - choosing the next narrow commercial backbone slice
+  - starting the narrow `quote_items` foundation
   - optional AI card readability polish
   - keeping historical and annual semantic tests aligned with future widget changes

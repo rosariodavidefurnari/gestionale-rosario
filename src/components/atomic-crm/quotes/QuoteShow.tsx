@@ -22,6 +22,10 @@ import { quoteStatusLabels } from "./quotesTypes";
 import { downloadQuotePDF } from "./QuotePDF";
 import { formatDateRange } from "../misc/formatDateRange";
 import { canCreateProjectFromQuote } from "./quoteProjectLinking";
+import {
+  buildPaymentCreatePathFromQuote,
+  canCreatePaymentFromQuote,
+} from "../payments/paymentLinking";
 
 export const QuoteShow = ({ open, id }: { open: boolean; id?: string }) => {
   const redirect = useRedirect();
@@ -113,6 +117,13 @@ const QuoteShowContent = () => {
             </Button>
           ) : canCreateProjectFromQuote(record) ? (
             <CreateProjectFromQuoteDialog client={client} quote={record} />
+          ) : null}
+          {canCreatePaymentFromQuote(record) ? (
+            <Button asChild variant="outline" size="sm">
+              <Link to={buildPaymentCreatePathFromQuote({ quote: record })}>
+                Registra pagamento
+              </Link>
+            </Button>
           ) : null}
           <EditButton />
           <DeleteButton />

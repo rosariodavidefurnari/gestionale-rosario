@@ -1,6 +1,78 @@
 import type { Identifier } from "ra-core";
 
-import type { Project, Quote } from "../types";
+import type { Payment, Project, Quote } from "../types";
+
+export const quoteStatusesEligibleForPaymentCreation = new Set([
+  "accettato",
+  "acconto_ricevuto",
+  "in_lavorazione",
+  "completato",
+]);
+
+type PaymentCreateDefaults = Partial<
+  Pick<Payment, "quote_id" | "client_id" | "project_id">
+>;
+
+const toOptionalIdentifier = (value?: string | null) =>
+  value == null || value === "" ? null : value;
+
+export const canCreatePaymentFromQuote = (
+  quote: Pick<Quote, "status" | "client_id">,
+) =>
+  Boolean(quote.client_id) &&
+  quoteStatusesEligibleForPaymentCreation.has(quote.status);
+
+export const buildPaymentCreateDefaultsFromQuote = ({
+  quote,
+}: {
+  quote: Pick<Quote, "id" | "client_id" | "project_id">;
+}): PaymentCreateDefaults => ({
+  quote_id: quote.id,
+  client_id: quote.client_id,
+  ...(quote.project_id ? { project_id: quote.project_id } : {}),
+});
+
+export const buildPaymentCreatePathFromQuote = ({
+  quote,
+}: {
+  quote: Pick<Quote, "id" | "client_id" | "project_id">;
+}) => {
+  const searchParams = new URLSearchParams();
+  const defaults = buildPaymentCreateDefaultsFromQuote({ quote });
+
+  Object.entries(defaults).forEach(([key, value]) => {
+    if (value != null && value !== "") {
+      searchParams.set(key, String(value));
+    }
+  });
+
+  const search = searchParams.toString();
+  return search ? `/payments/create?${search}` : "/payments/create";
+};
+
+export const getPaymentCreateDefaultsFromSearch = (
+  search: string,
+): PaymentCreateDefaults => {
+  const searchParams = new URLSearchParams(search);
+  const defaults: PaymentCreateDefaults = {};
+
+  const quoteId = toOptionalIdentifier(searchParams.get("quote_id"));
+  if (quoteId) {
+    defaults.quote_id = quoteId;
+  }
+
+  const clientId = toOptionalIdentifier(searchParams.get("client_id"));
+  if (clientId) {
+    defaults.client_id = clientId;
+  }
+
+  const projectId = toOptionalIdentifier(searchParams.get("project_id"));
+  if (projectId) {
+    defaults.project_id = projectId;
+  }
+
+  return defaults;
+};
 
 export const buildPaymentPatchFromQuote = ({
   quote,

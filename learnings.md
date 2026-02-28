@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **In un backbone commerciale che vuole diventare `AI-driving`,
+  `preventivo` e `progetto` devono restare acceleratori opzionali, non passaggi
+  obbligatori** — Nel caso `wedding`, il flusso giusto non è forzare sempre
+  `preventivo -> progetto -> pagamento`, ma permettere anche un percorso più
+  leggero come `preventivo -> pagamento` o persino `cliente -> pagamento`.
+  Il CRM deve strutturare quando serve, non inventare burocrazia che poi
+  produce dati fragili o finti.
+
 - [2026-02-28] **Negli smoke remoti con utenti temporanei creati via admin API,
   la cleanup va fatta `sales` -> `auth.users`** — Sul progetto remoto, la
   cancellazione diretta dell'utente auth fallisce con vincolo

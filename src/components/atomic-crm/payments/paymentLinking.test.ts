@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPaymentCreateDefaultsFromQuote,
+  buildPaymentCreatePathFromQuote,
+  canCreatePaymentFromQuote,
   buildQuoteSearchFilter,
   buildPaymentPatchFromQuote,
+  getPaymentCreateDefaultsFromSearch,
   shouldClearProjectForClient,
   shouldClearQuoteForClient,
 } from "./paymentLinking";
@@ -63,5 +67,70 @@ describe("paymentLinking", () => {
       "description@ilike": "%Diego TV%",
     });
     expect(buildQuoteSearchFilter("   ")).toEqual({});
+  });
+
+  it("builds quick-payment defaults and path from a quote", () => {
+    expect(
+      buildPaymentCreateDefaultsFromQuote({
+        quote: {
+          id: "quote-7",
+          client_id: "client-2",
+          project_id: "project-9",
+        },
+      }),
+    ).toEqual({
+      quote_id: "quote-7",
+      client_id: "client-2",
+      project_id: "project-9",
+    });
+
+    expect(
+      buildPaymentCreatePathFromQuote({
+        quote: {
+          id: "quote-7",
+          client_id: "client-2",
+          project_id: "project-9",
+        },
+      }),
+    ).toBe(
+      "/payments/create?quote_id=quote-7&client_id=client-2&project_id=project-9",
+    );
+  });
+
+  it("parses quick-payment defaults from the create URL search params", () => {
+    expect(
+      getPaymentCreateDefaultsFromSearch(
+        "?quote_id=quote-7&client_id=client-2&project_id=project-9",
+      ),
+    ).toEqual({
+      quote_id: "quote-7",
+      client_id: "client-2",
+      project_id: "project-9",
+    });
+
+    expect(getPaymentCreateDefaultsFromSearch("?quote_id=quote-7")).toEqual({
+      quote_id: "quote-7",
+    });
+  });
+
+  it("only shows quick payment for operational quote statuses that can still receive payments", () => {
+    expect(
+      canCreatePaymentFromQuote({
+        status: "accettato",
+        client_id: "client-1",
+      }),
+    ).toBe(true);
+    expect(
+      canCreatePaymentFromQuote({
+        status: "preventivo_inviato",
+        client_id: "client-1",
+      }),
+    ).toBe(false);
+    expect(
+      canCreatePaymentFromQuote({
+        status: "saldato",
+        client_id: "client-1",
+      }),
+    ).toBe(false);
   });
 });
