@@ -18,6 +18,7 @@ import {
 
 import type { Quote } from "../types";
 import { QuoteInputs } from "./QuoteInputs";
+import { transformQuoteFormData } from "./quoteItems";
 
 export const QuoteCreate = ({ open }: { open: boolean }) => {
   const redirect = useRedirect();
@@ -77,12 +78,17 @@ export const QuoteCreate = ({ open }: { open: boolean }) => {
         <DialogDescription className="sr-only">
           Compila i campi per creare un nuovo preventivo
         </DialogDescription>
-        <Create resource="quotes" mutationOptions={{ onSuccess }}>
+        <Create
+          resource="quotes"
+          mutationOptions={{ onSuccess }}
+          transform={transformQuoteFormData}
+        >
           <Form
             defaultValues={{
               index: 0,
               status: "primo_contatto",
               all_day: true,
+              quote_items: [],
             }}
           >
             <QuoteInputs />

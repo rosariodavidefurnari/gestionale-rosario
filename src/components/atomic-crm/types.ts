@@ -169,10 +169,17 @@ export type Quote = {
   response_date?: string;
   rejection_reason?: string;
   notes?: string;
+  quote_items?: QuoteItem[];
   index: number;
   created_at: string;
   updated_at: string;
 } & Pick<RaRecord, "id">;
+
+export type QuoteItem = {
+  description: string;
+  quantity: number;
+  unit_price: number;
+};
 
 export type Tag = {
   id: number;

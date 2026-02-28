@@ -286,11 +286,46 @@ Important scope decision:
   - or `quote -> payment`
   - without forcing `project`
 - there are still no:
-  - `quote_items`,
   - live PDF split editor,
   - automatic status transitions,
 - this was the smallest safe slice to strengthen module integration before
   broader AI expansion.
+
+### Commercial backbone slice 2 now implemented
+
+What was added:
+
+- new migration:
+  - `supabase/migrations/20260228190000_add_quote_items_json.sql`
+- `Quote` now supports optional embedded `quote_items`
+- quote create/edit now support repeatable line items
+- quote `amount` now auto-derives from line totals when item rows are present
+- quote show now renders itemized rows with per-line totals
+- quote PDF now renders itemized rows too when the quote is itemized
+
+Important scope decision:
+
+- this is still **not** the full quote-builder plan,
+- `quote_items` live inside `quotes`, not in a separate CRUD-heavy module,
+- quote and project remain optional domain objects,
+- the legacy simple quote path remains valid:
+  - description + amount
+- itemization only activates when the user actually adds line items.
+
+Runtime issue discovered and fixed during real browser validation:
+
+- quote create used the generic autocomplete fallback `q` on `clients`
+- on the real Supabase resource this failed with:
+  - `column clients.q does not exist`
+- fix applied:
+  - added shared name lookup helper:
+    - `src/components/atomic-crm/misc/referenceSearch.ts`
+  - moved client/project lookups that need name search to explicit
+    `name@ilike`
+  - applied in:
+    - `QuoteInputs`
+    - `QuoteList`
+    - `TaskFormContent`
 
 ### Browser click-tests now completed on both active tracks
 
@@ -313,6 +348,9 @@ What was verified in the real authenticated UI on `2026-02-28`:
   - verified payment create was prefilled with quote/client while leaving
     project empty
   - saved the payment successfully without creating a project
+  - created an itemized quote from the real UI
+  - verified the amount was auto-derived from line items
+  - verified quote show renders the itemized rows in the real authenticated app
 - annual AI track:
   - opened `Annuale`
   - generated the guided explanation
@@ -345,6 +383,12 @@ Runtime issues discovered and fixed during the browser smoke:
   - added a quote-specific `filterToQuery` on `description@ilike`
   - added regression coverage in:
     - `src/components/atomic-crm/payments/paymentLinking.test.ts`
+- quote create used the generic autocomplete fallback `q` on `clients`
+- on the Supabase `clients` resource this failed with:
+  - `column clients.q does not exist`
+- fix applied:
+  - added shared `name@ilike` lookup helper for name-based references
+  - wired it into quote/task/client lookups that search by name
 
 ### Tests added
 
@@ -358,6 +402,8 @@ Runtime issues discovered and fixed during the browser smoke:
 - `src/components/atomic-crm/quotes/quoteProjectLinking.test.ts`
 - `src/components/atomic-crm/payments/paymentLinking.test.ts`
 - `src/components/atomic-crm/quotes/CreateProjectFromQuoteDialog.test.tsx`
+- `src/components/atomic-crm/quotes/quoteItems.test.ts`
+- `src/components/atomic-crm/misc/referenceSearch.test.ts`
 
 Covered today:
 
@@ -380,6 +426,9 @@ Covered today:
 - annual AI card summary/question triggers.
 - quote -> project linking from direct `useCreate` mutation result.
 - quote autocomplete search in the payment form by description.
+- quote item row sanitization, total computation and create/edit payload
+  transform.
+- explicit name-based lookup filters for reference inputs that search on `name`.
 
 ## Validation Done
 
@@ -391,6 +440,7 @@ Successful commands:
 - `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
 - `npm test -- --run src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
 - `npm test -- --run src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts src/lib/analytics/buildAnnualOperationsContext.test.ts src/components/atomic-crm/dashboard/DashboardAnnualAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
+- `npm test -- --run src/components/atomic-crm/quotes/quoteItems.test.ts src/components/atomic-crm/misc/referenceSearch.test.ts src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/quotes/CreateProjectFromQuoteDialog.test.tsx src/components/atomic-crm/quotes/quoteProjectLinking.test.ts`
 - `npx supabase db push`
 - `curl` verification against remote PostgREST with the linked project `service_role`
   key
@@ -403,6 +453,8 @@ Successful commands:
   Supabase project for:
   - `Quote -> Project -> Payment`
   - `Annuale` AI card
+  - `Storico` free-question path
+  - itemized quote create/show flow
 
 ### Remote verification completed on linked project
 
@@ -582,9 +634,11 @@ Impact:
   explicitly de-prioritized for the current product scope.
 - The assistant-ready payload exists, and a single-turn historical Q&A flow now
   exists, but no multi-turn conversational chat flow exists yet.
-- `Annuale` still needs a dedicated AI context builder before any OpenAI
-  consumer is added there; this is now done only for `annual_operations`, not
-  for alerts/fiscal.
+- `Annuale` is still not AI-ready as a whole page:
+  - only `annual_operations` has a dedicated AI context today
+  - alerts and fiscal simulation remain outside that context
+- inside `annual_operations`, pending payments and open quotes are still mostly
+  top-line totals; a richer drill-down is the next useful semantic increment.
 - The browser output is now understandable for non-expert users, but markdown
   readability may still deserve further polish only if product wants a denser
   or more scannable layout.
@@ -603,12 +657,14 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Start the smallest viable `quote_items` foundation without reopening the
-   architecture.
-2. Only if useful after review, polish prompt/copy or markdown presentation of
-   the historical or annual AI cards further.
-3. Keep the new historical and annual semantic tests updated whenever the
+1. Add a small AI-safe drill-down in `annual_operations` for:
+   - pending payments
+   - open quotes
+   so the AI can answer with concrete entities, not only totals.
+2. Keep the new historical / annual / commercial tests updated whenever the
    widgets evolve.
+3. Only if useful after review, polish prompt/copy or markdown presentation of
+   the historical or annual AI cards further.
 4. Only later, if useful, evolve the current single-turn cards into a
    conversational assistant flow.
 5. Only later, if the product scope changes, revisit FakeRest/demo historical
@@ -623,6 +679,6 @@ Stable rollback note:
 - Read the backlog:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
-  - starting the narrow `quote_items` foundation
+  - adding annual AI-safe drill-down for pending payments / open quotes
+  - keeping historical, annual and commercial tests aligned with future widget changes
   - optional AI card readability polish
-  - keeping historical and annual semantic tests aligned with future widget changes

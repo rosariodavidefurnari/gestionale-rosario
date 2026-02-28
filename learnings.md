@@ -10,6 +10,22 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Per dare struttura ai preventivi senza aprire subito un
+  builder pesante, `quote_items` embedded in `quotes` sono una foundation
+  abbastanza forte** — In questo repo il compromesso migliore non era creare un
+  nuovo modulo CRUD o riscrivere tutto il flusso PDF, ma aggiungere voci
+  opzionali direttamente al preventivo e fare derivare da lì l'importo totale.
+  Così il percorso semplice resta leggero, mentre i casi che servono all'AI o
+  al commerciale ottengono dati più strutturati senza burocrazia finta.
+
+- [2026-02-28] **Sui resource Supabase reali il fallback generico `q` non è una
+  strategia affidabile per gli autocomplete business-critical** — Nel form
+  preventivi il lookup clienti falliva nel browser reale con
+  `column clients.q does not exist`. Quando il lookup deve trovare davvero
+  record per nome o descrizione, conviene dichiarare sempre il filtro esplicito
+  giusto (`name@ilike`, `description@ilike`) invece di sperare che ogni
+  resource supporti `q`.
+
 - [2026-02-28] **In un backbone commerciale che vuole diventare `AI-driving`,
   `preventivo` e `progetto` devono restare acceleratori opzionali, non passaggi
   obbligatori** — Nel caso `wedding`, il flusso giusto non è forzare sempre

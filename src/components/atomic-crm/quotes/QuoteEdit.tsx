@@ -18,6 +18,7 @@ import {
 import { FormToolbar } from "../layout/FormToolbar";
 import type { Quote } from "../types";
 import { QuoteInputs } from "./QuoteInputs";
+import { transformQuoteFormData } from "./quoteItems";
 
 export const QuoteEdit = ({ open, id }: { open: boolean; id?: string }) => {
   const redirect = useRedirect();
@@ -38,6 +39,7 @@ export const QuoteEdit = ({ open, id }: { open: boolean; id?: string }) => {
         {id ? (
           <EditBase
             id={id}
+            transform={transformQuoteFormData}
             mutationMode="pessimistic"
             mutationOptions={{
               onSuccess: () => {

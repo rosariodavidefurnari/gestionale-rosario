@@ -36,6 +36,11 @@ The implementation is now functionally closed for v1:
   browser-validated too,
 - the quote-driven quick-payment path is now browser-validated too, including
   the case with no linked project,
+- the `quote_items` foundation is now implemented inside `quotes` without
+  introducing a separate CRUD module,
+- itemized quotes now auto-derive `amount` from line items, keep the classic
+  quote path backward-compatible, and are browser-validated on real create/show
+  flows,
 - and the `Annuale` AI card is now browser-validated on the real authenticated
   UI path.
 
@@ -340,31 +345,96 @@ Ask the new session to:
   - prefilled payment-create defaults from quote
   - parsing defaults back from the create URL search params
 
+### Quote items foundation completed
+
+- Added migration:
+  - `20260228190000_add_quote_items_json.sql`
+- Scope decision locked in code:
+  - `quote_items` live inside `quotes.quote_items` as a JSONB array payload,
+    not as a separate CRUD-heavy resource
+  - the classic quote path stays valid:
+    - `description + amount` still works
+  - when `quote_items` exist:
+    - `amount` is derived automatically from the line totals
+- Added quote-items helper module:
+  - `quoteItems.ts`
+  - sanitize rows
+  - compute totals
+  - transform create/edit payloads safely
+- Added form/UI support:
+  - repeatable `Voci preventivo` in create/edit
+  - auto-locked total when the quote is itemized
+  - quote show renders the item list with per-line totals
+  - quote PDF renders itemized rows when present
+- Runtime fix discovered during real browser validation:
+  - generic autocomplete search `q` is not safe on the Supabase `clients`
+    resource
+  - real browser flow failed with `column clients.q does not exist`
+  - fix applied:
+    - added shared `name@ilike` helper for client/project reference lookups
+    - wired it into quote create/list and task client selection
+- Validation completed on `2026-02-28`:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/quotes/quoteItems.test.ts src/components/atomic-crm/misc/referenceSearch.test.ts src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/quotes/CreateProjectFromQuoteDialog.test.tsx src/components/atomic-crm/quotes/quoteProjectLinking.test.ts`
+  - `npx supabase db push`
+  - authenticated browser smoke:
+    - created a quote with line items from the real UI
+    - verified computed amount in the form/runtime
+    - verified itemized rendering in quote show on the real authenticated app
+    - no browser console errors after the explicit `name@ilike` fix
+
 ## Priority 1
 
-### Start the `quote_items` foundation
+### Add AI-safe drill-down for `pagamenti da ricevere` and `preventivi aperti`
 
 Why:
 
-- the narrow quick-payment slice is now implemented and browser-validated,
-- the next commercial gain now sits in structuring quote content more
-  explicitly, without reopening the approved backbone.
+- `Annuale` AI already sees the totals for pending payments and open quotes,
+  but not yet a structured drill-down behind those totals,
+- the next useful step should strengthen both tracks together:
+  - semantic layer for AI
+  - commercial backbone data contracts
 
 Tasks:
 
-- define the smallest viable `quote_items` foundation,
-- keep quote/project optional at the domain level,
-- avoid jumping straight to a full quote builder or PDF automation,
-- preserve the rule:
-  - reduce clicks
-  - avoid forced automations with ambiguous interpretation
+- expose a small structured breakdown inside `annual_operations`,
+- keep the breakdown semantically clean:
+  - `pagamenti da ricevere` = cash expected
+  - `preventivi aperti` = pipeline potential
+- avoid mixing this with the current-day alerts snapshot,
+- keep quote/project optional at the domain level.
 
 Acceptance:
 
-- the next commercial increment is clearly scoped as `quote_items` foundation,
-  not as a vague builder rewrite.
+- Annuale AI can answer payment/quote questions with concrete entities and not
+  only top-line totals.
 
 ## Priority 2
+
+### Keep the new UI and semantic tests updated if widgets evolve
+
+Why:
+
+- the current baseline is now protected by tests across:
+  - historical widgets,
+  - annual operations AI,
+  - commercial backbone helpers,
+  - quote itemization helpers.
+
+Tasks:
+
+- when historical/annual/commercial widgets change, update the tests in the
+  same branch,
+- keep coverage for empty/error/YTD/YoY semantics and AI card actions,
+- keep `quote_items` and lookup-helper tests aligned with any future form
+  refactor.
+
+Acceptance:
+
+- regressions in semantic rendering or cross-module linking keep getting caught
+  before shipping.
+
+## Priority 3
 
 ### Optional prompt / markdown polish of the AI card
 
@@ -383,26 +453,6 @@ Acceptance:
 
 - the generated summary/answer is easier to scan without changing business
   logic.
-
-## Priority 3
-
-### Keep the new UI tests updated if widgets evolve
-
-Why:
-
-- the current v1 is now protected by UI tests,
-- so future widget changes should extend those tests instead of silently
-  bypassing them.
-
-Tasks:
-
-- when historical widgets change, update the UI tests in the same branch,
-- keep coverage for empty/error/YTD/YoY semantics and the AI card actions,
-- keep the new annual semantic tests aligned with future changes to `Annuale`.
-
-Acceptance:
-
-- regressions in copy or semantic rendering keep getting caught before shipping.
 
 ## Priority 4
 

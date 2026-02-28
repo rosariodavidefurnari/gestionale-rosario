@@ -8,11 +8,67 @@ chiuso anche sul runtime reale. Anche il free-question path di `Storico` è ora
 browser-validato, e il primo slice della spina dorsale commerciale
 `Preventivo -> Progetto -> Pagamento` è validato sul percorso autenticato. In
 più, il quick payment da preventivo è ora validato anche per il caso semplice
-senza progetto. Prossimo passo: aprire il foundation work di `quote_items`
-senza riaprire l'architettura approvata, tenendo come eventuale lavoro
-secondario solo il polish della UI AI.
+senza progetto, e la foundation `quote_items` è implementata e validata sul
+runtime reale. Prossimo passo: dare a `Annuale` un drill-down AI-safe su
+`pagamenti da ricevere` e `preventivi aperti`, così l'AI può leggere meglio il
+backbone commerciale senza uscire dal perimetro semantico approvato.
 
 ## Last Session
+
+### Sessione 37 (2026-02-28, foundation `quote_items`)
+
+- Completed:
+  - **Foundation `quote_items` chiusa senza riaprire l'architettura**:
+    - nuova migration `20260228190000_add_quote_items_json.sql`
+    - `quote_items` salvati direttamente dentro `quotes` come array JSONB
+    - nessun nuovo modulo CRUD separato
+    - il preventivo classico `descrizione + importo` resta valido
+    - se ci sono voci, l'importo totale viene calcolato automaticamente
+  - **UI preventivi aggiornata**:
+    - create/edit con sezione ripetibile `Voci preventivo`
+    - importo bloccato in modifica quando il preventivo è itemizzato
+    - show con righe voce per voce e totale per riga
+    - PDF con rendering itemizzato quando presente
+  - **Fix runtime emerso dal browser smoke**:
+    - il lookup cliente del preventivo usava il filtro generico `q`
+    - sul Supabase reale falliva con `column clients.q does not exist`
+    - introdotto helper condiviso `name@ilike` per lookup nominali in:
+      - `QuoteInputs`
+      - `QuoteList`
+      - `TaskFormContent`
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/quotes/quoteItems.test.ts src/components/atomic-crm/misc/referenceSearch.test.ts src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/quotes/CreateProjectFromQuoteDialog.test.tsx src/components/atomic-crm/quotes/quoteProjectLinking.test.ts` OK
+  - totale: `16` test verdi
+  - `npx supabase db push` OK
+    - migration applicata al remoto:
+      - `20260228190000_add_quote_items_json.sql`
+  - smoke browser autenticato OK su `2026-02-28`:
+    - creazione di un preventivo itemizzato dalla UI reale
+    - importo calcolato correttamente dalle voci
+    - show del preventivo con righe itemizzate visibili
+    - nessun errore console dopo il fix `name@ilike`
+
+- Decisions:
+  - `quote_items` restano embedded nel preventivo, non diventano ora un nuovo
+    modulo autonomo
+  - il passo successivo più utile non è un altro builder UI, ma un drill-down
+    AI-safe di `pagamenti da ricevere` e `preventivi aperti` dentro
+    `annual_operations`
+
+- Notes:
+  - per lookup nominali su resource Supabase reali non conviene fidarsi del
+    fallback generico `q`
+  - la struttura embedded dei `quote_items` è abbastanza forte per il backbone
+    commerciale attuale senza introdurre burocrazia inutile
+
+- Next action:
+  - aggiungere drill-down AI-safe per:
+    - `pagamenti da ricevere`
+    - `preventivi aperti`
+  - solo se utile dopo review:
+    - polish prompt/markdown delle card AI
 
 ### Sessione 36 (2026-02-28, quick payment dal preventivo)
 

@@ -23,6 +23,10 @@ import { downloadQuotePDF } from "./QuotePDF";
 import { formatDateRange } from "../misc/formatDateRange";
 import { canCreateProjectFromQuote } from "./quoteProjectLinking";
 import {
+  getQuoteItemLineTotal,
+  sanitizeQuoteItems,
+} from "./quoteItems";
+import {
   buildPaymentCreatePathFromQuote,
   canCreatePaymentFromQuote,
 } from "../payments/paymentLinking";
@@ -80,6 +84,7 @@ const QuoteShowContent = () => {
   const serviceLabel =
     quoteServiceTypes.find((t) => t.value === record.service_type)?.label ??
     record.service_type;
+  const quoteItems = sanitizeQuoteItems(record.quote_items);
 
   const handleDownloadPDF = async () => {
     setPdfLoading(true);
@@ -89,6 +94,7 @@ const QuoteShowContent = () => {
         client,
         serviceLabel,
         statusLabel,
+        quoteItems,
       });
     } finally {
       setPdfLoading(false);
@@ -183,6 +189,42 @@ const QuoteShowContent = () => {
           />
         )}
       </div>
+
+      {quoteItems.length > 0 && (
+        <>
+          <Separator className="my-4 mx-4" />
+          <div className="mx-4 space-y-3">
+            <span className="text-xs text-muted-foreground tracking-wide">
+              Voci preventivo
+            </span>
+            <div className="rounded-md border">
+              {quoteItems.map((item, index) => (
+                <div
+                  key={`${item.description}-${index}`}
+                  className="flex items-start justify-between gap-4 border-b px-3 py-3 last:border-b-0"
+                >
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">{item.description}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.quantity} ×{" "}
+                      {item.unit_price.toLocaleString("it-IT", {
+                        style: "currency",
+                        currency: "EUR",
+                      })}
+                    </p>
+                  </div>
+                  <p className="text-sm font-medium">
+                    {getQuoteItemLineTotal(item).toLocaleString("it-IT", {
+                      style: "currency",
+                      currency: "EUR",
+                    })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {record.rejection_reason && (
         <>

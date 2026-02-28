@@ -8,6 +8,7 @@ import { TextInput } from "@/components/admin/text-input";
 import { required } from "ra-core";
 import { useWatch } from "react-hook-form";
 
+import { buildNameSearchFilter } from "../misc/referenceSearch";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 
 export const TaskFormContent = ({
@@ -36,6 +37,7 @@ export const TaskFormContent = ({
             label="Cliente"
             optionText="name"
             helperText={false}
+            filterToQuery={buildNameSearchFilter}
           />
         </ReferenceInput>
       )}

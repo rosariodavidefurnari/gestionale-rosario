@@ -1,6 +1,7 @@
 import { required, minValue, useGetOne } from "ra-core";
 import { useEffect } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
+import { ArrayInput } from "@/components/admin/array-input";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { ReferenceInput } from "@/components/admin/reference-input";
 import { TextInput } from "@/components/admin/text-input";
@@ -9,10 +10,13 @@ import { DateInput } from "@/components/admin/date-input";
 import { DateTimeInput } from "@/components/admin/date-time-input";
 import { BooleanInput } from "@/components/admin/boolean-input";
 import { SelectInput } from "@/components/admin/select-input";
+import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
 import { Separator } from "@/components/ui/separator";
 
+import { buildNameSearchFilter } from "../misc/referenceSearch";
 import { useConfigurationContext } from "../root/ConfigurationContext";
-import type { Project } from "../types";
+import type { Project, QuoteItem } from "../types";
+import { computeQuoteItemsTotal, hasQuoteItems } from "./quoteItems";
 import { quoteStatuses } from "./quotesTypes";
 import { toOptionalIdentifier } from "./quoteProjectLinking";
 
@@ -20,6 +24,8 @@ export const QuoteInputs = () => {
   const status = useWatch({ name: "status" });
   const clientId = useWatch({ name: "client_id" });
   const projectId = useWatch({ name: "project_id" });
+  const amount = useWatch({ name: "amount" });
+  const quoteItems = useWatch({ name: "quote_items" }) as QuoteItem[] | undefined;
   const allDay = useWatch({ name: "all_day" }) ?? true;
   const { setValue } = useFormContext();
   const { quoteServiceTypes } = useConfigurationContext();
@@ -34,6 +40,8 @@ export const QuoteInputs = () => {
   );
 
   const DateComponent = allDay ? DateInput : DateTimeInput;
+  const itemizedQuote = hasQuoteItems(quoteItems);
+  const itemizedAmount = computeQuoteItemsTotal(quoteItems);
 
   useEffect(() => {
     if (!selectedProject) return;
@@ -46,6 +54,16 @@ export const QuoteInputs = () => {
     });
   }, [clientId, selectedProject, setValue]);
 
+  useEffect(() => {
+    if (!itemizedQuote) return;
+    if (Number(amount ?? 0) === itemizedAmount) return;
+
+    setValue("amount", itemizedAmount, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [amount, itemizedAmount, itemizedQuote, setValue]);
+
   return (
     <div className="flex flex-col gap-4">
       <ReferenceInput source="client_id" reference="clients">
@@ -54,6 +72,7 @@ export const QuoteInputs = () => {
           optionText="name"
           validate={required()}
           helperText={false}
+          filterToQuery={buildNameSearchFilter}
         />
       </ReferenceInput>
 
@@ -68,6 +87,7 @@ export const QuoteInputs = () => {
           helperText={false}
           placeholder="Nessun progetto collegato"
           parse={toOptionalIdentifier}
+          filterToQuery={buildNameSearchFilter}
         />
       </ReferenceInput>
 
@@ -108,18 +128,52 @@ export const QuoteInputs = () => {
 
       <TextInput
         source="description"
-        label="Descrizione"
+        label="Descrizione breve"
         multiline
         rows={3}
-        helperText={false}
+        helperText="Titolo o riepilogo breve del preventivo."
       />
+
+      <ArrayInput
+        source="quote_items"
+        label="Voci preventivo"
+        helperText="Opzionale. Se aggiungi voci, l'importo totale si calcola da solo."
+      >
+        <SimpleFormIterator disableReordering getItemLabel={(index) => `Voce ${index + 1}`}>
+          <TextInput
+            source="description"
+            label="Voce"
+            validate={required()}
+            helperText={false}
+          />
+          <NumberInput
+            source="quantity"
+            label="Quantità"
+            defaultValue={1}
+            validate={[required(), minValue(1)]}
+            helperText={false}
+          />
+          <NumberInput
+            source="unit_price"
+            label="Prezzo unitario (EUR)"
+            defaultValue={0}
+            validate={[required(), minValue(0)]}
+            helperText={false}
+          />
+        </SimpleFormIterator>
+      </ArrayInput>
 
       <NumberInput
         source="amount"
         label="Importo preventivo (EUR)"
         validate={[required(), minValue(0)]}
         defaultValue={0}
-        helperText={false}
+        disabled={itemizedQuote}
+        helperText={
+          itemizedQuote
+            ? "Calcolato automaticamente dalle voci del preventivo."
+            : false
+        }
       />
 
       <Separator />

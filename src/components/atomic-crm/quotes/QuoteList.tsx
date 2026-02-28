@@ -20,6 +20,7 @@ import { QuoteEmpty } from "./QuoteEmpty";
 import { QuoteListContent } from "./QuoteListContent";
 import { QuoteShow } from "./QuoteShow";
 import { quoteStatusLabels } from "./quotesTypes";
+import { buildNameSearchFilter } from "../misc/referenceSearch";
 
 const QuoteList = () => {
   const { quoteServiceTypes } = useConfigurationContext();
@@ -31,6 +32,7 @@ const QuoteList = () => {
         label={false}
         placeholder="Cliente"
         optionText="name"
+        filterToQuery={buildNameSearchFilter}
       />
     </ReferenceInput>,
     <SelectInput
