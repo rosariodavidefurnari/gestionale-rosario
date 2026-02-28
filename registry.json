@@ -244,6 +244,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/quotes/SendQuoteStatusEmailDialog.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/quotes/QuoteShow.tsx",
           "type": "registry:component"
         },
@@ -817,6 +821,10 @@
         },
         {
           "path": "src/components/atomic-crm/clients/ClientCreate.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
           "type": "registry:component"
         },
         {

@@ -5,6 +5,7 @@ import { Suspense, type ReactNode } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { useConfigurationLoader } from "../root/useConfigurationLoader";
+import { UnifiedAiLauncher } from "../ai/UnifiedAiLauncher";
 import { MobileNavigation } from "./MobileNavigation";
 
 export const MobileLayout = ({ children }: { children: ReactNode }) => {
@@ -16,6 +17,7 @@ export const MobileLayout = ({ children }: { children: ReactNode }) => {
           {children}
         </Suspense>
       </ErrorBoundary>
+      <UnifiedAiLauncher />
       <MobileNavigation />
       <Notification mobileOffset={{ bottom: "72px" }} />
     </>

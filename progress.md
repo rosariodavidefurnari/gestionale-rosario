@@ -29,12 +29,46 @@ un dialog unico di preview/send manuale via `Gmail SMTP`, costruito sopra
 `quoteStatusEmailTemplates`, con entry point provider espliciti e nessun
 automatismo introdotto. Questa parte adesso è chiusa anche sul runtime remoto:
 deploy function, secret `SMTP_*` e invoke autenticato hanno restituito un
-`accepted` reale con risposta SMTP `250 OK`. Il prossimo passo Pareto non è
-aprire una nuova pagina AI, ma introdurre il launcher globale flottante della
-chat unificata e usarlo per il primo caso ad alto valore: ingestione fatture
-miste con conferma utente.
+`accepted` reale con risposta SMTP `250 OK`. Da lì in poi il primo ponte
+corretto verso la chat unificata è adesso chiuso come launcher globale
+flottante, disponibile da tutto il CRM senza route dedicata. Il prossimo passo
+Pareto resta dentro la stessa shell: impostazione separata del modello Gemini
+e poi ingestione fatture miste con conferma utente.
 
 ## Last Session
+
+### Sessione 54 (2026-02-28, launcher globale flottante per la chat AI)
+
+- Completed:
+  - **Shell AI unificata aggiunta senza aprire una nuova pagina nel menu**:
+    - nuovo componente:
+      - `UnifiedAiLauncher`
+    - bottone piccolo flottante in basso a destra
+    - presente nel layout condiviso desktop e mobile
+    - apertura in `Sheet`:
+      - lato destro desktop
+      - dal basso su mobile
+  - **Capability registry allineato nello stesso passaggio**:
+    - nuovo dialog dichiarato:
+      - `unified_ai_launcher_sheet`
+    - nuova azione dichiarata:
+      - `open_unified_ai_launcher`
+  - **Direzione della UX AI resa esplicita anche dentro la shell**:
+    - superficie unica
+    - nessuna scrittura automatica nel CRM
+    - prossimo use case:
+      - fatture miste dentro la stessa chat
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx src/lib/semantics/crmCapabilityRegistry.test.ts`
+  - `npm run registry:gen`
+
+- Decisions:
+  - il launcher unificato deve vivere nel layout condiviso, non in una route o
+    tab dedicata
+  - il prossimo step non è “abbellire la shell”, ma darle un use case reale:
+    modello Gemini in settings e ingestione fatture
 
 ### Sessione 53 (2026-02-28, verifica remota reale del send Gmail)
 
@@ -71,6 +105,7 @@ miste con conferma utente.
     una nuova route dedicata
   - il caso fatture va trattato come prima vertical slice della chat unificata,
     non come feature AI sparsa
+
 ### Sessione 52 (2026-02-28, invio manuale mail stato preventivo via Gmail)
 
 - Completed:

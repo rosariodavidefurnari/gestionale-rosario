@@ -106,18 +106,24 @@ The previous Pareto step is now closed:
   - authenticated invoke returned `accepted` with SMTP response `250 2.0.0 OK`
   - smoke user and smoke data cleaned after verification
 
+The next Pareto step is now closed too:
+
+- a first unified AI launcher now exists as a small floating button,
+- it is available across the CRM from the shared layout,
+- it opens one global shell instead of adding a new page in header/nav,
+- and it declares the write-safety rule explicitly before invoice ingestion is
+  added.
+
 The next high-value step is now:
 
-- introduce one unified AI launcher as a small floating entry point available
-  across the whole CRM,
-- keep it as one global surface instead of a new page in header/nav,
 - add a separate AI setting for invoice extraction model selection,
-- and only then implement the first vertical slice inside that same launcher:
+- keep `gemini-2.5-pro` as the default for invoice/OCR work,
+- then implement the first vertical slice inside the unified launcher:
   mixed invoice upload (`PDF` digitali + scansioni/foto), structured proposal,
   user correction in chat, and confirmed write into CRM resources.
 
-Do not open new scattered AI surfaces while doing this. The launcher must be
-the bridge toward one unified chat, not another isolated AI page.
+Do not open new scattered AI surfaces while doing this. The launcher must stay
+the bridge toward one unified chat, not become just another temporary AI page.
 
 ## Parallel Track Started: Commercial Backbone
 

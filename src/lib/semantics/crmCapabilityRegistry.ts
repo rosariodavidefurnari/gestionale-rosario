@@ -173,6 +173,14 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
   ],
   dialogs: [
     {
+      id: "unified_ai_launcher_sheet",
+      label: "Chat AI unificata",
+      description:
+        "Launcher globale flottante che apre la shell unica della chat AI sopra il CRM senza cambiare route.",
+      sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
+      entryPoints: ["global_floating_button"],
+    },
+    {
       id: "quote_create_dialog",
       label: "Nuovo preventivo",
       description: "Creazione preventivo in dialog sopra la board preventivi.",
@@ -246,6 +254,15 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
     },
   ],
   actions: [
+    {
+      id: "open_unified_ai_launcher",
+      label: "Apri chat AI unificata",
+      description:
+        "Apre la shell AI globale dal bottone flottante disponibile ovunque nel CRM.",
+      sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
+      actsOn: [],
+      requiredFields: [],
+    },
     {
       id: "quote_drag_change_status",
       label: "Sposta preventivo tra stati",

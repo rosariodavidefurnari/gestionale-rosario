@@ -8,6 +8,11 @@ describe("crmCapabilityRegistry", () => {
 
     expect(registry.routing.mode).toBe("hash");
     expect(
+      registry.dialogs.some(
+        (dialog) => dialog.id === "unified_ai_launcher_sheet",
+      ),
+    ).toBe(true);
+    expect(
       registry.resources.some(
         (resource) =>
           resource.resource === "quotes" &&
@@ -21,6 +26,11 @@ describe("crmCapabilityRegistry", () => {
     ).toBe(true);
     expect(
       registry.actions.some((action) => action.id === "client_create_payment"),
+    ).toBe(true);
+    expect(
+      registry.actions.some(
+        (action) => action.id === "open_unified_ai_launcher",
+      ),
     ).toBe(true);
   });
 

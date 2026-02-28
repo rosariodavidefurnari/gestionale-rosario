@@ -116,11 +116,15 @@ It is also runtime-verified on the linked remote project:
 - authenticated invoke returned `accepted` with SMTP response `250 2.0.0 OK`
 - smoke user and smoke quote/client cleaned after verification
 
+The floating launcher step is now closed too:
+
+- one unified AI launcher now exists as a small whole-site floating button
+- it opens the same shell everywhere from shared layout
+- it does not add a new AI page in the main navigation
+- it is now declared in the capability registry as the unified AI entry point
+
 The next open priority is:
 
-- introduce one unified AI launcher as a small floating button at whole-site
-  level, opening the same chat everywhere instead of adding a new route in the
-  main navigation,
 - add a separate settings field for the invoice-extraction model
   (`gemini-2.5-pro` default),
 - then implement the first real unified-chat vertical slice there:
@@ -130,12 +134,12 @@ The next open priority is:
 
 Why this comes next:
 
-- product direction is now explicit:
-  - one unified AI experience, not another page-level AI surface
-- the commercial/mail foundation needed before that move is now technically
-  closed and remotely verified
-- invoice ingestion is the first high-value operational use case that justifies
-  the unified launcher
+- the launcher now exists, so the next value is not more shell work but the
+  first real use case inside it
+- invoice ingestion is the first high-value operational case that justifies the
+  unified chat
+- model choice for invoice/OCR must be explicit in settings before wiring the
+  Gemini path
 
 Not the next step by default:
 

@@ -10,6 +10,13 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Se l'obiettivo prodotto e' una chat AI unificata, il primo
+  ponte corretto non e' una nuova route ma un launcher globale nel layout
+  condiviso** — Per evitare di moltiplicare pagine AI temporanee, la shell
+  iniziale va resa disponibile da tutto il sito con un bottone flottante e un
+  contenitore unico (`Sheet`). Cosi' il prossimo use case reale entra gia nella
+  superficie giusta invece di dover migrare in seguito da una route dedicata.
+
 - [2026-02-28] **Quando una nuova Edge Function UI-invoked sembra deployata ma
   risponde ancora “SMTP non configurato”, prima di dubitare del codice conviene
   verificare subito i secret remoti con `supabase secrets list` e poi rifare
