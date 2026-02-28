@@ -9,11 +9,63 @@ browser-validato, e il primo slice della spina dorsale commerciale
 `Preventivo -> Progetto -> Pagamento` è validato sul percorso autenticato. In
 più, il quick payment da preventivo è ora validato anche per il caso semplice
 senza progetto, e la foundation `quote_items` è implementata e validata sul
-runtime reale. Prossimo passo: dare a `Annuale` un drill-down AI-safe su
-`pagamenti da ricevere` e `preventivi aperti`, così l'AI può leggere meglio il
-backbone commerciale senza uscire dal perimetro semantico approvato.
+runtime reale. In più, `annual_operations` ora espone anche un drill-down
+AI-safe su `pagamenti da ricevere` e `preventivi aperti`. Prossimo passo:
+validare nel percorso AI reale di `Annuale` che questo nuovo dettaglio venga
+usato bene nelle risposte, senza scivolare su alert o fiscale.
 
 ## Last Session
+
+### Sessione 38 (2026-02-28, drill-down AI-safe per Annuale)
+
+- Completed:
+  - **Drill-down semantico aggiunto in `annual_operations`**:
+    - nuovo blocco `drilldowns.pendingPayments`
+    - nuovo blocco `drilldowns.openQuotes`
+    - il dettaglio vive nel model/context layer, non dentro la card UI
+  - **Backbone commerciale collegato meglio al layer AI**:
+    - i pagamenti da ricevere ora portano anche:
+      - cliente
+      - progetto opzionale
+      - preventivo opzionale
+      - stato
+      - data pagamento
+    - i preventivi aperti ora portano anche:
+      - cliente
+      - progetto opzionale
+      - stato leggibile
+      - segnale se sono già itemizzati
+      - numero voci itemizzate
+  - **Regola semantica mantenuta**:
+    - questo drill-down non coincide con gli alert giornalieri
+    - `pagamenti da ricevere` restano incassi attesi
+    - `preventivi aperti` restano pipeline potenziale
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts src/lib/analytics/buildAnnualOperationsContext.test.ts supabase/functions/_shared/annualOperationsAiGuidance.test.ts` OK
+  - totale: `8` test verdi
+  - nessun deploy Edge Function necessario:
+    - le function AI Annuale ricevono già il contesto JSON dal client/provider
+
+- Decisions:
+  - il prossimo passo utile non è aggiungere altro payload, ma verificare la
+    resa reale delle risposte AI di `Annuale` su domande mirate a pagamenti e
+    preventivi
+
+- Notes:
+  - portare il drill-down nel semantic layer evita di ricostruire logiche
+    diverse nella UI o nel prompt
+  - l'informazione `hasItemizedLines` collega già il nuovo foundation
+    `quote_items` con il contesto AI senza forzare un builder più pesante
+
+- Next action:
+  - validare `Annuale` AI con domande su:
+    - `pagamenti da ricevere`
+    - `preventivi aperti`
+  - verificare che la risposta resti fuori da:
+    - alert snapshot
+    - simulazione fiscale
 
 ### Sessione 37 (2026-02-28, foundation `quote_items`)
 

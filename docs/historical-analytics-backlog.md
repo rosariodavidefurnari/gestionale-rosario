@@ -41,6 +41,8 @@ The implementation is now functionally closed for v1:
 - itemized quotes now auto-derive `amount` from line items, keep the classic
   quote path backward-compatible, and are browser-validated on real create/show
   flows,
+- `annual_operations` now exposes a first AI-safe drill-down for
+  `pagamenti da ricevere` and `preventivi aperti`,
 - and the `Annuale` AI card is now browser-validated on the real authenticated
   UI path.
 
@@ -383,31 +385,75 @@ Ask the new session to:
     - verified itemized rendering in quote show on the real authenticated app
     - no browser console errors after the explicit `name@ilike` fix
 
+### Annual operations drill-down completed
+
+- Added semantic drill-down payload inside `annual_operations`:
+  - `drilldowns.pendingPayments`
+  - `drilldowns.openQuotes`
+- Scope rule kept explicit:
+  - this is not the alert snapshot
+  - pending payments stay `cash expected`
+  - open quotes stay `pipeline potential`
+  - the AI now receives concrete entities without mixing them with fiscal or
+    day-based alert logic
+- Pending payments drill-down now includes:
+  - `paymentId`
+  - `clientId`
+  - `clientName`
+  - optional `projectId` / `projectName`
+  - optional `quoteId`
+  - `amount`
+  - `status`
+  - optional `paymentDate`
+- Open quotes drill-down now includes:
+  - `quoteId`
+  - `clientId`
+  - `clientName`
+  - optional `projectId` / `projectName`
+  - `description`
+  - `amount`
+  - `status` + `statusLabel`
+  - optional `sentDate`
+  - `hasProject`
+  - `hasItemizedLines`
+  - `quoteItemsCount`
+- Important bridge with the commercial backbone:
+  - quote/project remain optional,
+  - but the AI now sees whether an open quote is already linked to a project
+    and whether it is itemized.
+- Validation completed:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/dashboard/dashboardAnnualModel.test.ts src/lib/analytics/buildAnnualOperationsContext.test.ts supabase/functions/_shared/annualOperationsAiGuidance.test.ts`
+  - no edge-function deploy required:
+    - existing annual functions already accept the richer JSON context from the
+      client/provider
+
 ## Priority 1
 
-### Add AI-safe drill-down for `pagamenti da ricevere` and `preventivi aperti`
+### Validate Annuale AI answers on payment/quote questions with the new drill-down
 
 Why:
 
-- `Annuale` AI already sees the totals for pending payments and open quotes,
-  but not yet a structured drill-down behind those totals,
-- the next useful step should strengthen both tracks together:
-  - semantic layer for AI
-  - commercial backbone data contracts
+- the semantic drill-down is now implemented,
+- the next useful step is to verify that the real AI answer path actually uses
+  it well on:
+  - `pagamenti da ricevere`
+  - `preventivi aperti`
 
 Tasks:
 
-- expose a small structured breakdown inside `annual_operations`,
-- keep the breakdown semantically clean:
-  - `pagamenti da ricevere` = cash expected
-  - `preventivi aperti` = pipeline potential
-- avoid mixing this with the current-day alerts snapshot,
-- keep quote/project optional at the domain level.
+- run an authenticated browser or remote validation on Annuale,
+- ask questions specifically about payments/open quotes,
+- verify the answer cites concrete entities from the drill-down when useful,
+- verify the answer still avoids drifting into:
+  - alert snapshot
+  - fiscal simulation
+  - fake certainty.
 
 Acceptance:
 
-- Annuale AI can answer payment/quote questions with concrete entities and not
-  only top-line totals.
+- Annuale AI answers payment/quote questions using the richer context in a way
+  that is concrete but still semantically disciplined.
 
 ## Priority 2
 

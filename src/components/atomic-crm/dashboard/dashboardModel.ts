@@ -10,6 +10,7 @@ import type {
   Quote,
   Service,
 } from "../types";
+import { sanitizeQuoteItems } from "../quotes/quoteItems";
 import { quoteStatusLabels } from "../quotes/quotesTypes";
 import { buildFiscalModel, type FiscalModel } from "./fiscalModel";
 
@@ -29,6 +30,7 @@ export type DashboardModel = {
   categoryBreakdown: CategoryBreakdownPoint[];
   quotePipeline: QuotePipelinePoint[];
   topClients: TopClientPoint[];
+  drilldowns: DashboardDrilldowns;
   alerts: DashboardAlerts;
   fiscal: FiscalModel | null;
   qualityFlags: AnnualQualityFlag[];
@@ -90,10 +92,43 @@ export type TopClientPoint = {
   revenue: number;
 };
 
+export type DashboardDrilldowns = {
+  pendingPayments: PendingPaymentDrilldown[];
+  openQuotes: OpenQuoteDrilldown[];
+};
+
 export type DashboardAlerts = {
   paymentAlerts: PaymentAlert[];
   upcomingServices: UpcomingServiceAlert[];
   unansweredQuotes: UnansweredQuoteAlert[];
+};
+
+export type PendingPaymentDrilldown = {
+  paymentId: string;
+  clientId: string;
+  clientName: string;
+  projectId?: string;
+  projectName?: string;
+  quoteId?: string;
+  amount: number;
+  status: string;
+  paymentDate?: string;
+};
+
+export type OpenQuoteDrilldown = {
+  quoteId: string;
+  clientId: string;
+  clientName: string;
+  projectId?: string;
+  projectName?: string;
+  description: string;
+  amount: number;
+  status: string;
+  statusLabel: string;
+  sentDate?: string;
+  hasProject: boolean;
+  hasItemizedLines: boolean;
+  quoteItemsCount: number;
 };
 
 export type PaymentAlert = {
@@ -477,6 +512,71 @@ export const buildDashboardModel = ({
     clients.map((client) => [String(client.id), client]),
   );
 
+  const pendingPaymentDrilldowns = pendingPayments
+    .map((payment) => {
+      const project = payment.project_id
+        ? projectById.get(String(payment.project_id))
+        : undefined;
+      return {
+        paymentId: String(payment.id),
+        clientId: String(payment.client_id),
+        clientName: clientById.get(String(payment.client_id))?.name ?? "Cliente",
+        projectId:
+          payment.project_id != null ? String(payment.project_id) : undefined,
+        projectName: project?.name,
+        quoteId: payment.quote_id != null ? String(payment.quote_id) : undefined,
+        amount: toNumber(payment.amount),
+        status: payment.status,
+        paymentDate: payment.payment_date ?? undefined,
+      } satisfies PendingPaymentDrilldown;
+    })
+    .sort((a, b) => {
+      const statusOrder = { scaduto: 0, in_attesa: 1 } as const;
+      const diff =
+        (statusOrder[a.status as keyof typeof statusOrder] ?? 2) -
+        (statusOrder[b.status as keyof typeof statusOrder] ?? 2);
+      if (diff !== 0) return diff;
+      if (a.paymentDate && b.paymentDate) {
+        return a.paymentDate.localeCompare(b.paymentDate);
+      }
+      if (a.paymentDate) return -1;
+      if (b.paymentDate) return 1;
+      return b.amount - a.amount;
+    });
+
+  const openQuoteDrilldowns = openQuotes
+    .map((quote) => {
+      const project = quote.project_id
+        ? projectById.get(String(quote.project_id))
+        : undefined;
+      const quoteItemsCount = sanitizeQuoteItems(quote.quote_items).length;
+      return {
+        quoteId: String(quote.id),
+        clientId: String(quote.client_id),
+        clientName: clientById.get(String(quote.client_id))?.name ?? "Cliente",
+        projectId:
+          quote.project_id != null ? String(quote.project_id) : undefined,
+        projectName: project?.name,
+        description: quote.description || "Preventivo",
+        amount: toNumber(quote.amount),
+        status: quote.status,
+        statusLabel: quoteStatusLabels[quote.status] ?? quote.status,
+        sentDate: quote.sent_date ?? undefined,
+        hasProject: quote.project_id != null,
+        hasItemizedLines: quoteItemsCount > 0,
+        quoteItemsCount,
+      } satisfies OpenQuoteDrilldown;
+    })
+    .sort((a, b) => {
+      if (b.amount !== a.amount) return b.amount - a.amount;
+      if (a.sentDate && b.sentDate) {
+        return a.sentDate.localeCompare(b.sentDate);
+      }
+      if (a.sentDate) return -1;
+      if (b.sentDate) return 1;
+      return a.description.localeCompare(b.description);
+    });
+
   const topClientRevenue = new Map<string, number>();
   for (const service of services) {
     if (!service.service_date) continue;
@@ -646,6 +746,10 @@ export const buildDashboardModel = ({
     categoryBreakdown,
     quotePipeline,
     topClients,
+    drilldowns: {
+      pendingPayments: pendingPaymentDrilldowns,
+      openQuotes: openQuoteDrilldowns,
+    },
     alerts: {
       paymentAlerts,
       upcomingServices,

@@ -1,6 +1,8 @@
 import type {
   AnnualQualityFlag,
   DashboardModel,
+  OpenQuoteDrilldown,
+  PendingPaymentDrilldown,
 } from "@/components/atomic-crm/dashboard/dashboardModel";
 
 export type AnnualOperationsContext = {
@@ -40,9 +42,69 @@ export type AnnualOperationsContext = {
     clientName: string;
     revenue: number;
   }>;
+  drilldowns: {
+    pendingPayments: Array<{
+      paymentId: string;
+      clientId: string;
+      clientName: string;
+      projectId?: string;
+      projectName?: string;
+      quoteId?: string;
+      amount: number;
+      status: string;
+      paymentDate?: string;
+    }>;
+    openQuotes: Array<{
+      quoteId: string;
+      clientId: string;
+      clientName: string;
+      projectId?: string;
+      projectName?: string;
+      description: string;
+      amount: number;
+      status: string;
+      statusLabel: string;
+      sentDate?: string;
+      hasProject: boolean;
+      hasItemizedLines: boolean;
+      quoteItemsCount: number;
+    }>;
+  };
   qualityFlags: AnnualQualityFlag[];
   caveats: string[];
 };
+
+const serializePendingPayment = (
+  payment: PendingPaymentDrilldown,
+): AnnualOperationsContext["drilldowns"]["pendingPayments"][number] => ({
+  paymentId: payment.paymentId,
+  clientId: payment.clientId,
+  clientName: payment.clientName,
+  projectId: payment.projectId,
+  projectName: payment.projectName,
+  quoteId: payment.quoteId,
+  amount: payment.amount,
+  status: payment.status,
+  paymentDate: payment.paymentDate,
+});
+
+const serializeOpenQuote = (
+  quote: OpenQuoteDrilldown,
+): AnnualOperationsContext["drilldowns"]["openQuotes"][number] => ({
+  quoteId: quote.quoteId,
+  clientId: quote.clientId,
+  clientName: quote.clientName,
+  projectId: quote.projectId,
+  projectName: quote.projectName,
+  description: quote.description,
+  amount: quote.amount,
+  status: quote.status,
+  statusLabel: quote.statusLabel,
+  sentDate: quote.sentDate,
+  hasProject: quote.hasProject,
+  hasItemizedLines: quote.hasItemizedLines,
+  quoteItemsCount: quote.quoteItemsCount,
+});
 
 const pushCaveat = (caveats: string[], value: string) => {
   if (!caveats.includes(value)) {
@@ -199,6 +261,12 @@ export const buildAnnualOperationsContext = (
       clientName: client.clientName,
       revenue: client.revenue,
     })),
+    drilldowns: {
+      pendingPayments: model.drilldowns.pendingPayments.map(
+        serializePendingPayment,
+      ),
+      openQuotes: model.drilldowns.openQuotes.map(serializeOpenQuote),
+    },
     qualityFlags: model.qualityFlags,
     caveats,
   };

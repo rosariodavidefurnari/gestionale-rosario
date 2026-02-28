@@ -327,6 +327,51 @@ Runtime issue discovered and fixed during real browser validation:
     - `QuoteList`
     - `TaskFormContent`
 
+### Annual operations drill-down now implemented
+
+What was added:
+
+- `annual_operations` now includes semantic drill-down payloads for:
+  - pending payments
+  - open quotes
+- the drill-down lives in the shared model/context layer, not in the UI card
+- no edge-function deploy was required:
+  - the existing annual AI functions already accept the richer JSON context
+    generated client-side
+
+Pending payments drill-down now carries:
+
+- `paymentId`
+- `clientId`
+- `clientName`
+- optional `projectId` / `projectName`
+- optional `quoteId`
+- `amount`
+- `status`
+- optional `paymentDate`
+
+Open quotes drill-down now carries:
+
+- `quoteId`
+- `clientId`
+- `clientName`
+- optional `projectId` / `projectName`
+- `description`
+- `amount`
+- `status` + `statusLabel`
+- optional `sentDate`
+- `hasProject`
+- `hasItemizedLines`
+- `quoteItemsCount`
+
+Important scope rule:
+
+- this is still **not** the alert snapshot,
+- pending payments remain `cash expected`,
+- open quotes remain `pipeline potential`,
+- the goal is to let the AI cite concrete entities without collapsing
+  operational totals, alert urgency, and fiscal simulation into one blob.
+
 ### Browser click-tests now completed on both active tracks
 
 What was verified in the real authenticated UI on `2026-02-28`:
@@ -423,6 +468,7 @@ Covered today:
 - annual net-of-discount basis consistency,
 - annual fiscal/business-health selected-year filtering,
 - annual AI context caveats and metric serialization,
+- annual AI context drill-down serialization for pending payments/open quotes,
 - annual AI card summary/question triggers.
 - quote -> project linking from direct `useCreate` mutation result.
 - quote autocomplete search in the payment form by description.
@@ -637,8 +683,8 @@ Impact:
 - `Annuale` is still not AI-ready as a whole page:
   - only `annual_operations` has a dedicated AI context today
   - alerts and fiscal simulation remain outside that context
-- inside `annual_operations`, pending payments and open quotes are still mostly
-  top-line totals; a richer drill-down is the next useful semantic increment.
+- the richer `annual_operations` drill-down is now in place, but still needs
+  one focused validation pass on real payment/quote questions in Annuale AI.
 - The browser output is now understandable for non-expert users, but markdown
   readability may still deserve further polish only if product wants a denser
   or more scannable layout.
@@ -657,10 +703,10 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Add a small AI-safe drill-down in `annual_operations` for:
+1. Validate Annuale AI on questions about:
    - pending payments
    - open quotes
-   so the AI can answer with concrete entities, not only totals.
+   to verify the new drill-down is actually used well in the real answer path.
 2. Keep the new historical / annual / commercial tests updated whenever the
    widgets evolve.
 3. Only if useful after review, polish prompt/copy or markdown presentation of
@@ -679,6 +725,6 @@ Stable rollback note:
 - Read the backlog:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
-  - adding annual AI-safe drill-down for pending payments / open quotes
+  - validating Annuale AI on payment / open-quote questions
   - keeping historical, annual and commercial tests aligned with future widget changes
   - optional AI card readability polish

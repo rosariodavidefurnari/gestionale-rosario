@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Se vuoi che l'AI parli bene di pagamenti e preventivi, non
+  bastano i totali: serve un drill-down semantico nel context layer** — In
+  `Annuale`, i KPI `pagamenti da ricevere` e `preventivi aperti` erano corretti
+  ma troppo poveri per risposte davvero utili. Il punto giusto dove aggiungere
+  dettaglio non è la card UI e nemmeno la Edge Function, ma il model/context
+  condiviso (`annual_operations`), così il browser, l'AI e i test leggono la
+  stessa struttura.
+
 - [2026-02-28] **Per dare struttura ai preventivi senza aprire subito un
   builder pesante, `quote_items` embedded in `quotes` sono una foundation
   abbastanza forte** — In questo repo il compromesso migliore non era creare un

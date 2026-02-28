@@ -231,4 +231,156 @@ describe("buildDashboardModel annual semantics", () => {
     expect(model.fiscal?.businessHealth.weightedPipelineValue).toBe(1000);
     expect(model.fiscal?.businessHealth.dso).toBe(50);
   });
+
+  it("exposes AI-safe drilldowns for pending payments and open quotes without forcing projects", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-01T09:00:00.000Z"));
+
+    const clients: Client[] = [
+      baseClient({ id: 1, name: "Cliente Wedding" }),
+      baseClient({ id: 2, name: "Cliente TV" }),
+    ];
+    const projects: Project[] = [
+      baseProject({ id: 1, client_id: 2, name: "Programma TV" }),
+    ];
+    const quotes: Quote[] = [
+      baseQuote({
+        id: 1,
+        client_id: 1,
+        project_id: null,
+        description: "Pacchetto wedding",
+        amount: 900,
+        status: "preventivo_inviato",
+        created_at: "2025-02-10T00:00:00.000Z",
+        sent_date: "2025-02-11T00:00:00.000Z",
+        quote_items: [
+          {
+            description: "Riprese",
+            quantity: 1,
+            unit_price: 600,
+          },
+          {
+            description: "Montaggio",
+            quantity: 1,
+            unit_price: 300,
+          },
+        ],
+      }),
+      baseQuote({
+        id: 2,
+        client_id: 2,
+        project_id: 1,
+        description: "Servizio TV",
+        amount: 1200,
+        status: "in_trattativa",
+        created_at: "2025-03-15T00:00:00.000Z",
+        sent_date: "2025-03-16T00:00:00.000Z",
+      }),
+      baseQuote({
+        id: 3,
+        client_id: 2,
+        project_id: 1,
+        description: "Quote chiuso",
+        amount: 500,
+        status: "saldato",
+        created_at: "2025-04-01T00:00:00.000Z",
+      }),
+    ];
+    const payments: Payment[] = [
+      basePayment({
+        id: 1,
+        client_id: 1,
+        project_id: null,
+        quote_id: 1,
+        amount: 400,
+        status: "in_attesa",
+        payment_date: "2025-05-10T00:00:00.000Z",
+      }),
+      basePayment({
+        id: 2,
+        client_id: 2,
+        project_id: 1,
+        quote_id: 2,
+        amount: 700,
+        status: "scaduto",
+        payment_date: "2025-04-10T00:00:00.000Z",
+      }),
+      basePayment({
+        id: 3,
+        client_id: 2,
+        project_id: 1,
+        amount: 200,
+        status: "ricevuto",
+        payment_date: "2025-06-10T00:00:00.000Z",
+      }),
+    ];
+
+    const model = buildDashboardModel({
+      payments,
+      quotes,
+      services: [],
+      projects,
+      clients,
+      expenses: [],
+      year: 2025,
+    });
+
+    expect(model.drilldowns.pendingPayments).toEqual([
+      {
+        paymentId: "2",
+        clientId: "2",
+        clientName: "Cliente TV",
+        projectId: "1",
+        projectName: "Programma TV",
+        quoteId: "2",
+        amount: 700,
+        status: "scaduto",
+        paymentDate: "2025-04-10T00:00:00.000Z",
+      },
+      {
+        paymentId: "1",
+        clientId: "1",
+        clientName: "Cliente Wedding",
+        projectId: undefined,
+        projectName: undefined,
+        quoteId: "1",
+        amount: 400,
+        status: "in_attesa",
+        paymentDate: "2025-05-10T00:00:00.000Z",
+      },
+    ]);
+
+    expect(model.drilldowns.openQuotes).toEqual([
+      {
+        quoteId: "2",
+        clientId: "2",
+        clientName: "Cliente TV",
+        projectId: "1",
+        projectName: "Programma TV",
+        description: "Servizio TV",
+        amount: 1200,
+        status: "in_trattativa",
+        statusLabel: "In trattativa",
+        sentDate: "2025-03-16T00:00:00.000Z",
+        hasProject: true,
+        hasItemizedLines: false,
+        quoteItemsCount: 0,
+      },
+      {
+        quoteId: "1",
+        clientId: "1",
+        clientName: "Cliente Wedding",
+        projectId: undefined,
+        projectName: undefined,
+        description: "Pacchetto wedding",
+        amount: 900,
+        status: "preventivo_inviato",
+        statusLabel: "Preventivo inviato",
+        sentDate: "2025-02-11T00:00:00.000Z",
+        hasProject: false,
+        hasItemizedLines: true,
+        quoteItemsCount: 2,
+      },
+    ]);
+  });
 });
