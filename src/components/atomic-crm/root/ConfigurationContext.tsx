@@ -1,7 +1,13 @@
 import { useMemo } from "react";
 import { useStore } from "ra-core";
 
-import type { AIConfig, FiscalConfig, LabeledValue, NoteStatus } from "../types";
+import type {
+  AIConfig,
+  FiscalConfig,
+  LabeledValue,
+  NoteStatus,
+  OperationalConfig,
+} from "../types";
 import { defaultConfiguration } from "./defaultConfiguration";
 
 export const CONFIGURATION_STORE_KEY = "app.configuration";
@@ -18,6 +24,7 @@ export interface ConfigurationContextValue {
   disableEmailPasswordAuthentication?: boolean;
   fiscalConfig?: FiscalConfig;
   aiConfig?: AIConfig;
+  operationalConfig?: OperationalConfig;
 }
 
 export const useConfigurationContext = () => {

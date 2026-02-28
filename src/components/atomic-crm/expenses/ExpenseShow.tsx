@@ -5,20 +5,26 @@ import { EditButton } from "@/components/admin/edit-button";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { Calendar, FileText } from "lucide-react";
 import { Link } from "react-router";
+import { calculateKmReimbursement } from "@/lib/semantics/crmSemanticRegistry";
 
 import type { Expense } from "../types";
 import { expenseTypeLabels } from "./expenseTypes";
 import { ErrorMessage } from "../misc/ErrorMessage";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 
 const eur = (n: number) =>
   n.toLocaleString("it-IT", { minimumFractionDigits: 2 });
 
-const computeTotal = (e: Expense) => {
+const computeTotal = (e: Expense, defaultKmRate: number) => {
   if (e.expense_type === "credito_ricevuto") {
     return -(e.amount ?? 0);
   }
   if (e.expense_type === "spostamento_km") {
-    return (e.km_distance ?? 0) * (e.km_rate ?? 0.19);
+    return calculateKmReimbursement({
+      kmDistance: e.km_distance,
+      kmRate: e.km_rate,
+      defaultKmRate,
+    });
   }
   return (e.amount ?? 0) * (1 + (e.markup_percent ?? 0) / 100);
 };
@@ -31,6 +37,7 @@ export const ExpenseShow = () => (
 
 const ExpenseShowContent = () => {
   const { record, isPending, error } = useShowContext<Expense>();
+  const { operationalConfig } = useConfigurationContext();
   const { data: project } = useGetOne(
     "projects",
     {
@@ -44,7 +51,7 @@ const ExpenseShowContent = () => {
   if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
 
-  const total = computeTotal(record);
+  const total = computeTotal(record, operationalConfig.defaultKmRate);
 
   return (
     <div className="mt-2 mb-2 flex gap-8">
@@ -83,7 +90,11 @@ const ExpenseShowContent = () => {
               </div>
             </div>
             <Separator className="my-4" />
-            <ExpenseDetails record={record} total={total} />
+            <ExpenseDetails
+              record={record}
+              total={total}
+              defaultKmRate={operationalConfig.defaultKmRate}
+            />
           </CardContent>
         </Card>
       </div>
@@ -94,9 +105,11 @@ const ExpenseShowContent = () => {
 const ExpenseDetails = ({
   record,
   total,
+  defaultKmRate,
 }: {
   record: Expense;
   total: number;
+  defaultKmRate: number;
 }) => {
   const isKm = record.expense_type === "spostamento_km";
   const isCredit = record.expense_type === "credito_ricevuto";
@@ -116,7 +129,7 @@ const ExpenseDetails = ({
           />
           <DetailRow
             label="Tariffa km"
-            value={`EUR ${eur(record.km_rate ?? 0.19)}`}
+            value={`EUR ${eur(record.km_rate ?? defaultKmRate)}`}
           />
         </>
       ) : (

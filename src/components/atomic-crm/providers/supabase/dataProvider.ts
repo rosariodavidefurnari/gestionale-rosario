@@ -51,6 +51,10 @@ import {
   type HistoricalAnalyticsAnswer,
   type HistoricalAnalyticsSummary,
 } from "@/lib/analytics/historicalAnalysis";
+import {
+  buildCrmSemanticRegistry,
+  type CrmSemanticRegistry,
+} from "@/lib/semantics/crmSemanticRegistry";
 
 if (import.meta.env.VITE_SUPABASE_URL === undefined) {
   throw new Error("Please set the VITE_SUPABASE_URL environment variable");
@@ -324,6 +328,10 @@ const dataProviderWithCustomMethods = {
       previousData: { id: 1 },
     });
     return data.config as ConfigurationContextValue;
+  },
+  async getCrmSemanticRegistry(): Promise<CrmSemanticRegistry> {
+    const config = await this.getConfiguration();
+    return buildCrmSemanticRegistry(config);
   },
   async getHistoricalAnalyticsContext(): Promise<AnalyticsContext> {
     return getHistoricalAnalyticsContextFromViews();

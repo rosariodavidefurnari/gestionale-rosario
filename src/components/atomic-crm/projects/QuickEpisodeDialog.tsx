@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Clapperboard } from "lucide-react";
 import type { Project } from "../types";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 import {
   QuickEpisodeForm,
   getDefaultFees,
@@ -21,13 +22,17 @@ interface QuickEpisodeDialogProps {
 }
 
 export const QuickEpisodeDialog = ({ record }: QuickEpisodeDialogProps) => {
+  const { operationalConfig } = useConfigurationContext();
   const [open, setOpen] = useState(false);
   const [create] = useCreate();
   const notify = useNotify();
   const refresh = useRefresh();
   const [saving, setSaving] = useState(false);
 
-  const defaults = getDefaultFees(record.tv_show);
+  const defaults = getDefaultFees(
+    record.tv_show,
+    operationalConfig.defaultKmRate,
+  );
 
   const handleSubmit = async (data: EpisodeFormData) => {
     setSaving(true);
@@ -38,6 +43,7 @@ export const QuickEpisodeDialog = ({ record }: QuickEpisodeDialogProps) => {
           data: {
             project_id: record.id,
             service_date: data.service_date,
+            is_taxable: true,
             service_type: data.service_type,
             fee_shooting: data.fee_shooting,
             fee_editing: data.fee_editing,

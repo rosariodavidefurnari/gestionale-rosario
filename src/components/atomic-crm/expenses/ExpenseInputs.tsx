@@ -6,8 +6,10 @@ import { SelectInput } from "@/components/admin/select-input";
 import { ReferenceInput } from "@/components/admin/reference-input";
 import { NumberInput } from "@/components/admin/number-input";
 import { DateInput } from "@/components/admin/date-input";
+import { calculateKmReimbursement } from "@/lib/semantics/crmSemanticRegistry";
 
 import { expenseTypeChoices, expenseTypeDescriptions } from "./expenseTypes";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 
 export const ExpenseInputs = () => {
   return (
@@ -86,9 +88,15 @@ const CreditSection = () => (
 );
 
 const KmSection = () => {
+  const { operationalConfig } = useConfigurationContext();
+  const defaultKmRate = operationalConfig.defaultKmRate;
   const kmDistance = useWatch({ name: "km_distance" }) ?? 0;
-  const kmRate = useWatch({ name: "km_rate" }) ?? 0.19;
-  const total = Number(kmDistance) * Number(kmRate);
+  const kmRate = useWatch({ name: "km_rate" }) ?? defaultKmRate;
+  const total = calculateKmReimbursement({
+    kmDistance,
+    kmRate,
+    defaultKmRate,
+  });
 
   return (
     <>
@@ -102,9 +110,12 @@ const KmSection = () => {
       <NumberInput
         source="km_rate"
         label="Tariffa km (EUR)"
-        defaultValue={0.19}
+        defaultValue={defaultKmRate}
         validate={minValue(0)}
-        helperText={false}
+        helperText={`Tariffa predefinita condivisa: EUR ${defaultKmRate.toLocaleString(
+          "it-IT",
+          { minimumFractionDigits: 2 },
+        )}`}
       />
       <div className="text-sm font-medium px-1 pt-1 border-t">
         Totale:{" "}

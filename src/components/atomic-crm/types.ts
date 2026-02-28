@@ -98,6 +98,7 @@ export type Service = {
   service_date: string;
   service_end?: string;
   all_day: boolean;
+  is_taxable: boolean;
   service_type:
     | "riprese"
     | "montaggio"
@@ -200,6 +201,7 @@ export type AttachmentNote = RAFile;
 export interface LabeledValue {
   value: string;
   label: string;
+  description?: string;
 }
 
 export interface NoteStatus extends LabeledValue {
@@ -230,4 +232,8 @@ export interface FiscalConfig {
 
 export interface AIConfig {
   historicalAnalysisModel: string;
+}
+
+export interface OperationalConfig {
+  defaultKmRate: number;
 }

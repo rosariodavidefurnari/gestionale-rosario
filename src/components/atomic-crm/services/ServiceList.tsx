@@ -11,12 +11,17 @@ import { ServiceListContent } from "./ServiceListContent";
 import { ServiceListFilter } from "./ServiceListFilter";
 import { TopToolbar } from "../layout/TopToolbar";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import {
+  calculateKmReimbursement,
+  calculateServiceNetValue,
+} from "@/lib/semantics/crmSemanticRegistry";
 
 export const ServiceList = () => {
-  const { serviceTypeChoices } = useConfigurationContext();
+  const { serviceTypeChoices, operationalConfig } = useConfigurationContext();
   const typeLabels: Record<string, string> = Object.fromEntries(
     serviceTypeChoices.map((t) => [t.value, t.label]),
   );
+  const defaultKmRate = operationalConfig.defaultKmRate;
 
   const exporter: Exporter<Service> = useCallback(
     async (records, fetchRelatedRecords) => {
@@ -31,13 +36,18 @@ export const ServiceList = () => {
         tutto_il_giorno: s.all_day ? "Sì" : "No",
         progetto: projects[s.project_id]?.name ?? "",
         tipo: typeLabels[s.service_type] ?? s.service_type,
+        tassabile: s.is_taxable === false ? "No" : "Sì",
         riprese: s.fee_shooting,
         montaggio: s.fee_editing,
         altro: s.fee_other,
         sconto: s.discount,
-        totale: s.fee_shooting + s.fee_editing + s.fee_other - s.discount,
+        totale: calculateServiceNetValue(s),
         km: s.km_distance,
-        rimborso_km: (s.km_distance * s.km_rate).toFixed(2),
+        rimborso_km: calculateKmReimbursement({
+          kmDistance: s.km_distance,
+          kmRate: s.km_rate,
+          defaultKmRate,
+        }).toFixed(2),
         localita: s.location ?? "",
         rif_fattura: s.invoice_ref ?? "",
         note: s.notes ?? "",
@@ -46,7 +56,7 @@ export const ServiceList = () => {
         downloadCSV(csv, "registro_lavori");
       });
     },
-    [typeLabels],
+    [defaultKmRate, typeLabels],
   );
 
   return (

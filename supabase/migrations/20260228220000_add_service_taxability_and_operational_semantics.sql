@@ -1,0 +1,2 @@
+ALTER TABLE public.services
+ADD COLUMN IF NOT EXISTS is_taxable BOOLEAN NOT NULL DEFAULT true;

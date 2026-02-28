@@ -13,7 +13,10 @@ export interface FeeDefaults {
 }
 
 /** Pre-fill fees based on tv_show type */
-export const getDefaultFees = (tvShow?: string | null): FeeDefaults => {
+export const getDefaultFees = (
+  tvShow?: string | null,
+  defaultKmRate = 0.19,
+): FeeDefaults => {
   switch (tvShow) {
     case "gustare_sicilia":
       return {
@@ -21,7 +24,7 @@ export const getDefaultFees = (tvShow?: string | null): FeeDefaults => {
         fee_editing: 311,
         fee_other: 0,
         service_type: "riprese_montaggio",
-        km_rate: 0.19,
+        km_rate: defaultKmRate,
       };
     case "bella_tra_i_fornelli":
     case "vale_il_viaggio":
@@ -30,7 +33,7 @@ export const getDefaultFees = (tvShow?: string | null): FeeDefaults => {
         fee_editing: 156,
         fee_other: 0,
         service_type: "riprese_montaggio",
-        km_rate: 0.19,
+        km_rate: defaultKmRate,
       };
     default:
       return {
@@ -38,7 +41,7 @@ export const getDefaultFees = (tvShow?: string | null): FeeDefaults => {
         fee_editing: 0,
         fee_other: 0,
         service_type: "riprese_montaggio",
-        km_rate: 0.19,
+        km_rate: defaultKmRate,
       };
   }
 };

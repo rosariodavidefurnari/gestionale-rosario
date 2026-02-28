@@ -13,6 +13,7 @@ import type { Service } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { ErrorMessage } from "../misc/ErrorMessage";
 import { formatDateRange } from "../misc/formatDateRange";
+import { calculateServiceNetValue } from "@/lib/semantics/crmSemanticRegistry";
 
 const eur = (n: number) =>
   n ? n.toLocaleString("it-IT", { minimumFractionDigits: 2 }) : "--";
@@ -42,6 +43,7 @@ export const ServiceListContent = () => {
           </TableHead>
           <TableHead className="text-right">Totale</TableHead>
           <TableHead className="text-right hidden lg:table-cell">Km</TableHead>
+          <TableHead className="hidden xl:table-cell">Fiscale</TableHead>
           <TableHead className="hidden xl:table-cell">
             Localit&agrave;
           </TableHead>
@@ -67,11 +69,7 @@ export const ServiceListContent = () => {
 const ServiceRow = ({ service, link }: { service: Service; link: string }) => {
   const { data: project } = useGetOne("projects", { id: service.project_id });
   const { serviceTypeChoices } = useConfigurationContext();
-  const total =
-    service.fee_shooting +
-    service.fee_editing +
-    service.fee_other -
-    service.discount;
+  const total = calculateServiceNetValue(service);
 
   return (
     <TableRow className="cursor-pointer hover:bg-muted/50">
@@ -105,6 +103,9 @@ const ServiceRow = ({ service, link }: { service: Service; link: string }) => {
       </TableCell>
       <TableCell className="text-right text-sm hidden lg:table-cell">
         {service.km_distance || "--"}
+      </TableCell>
+      <TableCell className="text-sm hidden xl:table-cell">
+        {service.is_taxable === false ? "Non tassabile" : "Tassabile"}
       </TableCell>
       <TableCell className="text-sm text-muted-foreground hidden xl:table-cell">
         {service.location ?? ""}

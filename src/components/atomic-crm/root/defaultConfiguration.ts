@@ -1,4 +1,4 @@
-import type { AIConfig, FiscalConfig } from "../types";
+import type { AIConfig, FiscalConfig, OperationalConfig } from "../types";
 import type { ConfigurationContextValue } from "./ConfigurationContext";
 import { defaultHistoricalAnalysisModel } from "@/lib/analytics/historicalAnalysis";
 
@@ -24,24 +24,84 @@ export const defaultTaskTypes = [
 ];
 
 export const defaultQuoteServiceTypes = [
-  { value: "wedding", label: "Wedding" },
-  { value: "battesimo", label: "Battesimo" },
-  { value: "compleanno", label: "Compleanno" },
-  { value: "evento", label: "Evento" },
-  { value: "produzione_tv", label: "Produzione TV" },
-  { value: "videoclip", label: "Videoclip" },
-  { value: "documentario", label: "Documentario" },
-  { value: "spot", label: "Spot" },
-  { value: "sito_web", label: "Sito Web" },
+  {
+    value: "wedding",
+    label: "Wedding",
+    description: "Preventivo per matrimonio o servizio wedding.",
+  },
+  {
+    value: "battesimo",
+    label: "Battesimo",
+    description: "Preventivo per battesimo o ricorrenza familiare simile.",
+  },
+  {
+    value: "compleanno",
+    label: "Compleanno",
+    description: "Preventivo per compleanni, feste private o eventi piccoli.",
+  },
+  {
+    value: "evento",
+    label: "Evento",
+    description: "Preventivo per evento generico non wedding e non TV.",
+  },
+  {
+    value: "produzione_tv",
+    label: "Produzione TV",
+    description: "Preventivo per produzioni televisive o format editoriali.",
+  },
+  {
+    value: "videoclip",
+    label: "Videoclip",
+    description: "Preventivo per videoclip musicali o contenuti assimilabili.",
+  },
+  {
+    value: "documentario",
+    label: "Documentario",
+    description: "Preventivo per documentari, racconti o reportage.",
+  },
+  {
+    value: "spot",
+    label: "Spot",
+    description: "Preventivo per spot, promo o contenuti advertising.",
+  },
+  {
+    value: "sito_web",
+    label: "Sito Web",
+    description: "Preventivo per sviluppo web o consegna di sito.",
+  },
 ];
 
 export const defaultServiceTypeChoices = [
-  { value: "riprese", label: "Riprese" },
-  { value: "montaggio", label: "Montaggio" },
-  { value: "riprese_montaggio", label: "Riprese + Montaggio" },
-  { value: "fotografia", label: "Fotografia" },
-  { value: "sviluppo_web", label: "Sviluppo Web" },
-  { value: "altro", label: "Altro" },
+  {
+    value: "riprese",
+    label: "Riprese",
+    description: "Esecuzione sul campo: video, camera, set o giornata riprese.",
+  },
+  {
+    value: "montaggio",
+    label: "Montaggio",
+    description: "Post-produzione, editing o rifinitura del materiale.",
+  },
+  {
+    value: "riprese_montaggio",
+    label: "Riprese + Montaggio",
+    description: "Servizio completo che comprende produzione e post-produzione.",
+  },
+  {
+    value: "fotografia",
+    label: "Fotografia",
+    description: "Servizio fotografico o shooting non video.",
+  },
+  {
+    value: "sviluppo_web",
+    label: "Sviluppo Web",
+    description: "Lavoro tecnico di sviluppo, revisione o consegna web.",
+  },
+  {
+    value: "altro",
+    label: "Altro",
+    description: "Prestazione che non rientra chiaramente negli altri tipi.",
+  },
 ];
 
 export const defaultFiscalConfig: FiscalConfig = {
@@ -68,6 +128,10 @@ export const defaultAIConfig: AIConfig = {
   historicalAnalysisModel: defaultHistoricalAnalysisModel,
 };
 
+export const defaultOperationalConfig: OperationalConfig = {
+  defaultKmRate: 0.19,
+};
+
 export const defaultConfiguration: ConfigurationContextValue = {
   noteStatuses: defaultNoteStatuses,
   taskTypes: defaultTaskTypes,
@@ -78,4 +142,5 @@ export const defaultConfiguration: ConfigurationContextValue = {
   lightModeLogo: defaultLightModeLogo,
   fiscalConfig: defaultFiscalConfig,
   aiConfig: defaultAIConfig,
+  operationalConfig: defaultOperationalConfig,
 };

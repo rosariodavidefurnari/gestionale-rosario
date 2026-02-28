@@ -7,6 +7,11 @@ import type {
   Quote,
   Service,
 } from "../types";
+import {
+  calculateKmReimbursement,
+  calculateServiceNetValue,
+  calculateTaxableServiceNetValue,
+} from "@/lib/semantics/crmSemanticRegistry";
 
 // ── Output types ──────────────────────────────────────────────────────
 
@@ -103,12 +108,6 @@ const toNumber = (value: unknown) => {
   return 0;
 };
 
-const getServiceNetRevenue = (service: Service) =>
-  toNumber(service.fee_shooting) +
-  toNumber(service.fee_editing) +
-  toNumber(service.fee_other) -
-  toNumber(service.discount);
-
 /**
  * Determines the substitute tax rate based on the year the business started.
  * Startup rate: 5% for the first 5 years (opening year included).
@@ -148,7 +147,10 @@ const categoryLabels: Record<string, string> = {
 
 const getExpenseAmount = (expense: Expense) => {
   if (expense.expense_type === "spostamento_km") {
-    return toNumber(expense.km_distance) * toNumber(expense.km_rate);
+    return calculateKmReimbursement({
+      kmDistance: expense.km_distance,
+      kmRate: expense.km_rate,
+    });
   }
   const base = toNumber(expense.amount);
   const markup = toNumber(expense.markup_percent);
@@ -237,6 +239,7 @@ export const buildFiscalModel = ({
   // ── Revenue by category (current year) ────────────────────────────
 
   const categoryRevenue = new Map<string, number>();
+  const taxableCategoryRevenue = new Map<string, number>();
   const categoryExpenses = new Map<string, number>();
   const clientRevenue = new Map<string, number>();
   const projectEarliestService = new Map<string, Date>();
@@ -249,9 +252,14 @@ export const buildFiscalModel = ({
     const project = projectById.get(String(service.project_id));
     if (!project) continue;
 
-    const revenue = getServiceNetRevenue(service);
+    const revenue = calculateServiceNetValue(service);
+    const taxableRevenue = calculateTaxableServiceNetValue(service);
     const cat = project.category;
     categoryRevenue.set(cat, (categoryRevenue.get(cat) ?? 0) + revenue);
+    taxableCategoryRevenue.set(
+      cat,
+      (taxableCategoryRevenue.get(cat) ?? 0) + taxableRevenue,
+    );
 
     const clientId = String(project.client_id);
     clientRevenue.set(clientId, (clientRevenue.get(clientId) ?? 0) + revenue);
@@ -292,7 +300,7 @@ export const buildFiscalModel = ({
     { fatturato: number; redditoForfettario: number }
   >();
 
-  for (const [cat, revenue] of categoryRevenue) {
+  for (const [cat, revenue] of taxableCategoryRevenue) {
     fatturatoLordoYtd += revenue;
     const profile = categoryToProfile.get(cat);
     if (profile) {
@@ -405,7 +413,10 @@ export const buildFiscalModel = ({
       : null;
 
   // Client concentration (top 3 / total)
-  const totalRevenue = fatturatoLordoYtd;
+  const totalRevenue = Array.from(clientRevenue.values()).reduce(
+    (sum, value) => sum + value,
+    0,
+  );
   const sortedClientRevenues = Array.from(clientRevenue.values()).sort(
     (a, b) => b - a,
   );

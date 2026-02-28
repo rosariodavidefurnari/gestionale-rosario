@@ -12,22 +12,29 @@ import {
 import type { Expense } from "../types";
 import { expenseTypeLabels } from "./expenseTypes";
 import { ErrorMessage } from "../misc/ErrorMessage";
+import { calculateKmReimbursement } from "@/lib/semantics/crmSemanticRegistry";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 
 const eur = (n: number) =>
   n ? n.toLocaleString("it-IT", { minimumFractionDigits: 2 }) : "--";
 
-const computeTotal = (e: Expense) => {
+const computeTotal = (e: Expense, defaultKmRate: number) => {
   if (e.expense_type === "credito_ricevuto") {
     return -(e.amount ?? 0);
   }
   if (e.expense_type === "spostamento_km") {
-    return (e.km_distance ?? 0) * (e.km_rate ?? 0.19);
+    return calculateKmReimbursement({
+      kmDistance: e.km_distance,
+      kmRate: e.km_rate,
+      defaultKmRate,
+    });
   }
   return (e.amount ?? 0) * (1 + (e.markup_percent ?? 0) / 100);
 };
 
 export const ExpenseListContent = () => {
   const { data, isPending, error } = useListContext<Expense>();
+  const { operationalConfig } = useConfigurationContext();
   const createPath = useCreatePath();
 
   if (error) return <ErrorMessage />;
@@ -50,6 +57,7 @@ export const ExpenseListContent = () => {
         {data.map((expense) => (
           <ExpenseRow
             key={expense.id}
+            defaultKmRate={operationalConfig.defaultKmRate}
             expense={expense}
             link={createPath({
               resource: "expenses",
@@ -63,7 +71,15 @@ export const ExpenseListContent = () => {
   );
 };
 
-const ExpenseRow = ({ expense, link }: { expense: Expense; link: string }) => {
+const ExpenseRow = ({
+  expense,
+  link,
+  defaultKmRate,
+}: {
+  expense: Expense;
+  link: string;
+  defaultKmRate: number;
+}) => {
   const { data: project } = useGetOne(
     "projects",
     {
@@ -82,7 +98,7 @@ const ExpenseRow = ({ expense, link }: { expense: Expense; link: string }) => {
       enabled: !!expense.client_id,
     },
   );
-  const total = computeTotal(expense);
+  const total = computeTotal(expense, defaultKmRate);
 
   return (
     <TableRow className="cursor-pointer hover:bg-muted/50">

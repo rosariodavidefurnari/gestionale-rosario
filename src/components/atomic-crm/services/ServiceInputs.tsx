@@ -8,6 +8,7 @@ import { NumberInput } from "@/components/admin/number-input";
 import { DateInput } from "@/components/admin/date-input";
 import { DateTimeInput } from "@/components/admin/date-time-input";
 import { BooleanInput } from "@/components/admin/boolean-input";
+import { calculateKmReimbursement } from "@/lib/semantics/crmSemanticRegistry";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { ServiceTotals } from "./ServiceTotals";
@@ -118,14 +119,26 @@ const ServiceFeeInputs = () => (
       validate={minValue(0)}
       helperText={false}
     />
+    <BooleanInput
+      source="is_taxable"
+      label="Tassabile"
+      defaultValue={true}
+      helperText="Togli la spunta solo se questo servizio non deve entrare nella base fiscale."
+    />
     <ServiceTotals />
   </div>
 );
 
 const ServiceKmInputs = () => {
+  const { operationalConfig } = useConfigurationContext();
+  const defaultKmRate = operationalConfig.defaultKmRate;
   const kmDistance = useWatch({ name: "km_distance" }) ?? 0;
-  const kmRate = useWatch({ name: "km_rate" }) ?? 0.19;
-  const kmReimbursement = kmDistance * kmRate;
+  const kmRate = useWatch({ name: "km_rate" }) ?? defaultKmRate;
+  const kmReimbursement = calculateKmReimbursement({
+    kmDistance,
+    kmRate,
+    defaultKmRate,
+  });
 
   return (
     <div className="flex flex-col gap-4">
@@ -140,9 +153,12 @@ const ServiceKmInputs = () => {
       <NumberInput
         source="km_rate"
         label="Tariffa km (EUR)"
-        defaultValue={0.19}
+        defaultValue={defaultKmRate}
         validate={minValue(0)}
-        helperText={false}
+        helperText={`Tariffa predefinita condivisa: EUR ${defaultKmRate.toLocaleString(
+          "it-IT",
+          { minimumFractionDigits: 2 },
+        )}`}
       />
       <div className="text-sm font-medium px-1">
         Rimborso km:{" "}

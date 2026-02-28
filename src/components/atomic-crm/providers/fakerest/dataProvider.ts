@@ -22,6 +22,10 @@ import type {
   HistoricalAnalyticsAnswer,
   HistoricalAnalyticsSummary,
 } from "@/lib/analytics/historicalAnalysis";
+import {
+  buildCrmSemanticRegistry,
+  type CrmSemanticRegistry,
+} from "@/lib/semantics/crmSemanticRegistry";
 
 const baseDataProvider = fakeRestDataProvider(generateData(), true, 300);
 
@@ -125,6 +129,10 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
       previousData: prev,
     });
     return config;
+  },
+  getCrmSemanticRegistry: async (): Promise<CrmSemanticRegistry> => {
+    const config = await dataProvider.getConfiguration();
+    return buildCrmSemanticRegistry(config);
   },
   getHistoricalAnalyticsContext: async (): Promise<AnalyticsContext> => {
     throw new Error(

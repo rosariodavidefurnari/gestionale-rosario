@@ -291,6 +291,7 @@ const gestionaleMessages = {
         service_date: "Data inizio",
         service_end: "Data fine",
         all_day: "Tutto il giorno",
+        is_taxable: "Tassabile",
         service_type: "Tipo servizio",
         fee_shooting: "Compenso riprese",
         fee_editing: "Compenso montaggio",

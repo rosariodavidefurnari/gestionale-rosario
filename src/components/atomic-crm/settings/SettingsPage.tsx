@@ -5,6 +5,7 @@ import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrayInput } from "@/components/admin/array-input";
+import { NumberInput } from "@/components/admin/number-input";
 import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
 import { TextInput } from "@/components/admin/text-input";
 
@@ -24,6 +25,7 @@ const SECTIONS = [
   { id: "tags", label: "Etichette" },
   { id: "quote-types", label: "Tipi preventivo" },
   { id: "service-types", label: "Tipi servizio" },
+  { id: "operativita", label: "Operatività" },
   { id: "notes", label: "Note" },
   { id: "tasks", label: "Attività" },
   { id: "ai", label: "AI" },
@@ -39,13 +41,22 @@ const transformFormValues = (data: Record<string, any>) => ({
     noteStatuses: ensureValues(data.noteStatuses),
     quoteServiceTypes: ensureValues(data.quoteServiceTypes),
     serviceTypeChoices: ensureValues(data.serviceTypeChoices),
+    operationalConfig: {
+      defaultKmRate:
+        Number(data.operationalConfig?.defaultKmRate) ||
+        defaultConfiguration.operationalConfig.defaultKmRate,
+    },
     fiscalConfig: data.fiscalConfig,
     aiConfig: data.aiConfig,
   } as ConfigurationContextValue,
 });
 
 /** Ensure every item in a { value, label } array has a value (slug from label). */
-const ensureValues = (items: { value?: string; label: string }[] | undefined) =>
+const ensureValues = (
+  items:
+    | { value?: string; label: string; description?: string }[]
+    | undefined,
+) =>
   items?.map((item) => ({
     ...item,
     value: item.value || toSlug(item.label),
@@ -99,6 +110,7 @@ const SettingsForm = () => {
       noteStatuses: config.noteStatuses,
       quoteServiceTypes: config.quoteServiceTypes,
       serviceTypeChoices: config.serviceTypeChoices,
+      operationalConfig: config.operationalConfig,
       fiscalConfig: config.fiscalConfig,
       aiConfig: config.aiConfig,
     }),
@@ -206,6 +218,12 @@ const SettingsFormFields = () => {
             >
               <SimpleFormIterator disableReordering disableClear>
                 <TextInput source="label" label={false} />
+                <TextInput
+                  source="description"
+                  label={false}
+                  multiline
+                  helperText="Spiega quando usare questo tipo nei preventivi."
+                />
               </SimpleFormIterator>
             </ArrayInput>
           </CardContent>
@@ -228,8 +246,30 @@ const SettingsFormFields = () => {
             >
               <SimpleFormIterator disableReordering disableClear>
                 <TextInput source="label" label={false} />
+                <TextInput
+                  source="description"
+                  label={false}
+                  multiline
+                  helperText="Spiega quando questo tipo va usato nel registro lavori."
+                />
               </SimpleFormIterator>
             </ArrayInput>
+          </CardContent>
+        </Card>
+
+        <Card id="operativita">
+          <CardContent className="space-y-4">
+            <h2 className="text-xl font-semibold text-muted-foreground">
+              Operatività
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Regole base condivise da servizi, spese e future automazioni AI.
+            </p>
+            <NumberInput
+              source="operationalConfig.defaultKmRate"
+              label="Tariffa km predefinita (EUR)"
+              helperText="Usata come valore iniziale per rimborso km in servizi e spese."
+            />
           </CardContent>
         </Card>
 

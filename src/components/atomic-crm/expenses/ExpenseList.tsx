@@ -10,18 +10,24 @@ import { ExpenseListContent } from "./ExpenseListContent";
 import { ExpenseListFilter } from "./ExpenseListFilter";
 import { TopToolbar } from "../layout/TopToolbar";
 import { expenseTypeLabels } from "./expenseTypes";
+import { calculateKmReimbursement } from "@/lib/semantics/crmSemanticRegistry";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 
-export const ExpenseList = () => (
-  <List
-    title={false}
-    actions={<ExpenseListActions />}
-    perPage={25}
-    sort={{ field: "expense_date", order: "DESC" }}
-    exporter={exporter}
-  >
-    <ExpenseListLayout />
-  </List>
-);
+export const ExpenseList = () => {
+  const { operationalConfig } = useConfigurationContext();
+
+  return (
+    <List
+      title={false}
+      actions={<ExpenseListActions />}
+      perPage={25}
+      sort={{ field: "expense_date", order: "DESC" }}
+      exporter={buildExporter(operationalConfig.defaultKmRate)}
+    >
+      <ExpenseListLayout />
+    </List>
+  );
+};
 
 const ExpenseListLayout = () => {
   const { data, isPending, filterValues } = useListContext();
@@ -55,17 +61,23 @@ const ExpenseListActions = () => (
   </TopToolbar>
 );
 
-const computeTotal = (e: Expense) => {
+const computeTotal = (e: Expense, defaultKmRate: number) => {
   if (e.expense_type === "credito_ricevuto") {
     return -(e.amount ?? 0);
   }
   if (e.expense_type === "spostamento_km") {
-    return (e.km_distance ?? 0) * (e.km_rate ?? 0.19);
+    return calculateKmReimbursement({
+      kmDistance: e.km_distance,
+      kmRate: e.km_rate,
+      defaultKmRate,
+    });
   }
   return (e.amount ?? 0) * (1 + (e.markup_percent ?? 0) / 100);
 };
 
-const exporter: Exporter<Expense> = async (records, fetchRelatedRecords) => {
+const buildExporter =
+  (defaultKmRate: number): Exporter<Expense> =>
+  async (records, fetchRelatedRecords) => {
   const clients = await fetchRelatedRecords<Client>(
     records,
     "client_id",
@@ -85,7 +97,7 @@ const exporter: Exporter<Expense> = async (records, fetchRelatedRecords) => {
     tariffa_km: e.km_rate ?? "",
     importo: e.amount ?? "",
     ricarico_percent: e.markup_percent ?? "",
-    totale: computeTotal(e).toFixed(2),
+    totale: computeTotal(e, defaultKmRate).toFixed(2),
     descrizione: e.description ?? "",
     rif_fattura: e.invoice_ref ?? "",
   }));
