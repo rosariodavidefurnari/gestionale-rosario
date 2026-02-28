@@ -43,6 +43,8 @@ The implementation is now functionally closed for v1:
   flows,
 - `annual_operations` now exposes a first AI-safe drill-down for
   `pagamenti da ricevere` and `preventivi aperti`,
+- the Annuale AI answer path is now remotely validated on a real question about
+  payments/open quotes using that richer drill-down,
 - and the `Annuale` AI card is now browser-validated on the real authenticated
   UI path.
 
@@ -428,23 +430,45 @@ Ask the new session to:
     - existing annual functions already accept the richer JSON context from the
       client/provider
 
+### Annuale AI validation on payment/quote questions completed
+
+- Authenticated remote smoke completed on `2026-02-28`
+- Validation setup:
+  - temporary authenticated user created via admin API on
+    `qvdmzhyzpyaveniirsmo`
+  - cleanup completed automatically after the run
+  - local code built the real `annual_operations` context and sent it to the
+    existing `annual_operations_answer` function
+- Observed result:
+  - chosen year in the smoke: `2026`
+  - drill-down contained:
+    - `2` pending payments
+    - `0` open quotes
+  - the answer cited the concrete client present in the drill-down:
+    - `Diego Caltabiano`
+  - the answer also correctly stated that no open quotes were present in that
+    perimetro
+- Outcome:
+  - the richer context is not only serialized correctly,
+  - it is also actually used by the real AI answer path without additional
+    code changes or new deploys.
+
 ## Priority 1
 
-### Validate Annuale AI answers on payment/quote questions with the new drill-down
+### Browser-validate Annuale AI on the payment/open-quote question set
 
 Why:
 
-- the semantic drill-down is now implemented,
-- the next useful step is to verify that the real AI answer path actually uses
-  it well on:
-  - `pagamenti da ricevere`
-  - `preventivi aperti`
+- the remote answer path is now validated,
+- the remaining narrow gap is the real browser click-path for this specific
+  question family inside `Annuale`.
 
 Tasks:
 
-- run an authenticated browser or remote validation on Annuale,
-- ask questions specifically about payments/open quotes,
-- verify the answer cites concrete entities from the drill-down when useful,
+- run an authenticated browser validation on Annuale,
+- ask a question specifically about payments/open quotes,
+- verify the answer still cites concrete entities from the drill-down when
+  useful,
 - verify the answer still avoids drifting into:
   - alert snapshot
   - fiscal simulation
@@ -452,8 +476,8 @@ Tasks:
 
 Acceptance:
 
-- Annuale AI answers payment/quote questions using the richer context in a way
-  that is concrete but still semantically disciplined.
+- the same targeted question set works end-to-end from the real Annuale UI,
+  not only from remote smoke.
 
 ## Priority 2
 

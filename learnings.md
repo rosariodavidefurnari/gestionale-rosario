@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Quando aggiungi un payload semantico nuovo per l'AI ma non
+  cambi la UI, uno smoke remoto autenticato può chiudere il dubbio più in
+  fretta di un browser test completo** — Per il drill-down Annuale su
+  `pagamenti da ricevere` / `preventivi aperti`, la parte critica non era la
+  card ma capire se la function AI usasse davvero il nuovo contesto. Un
+  one-off script con utente temporaneo, context reale e invoke della function
+  ha confermato subito il comportamento senza introdurre tooling nuovo.
+
 - [2026-02-28] **Se vuoi che l'AI parli bene di pagamenti e preventivi, non
   bastano i totali: serve un drill-down semantico nel context layer** — In
   `Annuale`, i KPI `pagamenti da ricevere` e `preventivi aperti` erano corretti

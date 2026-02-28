@@ -372,6 +372,24 @@ Important scope rule:
 - the goal is to let the AI cite concrete entities without collapsing
   operational totals, alert urgency, and fiscal simulation into one blob.
 
+Validation now completed on the real answer path too:
+
+- authenticated remote smoke completed on `2026-02-28`
+- temporary authenticated user created and cleaned automatically
+- local code built the real `annual_operations` context and invoked
+  `annual_operations_answer`
+- selected year in the smoke:
+  - `2026`
+- observed drill-down during the run:
+  - `2` pending payments
+  - `0` open quotes
+- the AI answer cited the concrete client present in the drill-down:
+  - `Diego Caltabiano`
+- and it correctly said that no open quotes were present in that same
+  perimetro
+- no extra code change or edge-function deploy was needed after the context
+  rollout
+
 ### Browser click-tests now completed on both active tracks
 
 What was verified in the real authenticated UI on `2026-02-28`:
@@ -683,8 +701,9 @@ Impact:
 - `Annuale` is still not AI-ready as a whole page:
   - only `annual_operations` has a dedicated AI context today
   - alerts and fiscal simulation remain outside that context
-- the richer `annual_operations` drill-down is now in place, but still needs
-  one focused validation pass on real payment/quote questions in Annuale AI.
+- the richer `annual_operations` drill-down is now validated on the remote
+  answer path, but still deserves one narrow browser click-test on the same
+  payment/quote question set.
 - The browser output is now understandable for non-expert users, but markdown
   readability may still deserve further polish only if product wants a denser
   or more scannable layout.
@@ -703,10 +722,10 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Validate Annuale AI on questions about:
+1. Browser-validate Annuale AI on questions about:
    - pending payments
    - open quotes
-   to verify the new drill-down is actually used well in the real answer path.
+   so the same drill-down evidence is also confirmed on the real UI path.
 2. Keep the new historical / annual / commercial tests updated whenever the
    widgets evolve.
 3. Only if useful after review, polish prompt/copy or markdown presentation of
@@ -725,6 +744,6 @@ Stable rollback note:
 - Read the backlog:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
-  - validating Annuale AI on payment / open-quote questions
+  - browser-validating Annuale AI on payment / open-quote questions
   - keeping historical, annual and commercial tests aligned with future widget changes
   - optional AI card readability polish

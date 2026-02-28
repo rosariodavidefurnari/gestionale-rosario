@@ -11,10 +11,54 @@ più, il quick payment da preventivo è ora validato anche per il caso semplice
 senza progetto, e la foundation `quote_items` è implementata e validata sul
 runtime reale. In più, `annual_operations` ora espone anche un drill-down
 AI-safe su `pagamenti da ricevere` e `preventivi aperti`. Prossimo passo:
-validare nel percorso AI reale di `Annuale` che questo nuovo dettaglio venga
-usato bene nelle risposte, senza scivolare su alert o fiscale.
+chiudere un click-test browser mirato di `Annuale` sulle domande
+`pagamenti/preventivi`, visto che la validazione remota del nuovo drill-down è
+già passata senza derive su alert o fiscale.
 
 ## Last Session
+
+### Sessione 39 (2026-02-28, remote validation Annuale drill-down)
+
+- Completed:
+  - **Validazione remota chiusa sul nuovo drill-down di `Annuale`**:
+    - creato utente temporaneo autenticato sul progetto remoto
+    - costruito localmente il vero contesto `annual_operations`
+    - invocata la Edge Function `annual_operations_answer`
+    - cleanup automatico di utente e riga `sales` a fine run
+  - **Evidenza raccolta sul comportamento reale dell'AI**:
+    - anno selezionato dallo smoke: `2026`
+    - drill-down presente nel contesto:
+      - `2` pagamenti da ricevere
+      - `0` preventivi aperti
+    - la risposta AI ha citato il cliente concreto presente nel drill-down:
+      - `Diego Caltabiano`
+    - la risposta ha anche dichiarato correttamente che non risultavano
+      preventivi aperti nel perimetro osservato
+
+- Validation:
+  - smoke remoto autenticato OK su `2026-02-28`
+  - modello usato: `gpt-5.2`
+  - nessun deploy aggiuntivo necessario:
+    - il nuovo contesto è stato accettato dalle function Annuale già attive
+
+- Decisions:
+  - il nuovo drill-down non richiede altro payload per ora
+  - il prossimo step utile è solo la verifica browser sulla stessa famiglia di
+    domande, non un nuovo refactor del semantic layer
+
+- Notes:
+  - un one-off script TypeScript locale basta per validare il path reale della
+    function quando non c'è ancora un tooling browser dedicato nel repo
+  - il passaggio `quote_items -> open quote drill-down -> AI answer` ora è
+    chiuso anche lato runtime reale, non solo nei test
+
+- Next action:
+  - click-test browser di `Annuale` con domanda su:
+    - `pagamenti da ricevere`
+    - `preventivi aperti`
+  - verificare che la risposta resti concreta ma non scivoli su:
+    - alert snapshot
+    - simulazione fiscale
 
 ### Sessione 38 (2026-02-28, drill-down AI-safe per Annuale)
 
