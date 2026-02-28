@@ -161,6 +161,14 @@ const getExpenseAmount = (expense: Expense) => {
 const toStartOfDay = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
+/** Format a local Date as YYYY-MM-DD without UTC conversion (avoids off-by-one in timezones ahead of UTC). */
+const toLocalISODate = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
 const diffDays = (from: Date, to: Date) => {
   const msPerDay = 1000 * 60 * 60 * 24;
   return Math.floor(
@@ -526,7 +534,7 @@ const buildDeadlines = ({
 
   const juneTotalAmount = juneItems.reduce((s, i) => s + i.amount, 0);
   deadlines.push({
-    date: juneDate.toISOString().slice(0, 10),
+    date: toLocalISODate(juneDate),
     label: "Saldo + 1° Acconto",
     items: juneItems,
     totalAmount: juneTotalAmount,
@@ -558,7 +566,7 @@ const buildDeadlines = ({
 
   const novTotalAmount = novItems.reduce((s, i) => s + i.amount, 0);
   deadlines.push({
-    date: novDate.toISOString().slice(0, 10),
+    date: toLocalISODate(novDate),
     label: "2° Acconto",
     items: novItems,
     totalAmount: novTotalAmount,

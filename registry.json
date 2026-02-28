@@ -144,6 +144,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/settings/FiscalSettingsSection.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/services/serviceTypes.ts",
           "type": "registry:component"
         },
@@ -608,6 +612,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/fiscalModel.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/dashboardModel.ts",
           "type": "registry:component"
         },
@@ -648,7 +656,23 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/DashboardFiscalKpis.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardDeadlinesCard.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/DashboardCategoryChart.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardBusinessHealthCard.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardAtecoChart.tsx",
           "type": "registry:component"
         },
         {
