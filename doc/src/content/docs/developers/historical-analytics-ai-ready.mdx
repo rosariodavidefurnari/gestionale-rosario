@@ -706,6 +706,13 @@ Current implementation choice:
     - a guided summary via `dataProvider.generateHistoricalAnalyticsSummary()`,
     - and a single-turn question flow via
       `dataProvider.askHistoricalAnalyticsQuestion()`,
+- a second separate AI card now exists for historical `incassi`, driven by:
+    - `dataProvider.getHistoricalCashInflowContext()`
+    - `dataProvider.generateHistoricalCashInflowSummary()`
+    - `dataProvider.askHistoricalCashInflowQuestion()`
+- important product rule preserved:
+    - the `incassi` card is separate from the `compensi` card
+    - the current `Storico` widgets are still competence-based only
 - the free-question flow is intentionally constrained:
     - historical data only,
     - no multi-turn memory,

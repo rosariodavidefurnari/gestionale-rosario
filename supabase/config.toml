@@ -167,6 +167,10 @@ verify_jwt = false
 verify_jwt = false
 [functions.historical_analytics_answer]
 verify_jwt = false
+[functions.historical_cash_inflow_summary]
+verify_jwt = false
+[functions.historical_cash_inflow_answer]
+verify_jwt = false
 [functions.annual_operations_summary]
 verify_jwt = false
 [functions.annual_operations_answer]

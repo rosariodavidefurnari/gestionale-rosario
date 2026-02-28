@@ -149,6 +149,12 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
         "Historical analytics AI summary is not available in the FakeRest provider.",
       );
     },
+  generateHistoricalCashInflowSummary:
+    async (): Promise<HistoricalAnalyticsSummary> => {
+      throw new Error(
+        "Historical cash inflow AI summary is not available in the FakeRest provider.",
+      );
+    },
   generateAnnualOperationsAnalyticsSummary:
     async (): Promise<AnnualOperationsAnalyticsSummary> => {
       throw new Error(
@@ -159,6 +165,12 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
     async (): Promise<HistoricalAnalyticsAnswer> => {
       throw new Error(
         "Historical analytics AI questions are not available in the FakeRest provider.",
+      );
+    },
+  askHistoricalCashInflowQuestion:
+    async (): Promise<HistoricalAnalyticsAnswer> => {
+      throw new Error(
+        "Historical cash inflow AI questions are not available in the FakeRest provider.",
       );
     },
   askAnnualOperationsQuestion:

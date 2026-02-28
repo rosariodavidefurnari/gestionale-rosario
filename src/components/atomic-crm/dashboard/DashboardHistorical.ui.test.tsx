@@ -40,6 +40,12 @@ vi.mock("./DashboardHistoricalAiSummaryCard", () => ({
   ),
 }));
 
+vi.mock("./DashboardHistoricalCashInflowAiCard", () => ({
+  DashboardHistoricalCashInflowAiCard: () => (
+    <div data-testid="historical-cash-inflow-ai-card" />
+  ),
+}));
+
 import { DashboardHistorical } from "./DashboardHistorical";
 
 const makeModel = ({
@@ -199,6 +205,10 @@ describe("DashboardHistorical", () => {
       screen.getByText(
         "Per misurare la crescita tra un anno e l'altro servono almeno due anni completi.",
       ),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("historical-ai-summary-card")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("historical-cash-inflow-ai-card"),
     ).toBeInTheDocument();
   });
 });

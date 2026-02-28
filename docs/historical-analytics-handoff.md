@@ -194,6 +194,72 @@ Remote validation completed on `2026-02-28`:
     - `cash_inflow = 1744.00`
     - `payments_count = 1`
 
+### Historical cash-inflow AI consumer added
+
+New frontend/UI pieces:
+
+- `src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowAiCard.tsx`
+- `src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowAiCard.test.tsx`
+
+Provider methods added:
+
+- `dataProvider.generateHistoricalCashInflowSummary()`
+- `dataProvider.askHistoricalCashInflowQuestion()`
+
+Edge Functions added:
+
+- `supabase/functions/historical_cash_inflow_summary/index.ts`
+- `supabase/functions/historical_cash_inflow_answer/index.ts`
+
+Runtime config updated:
+
+- `supabase/config.toml`
+  - `[functions.historical_cash_inflow_summary]`
+  - `[functions.historical_cash_inflow_answer]`
+  - both with `verify_jwt = false`
+
+Purpose:
+
+- expose a first end-user consumer of historical `incassi`,
+- keep it clearly separate from the existing competence-based historical card,
+- validate that the new cash-inflow context is usable by the same AI product
+  pattern already used elsewhere.
+
+Current behavior:
+
+- `Storico` now renders two separate AI cards:
+  - one for `compensi`
+  - one for `incassi`
+- the new card supports:
+  - guided summary
+  - single-turn free question
+- the new card reuses the existing model selection in Settings,
+- but it keeps copy and prompts explicitly centered on received cash only.
+
+Browser validation completed on `2026-02-28`:
+
+- authenticated login on the real local runtime
+- open `Storico`
+- trigger guided summary on `AI: spiegami gli incassi`
+- trigger suggested question:
+  - `Qual è stato l'anno con più incassi ricevuti?`
+- observed result:
+  - guided summary rendered
+  - question answer rendered
+  - visible output mentioned `2025`
+  - console errors observed:
+    - `0`
+  - page errors observed:
+    - `0`
+
+Important operational note:
+
+- the first deploy returned `401 Invalid JWT` in browser,
+- root cause was not the prompt or the provider method,
+- root cause was missing `verify_jwt = false` entries for the new function
+  slugs in `supabase/config.toml`,
+- redeploy after adding those entries fixed the browser path.
+
 ### Annual dashboard normalization completed before any AI rollout there
 
 Important constraint discovered after the historical flow shipped:
@@ -776,8 +842,6 @@ Impact:
 - the richer `annual_operations` drill-down is now validated on both:
   - the remote answer path
   - the real browser UI path
-- the historical `incassi` resource now exists, but no user-facing consumer is
-  wired to it yet
 - The browser output is now understandable for non-expert users, but markdown
   readability may still deserve further polish only if product wants a denser
   or more scannable layout.
@@ -796,10 +860,10 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Add the first AI-safe consumer of historical `incassi`, keeping
-   `compensi` and `incassi` clearly separated.
-2. Keep the new historical / annual / commercial tests updated whenever the
+1. Keep the new historical / annual / commercial tests updated whenever the
    widgets evolve.
+2. Only if useful, add a small non-AI surface for historical `incassi` while
+   keeping it separate from `compensi`.
 3. Only if useful after review, polish prompt/copy or markdown presentation of
    the historical or annual AI cards further.
 4. Only later, if useful, evolve the current single-turn cards into a
@@ -816,6 +880,6 @@ Stable rollback note:
 - Read the backlog:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
-  - adding the first AI-safe consumer of historical `incassi`
   - keeping historical, annual and commercial tests aligned with future widget changes
+  - optional non-AI surface for historical `incassi`
   - optional AI card readability polish

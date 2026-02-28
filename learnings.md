@@ -10,6 +10,18 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Quando aggiungi una nuova Edge Function usata dal frontend,
+  non basta deployare il file: va aggiunta anche in `supabase/config.toml` se
+  il progetto usa `verify_jwt = false` sulle function UI-invoked** — Il primo
+  deploy di `historical_cash_inflow_summary` e `historical_cash_inflow_answer`
+  rispondeva nel browser con `401 Invalid JWT` prima ancora di entrare nel
+  codice applicativo. La causa era semplice: le nuove function non avevano la
+  loro entry in `supabase/config.toml`, mentre quelle già attive sì. Pattern:
+  1) aggiungere `[functions.<slug>]`
+  2) impostare `verify_jwt = false` se il resto delle function UI usa già quel
+     modello
+  3) redeployare
+
 - [2026-02-28] **Per una view storica con `generate_series` e limiti derivati
   dai dati, separare prima i bounds in un CTE dedicato** — La prima versione di
   `analytics_yearly_cash_inflow` usava `generate_series(min(payment_rows.year),

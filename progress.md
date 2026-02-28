@@ -3,17 +3,70 @@
 ## Current Phase
 
 🟢 Dashboard storico AI-ready stabile, AI operativa su `Annuale` chiusa sul
-solo contesto `annual_operations`, e primo ponte semantico storico sul lato
-pagamenti ormai aperto davvero: gli `incassi` hanno ora una resource dedicata,
-separata dai `compensi`, già testata localmente e verificata anche sul remoto
-sia con `service_role` sia con un utente autenticato normale. Anche il
-backbone commerciale minimo `Preventivo -> Progetto -> Pagamento` resta chiuso
-sul runtime reale, con quick payment senza progetto e foundation
-`quote_items` già validati. Prossimo passo sensato: decidere il primo consumer
-AI-safe del nuovo layer `incassi`, senza mischiarlo alla UI `Storico`
-esistente finché copy e caveat non sono pronti.
+solo contesto `annual_operations`, e ponte storico lato pagamenti ora chiuso
+anche come consumer utente reale: gli `incassi` hanno una resource semantica
+dedicata e una card AI separata in `Storico`, validata nel browser reale sia
+nel riepilogo guidato sia nella domanda libera. Anche il backbone commerciale
+minimo `Preventivo -> Progetto -> Pagamento` resta chiuso sul runtime reale,
+con quick payment senza progetto e foundation `quote_items` già validati.
+Prossimo passo sensato: solo hardening o prossima espansione mirata, non un
+nuovo refactor dell'architettura.
 
 ## Last Session
+
+### Sessione 42 (2026-02-28, consumer AI storico per incassi)
+
+- Completed:
+  - **Primo consumer AI-safe degli `incassi` storici aggiunto**:
+    - nuova card:
+      - `DashboardHistoricalCashInflowAiCard`
+    - nuove function:
+      - `historical_cash_inflow_summary`
+      - `historical_cash_inflow_answer`
+    - nuovi metodi provider:
+      - `generateHistoricalCashInflowSummary()`
+      - `askHistoricalCashInflowQuestion()`
+  - **Separazione di prodotto preservata**:
+    - la card nuova parla solo di soldi già ricevuti
+    - i widget storici esistenti restano basati su `compensi`
+    - nessun widget storico è stato trasformato in vista mista
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistoricalCashInflowAiCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.test.tsx src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/lib/analytics/buildHistoricalCashInflowContext.test.ts`
+  - deploy remoto:
+    - `historical_cash_inflow_summary`
+    - `historical_cash_inflow_answer`
+  - browser click-test autenticato OK su `2026-02-28`:
+    - login reale con utente temporaneo
+    - apertura `Storico`
+    - summary guidata `Spiegami gli incassi`
+    - domanda suggerita:
+      - `Qual è stato l'anno con più incassi ricevuti?`
+    - nessun errore console
+    - nessun `pageerror`
+
+- Decisions:
+  - il primo consumer `incassi` resta una card AI separata, non una modifica ai
+    KPI o grafici storici esistenti
+  - per nuove function invocate dalla UI bisogna allineare anche
+    `supabase/config.toml` con:
+    - `verify_jwt = false`
+    - come già fatto per le altre function AI attive
+
+- Notes:
+  - il primo deploy delle function `incassi` falliva nel browser con
+    `401 Invalid JWT`
+  - la causa non era il context né il middleware applicativo:
+    - mancavano le entry dedicate in `supabase/config.toml`
+  - aggiunte:
+    - `[functions.historical_cash_inflow_summary]`
+    - `[functions.historical_cash_inflow_answer]`
+    - entrambe con `verify_jwt = false`
+
+- Next action:
+  - mantenere allineati test, docs e config function quando si apre il prossimo
+    slice AI o commerciale
 
 ### Sessione 41 (2026-02-28, semantica storica incassi)
 

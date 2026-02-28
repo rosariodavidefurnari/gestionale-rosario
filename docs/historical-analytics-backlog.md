@@ -51,7 +51,12 @@ The implementation is now functionally closed for v1:
   - `analytics_yearly_cash_inflow`
   - `buildHistoricalCashInflowContext()`
   - `dataProvider.getHistoricalCashInflowContext()`
-  - with authenticated remote verification already closed.
+  - with authenticated remote verification already closed,
+- and that same `incassi` layer now has a first separate end-user AI consumer:
+  - `DashboardHistoricalCashInflowAiCard`
+  - `historical_cash_inflow_summary`
+  - `historical_cash_inflow_answer`
+  - browser-validated on the real authenticated UI path.
 
 The next work is now future expansion on top of a stable shipped core, not a
 missing foundation piece.
@@ -510,35 +515,35 @@ Ask the new session to:
   - do not merge `incassi` into the existing `Storico` UI yet
   - keep `compensi` and `incassi` as separate semantic bases
 
+### Historical `incassi` AI consumer added
+
+- Added dedicated UI card:
+  - `DashboardHistoricalCashInflowAiCard`
+- Added provider methods:
+  - `generateHistoricalCashInflowSummary()`
+  - `askHistoricalCashInflowQuestion()`
+- Added Edge Functions:
+  - `historical_cash_inflow_summary`
+  - `historical_cash_inflow_answer`
+- Added browser/UI tests:
+  - `DashboardHistoricalCashInflowAiCard.test.tsx`
+- Added runtime config continuity:
+  - `supabase/config.toml`
+  - `[functions.historical_cash_inflow_summary] verify_jwt = false`
+  - `[functions.historical_cash_inflow_answer] verify_jwt = false`
+- Added browser validation on `2026-02-28`:
+  - authenticated login on the real local runtime
+  - guided summary rendered
+  - suggested-question answer rendered
+  - no console errors
+  - no page errors
+- Scope rule preserved:
+  - the new card stays separate from the existing `Storico` KPI/chart widgets
+  - `compensi` and `incassi` are still never mixed in one widget
+
 ## Priority 1
 
-### Add the first AI-safe consumer of historical `incassi`
-
-Why:
-
-- the historical `incassi` resource now exists and is already verified,
-- but no end-user or AI consumer reads it yet,
-- the next durable gain is to expose that resource without collapsing it into
-  the existing `compensi` UI.
-
-Tasks:
-
-- define one dedicated consumer for the new context:
-  - AI-only helper
-  - or separate card/surface clearly labeled as `incassi`
-- keep the rule explicit:
-  - `compensi` != `incassi`
-- avoid mutating the current `Storico` widgets into mixed-basis widgets
-- keep labels and caveats as plain Italian, not accounting shorthand
-
-Acceptance:
-
-- the repo exposes one safe consumer of historical `incassi` that cannot be
-  confused with historical `compensi`.
-
-## Priority 2
-
-### Keep the new UI and semantic tests updated if widgets evolve
+### Keep the new historical / annual / commercial tests updated if widgets evolve
 
 Why:
 
@@ -546,7 +551,8 @@ Why:
   - historical widgets,
   - annual operations AI,
   - commercial backbone helpers,
-  - quote itemization helpers.
+  - quote itemization helpers,
+  - and the new historical cash-inflow AI card.
 
 Tasks:
 
@@ -554,12 +560,34 @@ Tasks:
   same branch,
 - keep coverage for empty/error/YTD/YoY semantics and AI card actions,
 - keep `quote_items` and lookup-helper tests aligned with any future form
-  refactor.
+  refactor,
+- keep `supabase/config.toml` aligned when new UI-invoked functions are added.
 
 Acceptance:
 
-- regressions in semantic rendering or cross-module linking keep getting caught
-  before shipping.
+- regressions in semantic rendering, function wiring, or cross-module linking
+  keep getting caught before shipping.
+
+## Priority 2
+
+### Optional non-AI surface for historical `incassi`
+
+Why:
+
+- the AI card now exists and is useful,
+- but product may still want a small visual surface for `incassi` without
+  forcing the user to ask the AI first.
+
+Tasks:
+
+- only if useful, add one small clearly labeled widget/card for received cash,
+- keep it separate from competence-based widgets,
+- avoid mixed labels like generic `fatturato`.
+
+Acceptance:
+
+- a user can read a basic historical cash signal without AI, while the semantic
+  separation stays intact.
 
 ## Priority 3
 

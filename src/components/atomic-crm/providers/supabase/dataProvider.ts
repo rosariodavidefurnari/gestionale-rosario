@@ -369,6 +369,39 @@ const dataProviderWithCustomMethods = {
 
     return data.data;
   },
+  async generateHistoricalCashInflowSummary(): Promise<HistoricalAnalyticsSummary> {
+    const [context, model] = await Promise.all([
+      getHistoricalCashInflowContextFromViews(),
+      getConfiguredHistoricalAnalysisModel(),
+    ]);
+
+    const { data, error } = await supabase.functions.invoke<{
+      data: HistoricalAnalyticsSummary;
+    }>("historical_cash_inflow_summary", {
+      method: "POST",
+      body: {
+        context,
+        model,
+      },
+    });
+
+    if (!data || error) {
+      console.error("generateHistoricalCashInflowSummary.error", error);
+      const errorDetails = await (async () => {
+        try {
+          return (await error?.context?.json()) ?? {};
+        } catch {
+          return {};
+        }
+      })();
+      throw new Error(
+        errorDetails?.message ||
+          "Impossibile generare l'analisi AI degli incassi storici",
+      );
+    }
+
+    return data.data;
+  },
   async generateAnnualOperationsAnalyticsSummary(
     year: number,
   ): Promise<AnnualOperationsAnalyticsSummary> {
@@ -441,6 +474,48 @@ const dataProviderWithCustomMethods = {
       throw new Error(
         errorDetails?.message ||
           "Impossibile ottenere una risposta AI sullo storico",
+      );
+    }
+
+    return data.data;
+  },
+  async askHistoricalCashInflowQuestion(
+    question: string,
+  ): Promise<HistoricalAnalyticsAnswer> {
+    const trimmedQuestion = question.trim();
+
+    if (!trimmedQuestion) {
+      throw new Error("Scrivi una domanda prima di inviare la richiesta.");
+    }
+
+    const [context, model] = await Promise.all([
+      getHistoricalCashInflowContextFromViews(),
+      getConfiguredHistoricalAnalysisModel(),
+    ]);
+
+    const { data, error } = await supabase.functions.invoke<{
+      data: HistoricalAnalyticsAnswer;
+    }>("historical_cash_inflow_answer", {
+      method: "POST",
+      body: {
+        context,
+        question: trimmedQuestion,
+        model,
+      },
+    });
+
+    if (!data || error) {
+      console.error("askHistoricalCashInflowQuestion.error", error);
+      const errorDetails = await (async () => {
+        try {
+          return (await error?.context?.json()) ?? {};
+        } catch {
+          return {};
+        }
+      })();
+      throw new Error(
+        errorDetails?.message ||
+          "Impossibile ottenere una risposta AI sugli incassi storici",
       );
     }
 
