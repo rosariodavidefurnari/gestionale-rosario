@@ -1,3 +1,4 @@
+import type { FiscalConfig } from "../types";
 import type { ConfigurationContextValue } from "./ConfigurationContext";
 
 export const defaultDarkModeLogo = "./logos/logo_atomic_crm_dark.svg";
@@ -42,6 +43,31 @@ export const defaultServiceTypeChoices = [
   { value: "altro", label: "Altro" },
 ];
 
+export const defaultFiscalConfig: FiscalConfig = {
+  taxProfiles: [
+    {
+      atecoCode: "731102",
+      description: "Marketing e servizi pubblicitari",
+      coefficienteReddititivita: 78,
+      linkedCategories: [
+        "produzione_tv",
+        "spot",
+        "wedding",
+        "evento_privato",
+      ],
+    },
+    {
+      atecoCode: "621000",
+      description: "Produzione software e consulenza IT",
+      coefficienteReddititivita: 67,
+      linkedCategories: ["sviluppo_web"],
+    },
+  ],
+  aliquotaINPS: 26.07,
+  tettoFatturato: 85000,
+  annoInizioAttivita: 2023,
+};
+
 export const defaultConfiguration: ConfigurationContextValue = {
   noteStatuses: defaultNoteStatuses,
   taskTypes: defaultTaskTypes,
@@ -50,4 +76,5 @@ export const defaultConfiguration: ConfigurationContextValue = {
   title: defaultTitle,
   darkModeLogo: defaultDarkModeLogo,
   lightModeLogo: defaultLightModeLogo,
+  fiscalConfig: defaultFiscalConfig,
 };

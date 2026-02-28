@@ -193,3 +193,25 @@ export interface LabeledValue {
 export interface NoteStatus extends LabeledValue {
   color: string;
 }
+
+/** Tax profile for a single ATECO code under Regime Forfettario.
+ *  Links project categories to a specific profitability coefficient. */
+export interface FiscalTaxProfile {
+  atecoCode: string;
+  description: string;
+  coefficienteReddititivita: number; // percentage, e.g. 78
+  linkedCategories: string[];
+}
+
+/** Complete fiscal configuration stored in Settings.
+ *  All fields configurable from UI and persisted to DB via configuration JSONB. */
+export interface FiscalConfig {
+  taxProfiles: FiscalTaxProfile[];
+  aliquotaINPS: number; // 26.07
+  tettoFatturato: number; // 85000
+  annoInizioAttivita: number; // 2023
+  /** Override manuale dell'aliquota sostitutiva.
+   *  Se undefined/null → calcolo automatico: 5% primi 5 anni, 15% dal 6°.
+   *  Se valorizzato → usa questo valore (per casistiche particolari). */
+  aliquotaOverride?: number;
+}
