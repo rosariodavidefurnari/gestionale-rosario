@@ -1,4 +1,5 @@
-import { AlertTriangle, RefreshCw, Settings } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, ChevronLeft, ChevronRight, RefreshCw, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +20,12 @@ import { DashboardRevenueTrendChart } from "./DashboardRevenueTrendChart";
 import { DashboardTopClientsCard } from "./DashboardTopClientsCard";
 import { useDashboardData } from "./useDashboardData";
 
+const currentYear = new Date().getFullYear();
+
 export const Dashboard = () => {
-  const { data, isPending, error, refetch } = useDashboardData();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const { data, isPending, error, refetch } = useDashboardData(selectedYear);
+  const isCurrentYear = data?.isCurrentYear ?? selectedYear === currentYear;
 
   if (isPending || !data) {
     if (error) {
@@ -32,6 +37,13 @@ export const Dashboard = () => {
   return (
     <div className="space-y-6 mt-1">
       {import.meta.env.VITE_IS_DEMO === "true" ? <Welcome /> : null}
+
+      <YearSelector
+        year={selectedYear}
+        onPrev={() => setSelectedYear((y) => y - 1)}
+        onNext={() => setSelectedYear((y) => Math.min(y + 1, currentYear))}
+        isCurrentYear={isCurrentYear}
+      />
 
       <DashboardKpiCards kpis={data.kpis} />
 
@@ -45,18 +57,20 @@ export const Dashboard = () => {
           <DashboardPipelineCard data={data.quotePipeline} />
           <DashboardTopClientsCard data={data.topClients} />
         </div>
-        <DashboardAlertsCard alerts={data.alerts} />
+        {isCurrentYear && <DashboardAlertsCard alerts={data.alerts} />}
       </div>
 
       {/* Fiscal & Business Health Section */}
       {data.fiscal ? (
         <>
           <h2 className="text-xl font-semibold mt-2">
-            Fiscale & Salute Aziendale
+            {isCurrentYear
+              ? "Fiscale & Salute Aziendale"
+              : `Riepilogo Fiscale ${selectedYear}`}
           </h2>
 
-          {/* Warnings */}
-          {data.fiscal.warnings.length > 0 && (
+          {/* Warnings — only for current year */}
+          {isCurrentYear && data.fiscal.warnings.length > 0 && (
             <div className="space-y-2">
               {data.fiscal.warnings.map((w) => (
                 <div
@@ -79,17 +93,22 @@ export const Dashboard = () => {
           <DashboardFiscalKpis
             fiscalKpis={data.fiscal.fiscalKpis}
             warnings={data.fiscal.warnings}
+            isCurrentYear={isCurrentYear}
           />
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <DashboardAtecoChart data={data.fiscal.atecoBreakdown} />
-            <DashboardDeadlinesCard
-              deadlines={data.fiscal.deadlines}
-              isFirstYear={data.fiscal.deadlines.length === 0}
-            />
+            {isCurrentYear && (
+              <DashboardDeadlinesCard
+                deadlines={data.fiscal.deadlines}
+                isFirstYear={data.fiscal.deadlines.length === 0}
+              />
+            )}
           </div>
 
-          <DashboardBusinessHealthCard health={data.fiscal.businessHealth} />
+          {isCurrentYear && (
+            <DashboardBusinessHealthCard health={data.fiscal.businessHealth} />
+          )}
         </>
       ) : (
         <Card className="mt-2">
@@ -110,6 +129,36 @@ export const Dashboard = () => {
     </div>
   );
 };
+
+const YearSelector = ({
+  year,
+  onPrev,
+  onNext,
+  isCurrentYear,
+}: {
+  year: number;
+  onPrev: () => void;
+  onNext: () => void;
+  isCurrentYear: boolean;
+}) => (
+  <div className="flex items-center gap-2">
+    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onPrev}>
+      <ChevronLeft className="h-4 w-4" />
+    </Button>
+    <span className="text-lg font-semibold tabular-nums min-w-[4ch] text-center">
+      {year}
+    </span>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8"
+      onClick={onNext}
+      disabled={isCurrentYear}
+    >
+      <ChevronRight className="h-4 w-4" />
+    </Button>
+  </div>
+);
 
 const DashboardError = ({ onRetry }: { onRetry: () => void }) => (
   <Card className="mt-1">

@@ -30,6 +30,8 @@ export type DashboardModel = {
   topClients: TopClientPoint[];
   alerts: DashboardAlerts;
   fiscal: FiscalModel | null;
+  selectedYear: number;
+  isCurrentYear: boolean;
 };
 
 export type DashboardKpis = {
@@ -221,11 +223,11 @@ const isCurrentYear = (value?: string, year = new Date().getFullYear()) => {
   return date.getFullYear() === year;
 };
 
-const getSortedMonthStarts = (count: number) => {
-  const now = new Date();
+const getSortedMonthStarts = (count: number, referenceDate?: Date) => {
+  const ref = referenceDate ?? new Date();
   const items: Date[] = [];
   for (let i = count - 1; i >= 0; i -= 1) {
-    items.push(new Date(now.getFullYear(), now.getMonth() - i, 1));
+    items.push(new Date(ref.getFullYear(), ref.getMonth() - i, 1));
   }
   return items;
 };
@@ -239,6 +241,7 @@ export const buildDashboardModel = ({
   clients,
   expenses,
   fiscalConfig,
+  year,
 }: {
   monthlyRevenueRows: MonthlyRevenueRow[];
   payments: Payment[];
@@ -248,12 +251,28 @@ export const buildDashboardModel = ({
   clients: Client[];
   expenses: Expense[];
   fiscalConfig?: FiscalConfig;
+  year?: number;
 }): DashboardModel => {
   const now = new Date();
   const today = toStartOfDay(now);
-  const currentYear = now.getFullYear();
-  const currentMonthKey = monthKey(now);
-  const previousMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const nowYear = now.getFullYear();
+  // Validate year: must be a reasonable value, default to current year
+  const selectedYear =
+    year != null && Number.isFinite(year) && year >= 2000 && year <= nowYear
+      ? year
+      : nowYear;
+  const isSelectedCurrentYear = selectedYear === nowYear;
+
+  // For past years use Dec as reference month; for current year use today
+  const referenceDate = isSelectedCurrentYear
+    ? now
+    : new Date(selectedYear, 11, 31);
+  const currentMonthKey = monthKey(referenceDate);
+  const previousMonthDate = new Date(
+    referenceDate.getFullYear(),
+    referenceDate.getMonth() - 1,
+    1,
+  );
   const previousMonthKey = monthKey(previousMonthDate);
 
   const monthlyTotals = new Map<string, { revenue: number; totalKm: number; kmCost: number }>();
@@ -269,12 +288,12 @@ export const buildDashboardModel = ({
     bucket.kmCost += toNumber(row.km_cost);
     monthlyTotals.set(key, bucket);
 
-    if (rowDate.getFullYear() === currentYear) {
+    if (rowDate.getFullYear() === selectedYear) {
       categoryTotals.set(row.category, (categoryTotals.get(row.category) ?? 0) + toNumber(row.revenue));
     }
   }
 
-  const revenueTrend = getSortedMonthStarts(12).map((date) => {
+  const revenueTrend = getSortedMonthStarts(12, referenceDate).map((date) => {
     const key = monthKey(date);
     const values = monthlyTotals.get(key) ?? { revenue: 0, totalKm: 0, kmCost: 0 };
     return {
@@ -304,14 +323,23 @@ export const buildDashboardModel = ({
         : null;
 
   const annualRevenue = Array.from(monthlyTotals.entries()).reduce((sum, [key, value]) => {
-    if (key.startsWith(`${currentYear}-`)) {
+    if (key.startsWith(`${selectedYear}-`)) {
       return sum + value.revenue;
     }
     return sum;
   }, 0);
 
+  // Filter payments and quotes by selected year
+  const yearPayments = payments.filter((payment) => {
+    const dateStr = payment.payment_date ?? payment.created_at;
+    return isCurrentYear(dateStr, selectedYear);
+  });
+  const yearQuotes = quotes.filter((quote) =>
+    isCurrentYear(quote.created_at, selectedYear),
+  );
+
   // Exclude refunds from pending alerts (refunds are outgoing, not incoming)
-  const pendingPayments = payments.filter(
+  const pendingPayments = yearPayments.filter(
     (payment) => payment.status !== "ricevuto" && payment.payment_type !== "rimborso",
   );
   const pendingPaymentsTotal = pendingPayments.reduce(
@@ -319,7 +347,7 @@ export const buildDashboardModel = ({
     0,
   );
 
-  const openQuotes = quotes.filter((quote) => !quoteClosedForOpenKpi.has(quote.status));
+  const openQuotes = yearQuotes.filter((quote) => !quoteClosedForOpenKpi.has(quote.status));
   const openQuotesAmount = openQuotes.reduce((sum, quote) => sum + toNumber(quote.amount), 0);
 
   const quotePipelineSeed = new Map<string, QuotePipelinePoint>(
@@ -334,7 +362,7 @@ export const buildDashboardModel = ({
     ]),
   );
 
-  for (const quote of quotes) {
+  for (const quote of yearQuotes) {
     const bucket = quotePipelineSeed.get(quote.status);
     if (!bucket) continue;
     bucket.count += 1;
@@ -348,7 +376,7 @@ export const buildDashboardModel = ({
 
   const topClientRevenue = new Map<string, number>();
   for (const service of services) {
-    if (!isCurrentYear(service.service_date, currentYear)) continue;
+    if (!isCurrentYear(service.service_date, selectedYear)) continue;
     const project = projectById.get(String(service.project_id));
     if (!project) continue;
     const clientId = String(project.client_id);
@@ -464,6 +492,7 @@ export const buildDashboardModel = ({
         projects,
         clients,
         fiscalConfig,
+        year: selectedYear,
       })
     : null;
 
@@ -490,5 +519,7 @@ export const buildDashboardModel = ({
       unansweredQuotes,
     },
     fiscal,
+    selectedYear,
+    isCurrentYear: isSelectedCurrentYear,
   };
 };

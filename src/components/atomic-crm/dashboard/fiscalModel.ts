@@ -186,6 +186,7 @@ export const buildFiscalModel = ({
   projects,
   clients,
   fiscalConfig,
+  year,
 }: {
   services: Service[];
   expenses: Expense[];
@@ -194,11 +195,19 @@ export const buildFiscalModel = ({
   projects: Project[];
   clients: Client[];
   fiscalConfig: FiscalConfig;
+  year?: number;
 }): FiscalModel => {
   const now = new Date();
   const today = toStartOfDay(now);
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1; // 1-based
+  const nowYear = now.getFullYear();
+  // Validate year: must be a reasonable value, default to current year
+  const currentYear =
+    year != null && Number.isFinite(year) && year >= 2000 && year <= nowYear
+      ? year
+      : nowYear;
+  const isSelectedCurrentYear = currentYear === nowYear;
+  // Past years have 12 months of complete data; current year uses months elapsed
+  const currentMonth = isSelectedCurrentYear ? now.getMonth() + 1 : 12;
   const monthsOfData = Math.max(1, currentMonth);
 
   const projectById = new Map(

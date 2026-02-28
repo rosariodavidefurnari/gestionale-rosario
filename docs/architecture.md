@@ -33,9 +33,10 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 | Localizzazione IT | Completa su ~70+ file, 3 livelli | audit sessione 4 |
 | DateTime Range Support (all_day pattern) | Implementato su 4 moduli | sessione 16 |
 | Simulatore Fiscale + KPI Salute Aziendale | Implementato | sessione 17 |
-| Typecheck | 0 errori | sessione 17 |
-| Build produzione (`npm run build`) | OK (6.09s) | sessione 17 |
-| Test | 42/42 passati | sessione 17 |
+| Navigazione per anno Dashboard | Implementata | sessione 18 |
+| Typecheck | 0 errori | sessione 18 |
+| Build produzione (`npm run build`) | OK | sessione 18 |
+| Test | 42/42 passati | sessione 18 |
 | Lint | 0 nuovi errori | sessione 11 |
 | Deploy Vercel | gestionale-rosario.vercel.app | sessione 5 |
 
@@ -195,10 +196,10 @@ src/components/atomic-crm/tags/
 
 ```
 src/components/atomic-crm/dashboard/
-├── Dashboard.tsx                       # Desktop (KPI + charts + pipeline + alert + fiscale)
+├── Dashboard.tsx                       # Desktop (KPI + charts + pipeline + alert + fiscale + year nav)
 ├── MobileDashboard.tsx                 # Mobile (KPI + fiscale compatti)
-├── useDashboardData.ts                 # useGetList multipli + expenses + fiscalConfig
-├── dashboardModel.ts                   # Aggregazioni KPI/grafici/pipeline/alert + fiscal
+├── useDashboardData.ts                 # useGetList multipli + expenses + fiscalConfig (year param)
+├── dashboardModel.ts                   # Aggregazioni KPI/grafici/pipeline/alert + fiscal (year-aware)
 ├── fiscalModel.ts                      # Logica pura calcoli fiscali regime forfettario
 ├── DashboardKpiCards.tsx               # 4 KPI cards fatturato/pagamenti
 ├── DashboardFiscalKpis.tsx             # 4 KPI cards fiscali (netto, tasse, accantonamento, tetto)
@@ -277,7 +278,7 @@ FiscalConfig, FiscalTaxProfile             ← Fiscale
 
 ```
 /login          → Login (unica pagina pubblica)
-/               → Dashboard finanziaria (Recharts: KPI, grafici, pipeline, alert)
+/               → Dashboard finanziaria (Recharts: KPI, grafici, pipeline, alert, navigazione anno)
 /clients        → Lista clienti
 /clients/:id    → Scheda cliente (dettagli + tags + note + promemoria)
 /projects       → Lista progetti

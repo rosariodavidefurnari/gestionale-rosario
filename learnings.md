@@ -463,3 +463,22 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 - [2026-02-28] **Acconti forfettari 50/50 dal 2019** — D.L. 124/2019, art. 58: per forfettari e
   soggetti ISA, gli acconti sono 50%+50% (non 40/60). Soglie: >257.52€ → due acconti, 51.65-257.52€ →
   acconto unico a novembre, <51.65€ → nessun acconto. INPS: acconti su 80% del totale stimato.
+
+- [2026-02-28] **Year navigation: parametrizzare funzioni pure, non duplicare** — Per aggiungere
+  navigazione anno alla dashboard, basta parametrizzare le funzioni pure esistenti (`buildDashboardModel`,
+  `buildFiscalModel`) con un `year?` opzionale. Le query dati restano invariate (fetchano tutto lo
+  storico), il filtraggio avviene nel model builder. Nessuna query aggiuntiva = nessun overhead.
+
+- [2026-02-28] **Revenue trend: referenceDate per anni passati** — Per mostrare il trend gen-dic di un
+  anno passato (invece del rolling 12 mesi), passare `new Date(selectedYear, 11, 31)` come referenceDate
+  a `getSortedMonthStarts`. La stessa funzione funziona per entrambi i casi senza branching.
+
+- [2026-02-28] **Componenti operativi vs storici nella dashboard** — Pattern di design: per anni passati,
+  nascondere completamente (non mostrare avvisi) i componenti forward-looking (deadlines, business health,
+  alerts, warnings fiscali). Mostrare solo dati storici (KPI filtrati, grafici, FiscalKpis con label
+  definitive). L'utente ha confermato: "nascondi completamente ciò che non ha senso".
+
+- [2026-02-28] **Filtro per anno: usare payment_date, non created_at** — I pagamenti vanno filtrati per
+  `payment_date` (la data effettiva del pagamento), con fallback a `created_at`. I preventivi si filtrano
+  per `created_at`. Un pagamento non ricevuto di un anno passato resta visibile solo in quell'anno — è un
+  dato storico (credito perso), non operativo.

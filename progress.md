@@ -2,9 +2,41 @@
 
 ## Current Phase
 
-🟢 Simulatore Fiscale + KPI Salute Aziendale implementato. Typecheck 0 errori, build OK, 42/42 test.
+🟢 Navigazione per anno nella Dashboard. Typecheck 0 errori, build OK, 42/42 test.
 
 ## Last Session
+
+### Sessione 18 (2026-02-28, Navigazione per anno Dashboard)
+
+- Completed:
+  - **Year selector UI**: chevron `← 2025 →` con freccia destra disabilitata su anno corrente
+  - **dashboardModel.ts**: parametro `year?` con validazione (2000–anno corrente, fallback), `selectedYear` e `isCurrentYear` nel DashboardModel, revenue trend adattato (gen-dic per anni passati vs rolling 12 per anno corrente)
+  - **fiscalModel.ts**: parametro `year?` con stessa validazione, `monthsOfData = 12` per anni passati, aliquota calcolata su anno selezionato
+  - **useDashboardData.ts**: accetta `year?`, lo passa a buildDashboardModel, aggiunto alle deps useMemo
+  - **Dashboard.tsx**: state `selectedYear`, YearSelector component, visibilità condizionale per anni passati
+  - **DashboardFiscalKpis.tsx**: label dinamiche ("Stima" → termine definitivo per anni passati), badge "Consuntivo anno completo"
+  - **Filtro per anno**: pagamenti filtrati per `payment_date` (fallback `created_at`), preventivi per `created_at`, pipeline per anno
+  - **Nascosti per anni passati**: DeadlinesCard, BusinessHealthCard, warnings fiscali, alerts card
+  - **Sempre visibili**: KPI (filtrati per anno), revenue trend, categorie, top clienti, pipeline, FiscalKpis, AtecoChart
+  - **Titolo dinamico**: "Fiscale & Salute Aziendale" (corrente) vs "Riepilogo Fiscale 2025" (passato)
+  - **Error handling**: validazione anno (>= 2000, <= anno corrente), Number.isFinite check, freccia destra disabilitata
+  - **Verifica**: Typecheck 0 errori, build OK, 42/42 test passati
+
+- Files modified:
+  - `src/components/atomic-crm/dashboard/dashboardModel.ts` (year param, selectedYear, isCurrentYear, referenceDate, filtro pagamenti/preventivi per anno)
+  - `src/components/atomic-crm/dashboard/fiscalModel.ts` (year param, monthsOfData condizionale)
+  - `src/components/atomic-crm/dashboard/useDashboardData.ts` (year param passthrough)
+  - `src/components/atomic-crm/dashboard/Dashboard.tsx` (YearSelector, state, visibilità condizionale)
+  - `src/components/atomic-crm/dashboard/DashboardFiscalKpis.tsx` (isCurrentYear prop, label dinamiche)
+
+- Decisions:
+  - Per anni passati nascondere completamente (non avvisi) i componenti forward-looking
+  - Filtrare pagamenti e preventivi per anno (non mostrare dati globali)
+  - Alerts nascosti per anni passati (operativi solo per anno corrente)
+  - Pagamenti non ricevuti di anni passati restano visibili solo nell'anno di appartenenza (crediti persi = dato storico)
+  - MobileDashboard non impattata (sempre anno corrente)
+
+- Next action: Test visivo completo, deploy Vercel
 
 ### Sessione 17 (2026-02-28, Simulatore Fiscale)
 

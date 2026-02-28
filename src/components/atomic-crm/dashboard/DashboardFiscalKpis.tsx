@@ -16,15 +16,20 @@ import type { FiscalKpis, FiscalWarning } from "./fiscalModel";
 export const DashboardFiscalKpis = ({
   fiscalKpis,
   warnings,
+  isCurrentYear = true,
 }: {
   fiscalKpis: FiscalKpis;
   warnings: FiscalWarning[];
+  isCurrentYear?: boolean;
 }) => {
-  const hasCeilingWarning = warnings.some(
-    (w) => w.type === "ceiling_exceeded" || w.type === "ceiling_critical",
-  );
-  const reliabilityLabel =
-    fiscalKpis.monthsOfData < 3
+  const hasCeilingWarning =
+    isCurrentYear &&
+    warnings.some(
+      (w) => w.type === "ceiling_exceeded" || w.type === "ceiling_critical",
+    );
+  const reliabilityLabel = !isCurrentYear
+    ? "Consuntivo anno completo"
+    : fiscalKpis.monthsOfData < 3
       ? "Stima preliminare"
       : `Stima basata su ${fiscalKpis.monthsOfData} mesi`;
 
@@ -34,7 +39,7 @@ export const DashboardFiscalKpis = ({
       <Card className="gap-3 py-4">
         <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
           <CardTitle className="text-sm font-medium">
-            Reddito netto stimato
+            {isCurrentYear ? "Reddito netto stimato" : "Reddito netto"}
           </CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -55,7 +60,7 @@ export const DashboardFiscalKpis = ({
       <Card className="gap-3 py-4">
         <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
           <CardTitle className="text-sm font-medium">
-            Stima tasse annuali
+            {isCurrentYear ? "Stima tasse annuali" : "Tasse annuali"}
           </CardTitle>
           <Calculator className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -81,7 +86,9 @@ export const DashboardFiscalKpis = ({
       <Card className="gap-3 py-4">
         <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
           <CardTitle className="text-sm font-medium">
-            Accantonamento mensile
+            {isCurrentYear
+              ? "Accantonamento mensile"
+              : "Accantonamento medio mensile"}
           </CardTitle>
           <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>

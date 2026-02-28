@@ -11,7 +11,7 @@ import {
 
 const LARGE_PAGE = { page: 1, perPage: 1000 };
 
-export const useDashboardData = () => {
+export const useDashboardData = (year?: number) => {
   const { fiscalConfig } = useConfigurationContext();
 
   const monthlyRevenueQuery = useGetList<MonthlyRevenueRow>("monthly_revenue", {
@@ -90,6 +90,7 @@ export const useDashboardData = () => {
       clients: clientsQuery.data,
       expenses: expensesQuery.data,
       fiscalConfig,
+      year,
     });
   }, [
     clientsQuery.data,
@@ -100,6 +101,7 @@ export const useDashboardData = () => {
     projectsQuery.data,
     quotesQuery.data,
     servicesQuery.data,
+    year,
   ]);
 
   return {
