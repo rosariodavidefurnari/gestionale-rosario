@@ -1,0 +1,117 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import OpenAI from "npm:openai";
+
+import { AuthMiddleware, UserMiddleware } from "../_shared/authentication.ts";
+import { corsHeaders, OptionsMiddleware } from "../_shared/cors.ts";
+import { getUserSale } from "../_shared/getUserSale.ts";
+import { createErrorResponse } from "../_shared/utils.ts";
+
+const defaultHistoricalAnalysisModel = "gpt-5.2";
+const allowedModels = new Set(["gpt-5.2", "gpt-5-mini", "gpt-5-nano"]);
+
+const openaiApiKey = Deno.env.get("OPENAI_API_KEY") ?? "";
+
+const openai = new OpenAI({
+  apiKey: openaiApiKey,
+});
+
+const instructions = `
+Sei un analista del gestionale Rosario Furnari.
+Usa solo il contesto JSON fornito.
+Non inventare dati mancanti.
+Non confrontare mai un anno YTD con un anno chiuso completo, salvo che il contesto lo chieda esplicitamente.
+Se un confronto non è dimostrabile, dillo chiaramente.
+Scrivi in italiano, in markdown semplice, con queste sezioni:
+
+## Sintesi
+Breve lettura del quadro storico.
+
+## Segnali chiave
+3 bullet concreti sui dati.
+
+## Cautele
+Bullet brevi su limiti, YTD, comparabilità e caveat del contesto.
+
+## Prossimi controlli
+2 o 3 verifiche operative utili.
+`.trim();
+
+async function createHistoricalAnalyticsSummary(req: Request, currentUserSale: any) {
+  if (!openaiApiKey) {
+    return createErrorResponse(
+      500,
+      "OPENAI_API_KEY non configurata nelle Edge Functions",
+    );
+  }
+
+  if (!currentUserSale) {
+    return createErrorResponse(401, "Unauthorized");
+  }
+
+  const { context, model } = await req.json();
+
+  if (!context) {
+    return createErrorResponse(400, "Missing analytics context");
+  }
+
+  const selectedModel =
+    typeof model === "string" && allowedModels.has(model)
+      ? model
+      : defaultHistoricalAnalysisModel;
+
+  try {
+    const response = await openai.responses.create({
+      model: selectedModel,
+      instructions,
+      input: `Contesto analytics storico:\n${JSON.stringify(context, null, 2)}`,
+      reasoning: {
+        effort: "medium",
+      },
+      max_output_tokens: 900,
+    });
+
+    const summaryMarkdown = response.output_text?.trim();
+
+    if (!summaryMarkdown) {
+      return createErrorResponse(502, "OpenAI ha restituito una risposta vuota");
+    }
+
+    return new Response(
+      JSON.stringify({
+        data: {
+          model: selectedModel,
+          generatedAt: new Date().toISOString(),
+          summaryMarkdown,
+        },
+      }),
+      {
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      },
+    );
+  } catch (error) {
+    console.error("historical_analytics_summary.error", error);
+    return createErrorResponse(
+      500,
+      "Impossibile generare l'analisi AI dello storico",
+    );
+  }
+}
+
+Deno.serve(async (req: Request) =>
+  OptionsMiddleware(req, async (req) =>
+    AuthMiddleware(req, async (req) =>
+      UserMiddleware(req, async (req, user) => {
+        const currentUserSale = user ? await getUserSale(user) : null;
+        if (!currentUserSale) {
+          return createErrorResponse(401, "Unauthorized");
+        }
+
+        if (req.method === "POST") {
+          return createHistoricalAnalyticsSummary(req, currentUserSale);
+        }
+
+        return createErrorResponse(405, "Method Not Allowed");
+      }),
+    ),
+  ),
+);

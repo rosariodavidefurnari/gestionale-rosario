@@ -15,6 +15,7 @@ import {
   type ConfigurationContextValue,
 } from "../root/ConfigurationContext";
 import { defaultConfiguration } from "../root/defaultConfiguration";
+import { AISettingsSection } from "./AISettingsSection";
 import { FiscalSettingsSection } from "./FiscalSettingsSection";
 import { TagsSettingsSection } from "./TagsSettingsSection";
 
@@ -25,6 +26,7 @@ const SECTIONS = [
   { id: "service-types", label: "Tipi servizio" },
   { id: "notes", label: "Note" },
   { id: "tasks", label: "Attività" },
+  { id: "ai", label: "AI" },
   { id: "fiscale", label: "Fiscale" },
 ];
 
@@ -38,6 +40,7 @@ const transformFormValues = (data: Record<string, any>) => ({
     quoteServiceTypes: ensureValues(data.quoteServiceTypes),
     serviceTypeChoices: ensureValues(data.serviceTypeChoices),
     fiscalConfig: data.fiscalConfig,
+    aiConfig: data.aiConfig,
   } as ConfigurationContextValue,
 });
 
@@ -97,6 +100,7 @@ const SettingsForm = () => {
       quoteServiceTypes: config.quoteServiceTypes,
       serviceTypeChoices: config.serviceTypeChoices,
       fiscalConfig: config.fiscalConfig,
+      aiConfig: config.aiConfig,
     }),
     [config],
   );
@@ -257,6 +261,14 @@ const SettingsFormFields = () => {
                 <TextInput source="label" label={false} />
               </SimpleFormIterator>
             </ArrayInput>
+          </CardContent>
+        </Card>
+
+        {/* AI */}
+        <Card id="ai">
+          <CardContent className="space-y-4">
+            <h2 className="text-xl font-semibold text-muted-foreground">AI</h2>
+            <AISettingsSection />
           </CardContent>
         </Card>
 

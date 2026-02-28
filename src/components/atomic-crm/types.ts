@@ -219,3 +219,7 @@ export interface FiscalConfig {
    *  Se valorizzato → usa questo valore (per casistiche particolari). */
   aliquotaOverride?: number;
 }
+
+export interface AIConfig {
+  historicalAnalysisModel: string;
+}

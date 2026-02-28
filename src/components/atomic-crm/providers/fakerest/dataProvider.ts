@@ -11,6 +11,8 @@ import type { CrmDataProvider } from "../types";
 import { authProvider, USER_STORAGE_KEY } from "./authProvider";
 import generateData from "./dataGenerator";
 import { withSupabaseFilterAdapter } from "./internal/supabaseAdapter";
+import type { AnalyticsContext } from "@/lib/analytics/buildAnalyticsContext";
+import type { HistoricalAnalyticsSummary } from "@/lib/analytics/historicalAnalysis";
 
 const baseDataProvider = fakeRestDataProvider(generateData(), true, 300);
 
@@ -115,6 +117,17 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
     });
     return config;
   },
+  getHistoricalAnalyticsContext: async (): Promise<AnalyticsContext> => {
+    throw new Error(
+      "Historical analytics AI context is not available in the FakeRest provider.",
+    );
+  },
+  generateHistoricalAnalyticsSummary:
+    async (): Promise<HistoricalAnalyticsSummary> => {
+      throw new Error(
+        "Historical analytics AI summary is not available in the FakeRest provider.",
+      );
+    },
 };
 
 const processConfigLogo = async (logo: any): Promise<string> => {

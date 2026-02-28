@@ -2,9 +2,275 @@
 
 ## Current Phase
 
-🟢 Stabilizzazione accessibilita form e warning runtime dashboard. Typecheck 0 errori, build OK.
+🟢 Dashboard storico AI-ready implementato, verificato sul remoto e con smoke test remoto OpenAI chiuso. Prossimo passo: browser click-test della card AI e test UI storici.
 
 ## Last Session
+
+### Sessione 25 (2026-02-28, remote AI smoke closure)
+
+- Completed:
+  - **Smoke test remoto AI chiuso**: verificato end-to-end `historical_analytics_summary`
+    con utente autenticato temporaneo sul progetto `qvdmzhyzpyaveniirsmo`
+  - **Auth runtime fix confermato**: il fallback
+    `SB_PUBLISHABLE_KEY -> SUPABASE_ANON_KEY` in
+    `supabase/functions/_shared/authentication.ts` ha eliminato il `401 Error:
+    supabaseKey is required`
+  - **Secrets remoti riallineati**: impostati esplicitamente
+    `OPENAI_API_KEY` e `SB_PUBLISHABLE_KEY` sul progetto remoto
+  - **Output OpenAI verificato**:
+    - status `200 OK`
+    - model `gpt-5.2`
+    - summary coerente con `2026 YTD` e `2025 vs 2024`
+  - **Docs di continuità aggiornati**: handoff/backlog/learnings/progress/spec
+    riallineati allo stato finale della sessione
+
+- Decisions:
+  - Il lavoro infrastrutturale sul primo flusso AI storico si considera chiuso
+    lato remoto/server
+  - Il prossimo step non è più “far funzionare la function”, ma verificare il
+    click-path browser e poi aggiungere test UI
+  - La continuità tra chat va mantenuta aggiornando sempre handoff/backlog/spec
+    quando cambiano stato remoto, secret o verifiche runtime
+
+- Validation:
+  - `npx supabase secrets list --project-ref qvdmzhyzpyaveniirsmo` OK
+  - `npx supabase secrets set OPENAI_API_KEY ... SB_PUBLISHABLE_KEY ... --project-ref qvdmzhyzpyaveniirsmo` OK
+  - authenticated remote smoke of `historical_analytics_summary` OK
+
+- Notes:
+  - La prima invocazione remota ha rivelato due problemi ambientali reali:
+    secret `SB_PUBLISHABLE_KEY` mancante nel runtime Edge e `OPENAI_API_KEY`
+    non presente sul progetto remoto
+  - Entrambi i problemi sono stati corretti nella stessa sessione e il re-test
+    finale è passato
+  - Non è stato eseguito un click-test browser autenticato in questa
+    environment
+  - Questo punto va trattato come baseline stabile di rollback: dopo il push,
+    se un'evoluzione successiva rompe il flusso storico AI, bisogna tornare a
+    questo commit
+
+- Next action:
+  - aprire l'app autenticata e cliccare `Storico -> Genera analisi`
+  - poi aggiungere test UI per empty/error/N-D/subtitle states
+  - solo dopo valutare eventuale refine del prompt o UX conversazionale
+
+### Sessione 24 (2026-02-28, OpenAI summary flow)
+
+- Completed:
+  - **Configurazione AI**: aggiunta sezione `AI` in Impostazioni con dropdown
+    modello e default `gpt-5.2`
+  - **Consumer UI reale**: aggiunta card `Analisi AI dello storico` dentro il
+    dashboard `Storico`, con generazione manuale su click
+  - **Provider methods**:
+    - `getHistoricalAnalyticsContext()`
+    - `generateHistoricalAnalyticsSummary()`
+  - **Edge Function OpenAI**: creata `historical_analytics_summary` usando SDK
+    ufficiale OpenAI e `responses.create`
+  - **Deploy remoto**:
+    - secret `OPENAI_API_KEY` impostato sul progetto remoto
+    - function `historical_analytics_summary` deployata su
+      `qvdmzhyzpyaveniirsmo`
+  - **Docs di continuità aggiornati**: handoff/backlog/learnings/progress
+    riallineati al nuovo stato
+
+- Decisions:
+  - L'uso di OpenAI resta server-side tramite Edge Function, non client-side
+  - Il primo flusso AI e manuale e non chat-based, per controllare costi e
+    qualità dell'output
+  - La scelta modello e configurabile da Settings ma limitata a una whitelist
+
+- Files created:
+  - `src/lib/analytics/historicalAnalysis.ts`
+  - `src/components/atomic-crm/settings/AISettingsSection.tsx`
+  - `src/components/atomic-crm/dashboard/DashboardHistoricalAiSummaryCard.tsx`
+  - `supabase/functions/historical_analytics_summary/index.ts`
+
+- Files modified:
+  - `src/components/atomic-crm/types.ts`
+  - `src/components/atomic-crm/root/ConfigurationContext.tsx`
+  - `src/components/atomic-crm/root/defaultConfiguration.ts`
+  - `src/components/atomic-crm/settings/SettingsPage.tsx`
+  - `src/components/atomic-crm/providers/supabase/dataProvider.ts`
+  - `src/components/atomic-crm/providers/fakerest/dataProvider.ts`
+  - `src/components/atomic-crm/dashboard/DashboardHistorical.tsx`
+  - `supabase/config.toml`
+  - `doc/src/content/docs/developers/historical-analytics-ai-ready.mdx`
+  - `docs/historical-analytics-handoff.md`
+  - `docs/historical-analytics-backlog.md`
+  - `learnings.md`
+  - `progress.md`
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts` OK
+  - `npx supabase secrets set OPENAI_API_KEY ... --project-ref qvdmzhyzpyaveniirsmo` OK
+  - `npx supabase functions deploy historical_analytics_summary --project-ref qvdmzhyzpyaveniirsmo` OK
+
+- Notes:
+  - In questa sessione non e stato eseguito un click-test autenticato della
+    card AI dentro il browser
+  - Il flusso AI attuale produce una sintesi markdown, non ancora una chat o un
+    pannello conversazionale
+
+- Next action:
+  - aprire `Storico`, lanciare `Analisi AI` e verificare output reale
+  - poi aggiungere test UI sugli stati storico
+
+### Sessione 23 (2026-02-28, AI analytics entry point)
+
+- Completed:
+  - **Entry point AI aggiunto**: introdotto
+    `dataProvider.getHistoricalAnalyticsContext()` come primo punto di accesso
+    stabile al payload semantico storico
+  - **Payload semanticamente piu forte**: `buildAnalyticsContext()` ora include
+    anche `caveats` umani oltre a `meta`, `metrics`, `series` e `qualityFlags`
+  - **Copertura test aggiornata**: i test sul context serializzato verificano
+    anche i nuovi caveat principali
+  - **Scope riallineato**: backlog/handoff aggiornati per segnare che la demo
+    non e una priorita corrente
+
+- Decisions:
+  - Il primo consumer AI resta lato client/provider e non richiede ancora una
+    nuova edge function
+  - L'assistente futuro dovra consumare il metodo custom del provider invece di
+    interrogare tabelle o view raw in autonomia
+  - FakeRest/demo historical support viene rinviato finche non entra davvero
+    nel perimetro prodotto
+
+- Files modified:
+  - `src/lib/analytics/buildAnalyticsContext.ts`
+  - `src/components/atomic-crm/providers/supabase/dataProvider.ts`
+  - `src/components/atomic-crm/providers/fakerest/dataProvider.ts`
+  - `src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
+  - `doc/src/content/docs/developers/historical-analytics-ai-ready.mdx`
+  - `docs/historical-analytics-handoff.md`
+  - `docs/historical-analytics-backlog.md`
+  - `learnings.md`
+  - `progress.md`
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts` OK
+
+- Next action:
+  - scegliere il primo consumer reale del payload AI
+  - poi aggiungere UI tests per gli stati storico
+
+### Sessione 22 (2026-02-28, Remote historical verification)
+
+- Completed:
+  - **Verifica remota delle view storiche**: controllate sul progetto
+    `qvdmzhyzpyaveniirsmo` via PostgREST:
+    - `analytics_history_meta`
+    - `analytics_yearly_competence_revenue`
+    - `analytics_yearly_competence_revenue_by_category`
+    - `analytics_client_lifetime_competence_revenue`
+  - **Semantica confermata con dati reali**:
+    - `first_year_with_data = 2024`
+    - `last_year_with_data = 2025`
+    - `2026` presente come riga `YTD`
+    - `YoY = 2025 vs 2024 = +560%`
+    - top client lifetime: `Diego Caltabiano = €23.700`
+  - **Diagnosi RLS chiarita**: le stesse query con publishable/anon key
+    restituiscono array vuoti non per assenza dati, ma per `security_invoker=on`
+    sopra tabelle base protette da RLS
+  - **Continuity docs aggiornati**: handoff/backlog/learnings riallineati al
+    nuovo stato della verifica
+
+- Decisions:
+  - Considerare completata la verifica remota a livello risorse/dati, senza
+    riaprire l'architettura dello storico
+  - Non interpretare piu output vuoti con ruolo anonimo come prova di migration
+    fallita sulle view analytics
+  - Mantenere come prossimi step prioritari FakeRest/demo hardening e primo
+    consumo AI del `buildAnalyticsContext`
+
+- Files modified:
+  - `docs/historical-analytics-handoff.md`
+  - `docs/historical-analytics-backlog.md`
+  - `learnings.md`
+  - `progress.md`
+
+- Validation:
+  - query REST remote OK sulle nuove view con `service_role`
+  - verifica publishable/anon OK per confermare il comportamento RLS
+
+- Notes:
+  - In questa sessione non e stato eseguito un browser smoke test completo del
+    tab `Storico`; la verifica fatta e stata sul layer dati/runtime remoto
+  - Il pooler Postgres remoto rimane poco affidabile per diagnostica dopo errori
+    auth del temp role CLI
+
+- Next action:
+  - decidere se consolidare il gating demo/FakeRest o introdurre una capability
+    check esplicita per lo storico
+  - poi costruire il primo entry point AI sopra `buildAnalyticsContext`
+
+### Sessione 21 (2026-02-28, Historical Analytics AI-Ready + push remoto)
+
+- Completed:
+  - **Spec tecnica storica**: aggiunta documentazione ufficiale con regole canoniche, viste aggregate, semantic layer e roadmap AI in `doc/src/content/docs/developers/historical-analytics-ai-ready.mdx`
+  - **Viste aggregate Supabase**: creata migration `20260228133000_historical_analytics_views.sql` con:
+    - `analytics_business_clock`
+    - `analytics_history_meta`
+    - `analytics_yearly_competence_revenue`
+    - `analytics_yearly_competence_revenue_by_category`
+    - `analytics_client_lifetime_competence_revenue`
+  - **Provider Supabase**: registrate le primary key delle nuove view nel data provider
+  - **Dashboard shell**: separato il dashboard in `Annuale` e `Storico`
+  - **Vista storica desktop/mobile**: aggiunti KPI storici, grafico annuale, mix categorie, top clienti all-time e card di contesto
+  - **Semantic layer AI-ready**:
+    - `analyticsDefinitions.ts`
+    - `buildAnalyticsContext.ts`
+  - **Regole bloccate in codice**:
+    - anno corrente sempre `YTD`
+    - `YoY` solo sugli ultimi due anni chiusi
+    - baseline `0` => `N/D`
+  - **Testing**: aggiunti test unitari su `dashboardHistoryModel`
+  - **Continuity docs**: creati `docs/historical-analytics-handoff.md` e `docs/historical-analytics-backlog.md`
+  - **Push remoto completato**: `npx supabase db push` eseguito con successo sul progetto collegato `qvdmzhyzpyaveniirsmo`
+
+- Decisions:
+  - La base semantica v1 dello storico è `compensi per competenza`, non `incassi`
+  - Il dashboard storico non deve mescolare alert operativi e logica fiscale forward-looking
+  - Le sessioni future devono ripartire leggendo handoff + backlog + spec, non dalla sola chat
+  - La verifica runtime successiva va fatta sul remoto, non su locale, perché in questo ambiente non esiste un DB locale funzionante
+
+- Files created:
+  - `doc/src/content/docs/developers/historical-analytics-ai-ready.mdx`
+  - `supabase/migrations/20260228133000_historical_analytics_views.sql`
+  - `src/components/atomic-crm/dashboard/DashboardAnnual.tsx`
+  - `src/components/atomic-crm/dashboard/DashboardHistorical.tsx`
+  - `src/components/atomic-crm/dashboard/DashboardHistoricalKpis.tsx`
+  - `src/components/atomic-crm/dashboard/DashboardHistoricalRevenueChart.tsx`
+  - `src/components/atomic-crm/dashboard/DashboardHistoricalCategoryMixChart.tsx`
+  - `src/components/atomic-crm/dashboard/DashboardHistoricalTopClientsCard.tsx`
+  - `src/components/atomic-crm/dashboard/dashboardHistoryModel.ts`
+  - `src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
+  - `src/components/atomic-crm/dashboard/useHistoricalDashboardData.ts`
+  - `src/lib/analytics/analyticsDefinitions.ts`
+  - `src/lib/analytics/buildAnalyticsContext.ts`
+  - `docs/historical-analytics-handoff.md`
+  - `docs/historical-analytics-backlog.md`
+
+- Files modified:
+  - `src/components/atomic-crm/dashboard/Dashboard.tsx`
+  - `src/components/atomic-crm/dashboard/MobileDashboard.tsx`
+  - `src/components/atomic-crm/providers/supabase/dataProvider.ts`
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts` OK
+  - `npx supabase db push` OK su remoto
+
+- Notes:
+  - `npx supabase migration list --linked` non è stato affidabile per auth del temp role
+  - `npx supabase db push --dry-run` ha mostrato correttamente la migration pendente prima del push
+  - dopo alcuni tentativi auth il pooler remoto ha aperto un circuit breaker sul temp role CLI; non usare questo come indicatore del fallimento del push reale se il comando `db push` ha già confermato l'applicazione
+
+- Next action:
+  - aprire l'app contro il remoto e validare davvero la vista `Storico`
+  - poi iniziare il primo flusso AI sopra `buildAnalyticsContext`
 
 ### Sessione 20 (2026-02-28, Accessibilita form e warning dashboard)
 

@@ -10,6 +10,99 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Se una Edge Function dice che una key non e configurata,
+  verificare i secret remoti reali con `supabase secrets list`, non i `.env`
+  locali** — Nel flusso AI storico i file `.env` del repo contenevano
+  `OPENAI_API_KEY`, ma il progetto remoto `qvdmzhyzpyaveniirsmo` non aveva quel
+  secret caricato. L'errore `OPENAI_API_KEY non configurata nelle Edge
+  Functions` era quindi corretto. Prima di supporre un bug nel codice, usare
+  `npx supabase secrets list --project-ref <ref>` e riallineare esplicitamente
+  i secret mancanti.
+
+- [2026-02-28] **Per smoke test Auth admin remoti conviene usare la chiave
+  legacy `service_role`, non la nuova `secret` key** — Sul progetto storico la
+  nuova key `sb_secret_...` non ha funzionato bene con
+  `supabase-js auth.admin.createUser()`, che riceveva HTML invece di JSON. La
+  chiave legacy `service_role` recuperata via
+  `npx supabase projects api-keys --project-ref <ref>` ha invece permesso di
+  creare l'utente temporaneo e chiudere lo smoke test autenticato.
+
+- [2026-02-28] **Le view `security_invoker` su tabelle con RLS possono
+  sembrare vuote con chiave anon anche quando i dati esistono** — Nella verifica
+  remota dello storico, le query PostgREST con publishable/anon key tornavano
+  array vuoti su `analytics_*`, mentre la stessa lettura con `service_role`
+  mostrava dati reali. Se una view usa `security_invoker=on`, un risultato vuoto
+  con ruolo anonimo puo essere solo l'effetto normale delle policy RLS sulle
+  tabelle base, non un segnale che la migration non sia applicata.
+
+- [2026-02-28] **Per validare rapidamente Supabase remoto senza psql, usare
+  `supabase projects api-keys` e poi interrogare PostgREST** — Quando il pooler
+  Postgres va in circuit breaker o rifiuta il temp role CLI, il modo piu
+  affidabile per confermare la presenza di dati e view resta:
+  1) `npx supabase projects api-keys --project-ref <ref>`
+  2) query REST dirette alle risorse da verificare
+  Questo permette di distinguere tra problema di connessione DB e problema reale
+  di schema/dati.
+
+- [2026-02-28] **Il primo consumer AI conviene esporlo come metodo custom del
+  `dataProvider`** — In questo progetto il punto di aggancio meno invasivo e piu
+  riusabile e `dataProvider.getHistoricalAnalyticsContext()`: riusa auth/query
+  gia esistenti, non costringe a introdurre subito una edge function, e separa
+  l'assistente dalle tabelle raw.
+
+- [2026-02-28] **La chiave OpenAI va usata da Edge Function, non dal client
+  Vite** — Anche se `OPENAI_API_KEY` esiste nei file `.env` del repo, il punto
+  corretto per il consumo runtime e una Edge Function con secret remoto
+  (`OPENAI_API_KEY`) e invocazione autenticata da Supabase. La UI deve invocare
+  la function, non parlare direttamente con OpenAI.
+
+- [2026-02-28] **Per i modelli AI in UI conviene usare un dropdown
+  whitelisted, non un campo libero** — Salvare in configurazione un valore
+  scelto da lista (`gpt-5.2`, `gpt-5-mini`, `gpt-5-nano`) riduce errori di
+  battitura, evita modelli non supportati e rende piu semplice validare lato
+  server.
+
+- [2026-02-28] **Per continuità tra chat servono tre file, non solo il
+  resoconto finale** — Il pattern che funziona meglio è separare:
+  1) specifica tecnica stabile (`doc/.../historical-analytics-ai-ready.mdx`),
+  2) handoff operativo (`docs/historical-analytics-handoff.md`),
+  3) backlog prioritizzato (`docs/historical-analytics-backlog.md`).
+  In una nuova chat bisogna far leggere al modello questi file all'inizio,
+  altrimenti si perde il contesto semantico e si rischia di riproporre scelte
+  già fissate.
+
+- [2026-02-28] **Quando la demo non e nel perimetro, meglio dichiararlo nei
+  docs di continuita invece di lasciare backlog fittizi** — Se il prodotto non
+  richiede parita FakeRest/demo, conviene de-prioritizzare esplicitamente quel
+  lavoro nei file di handoff/backlog. Altrimenti le sessioni successive tendono
+  a tornare su un ramo che il prodotto non considera importante.
+
+- [2026-02-28] **Per riprendere una sessione nuova serve un prompt di resume
+  esplicito** — Non basta dire "continua". Conviene indicare:
+  obiettivo attuale, file da leggere, stato già raggiunto, e prossimo passo
+  desiderato. Esempio robusto:
+  `Leggi docs/historical-analytics-handoff.md, docs/historical-analytics-backlog.md e doc/src/content/docs/developers/historical-analytics-ai-ready.mdx. Poi continua dal primo punto aperto del backlog senza ridefinire l'architettura.`
+
+- [2026-02-28] **`supabase db push --dry-run` può dare segnale utile anche
+  quando `migration list --linked` fallisce** — Nel remoto collegato
+  `qvdmzhyzpyaveniirsmo`, `migration list --linked` ha fallito per auth del
+  temp role, ma `npx supabase db push --dry-run` ha comunque mostrato con
+  precisione quale migration era pendente. Per capire il delta da pushare,
+  il dry-run è spesso più utile del list command.
+
+- [2026-02-28] **Dopo troppi errori auth il pooler Supabase può aprire un
+  circuit breaker sul temp role CLI** — Dopo alcuni tentativi falliti di
+  login del ruolo temporaneo, il CLI può rispondere con
+  `Circuit breaker open: Too many authentication errors`. Se il push reale è
+  già andato a buon fine, non insistere con ulteriori comandi diagnostici sul
+  temp role: aggiornare i file di handoff e passare alla verifica runtime.
+
+- [2026-02-28] **Per analytics e AI, prima si bloccano le regole in codice e
+  test, poi si fa UI e solo dopo AI** — La sequenza giusta emersa è:
+  SQL aggregate views -> model storico con regole YTD/YoY -> test unitari ->
+  shell dashboard -> context builder AI-ready. Saltare direttamente alla UI o
+  all'AI senza il layer semantico porta quasi sempre a metriche ambigue.
+
 - [2026-02-28] **`FormLabel` + `FormControl` funzionano solo se `id` arriva
   all'elemento interattivo reale** — Nei controlli composti con `Popover`,
   `Select` o `combobox`, mettere `FormControl` attorno a un wrapper non basta.

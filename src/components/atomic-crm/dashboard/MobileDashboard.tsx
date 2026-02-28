@@ -1,14 +1,23 @@
-import { CalendarClock, PiggyBank, Shield } from "lucide-react";
+import {
+  BarChart3,
+  CalendarClock,
+  CalendarRange,
+  PiggyBank,
+  Shield,
+} from "lucide-react";
 import { RefreshCw } from "lucide-react";
+import { useState } from "react";
 import { useTimeout } from "ra-core";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import MobileHeader from "../layout/MobileHeader";
 import { MobileContent } from "../layout/MobileContent";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { DashboardHistorical } from "./DashboardHistorical";
 import { formatCurrency, formatCurrencyPrecise } from "./dashboardModel";
 import type { FiscalModel } from "./fiscalModel";
 import { Welcome } from "./Welcome";
@@ -42,43 +51,80 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const MobileDashboard = () => {
-  const { data, isPending, error, refetch } = useDashboardData();
-  const showLoading = useTimeout(800);
-
-  if ((isPending || !data) && !error) {
-    return <Wrapper>{showLoading ? <MobileDashboardLoading /> : null}</Wrapper>;
-  }
-
-  if (error || !data) {
-    return (
-      <Wrapper>
-        <Card>
-          <CardContent className="px-4 py-8 text-center">
-            <p className="text-sm text-muted-foreground mb-4">
-              Impossibile caricare la dashboard.
-            </p>
-            <Button variant="outline" onClick={refetch} className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Riprova
-            </Button>
-          </CardContent>
-        </Card>
-      </Wrapper>
-    );
-  }
+  const allowHistorical = import.meta.env.VITE_IS_DEMO !== "true";
+  const [mode, setMode] = useState<"annual" | "historical">("annual");
 
   return (
     <Wrapper>
       <div className="space-y-4 mt-1">
-        {import.meta.env.VITE_IS_DEMO === "true" ? <Welcome /> : null}
-        <DashboardKpiCards
-          kpis={data.kpis}
-          year={data.selectedYear}
-          compact
-        />
-        {data.fiscal && <MobileFiscalKpis fiscal={data.fiscal} />}
+        {allowHistorical ? (
+          <div className="space-y-2">
+            <ToggleGroup
+              type="single"
+              value={mode}
+              onValueChange={(value) => {
+                if (value === "annual" || value === "historical") {
+                  setMode(value);
+                }
+              }}
+              variant="outline"
+              className="w-full justify-start"
+            >
+              <ToggleGroupItem value="annual" aria-label="Vista annuale">
+                <CalendarRange className="h-4 w-4" />
+                Annuale
+              </ToggleGroupItem>
+              <ToggleGroupItem value="historical" aria-label="Vista storica">
+                <BarChart3 className="h-4 w-4" />
+                Storico
+              </ToggleGroupItem>
+            </ToggleGroup>
+            <p className="text-xs text-muted-foreground">
+              Storico: lettura strategica con anno corrente trattato come YTD.
+            </p>
+          </div>
+        ) : null}
+
+        {allowHistorical && mode === "historical" ? (
+          <DashboardHistorical />
+        ) : (
+          <MobileAnnualDashboard />
+        )}
       </div>
     </Wrapper>
+  );
+};
+
+const MobileAnnualDashboard = () => {
+  const { data, isPending, error, refetch } = useDashboardData();
+  const showLoading = useTimeout(800);
+
+  if ((isPending || !data) && !error) {
+    return showLoading ? <MobileDashboardLoading /> : null;
+  }
+
+  if (error || !data) {
+    return (
+      <Card>
+        <CardContent className="px-4 py-8 text-center">
+          <p className="text-sm text-muted-foreground mb-4">
+            Impossibile caricare la dashboard.
+          </p>
+          <Button variant="outline" onClick={refetch} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Riprova
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {import.meta.env.VITE_IS_DEMO === "true" ? <Welcome /> : null}
+      <DashboardKpiCards kpis={data.kpis} year={data.selectedYear} compact />
+      {data.fiscal && <MobileFiscalKpis fiscal={data.fiscal} />}
+    </div>
   );
 };
 

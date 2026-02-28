@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useStore } from "ra-core";
 
-import type { FiscalConfig, LabeledValue, NoteStatus } from "../types";
+import type { AIConfig, FiscalConfig, LabeledValue, NoteStatus } from "../types";
 import { defaultConfiguration } from "./defaultConfiguration";
 
 export const CONFIGURATION_STORE_KEY = "app.configuration";
@@ -17,6 +17,7 @@ export interface ConfigurationContextValue {
   googleWorkplaceDomain?: string;
   disableEmailPasswordAuthentication?: boolean;
   fiscalConfig?: FiscalConfig;
+  aiConfig?: AIConfig;
 }
 
 export const useConfigurationContext = () => {

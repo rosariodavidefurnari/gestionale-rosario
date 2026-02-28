@@ -10,6 +10,21 @@ import type { RAFile, Sale, SalesFormData, SignUpData } from "../../types";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import { getIsInitialized } from "./authProvider";
 import { supabase } from "./supabase";
+import {
+  buildDashboardHistoryModel,
+  type AnalyticsClientLifetimeCompetenceRevenueRow,
+  type AnalyticsHistoryMetaRow,
+  type AnalyticsYearlyCompetenceRevenueByCategoryRow,
+  type AnalyticsYearlyCompetenceRevenueRow,
+} from "../../dashboard/dashboardHistoryModel";
+import {
+  buildAnalyticsContext,
+  type AnalyticsContext,
+} from "@/lib/analytics/buildAnalyticsContext";
+import {
+  defaultHistoricalAnalysisModel,
+  type HistoricalAnalyticsSummary,
+} from "@/lib/analytics/historicalAnalysis";
 
 if (import.meta.env.VITE_SUPABASE_URL === undefined) {
   throw new Error("Please set the VITE_SUPABASE_URL environment variable");
@@ -26,9 +41,67 @@ const baseDataProvider = supabaseDataProvider({
   supabaseClient: supabase,
   sortOrder: "asc,desc.nullslast" as any,
   primaryKeys: new Map(defaultPrimaryKeys)
+    .set("analytics_business_clock", ["id"])
+    .set("analytics_history_meta", ["id"])
+    .set("analytics_yearly_competence_revenue", ["year"])
+    .set("analytics_yearly_competence_revenue_by_category", [
+      "year",
+      "category",
+    ])
+    .set("analytics_client_lifetime_competence_revenue", ["client_id"])
     .set("monthly_revenue", ["month", "category"])
     .set("project_financials", ["project_id"]),
 });
+
+const getHistoricalAnalyticsContextFromViews = async () => {
+  const [metaResponse, yearlyRevenueResponse, categoryMixResponse, topClientsResponse] =
+    await Promise.all([
+      baseDataProvider.getOne<AnalyticsHistoryMetaRow>("analytics_history_meta", {
+        id: 1,
+      }),
+      baseDataProvider.getList<AnalyticsYearlyCompetenceRevenueRow>(
+        "analytics_yearly_competence_revenue",
+        {
+          pagination: { page: 1, perPage: 200 },
+          sort: { field: "year", order: "ASC" },
+          filter: {},
+        },
+      ),
+      baseDataProvider.getList<AnalyticsYearlyCompetenceRevenueByCategoryRow>(
+        "analytics_yearly_competence_revenue_by_category",
+        {
+          pagination: { page: 1, perPage: 1000 },
+          sort: { field: "year", order: "ASC" },
+          filter: {},
+        },
+      ),
+      baseDataProvider.getList<AnalyticsClientLifetimeCompetenceRevenueRow>(
+        "analytics_client_lifetime_competence_revenue",
+        {
+          pagination: { page: 1, perPage: 10 },
+          sort: { field: "lifetime_revenue", order: "DESC" },
+          filter: {},
+        },
+      ),
+    ]);
+
+  const historyModel = buildDashboardHistoryModel({
+    meta: metaResponse.data,
+    yearlyRevenueRows: yearlyRevenueResponse.data,
+    categoryRows: categoryMixResponse.data,
+    clientRows: topClientsResponse.data,
+  });
+
+  return buildAnalyticsContext(historyModel);
+};
+
+const getConfiguredHistoricalAnalysisModel = async () => {
+  const { data } = await baseDataProvider.getOne("configuration", { id: 1 });
+  const config = (data?.config as ConfigurationContextValue | undefined) ?? {};
+  return (
+    config.aiConfig?.historicalAnalysisModel ?? defaultHistoricalAnalysisModel
+  );
+};
 
 const dataProviderWithCustomMethods = {
   ...baseDataProvider,
@@ -143,6 +216,42 @@ const dataProviderWithCustomMethods = {
       previousData: { id: 1 },
     });
     return data.config as ConfigurationContextValue;
+  },
+  async getHistoricalAnalyticsContext(): Promise<AnalyticsContext> {
+    return getHistoricalAnalyticsContextFromViews();
+  },
+  async generateHistoricalAnalyticsSummary(): Promise<HistoricalAnalyticsSummary> {
+    const [context, model] = await Promise.all([
+      getHistoricalAnalyticsContextFromViews(),
+      getConfiguredHistoricalAnalysisModel(),
+    ]);
+
+    const { data, error } = await supabase.functions.invoke<{
+      data: HistoricalAnalyticsSummary;
+    }>("historical_analytics_summary", {
+      method: "POST",
+      body: {
+        context,
+        model,
+      },
+    });
+
+    if (!data || error) {
+      console.error("generateHistoricalAnalyticsSummary.error", error);
+      const errorDetails = await (async () => {
+        try {
+          return (await error?.context?.json()) ?? {};
+        } catch {
+          return {};
+        }
+      })();
+      throw new Error(
+        errorDetails?.message ||
+          "Impossibile generare l'analisi AI dello storico",
+      );
+    }
+
+    return data.data;
   },
 } satisfies DataProvider;
 

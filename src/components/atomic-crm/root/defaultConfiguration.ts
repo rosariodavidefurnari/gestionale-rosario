@@ -1,5 +1,6 @@
-import type { FiscalConfig } from "../types";
+import type { AIConfig, FiscalConfig } from "../types";
 import type { ConfigurationContextValue } from "./ConfigurationContext";
+import { defaultHistoricalAnalysisModel } from "@/lib/analytics/historicalAnalysis";
 
 export const defaultDarkModeLogo = "./logos/logo_atomic_crm_dark.svg";
 export const defaultLightModeLogo = "./logos/logo_atomic_crm_light.svg";
@@ -63,6 +64,10 @@ export const defaultFiscalConfig: FiscalConfig = {
   annoInizioAttivita: 2023,
 };
 
+export const defaultAIConfig: AIConfig = {
+  historicalAnalysisModel: defaultHistoricalAnalysisModel,
+};
+
 export const defaultConfiguration: ConfigurationContextValue = {
   noteStatuses: defaultNoteStatuses,
   taskTypes: defaultTaskTypes,
@@ -72,4 +77,5 @@ export const defaultConfiguration: ConfigurationContextValue = {
   darkModeLogo: defaultDarkModeLogo,
   lightModeLogo: defaultLightModeLogo,
   fiscalConfig: defaultFiscalConfig,
+  aiConfig: defaultAIConfig,
 };

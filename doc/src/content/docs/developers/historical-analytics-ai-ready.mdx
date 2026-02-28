@@ -532,6 +532,7 @@ Recommended files:
 
 - `src/components/atomic-crm/dashboard/analyticsDefinitions.ts`
 - `src/lib/analytics/buildAnalyticsContext.ts`
+- `src/components/atomic-crm/providers/supabase/dataProvider.ts`
 
 Recommended TypeScript shape:
 
@@ -582,8 +583,50 @@ export type AnalyticsContext = {
         }>;
     };
     qualityFlags: string[];
+    caveats: string[];
 };
 ```
+
+Current implementation choice:
+
+- the first assistant-ready entry point is exposed client-side as
+  `dataProvider.getHistoricalAnalyticsContext()`,
+- it returns the curated semantic payload built from the aggregate views and the
+  historical dashboard model,
+- and it adds human-readable caveats so a future AI consumer does not need to
+  infer warnings from raw flags alone.
+- the first end-user consumer is a manual `Analisi AI` card in the `Storico`
+  dashboard,
+- and the OpenAI model is configured from Settings via a dropdown, with
+  `gpt-5.2` as the default.
+
+## Remote Runtime Verification
+
+Verified on `2026-02-28` against the linked project
+`qvdmzhyzpyaveniirsmo`:
+
+- authenticated reads to:
+  - `analytics_history_meta`
+  - `analytics_yearly_competence_revenue`
+  - `analytics_yearly_competence_revenue_by_category`
+- derived values remained aligned with the semantic contract:
+  - `2024 = EUR 3,118`
+  - `2025 = EUR 20,582`
+  - `2026 = YTD al 28/02/2026`
+  - `YoY = 2025 vs 2024 = +560%`
+- the first OpenAI function consumer
+  `historical_analytics_summary` returned `200 OK`,
+- the selected model resolved to `gpt-5.2`,
+- and the generated markdown summary correctly preserved the YTD / closed-year
+  caveats.
+
+Operational note:
+
+- the remote Edge runtime needs both:
+  - `OPENAI_API_KEY`
+  - `SB_PUBLISHABLE_KEY`
+- and the shared auth middleware should still fall back to `SUPABASE_ANON_KEY`
+  for resilience when `SB_PUBLISHABLE_KEY` is not present.
 
 ## AI Interpretation Rules
 
@@ -621,12 +664,15 @@ Examples:
 
 The FakeRest provider currently does not expose historical analytics resources.
 
-For local demo compatibility, choose one of these strategies:
+Current product decision:
 
-- add synthetic `analytics_*` resources in the FakeRest generator,
-- or disable the historical dashboard in demo mode with a clear notice.
+- FakeRest/demo parity is not in scope for the current delivery,
+- so the historical AI flow can remain unsupported in demo mode,
+- and new work should not spend time on FakeRest unless product scope changes.
 
-The preferred option is to generate synthetic `analytics_*` resources. This keeps the semantic contract identical between demo and production.
+If demo parity becomes relevant later, the cleanest option is to generate
+synthetic `analytics_*` resources so the semantic contract stays identical
+between demo and production.
 
 ## Provider Integration
 
