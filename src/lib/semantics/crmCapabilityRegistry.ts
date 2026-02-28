@@ -162,7 +162,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       label: "Impostazioni",
       routePattern: "/#/settings",
       description:
-        "Config centrale per marchio, tipi, regole fiscali, AI analitica, modello Gemini fatture e operativita'.",
+        "Config centrale per marchio, tipi, regole fiscali, AI analitica/read-only CRM, modello Gemini fatture e operativita'.",
     },
     {
       id: "profile",
@@ -271,6 +271,20 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
       actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
       requiredFields: [],
+    },
+    {
+      id: "ask_unified_crm_question",
+      label: "Chiedi al CRM nella chat unificata",
+      description:
+        "Invia una domanda read-only sul CRM core usando la stessa snapshot mostrata nel launcher e restituisce una risposta grounded senza scrivere nel CRM.",
+      sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
+      actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
+      requiredFields: [
+        "question",
+        "context.meta.generatedAt",
+        "aiConfig.historicalAnalysisModel",
+      ],
+      sideEffects: ["invoke modello testuale read-only"],
     },
     {
       id: "invoice_import_extract",

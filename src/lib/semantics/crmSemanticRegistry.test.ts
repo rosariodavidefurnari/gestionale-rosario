@@ -65,6 +65,9 @@ describe("crmSemanticRegistry", () => {
       "generatedAt",
     );
     expect(registry.rules.unifiedAiReadContext.scope).toContain("quotes");
+    expect(registry.rules.unifiedAiReadContext.meaning).toContain(
+      "conferma esplicita",
+    );
   });
 
   it("uses km and taxable helpers consistently", () => {

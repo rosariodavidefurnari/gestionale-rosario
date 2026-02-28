@@ -1,6 +1,6 @@
 # Historical Analytics Handoff
 
-Last updated: 2026-02-28
+Last updated: 2026-03-01
 
 ## Goal
 
@@ -30,6 +30,22 @@ The real destination is:
 This means the current page-level AI widgets are only temporary bridges.
 Current work should keep strengthening semantics, business links, and shared
 registries instead of multiplying isolated AI entry points.
+
+## Current AI Execution Policy
+
+The approved execution policy is now explicit:
+
+- general CRM chat:
+  - `read-only` first
+- broader CRM writes from the unified chat:
+  - only later
+  - only as assisted workflows
+  - only with explicit user confirmation
+- free autonomous writes across the CRM:
+  - not approved
+
+Today the only shipped AI-assisted write flow is invoice import, and it still
+requires explicit confirmation before creating `payments` or `expenses`.
 
 ## Non-Negotiable Rules
 
@@ -160,12 +176,28 @@ The next Pareto step is now closed too:
   - `expenses`
 - no new standalone AI page or route was added while doing this
 
+The next Pareto step is now closed too:
+
+- the launcher now supports the first real read-only AI answer on top of the
+  shared CRM-wide snapshot
+- the answer flow stays in the same global shell and uses the same snapshot the
+  user sees in UI
+- the text model remains the existing analytic/read-only model setting in
+  `Impostazioni -> AI`
+- the read boundary is now explicit in docs, semantic registry, capability
+  registry, launcher copy and Edge Function prompt
+- runtime verification is now closed too on the linked remote project:
+  - `unified_crm_answer` deployed remotely on `qvdmzhyzpyaveniirsmo`
+  - authenticated smoke question returned HTTP `200`
+  - the answer used real CRM counts/totals and repeated the write boundary
+  - smoke user cleaned after verification
+
 The next high-value step is now:
 
-- use that shared CRM-wide read context for the first real read-only AI answer
-  inside the unified launcher,
-- keeping it inside the same global shell,
-- and still avoiding new scattered page-level AI surfaces.
+- turn grounded launcher answers into the first guided handoff toward existing
+  CRM actions/routes,
+- still inside the same global shell,
+- still without direct execution or free writes from the general CRM chat.
 
 Do not open new scattered AI surfaces while doing this. The launcher, the
 separate Gemini setting, and the existing semantic/capability foundations are

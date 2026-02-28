@@ -67,6 +67,7 @@ import {
   buildUnifiedCrmReadContext,
   type UnifiedCrmReadContext,
 } from "@/lib/ai/unifiedCrmReadContext";
+import { type UnifiedCrmAnswer } from "@/lib/ai/unifiedCrmAssistant";
 import {
   buildCrmSemanticRegistry,
   type CrmSemanticRegistry,
@@ -501,6 +502,46 @@ const dataProviderWithCustomMethods = {
   },
   async getUnifiedCrmReadContext(): Promise<UnifiedCrmReadContext> {
     return getUnifiedCrmReadContextFromResources();
+  },
+  async askUnifiedCrmQuestion(
+    question: string,
+    context: UnifiedCrmReadContext,
+  ): Promise<UnifiedCrmAnswer> {
+    const trimmedQuestion = question.trim();
+
+    if (!trimmedQuestion) {
+      throw new Error("Scrivi una domanda prima di inviare la richiesta.");
+    }
+
+    const model = await getConfiguredHistoricalAnalysisModel();
+
+    const { data, error } = await supabase.functions.invoke<{
+      data: UnifiedCrmAnswer;
+    }>("unified_crm_answer", {
+      method: "POST",
+      body: {
+        context,
+        question: trimmedQuestion,
+        model,
+      },
+    });
+
+    if (!data || error) {
+      console.error("askUnifiedCrmQuestion.error", error);
+      const errorDetails = await (async () => {
+        try {
+          return (await error?.context?.json()) ?? {};
+        } catch {
+          return {};
+        }
+      })();
+      throw new Error(
+        errorDetails?.message ||
+          "Impossibile ottenere una risposta AI sul CRM unificato",
+      );
+    }
+
+    return data.data;
   },
   async getInvoiceImportWorkspace(): Promise<InvoiceImportWorkspace> {
     return getInvoiceImportWorkspaceFromResources();

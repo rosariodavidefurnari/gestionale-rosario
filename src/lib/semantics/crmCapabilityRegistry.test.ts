@@ -38,6 +38,9 @@ describe("crmCapabilityRegistry", () => {
       ),
     ).toBe(true);
     expect(
+      registry.actions.some((action) => action.id === "ask_unified_crm_question"),
+    ).toBe(true);
+    expect(
       registry.actions.some((action) => action.id === "invoice_import_extract"),
     ).toBe(true);
     expect(
@@ -47,7 +50,7 @@ describe("crmCapabilityRegistry", () => {
       registry.pages.some(
         (page) =>
           page.id === "settings" &&
-          page.description.includes("Gemini fatture"),
+          page.description.includes("AI analitica/read-only CRM"),
       ),
     ).toBe(true);
   });

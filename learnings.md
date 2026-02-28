@@ -10,6 +10,23 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se il launcher mostra gia una snapshot condivisa, il primo
+  answer flow deve usare proprio quella snapshot e non ricostruirne un'altra
+  lato function** — Nel launcher unificato il pattern corretto e' passare la
+  stessa `getUnifiedCrmReadContext()` gia visibile in UI dentro
+  `askUnifiedCrmQuestion(question, context)`. Cosi' l'utente legge e l'AI
+  risponde sullo stesso identico perimetro, senza drift tra risposta e
+  schermata.
+
+- [2026-03-01] **Prima di dare write power generale alla chat, la policy va
+  resa esplicita in docs, registry e prompt** — Dire solo "poi arriveremo alle
+  scritture" non basta. Serve scrivere chiaramente che:
+  1) il CRM chat generale e' `read-only` adesso
+  2) l'unico write AI gia spedito resta quello fatture con conferma
+  3) le future scritture generali potranno essere solo assistite e confermate
+  4) la scrittura autonoma libera non e' approvata
+  Altrimenti il perimetro si sfalda gia al milestone successivo.
+
 - [2026-02-28] **Se il launcher unificato deve iniziare a leggere tutto il CRM,
   il passo corretto non e' una domanda AI in piu ma un provider entry point
   read-only condiviso** — Prima di far rispondere l’AI su clienti, preventivi,

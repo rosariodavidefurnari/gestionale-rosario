@@ -7,14 +7,14 @@ export const AISettingsSection = () => {
     <div className="space-y-6">
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Scegli il modello AI usato per generare le analisi di Storico e
-          Annuale. La chiamata parte lato server e usa payload semantici, non
-          le tabelle raw.
+          Scegli il modello AI usato per generare le analisi di Storico,
+          Annuale e le risposte read-only della chat CRM unificata. La chiamata
+          parte lato server e usa payload semantici, non le tabelle raw.
         </p>
 
         <SelectInput
           source="aiConfig.historicalAnalysisModel"
-          label="Modello analisi Storico e Annuale"
+          label="Modello analisi e risposte CRM"
           choices={historicalAnalysisModelChoices}
           optionText="label"
           optionValue="value"

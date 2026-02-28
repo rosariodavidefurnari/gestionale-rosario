@@ -255,7 +255,7 @@ export const buildUnifiedCrmReadContext = ({
       })),
     },
     caveats: [
-      "Questo snapshot e' read-only: nessuna scrittura nel CRM parte da questo contesto senza una conferma esplicita in un workflow dedicato.",
+      "Questo snapshot e' read-only: nessuna scrittura nel CRM parte da questo contesto o dalle risposte AI che lo usano senza una conferma esplicita in un workflow dedicato.",
       "I significati di stati, tipi, formule e route vanno letti dai registri semantico e capability inclusi nel contesto.",
       "Le liste recenti sono intenzionalmente limitate ai record piu utili per lettura rapida nel launcher unificato.",
     ],

@@ -34,6 +34,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { InvoiceImportDraftEditor } from "./InvoiceImportDraftEditor";
+import { UnifiedCrmAnswerPanel } from "./UnifiedCrmAnswerPanel";
 import { UnifiedCrmReadSnapshot } from "./UnifiedCrmReadSnapshot";
 import type { CrmDataProvider } from "../providers/types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
@@ -163,7 +164,10 @@ export const UnifiedAiLauncher = () => {
   );
 
   const hasBlockingErrors = blockingErrors.length > 0;
-  const selectedModel = aiConfig?.invoiceExtractionModel ?? "gemini-2.5-pro";
+  const selectedAnswerModel =
+    aiConfig?.historicalAnalysisModel ?? "gpt-5.2";
+  const selectedInvoiceModel =
+    aiConfig?.invoiceExtractionModel ?? "gemini-2.5-pro";
 
   const onFileSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextFiles = Array.from(event.target.files ?? []);
@@ -255,20 +259,21 @@ export const UnifiedAiLauncher = () => {
         )}
       >
         <SheetHeader className="border-b bg-muted/30 pb-4">
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">AI unificata</Badge>
-            <Badge variant="outline">{selectedModel}</Badge>
-          </div>
-          <SheetTitle className="flex items-center gap-2 text-left">
-            <Bot className="size-4" />
-            Chat AI fatture
-          </SheetTitle>
-          <SheetDescription className="text-left">
-            Carica PDF, scansioni o foto. L&apos;AI propone un import coerente in
-            `payments` o `expenses`, ma nulla viene scritto nel CRM senza la tua
-            conferma esplicita.
-          </SheetDescription>
-        </SheetHeader>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">AI unificata</Badge>
+          <Badge variant="outline">CRM: {selectedAnswerModel}</Badge>
+          <Badge variant="outline">Fatture: {selectedInvoiceModel}</Badge>
+        </div>
+        <SheetTitle className="flex items-center gap-2 text-left">
+          <Bot className="size-4" />
+          Chat AI unificata
+        </SheetTitle>
+        <SheetDescription className="text-left">
+          Legge una snapshot coerente del CRM e gestisce anche l&apos;import
+          fatture nella stessa shell. Le risposte restano read-only e ogni
+          scrittura passa solo da workflow con conferma esplicita.
+        </SheetDescription>
+      </SheetHeader>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
           <div className="rounded-2xl border bg-primary/5 px-4 py-3">
@@ -299,13 +304,30 @@ export const UnifiedAiLauncher = () => {
             </div>
           ) : null}
 
-          {readContext ? <UnifiedCrmReadSnapshot context={readContext} /> : null}
+        {readContext ? <UnifiedCrmReadSnapshot context={readContext} /> : null}
 
-          <div className="rounded-2xl border bg-background p-4 shadow-sm">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="invoice-import-files">Documenti</Label>
-                <Input
+        <UnifiedCrmAnswerPanel
+          context={readContext ?? null}
+          selectedModel={selectedAnswerModel}
+        />
+
+        <div className="rounded-2xl border bg-background p-4 shadow-sm">
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <FileUp className="size-4" />
+                <p className="text-sm font-medium">Import fatture</p>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Carica PDF, scansioni o foto. L&apos;AI propone un import
+                coerente in `payments` o `expenses`, ma nulla viene scritto nel
+                CRM senza la tua conferma esplicita.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="invoice-import-files">Documenti</Label>
+              <Input
                   id="invoice-import-files"
                   ref={fileInputRef}
                   type="file"

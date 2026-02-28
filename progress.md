@@ -44,10 +44,55 @@ CRM core attraverso il backbone semantico già approvato. Anche questo step è
 ora chiuso: il launcher carica una snapshot read-only di `clients`, `quotes`,
 `projects`, `payments` ed `expenses` riusando semantic registry, capability
 registry e un unico provider entry point. Il prossimo passo Pareto resta
-dentro la stessa superficie: usare quel contesto CRM-wide per il primo vero
-answer flow AI di lettura generale nel launcher unificato.
+dentro la stessa superficie e ora e' chiuso anche lui: il launcher usa quel
+contesto CRM-wide per il primo vero answer flow AI di lettura generale, sempre
+read-only. La policy prodotto e' adesso esplicita anche nei documenti e nei
+registry: prima lettura generale del CRM, poi eventualmente write assistito
+solo con conferma esplicita, mai scrittura autonoma libera. Il prossimo passo
+Pareto non e' un'altra AI sparsa, ma il primo handoff guidato dalle risposte
+del launcher verso azioni/route gia approvate del CRM, ancora senza
+esecuzione diretta.
 
 ## Last Session
+
+### Sessione 58 (2026-03-01, answer flow AI read-only nel launcher unificato)
+
+- Completed:
+  - **La chat unificata ora risponde anche sul CRM core, non solo sulle
+    fatture**:
+    - nuovo pannello:
+      - `UnifiedCrmAnswerPanel`
+    - nuove domande suggerite read-only sul CRM core
+    - risposta markdown grounded dentro la stessa shell globale
+  - **Provider, function e settings riallineati nello stesso passaggio**:
+    - nuovo entry point provider:
+      - `askUnifiedCrmQuestion(question, context)`
+    - nuova Edge Function:
+      - `unified_crm_answer`
+    - `Impostazioni -> AI` ora dichiara che il modello testuale serve anche
+      alle risposte read-only del launcher
+  - **Boundary di scrittura reso esplicito nella base condivisa**:
+    - semantic registry aggiornato sulla regola `unifiedAiReadContext`
+    - capability registry aggiornato con:
+      - azione `ask_unified_crm_question`
+    - la policy `read-only first / write assistito con conferma poi` ora e'
+      scritta anche nei docs di continuita'
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx src/lib/ai/unifiedCrmReadContext.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts supabase/functions/_shared/unifiedCrmAnswer.test.ts`
+  - `npm run registry:gen`
+  - `npx supabase functions deploy unified_crm_answer --project-ref qvdmzhyzpyaveniirsmo --no-verify-jwt`
+  - smoke autenticato remoto riuscito su `unified_crm_answer` con risposta
+    `200` e answer markdown reale, poi cleanup utente smoke
+
+- Decisions:
+  - il general Q&A del launcher deve usare la stessa snapshot che l'utente vede
+    in UI, non un contesto ricostruito diversamente lato function
+  - la chat CRM generale resta read-only anche se l'obiettivo di lungo periodo
+    include write assistito
+  - il prossimo passo Pareto e' un handoff guidato verso azioni/route CRM gia
+    esistenti, non l'esecuzione diretta di scritture dal Q&A generale
 
 ### Sessione 57 (2026-02-28, read context CRM-wide nel launcher unificato)
 

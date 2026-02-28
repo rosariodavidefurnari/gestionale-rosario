@@ -177,3 +177,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.invoice_import_extract]
 verify_jwt = false
+[functions.unified_crm_answer]
+verify_jwt = false

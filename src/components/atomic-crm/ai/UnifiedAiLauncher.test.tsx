@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const useIsMobile = vi.fn();
 const getUnifiedCrmReadContext = vi.fn();
+const askUnifiedCrmQuestion = vi.fn();
 const getInvoiceImportWorkspace = vi.fn();
 const uploadInvoiceImportFiles = vi.fn();
 const generateInvoiceImportDraft = vi.fn();
@@ -23,6 +24,7 @@ vi.mock("ra-core", async () => {
     ...actual,
     useDataProvider: () => ({
       getUnifiedCrmReadContext,
+      askUnifiedCrmQuestion,
       getInvoiceImportWorkspace,
       uploadInvoiceImportFiles,
       generateInvoiceImportDraft,
@@ -63,6 +65,7 @@ describe("UnifiedAiLauncher", () => {
     useIsMobile.mockReset();
     useIsMobile.mockReturnValue(false);
     getUnifiedCrmReadContext.mockReset();
+    askUnifiedCrmQuestion.mockReset();
     getInvoiceImportWorkspace.mockReset();
     uploadInvoiceImportFiles.mockReset();
     generateInvoiceImportDraft.mockReset();
@@ -256,15 +259,52 @@ describe("UnifiedAiLauncher", () => {
 
     fireEvent.click(launcherButton);
 
-    expect(await screen.findByText("Chat AI fatture")).toBeInTheDocument();
+    expect(await screen.findByText("Chat AI unificata")).toBeInTheDocument();
     expect(await screen.findByText("Snapshot CRM")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Carica PDF, scansioni o foto/i),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Chat CRM read-only")).toBeInTheDocument();
+    expect(await screen.findByText("Import fatture")).toBeInTheDocument();
     await waitFor(() =>
       expect(getInvoiceImportWorkspace).toHaveBeenCalledTimes(1),
     );
     expect(getUnifiedCrmReadContext).toHaveBeenCalledTimes(1);
+  });
+
+  it("asks a read-only CRM question inside the launcher", async () => {
+    askUnifiedCrmQuestion.mockResolvedValue({
+      question: "Dammi un riepilogo operativo rapido del CRM.",
+      model: "gpt-5.2",
+      generatedAt: "2026-02-28T22:05:00.000Z",
+      answerMarkdown:
+        "## Risposta breve\nTutto sotto controllo.\n\n## Dati usati\n- 1 preventivo aperto.\n- 1 pagamento pendente.",
+    });
+
+    renderLauncher();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri chat AI unificata" }),
+    );
+
+    const suggestionButton = await screen.findByRole("button", {
+      name: "Dammi un riepilogo operativo rapido del CRM.",
+    });
+
+    await waitFor(() => expect(suggestionButton).toBeEnabled());
+
+    fireEvent.click(suggestionButton);
+
+    await waitFor(() =>
+      expect(askUnifiedCrmQuestion).toHaveBeenCalledTimes(1),
+    );
+
+    expect(askUnifiedCrmQuestion).toHaveBeenCalledWith(
+      "Dammi un riepilogo operativo rapido del CRM.",
+      expect.objectContaining({
+        meta: expect.objectContaining({
+          scope: "crm_read_snapshot",
+        }),
+      }),
+    );
+
+    expect(await screen.findByText("Tutto sotto controllo.")).toBeInTheDocument();
   });
 
   it("uploads files, generates a draft, and confirms the import", async () => {

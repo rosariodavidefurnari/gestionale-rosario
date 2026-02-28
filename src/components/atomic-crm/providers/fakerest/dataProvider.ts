@@ -36,6 +36,7 @@ import {
   buildUnifiedCrmReadContext,
   type UnifiedCrmReadContext,
 } from "@/lib/ai/unifiedCrmReadContext";
+import type { UnifiedCrmAnswer } from "@/lib/ai/unifiedCrmAssistant";
 import type { AnalyticsContext } from "@/lib/analytics/buildAnalyticsContext";
 import type { AnnualOperationsContext } from "@/lib/analytics/buildAnnualOperationsContext";
 import type { HistoricalCashInflowContext } from "@/lib/analytics/buildHistoricalCashInflowContext";
@@ -208,6 +209,11 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
       semanticRegistry: buildCrmSemanticRegistry(config),
       capabilityRegistry: buildCrmCapabilityRegistry(),
     });
+  },
+  askUnifiedCrmQuestion: async (): Promise<UnifiedCrmAnswer> => {
+    throw new Error(
+      "Unified CRM AI answers are not available in the FakeRest provider.",
+    );
   },
   getInvoiceImportWorkspace: async (): Promise<InvoiceImportWorkspace> => {
     const [clientsResponse, projectsResponse] = await Promise.all([

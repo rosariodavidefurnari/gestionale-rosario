@@ -1,6 +1,6 @@
 # Historical Analytics Backlog
 
-Last updated: 2026-02-28
+Last updated: 2026-03-01
 
 ## Current State
 
@@ -105,6 +105,10 @@ Strategic product note:
   without losing what already works.
 - the current page-level AI cards should therefore be treated as transitional,
   not as the final UX architecture.
+- the approved execution path is now explicit too:
+  - first a general `read-only` CRM chat
+  - only later assisted writes with explicit confirmation
+  - no free autonomous CRM writes
 
 ## First Open Priority
 
@@ -171,20 +175,37 @@ The read-context step is now closed too:
   - `expenses`
 - no new AI page or page-level AI widget was added to deliver this step
 
+The general CRM answer step is now closed too:
+
+- the unified launcher now supports the first read-only AI answer flow on top
+  of the shared CRM-wide snapshot
+- the flow uses:
+  - the same launcher shell
+  - the same snapshot the user sees
+  - the existing text-model setting already used by Storico/Annuale
+- no new AI page or page-level AI widget was added
+- runtime verification is now closed too on `qvdmzhyzpyaveniirsmo`:
+  - `unified_crm_answer` deployed
+  - authenticated smoke question returned HTTP `200`
+  - answer markdown came back grounded on the real snapshot and repeated the
+    read-only/write-confirmation boundary
+  - smoke user cleaned after verification
+
 The next open priority is:
 
-- use this shared CRM-wide read context for the first read-only AI answer flow
-  inside the unified launcher
-- keep the interaction in the global floating shell and do not reopen the
-  route/page-level AI architecture debate
+- use grounded launcher answers to produce the first guided handoff toward
+  existing CRM routes/dialogs or approved actions
+- keep the interaction in the same floating shell
+- do not give the general CRM chat direct write execution yet
 
 Why this comes next:
 
-- the launcher now has both:
+- the launcher now has all three base layers it needed:
   - a real invoice workflow
   - a real CRM-wide read snapshot
-- the next Pareto gain is therefore to let the AI answer on top of that shared
-  read context, not to build another separate interface
+- a real CRM-wide read-only answer flow
+- the next Pareto gain is therefore not another raw Q&A surface, but a first
+  practical handoff from grounded answer to existing CRM actions
 - the semantic/capability backbone is already strong enough for this next step
 
 Not the next step by default:
@@ -193,6 +214,7 @@ Not the next step by default:
 - more page-level AI cards
 - more dashboard widgets
 - broader automation after the manual path is already stable
+- direct write execution from the general CRM Q&A flow
 - automatic invoice writes without explicit confirmation
 
 ## Stop Line For This Phase
