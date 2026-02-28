@@ -11,7 +11,7 @@ export const unifiedCrmSuggestedQuestions = [
 
 export type UnifiedCrmSuggestedAction = {
   id: string;
-  kind: "page" | "list" | "show";
+  kind: "page" | "list" | "show" | "approved_action";
   resource:
     | "dashboard"
     | "clients"
@@ -22,6 +22,11 @@ export type UnifiedCrmSuggestedAction = {
   label: string;
   description: string;
   href: string;
+  capabilityActionId?:
+    | "quote_create_payment"
+    | "client_create_payment"
+    | "project_quick_payment"
+    | "follow_unified_crm_handoff";
 };
 
 export type UnifiedCrmAnswer = {

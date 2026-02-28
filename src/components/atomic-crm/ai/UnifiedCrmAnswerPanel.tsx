@@ -174,8 +174,8 @@ export const UnifiedCrmAnswerPanel = ({
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Azioni suggerite</p>
                   <p className="text-xs text-muted-foreground">
-                    Handoff verso route gia approvate del CRM. Nessuna scrittura
-                    parte direttamente da qui.
+                    Handoff verso route o superfici commerciali gia approvate
+                    del CRM. Nessuna scrittura parte direttamente da qui.
                   </p>
                 </div>
 
@@ -189,8 +189,11 @@ export const UnifiedCrmAnswerPanel = ({
                     >
                       <a href={action.href} onClick={onNavigate}>
                         <span className="space-y-1">
-                          <span className="block text-sm font-medium">
-                            {action.label}
+                          <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                            <span>{action.label}</span>
+                            {action.kind === "approved_action" ? (
+                              <Badge variant="secondary">Azione approvata</Badge>
+                            ) : null}
                           </span>
                           <span className="block text-xs text-muted-foreground">
                             {action.description}

@@ -96,6 +96,7 @@ describe("unifiedCrmReadContext", () => {
     expect(context.snapshot.totals.pendingPaymentsAmount).toBe(1200);
     expect(context.snapshot.totals.expensesAmount).toBe(300);
     expect(context.snapshot.openQuotes[0]?.clientId).toBe("client-1");
+    expect(context.snapshot.pendingPayments[0]?.quoteId).toBeNull();
     expect(context.snapshot.pendingPayments[0]?.projectId).toBe("project-1");
     expect(context.snapshot.openQuotes[0]?.statusLabel).toBe("In trattativa");
     expect(context.snapshot.pendingPayments[0]?.statusLabel).toBe("In attesa");

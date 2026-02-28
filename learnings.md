@@ -10,6 +10,22 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Quando il launcher passa dal semplice salto di route al
+  handoff commerciale, conviene preferire entry point approvati e
+  deterministicamente costruiti** — Se la domanda utente è già orientata a un
+  incasso o a un seguito commerciale, il pattern corretto non è aggiungere una
+  route generica in più ma usare l'entry point giusto già approvato, per
+  esempio `payments/create?...` precompilato dal `quoteId/clientId/projectId`
+  o il `project show` che ospita il quick payment. Così il launcher resta
+  utile, auditabile e senza inventare workflow nuovi.
+
+- [2026-03-01] **Se un test reale su fatture storiche trova un cliente che non
+  esiste nel CRM, non conviene improvvisare subito la creazione cliente dentro
+  l'import** — Prima serve chiudere il percorso prioritario della chat
+  unificata e, quando tocchera' quel pezzo, definire esplicitamente i campi
+  anagrafici di fatturazione che oggi mancano. Solo dopo ha senso aggiungere
+  creazione cliente assistita e sempre con conferma esplicita.
+
 - [2026-03-01] **Se una risposta AI deve portare l'utente a una route reale del
   CRM, i link non vanno lasciati inventare al modello** — Nel launcher
   unificato il pattern corretto e' fare rispondere il modello solo sui dati e

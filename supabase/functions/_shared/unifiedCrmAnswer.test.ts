@@ -61,6 +61,9 @@ describe("unifiedCrmAnswer", () => {
           openQuotes: [
             {
               quoteId: "quote-1",
+              clientId: "client-1",
+              projectId: "project-1",
+              status: "accettato",
             },
           ],
           activeProjects: [
@@ -71,6 +74,9 @@ describe("unifiedCrmAnswer", () => {
           pendingPayments: [
             {
               paymentId: "payment-1",
+              quoteId: "quote-1",
+              clientId: "client-1",
+              projectId: "project-1",
             },
           ],
           recentExpenses: [],
@@ -84,11 +90,13 @@ describe("unifiedCrmAnswer", () => {
 
     expect(actions[0]).toEqual(
       expect.objectContaining({
-        resource: "payments",
+        resource: "quotes",
         kind: "show",
-        href: "/#/payments/payment-1/show",
+        href: "/#/quotes/quote-1/show",
       }),
     );
-    expect(actions.some((action) => action.href === "/#/payments")).toBe(true);
+    expect(actions.some((action) => action.capabilityActionId === "quote_create_payment")).toBe(
+      true,
+    );
   });
 });

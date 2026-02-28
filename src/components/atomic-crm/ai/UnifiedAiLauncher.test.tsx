@@ -211,6 +211,7 @@ describe("UnifiedAiLauncher", () => {
         pendingPayments: [
           {
             paymentId: "payment-1",
+            quoteId: "quote-1",
             clientId: "client-1",
             projectId: "project-1",
             clientName: "Mario Rossi",
@@ -285,12 +286,13 @@ describe("UnifiedAiLauncher", () => {
         "## Risposta breve\nTutto sotto controllo.\n\n## Dati usati\n- 1 preventivo aperto.\n- 1 pagamento pendente.",
       suggestedActions: [
         {
-          id: "open-first-pending-payment",
-          kind: "show",
+          id: "quote-create-payment-handoff",
+          kind: "approved_action",
           resource: "payments",
-          label: "Apri il pagamento piu urgente",
-          description: "Vai al dettaglio del pagamento pendente.",
-          href: "/#/payments/payment-1/show",
+          capabilityActionId: "quote_create_payment",
+          label: "Registra pagamento dal preventivo",
+          description: "Apre il form pagamenti precompilato dal preventivo.",
+          href: "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1",
         },
         {
           id: "open-dashboard",
@@ -331,12 +333,16 @@ describe("UnifiedAiLauncher", () => {
 
     expect(await screen.findByText("Tutto sotto controllo.")).toBeInTheDocument();
     expect(await screen.findByText("Azioni suggerite")).toBeInTheDocument();
-    expect(screen.getByText("Apri il pagamento piu urgente")).toBeInTheDocument();
+    expect(screen.getByText("Registra pagamento dal preventivo")).toBeInTheDocument();
+    expect(screen.getByText("Azione approvata")).toBeInTheDocument();
     expect(
       screen
-        .getByText("Apri il pagamento piu urgente")
+        .getByText("Registra pagamento dal preventivo")
         .closest("a"),
-    ).toHaveAttribute("href", "/#/payments/payment-1/show");
+    ).toHaveAttribute(
+      "href",
+      "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1",
+    );
   });
 
   it("uploads files, generates a draft, and confirms the import", async () => {

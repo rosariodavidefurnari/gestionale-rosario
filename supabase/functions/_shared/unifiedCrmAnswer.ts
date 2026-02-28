@@ -4,7 +4,7 @@ export const unifiedCrmAnswerMaxQuestionLength = 300;
 
 export type UnifiedCrmSuggestedAction = {
   id: string;
-  kind: "page" | "list" | "show";
+  kind: "page" | "list" | "show" | "approved_action";
   resource:
     | "dashboard"
     | "clients"
@@ -15,6 +15,11 @@ export type UnifiedCrmSuggestedAction = {
   label: string;
   description: string;
   href: string;
+  capabilityActionId?:
+    | "quote_create_payment"
+    | "client_create_payment"
+    | "project_quick_payment"
+    | "follow_unified_crm_handoff";
 };
 
 export type UnifiedCrmAnswerPayload = {
@@ -39,8 +44,34 @@ const getRoutePrefix = (context: Record<string, unknown>) => {
   return getString(meta?.routePrefix) ?? "/#/";
 };
 
+const quoteStatusesEligibleForPaymentCreation = new Set([
+  "accettato",
+  "acconto_ricevuto",
+  "in_lavorazione",
+  "completato",
+]);
+
 const buildListHref = (routePrefix: string, resource: string) =>
   `${routePrefix}${resource}`;
+
+const buildCreateHref = (
+  routePrefix: string,
+  resource: string,
+  searchParams: Record<string, string | null | undefined>,
+) => {
+  const query = new URLSearchParams();
+
+  Object.entries(searchParams).forEach(([key, value]) => {
+    if (value) {
+      query.set(key, value);
+    }
+  });
+
+  const search = query.toString();
+  return search
+    ? `${routePrefix}${resource}/create?${search}`
+    : `${routePrefix}${resource}/create`;
+};
 
 const buildShowHref = (
   routePrefix: string,
@@ -55,6 +86,9 @@ const getObjectArray = (
 
 const includesAny = (value: string, patterns: string[]) =>
   patterns.some((pattern) => value.includes(pattern));
+
+const canCreatePaymentFromQuoteStatus = (status: string | null) =>
+  Boolean(status && quoteStatusesEligibleForPaymentCreation.has(status));
 
 export const buildUnifiedCrmSuggestedActions = ({
   question,
@@ -148,6 +182,11 @@ export const buildUnifiedCrmSuggestedActions = ({
     "payments",
     getString(firstPayment?.paymentId),
   );
+  const paymentQuoteHref = buildShowHref(
+    routePrefix,
+    "quotes",
+    getString(firstPayment?.quoteId),
+  );
   const paymentClientHref = buildShowHref(
     routePrefix,
     "clients",
@@ -163,6 +202,15 @@ export const buildUnifiedCrmSuggestedActions = ({
     "quotes",
     getString(firstQuote?.quoteId),
   );
+  const quoteCreatePaymentHref = canCreatePaymentFromQuoteStatus(
+    getString(firstQuote?.status),
+  )
+    ? buildCreateHref(routePrefix, "payments", {
+        quote_id: getString(firstQuote?.quoteId),
+        client_id: getString(firstQuote?.clientId),
+        project_id: getString(firstQuote?.projectId),
+      })
+    : null;
   const quoteClientHref = buildShowHref(
     routePrefix,
     "clients",
@@ -178,6 +226,9 @@ export const buildUnifiedCrmSuggestedActions = ({
     "projects",
     getString(firstProject?.projectId),
   );
+  const projectQuickPaymentHref = getString(firstProject?.projectId)
+    ? buildShowHref(routePrefix, "projects", getString(firstProject?.projectId))
+    : null;
   const projectClientHref = buildShowHref(
     routePrefix,
     "clients",
@@ -198,21 +249,18 @@ export const buildUnifiedCrmSuggestedActions = ({
     "clients",
     getString(firstClient?.clientId),
   );
+  const clientCreatePaymentHref = getString(firstClient?.clientId)
+    ? buildCreateHref(routePrefix, "payments", {
+        client_id: getString(firstClient?.clientId),
+      })
+    : null;
+  const paymentClientCreateHref = getString(firstPayment?.clientId)
+    ? buildCreateHref(routePrefix, "payments", {
+        client_id: getString(firstPayment?.clientId),
+      })
+    : null;
 
   if (genericSummary) {
-    pushSuggestion(
-      paymentHref
-        ? {
-            id: "open-first-pending-payment",
-            kind: "show",
-            resource: "payments",
-            label: "Apri il pagamento piu urgente",
-            description:
-              "Vai al dettaglio del primo pagamento pendente nello snapshot corrente.",
-            href: paymentHref,
-          }
-        : null,
-    );
     pushSuggestion(
       quoteHref
         ? {
@@ -226,58 +274,115 @@ export const buildUnifiedCrmSuggestedActions = ({
           }
         : null,
     );
-    pushSuggestion({
-      id: "open-dashboard",
-      kind: "page",
-      resource: "dashboard",
-      label: "Apri la dashboard",
-      description:
-        "Usa la dashboard come quadro generale prima di aprire un record specifico.",
-      href: routePrefix,
-    });
-  } else if (focusPayments) {
     pushSuggestion(
-      paymentHref
+      quoteCreatePaymentHref
         ? {
-            id: "open-first-pending-payment",
-            kind: "show",
+            id: "quote-create-payment-handoff",
+            kind: "approved_action",
             resource: "payments",
-            label: "Apri il pagamento piu urgente",
+            capabilityActionId: "quote_create_payment",
+            label: "Registra un pagamento dal preventivo",
             description:
-              "Vai al dettaglio del primo pagamento pendente nello snapshot corrente.",
-            href: paymentHref,
+              "Apre il form pagamenti gia precompilato dal preventivo aperto principale.",
+            href: quoteCreatePaymentHref,
           }
         : null,
     );
-    pushSuggestion({
-      id: "open-payments-list",
-      kind: "list",
-      resource: "payments",
-      label: "Apri tutti i pagamenti",
-      description:
-        "Controlla l'elenco completo dei pagamenti per approfondire incassi attesi o ricevuti.",
-      href: buildListHref(routePrefix, "payments"),
-    });
     pushSuggestion(
-      paymentClientHref
+      clientCreatePaymentHref
         ? {
-            id: "open-linked-client-from-payment",
-            kind: "show",
-            resource: "clients",
-            label: "Apri il cliente collegato",
+            id: "client-create-payment-handoff",
+            kind: "approved_action",
+            resource: "payments",
+            capabilityActionId: "client_create_payment",
+            label: "Registra un pagamento diretto dal cliente",
             description:
-              "Vai alla scheda cliente collegata al primo pagamento pendente.",
-            href: paymentClientHref,
+              "Apre il form pagamenti precompilato sul cliente piu recente dello snapshot.",
+            href: clientCreatePaymentHref,
           }
-        : paymentProjectHref
+        : {
+            id: "open-dashboard",
+            kind: "page",
+            resource: "dashboard",
+            label: "Apri la dashboard",
+            description:
+              "Usa la dashboard come quadro generale prima di aprire un record specifico.",
+            href: routePrefix,
+          },
+    );
+  } else if (focusPayments) {
+    pushSuggestion(
+      paymentQuoteHref
+        ? {
+            id: "open-linked-quote-from-payment",
+            kind: "show",
+            resource: "quotes",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri il preventivo collegato",
+            description:
+              "Vai al preventivo collegato al pagamento pendente piu rilevante.",
+            href: paymentQuoteHref,
+          }
+        : paymentHref
           ? {
-              id: "open-linked-project-from-payment",
+              id: "open-first-pending-payment",
               kind: "show",
-              resource: "projects",
-              label: "Apri il progetto collegato",
+              resource: "payments",
+              capabilityActionId: "follow_unified_crm_handoff",
+              label: "Apri il pagamento piu urgente",
               description:
-                "Vai al progetto collegato al primo pagamento pendente.",
-              href: paymentProjectHref,
+                "Vai al dettaglio del primo pagamento pendente nello snapshot corrente.",
+              href: paymentHref,
+            }
+          : null,
+    );
+    pushSuggestion(
+      quoteCreatePaymentHref
+        ? {
+            id: "quote-create-payment-handoff",
+            kind: "approved_action",
+            resource: "payments",
+            capabilityActionId: "quote_create_payment",
+            label: "Registra un altro pagamento dal preventivo",
+            description:
+              "Apre il form pagamenti gia precompilato dal preventivo aperto piu rilevante.",
+            href: quoteCreatePaymentHref,
+          }
+        : paymentClientCreateHref
+          ? {
+              id: "client-create-payment-from-payment-context",
+              kind: "approved_action",
+              resource: "payments",
+              capabilityActionId: "client_create_payment",
+              label: "Registra un pagamento diretto dal cliente",
+              description:
+                "Apre il form pagamenti precompilato sul cliente del pagamento pendente principale.",
+              href: paymentClientCreateHref,
+            }
+          : null,
+    );
+    pushSuggestion(
+      paymentProjectHref
+        ? {
+            id: "project-quick-payment-handoff-from-payment-context",
+            kind: "approved_action",
+            resource: "projects",
+            capabilityActionId: "project_quick_payment",
+            label: "Apri il progetto e usa Pagamento",
+            description:
+              "Apre il progetto collegato; da li puoi usare il quick payment gia approvato.",
+            href: paymentProjectHref,
+          }
+        : paymentClientHref
+          ? {
+              id: "open-linked-client-from-payment",
+              kind: "show",
+              resource: "clients",
+              capabilityActionId: "follow_unified_crm_handoff",
+              label: "Apri il cliente collegato",
+              description:
+                "Vai alla scheda cliente collegata al primo pagamento pendente.",
+              href: paymentClientHref,
             }
           : null,
     );
@@ -288,6 +393,7 @@ export const buildUnifiedCrmSuggestedActions = ({
             id: "open-first-open-quote",
             kind: "show",
             resource: "quotes",
+            capabilityActionId: "follow_unified_crm_handoff",
             label: "Apri il preventivo aperto piu rilevante",
             description:
               "Vai al dettaglio del primo preventivo aperto nello snapshot corrente.",
@@ -295,37 +401,53 @@ export const buildUnifiedCrmSuggestedActions = ({
           }
         : null,
     );
-    pushSuggestion({
-      id: "open-quotes-list",
-      kind: "list",
-      resource: "quotes",
-      label: "Apri tutti i preventivi",
-      description:
-        "Controlla la lista completa dei preventivi per vedere pipeline e stati.",
-      href: buildListHref(routePrefix, "quotes"),
-    });
     pushSuggestion(
-      quoteProjectHref
+      quoteCreatePaymentHref
         ? {
-            id: "open-linked-project-from-quote",
-            kind: "show",
-            resource: "projects",
-            label: "Apri il progetto collegato",
+            id: "quote-create-payment-handoff",
+            kind: "approved_action",
+            resource: "payments",
+            capabilityActionId: "quote_create_payment",
+            label: "Registra pagamento dal preventivo",
             description:
-              "Vai al progetto collegato al primo preventivo aperto nello snapshot.",
-            href: quoteProjectHref,
+              "Apre il form pagamenti gia precompilato dal preventivo aperto principale.",
+            href: quoteCreatePaymentHref,
           }
-        : quoteClientHref
+        : quoteProjectHref
           ? {
-              id: "open-linked-client-from-quote",
-              kind: "show",
-              resource: "clients",
-              label: "Apri il cliente collegato",
+              id: "project-quick-payment-handoff-from-quote",
+              kind: "approved_action",
+              resource: "projects",
+              capabilityActionId: "project_quick_payment",
+              label: "Apri il progetto e usa Pagamento",
               description:
-                "Vai alla scheda cliente collegata al primo preventivo aperto.",
-              href: quoteClientHref,
+                "Apre il progetto collegato; da li puoi usare il quick payment gia approvato.",
+              href: quoteProjectHref,
             }
           : null,
+    );
+    pushSuggestion(
+      quoteClientHref
+        ? {
+            id: "open-linked-client-from-quote",
+            kind: "show",
+            resource: "clients",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri il cliente collegato",
+            description:
+              "Vai alla scheda cliente collegata al primo preventivo aperto.",
+            href: quoteClientHref,
+          }
+        : {
+            id: "open-quotes-list",
+            kind: "list",
+            resource: "quotes",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri tutti i preventivi",
+            description:
+              "Controlla la lista completa dei preventivi per vedere pipeline e stati.",
+            href: buildListHref(routePrefix, "quotes"),
+          },
     );
   } else if (focusProjects) {
     pushSuggestion(
@@ -334,6 +456,7 @@ export const buildUnifiedCrmSuggestedActions = ({
             id: "open-first-active-project",
             kind: "show",
             resource: "projects",
+            capabilityActionId: "follow_unified_crm_handoff",
             label: "Apri il progetto attivo principale",
             description:
               "Vai al dettaglio del primo progetto attivo nello snapshot corrente.",
@@ -341,27 +464,42 @@ export const buildUnifiedCrmSuggestedActions = ({
           }
         : null,
     );
-    pushSuggestion({
-      id: "open-projects-list",
-      kind: "list",
-      resource: "projects",
-      label: "Apri tutti i progetti",
-      description:
-        "Controlla la lista completa dei progetti per approfondire stato e lavori attivi.",
-      href: buildListHref(routePrefix, "projects"),
-    });
+    pushSuggestion(
+      projectQuickPaymentHref
+        ? {
+            id: "project-quick-payment-handoff",
+            kind: "approved_action",
+            resource: "projects",
+            capabilityActionId: "project_quick_payment",
+            label: "Apri il progetto e usa Pagamento",
+            description:
+              "Apre il progetto attivo principale; da li puoi usare il quick payment gia approvato.",
+            href: projectQuickPaymentHref,
+          }
+        : null,
+    );
     pushSuggestion(
       projectClientHref
         ? {
             id: "open-linked-client-from-project",
             kind: "show",
             resource: "clients",
+            capabilityActionId: "follow_unified_crm_handoff",
             label: "Apri il cliente collegato",
             description:
               "Vai alla scheda cliente collegata al primo progetto attivo.",
             href: projectClientHref,
           }
-        : null,
+        : {
+            id: "open-projects-list",
+            kind: "list",
+            resource: "projects",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri tutti i progetti",
+            description:
+              "Controlla la lista completa dei progetti per approfondire stato e lavori attivi.",
+            href: buildListHref(routePrefix, "projects"),
+          },
     );
   } else if (focusExpenses) {
     pushSuggestion(
@@ -370,6 +508,7 @@ export const buildUnifiedCrmSuggestedActions = ({
             id: "open-first-recent-expense",
             kind: "show",
             resource: "expenses",
+            capabilityActionId: "follow_unified_crm_handoff",
             label: "Apri la spesa piu recente",
             description:
               "Vai al dettaglio della prima spesa recente nello snapshot corrente.",
@@ -390,11 +529,12 @@ export const buildUnifiedCrmSuggestedActions = ({
       expenseProjectHref
         ? {
             id: "open-linked-project-from-expense",
-            kind: "show",
+            kind: "approved_action",
             resource: "projects",
+            capabilityActionId: "project_quick_payment",
             label: "Apri il progetto collegato",
             description:
-              "Vai al progetto collegato alla prima spesa recente nello snapshot.",
+              "Apre il progetto collegato alla spesa; da li puoi usare le azioni progetto gia approvate.",
             href: expenseProjectHref,
           }
         : null,
@@ -406,6 +546,7 @@ export const buildUnifiedCrmSuggestedActions = ({
             id: "open-first-recent-client",
             kind: "show",
             resource: "clients",
+            capabilityActionId: "follow_unified_crm_handoff",
             label: "Apri il cliente piu recente",
             description:
               "Vai alla scheda del cliente piu recente presente nello snapshot corrente.",
@@ -413,21 +554,36 @@ export const buildUnifiedCrmSuggestedActions = ({
           }
         : null,
     );
-    pushSuggestion({
-      id: "open-clients-list",
-      kind: "list",
-      resource: "clients",
-      label: "Apri tutti i clienti",
-      description:
-        "Controlla l'anagrafica completa per approfondire i clienti nel CRM.",
-      href: buildListHref(routePrefix, "clients"),
-    });
+    pushSuggestion(
+      clientCreatePaymentHref
+        ? {
+            id: "client-create-payment-handoff",
+            kind: "approved_action",
+            resource: "payments",
+            capabilityActionId: "client_create_payment",
+            label: "Registra pagamento dal cliente",
+            description:
+              "Apre il form pagamenti precompilato sul cliente piu recente dello snapshot.",
+            href: clientCreatePaymentHref,
+          }
+        : {
+            id: "open-clients-list",
+            kind: "list",
+            resource: "clients",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri tutti i clienti",
+            description:
+              "Controlla l'anagrafica completa per approfondire i clienti nel CRM.",
+            href: buildListHref(routePrefix, "clients"),
+          },
+    );
     pushSuggestion(
       quoteHref
         ? {
             id: "open-open-quote-from-client-context",
             kind: "show",
             resource: "quotes",
+            capabilityActionId: "follow_unified_crm_handoff",
             label: "Apri il preventivo aperto collegato",
             description:
               "Apri un preventivo aperto dallo snapshot per proseguire il controllo commerciale.",

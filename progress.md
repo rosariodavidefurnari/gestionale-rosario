@@ -50,12 +50,56 @@ read-only. La policy prodotto e' adesso esplicita anche nei documenti e nei
 registry: prima lettura generale del CRM, poi eventualmente write assistito
 solo con conferma esplicita, mai scrittura autonoma libera. Il prossimo passo
 Pareto dentro la stessa shell e' ora chiuso anche lui: le risposte del
-launcher propongono handoff strutturati verso route gia approvate del CRM. Il
-prossimo passo non e' un'altra AI sparsa, ma alzare quel handoff da semplice
-salto di route al primo handoff commerciale orientato ad azioni gia approvate,
-sempre senza esecuzione diretta dalla chat generale.
+launcher propongono handoff strutturati verso route gia approvate del CRM.
+Anche lo step successivo e' ora chiuso: quel handoff e' stato alzato al primo
+handoff commerciale orientato ad azioni gia approvate, sempre senza
+esecuzione diretta dalla chat generale. Il prossimo lavoro ad alto valore non
+e' un'altra AI sparsa, ma rendere piu guidata la scelta della superficie
+commerciale approvata corretta dentro la stessa shell, prima di discutere
+qualunque write execution generale. Nota differita gia registrata da test
+reale utente: l'import fatture incontra anche clienti storici assenti dal CRM
+e in quel caso mancano ancora creazione assistita cliente e alcuni campi
+anagrafici da fatturazione; non e' il focus adesso, ma il backlog lo conserva.
 
 ## Last Session
+
+### Sessione 60 (2026-03-01, handoff commerciale orientato ad azioni approvate)
+
+- Completed:
+  - **Il launcher non suggerisce piu solo record o liste: ora propone anche il
+    primo handoff commerciale orientato ad azioni reali**:
+    - le `suggestedActions` possono ora rappresentare:
+      - route show/list/page
+      - azioni approvate come:
+        - `quote_create_payment`
+        - `client_create_payment`
+        - `project_quick_payment`
+    - il pannello answer rende visibile quando una suggestion e' una
+      `Azione approvata`
+  - **I handoff commerciali restano deterministicamente controllati**:
+    - i form pagamento precompilati usano href costruiti dal sistema
+    - i jump progetto per quick payment aprono il progetto corretto
+    - nessuna URL commerciale viene inventata dal modello
+  - **Feedback reale utente registrato senza spostare la priorita' corrente**:
+    - backlog aggiornato sul caso:
+      - fattura cliente storica con cliente assente dal CRM
+      - campi anagrafici fatturazione ancora incompleti
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx src/lib/ai/unifiedCrmReadContext.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts supabase/functions/_shared/unifiedCrmAnswer.test.ts`
+  - `npx supabase functions deploy unified_crm_answer --project-ref qvdmzhyzpyaveniirsmo --no-verify-jwt`
+  - smoke autenticato remoto riuscito su `unified_crm_answer` con domanda
+    `Chi mi deve ancora pagare?` e ritorno reale di:
+    - `payments show`
+    - `quote_create_payment`
+    - `project_quick_payment`
+
+- Decisions:
+  - il primo salto dalla chat verso il commerciale deve puntare a entry point
+    gia approvati e non inventare workflow nuovi
+  - il caso `cliente mancante da fattura storica` e' reale, ma resta differito
+    finche' non si chiude il percorso prioritario del launcher unificato
 
 ### Sessione 59 (2026-03-01, handoff guidato da answer flow a route CRM)
 
@@ -93,8 +137,9 @@ sempre senza esecuzione diretta dalla chat generale.
     sistema, non inventate dal modello
   - il primo handoff della chat generale resta su superfici esistenti
     `read-only` o comunque gia approvate, senza esecuzione diretta
-  - il prossimo passo Pareto e' il primo handoff commerciale orientato ad
-    azioni gia approvate, non un nuovo consumer AI separato
+  - il passo successivo chiuso sopra questo livello e' il primo handoff
+    commerciale orientato ad azioni gia approvate, non un nuovo consumer AI
+    separato
 
 ### Sessione 58 (2026-03-01, answer flow AI read-only nel launcher unificato)
 

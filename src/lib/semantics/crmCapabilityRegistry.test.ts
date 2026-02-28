@@ -44,6 +44,11 @@ describe("crmCapabilityRegistry", () => {
       registry.actions.some((action) => action.id === "follow_unified_crm_handoff"),
     ).toBe(true);
     expect(
+      registry.actions.find(
+        (action) => action.id === "follow_unified_crm_handoff",
+      )?.requiredFields,
+    ).toContain("answer.suggestedActions[].capabilityActionId");
+    expect(
       registry.actions.some((action) => action.id === "invoice_import_extract"),
     ).toBe(true);
     expect(

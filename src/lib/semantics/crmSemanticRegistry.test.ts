@@ -69,7 +69,7 @@ describe("crmSemanticRegistry", () => {
       "conferma esplicita",
     );
     expect(registry.rules.unifiedAiReadContext.meaning).toContain(
-      "route o superfici gia approvate",
+      "route o azioni gia approvate",
     );
   });
 

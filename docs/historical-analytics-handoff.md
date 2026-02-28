@@ -211,17 +211,50 @@ The next Pareto step is now closed too:
     - `suggestedActions` for `payments show`, `payments list`, `client show`
   - smoke user cleaned after verification
 
-The next high-value step is now:
+The next high-value step is now closed too:
 
-- upgrade those handoff suggestions from generic route jumps to the first
+- grounded launcher answers now escalate from generic route jumps to the first
   action-oriented commercial handoff on already approved surfaces
-- prioritize existing approved actions such as:
-  - `quote_show`
+- the launcher now prioritizes existing approved actions such as:
   - `quote_create_payment`
   - `client_create_payment`
   - `project_quick_payment`
-- still inside the same global shell
-- still without direct execution or free writes from the general CRM chat
+- the answer panel marks those cases explicitly as `Azione approvata`
+- the handoff targets still stay deterministic and system-built:
+  - prefilled `payments/create` routes are assembled from snapshot ids
+  - project quick-payment jumps reuse the existing project surface
+  - commercial URLs are not invented by the model
+- runtime verification is now closed too on the linked remote project:
+  - `unified_crm_answer` redeployed remotely on `qvdmzhyzpyaveniirsmo`
+  - authenticated smoke question `Chi mi deve ancora pagare?` returned HTTP
+    `200`
+  - the response included:
+    - grounded markdown answer
+    - one generic `payments show` handoff
+    - one approved commercial handoff for `quote_create_payment`
+    - one approved commercial handoff for `project_quick_payment`
+  - smoke user cleaned after verification
+
+The next high-value step is now:
+
+- keep the same floating shell and make the commercial handoff more guided,
+  not more autonomous
+- choose the right approved commercial surface with stronger intent/context
+  mapping before considering any direct execution from chat
+- keep the general CRM chat without direct write execution:
+  - no free writes
+  - no auto-execution
+  - no new scattered AI surfaces
+
+Deferred note from real user trial:
+
+- invoice import can already read a valid historical customer invoice even when
+  that client does not exist yet in the CRM
+- today the launcher correctly stops before creating a missing client
+- later there must be a dedicated slice for:
+  - billing-specific client fields missing from the current anagraphic model
+  - AI-assisted client creation from invoice import, still only after explicit
+    confirmation
 
 Do not open new scattered AI surfaces while doing this. The launcher, the
 separate Gemini setting, and the existing semantic/capability foundations are

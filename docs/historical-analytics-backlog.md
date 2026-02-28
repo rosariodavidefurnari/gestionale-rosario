@@ -210,22 +210,58 @@ The guided route-handoff step is now closed too:
     - `clients show`
   - smoke user cleaned after verification
 
+The first action-oriented commercial handoff step is now closed too:
+
+- unified launcher answers now include both generic route handoff and approved
+  commercial handoff
+- the approved commercial targets currently include:
+  - `quote_create_payment`
+  - `client_create_payment`
+  - `project_quick_payment`
+- `suggestedActions` remain deterministic:
+  - routes and query params come from the shared snapshot
+  - the model does not invent commercial URLs
+- runtime verification is now closed too on `qvdmzhyzpyaveniirsmo`:
+  - `unified_crm_answer` redeployed
+  - authenticated smoke question `Chi mi deve ancora pagare?` returned HTTP
+    `200`
+  - response included one grounded answer plus handoff actions for:
+    - `payments show`
+    - `quote_create_payment`
+    - `project_quick_payment`
+  - smoke user cleaned after verification
+
 The next open priority is:
 
-- evolve from generic route handoff to the first action-oriented commercial
-  handoff on already approved surfaces
-- keep the interaction in the same floating shell
-- still do not give the general CRM chat direct write execution
+- make the handoff more guided on top of approved commercial surfaces, still
+  inside the same floating shell
+- improve intent/context mapping so the launcher picks the most coherent
+  approved entry point before any future write-execution discussion
+- keep the general CRM chat without direct write execution
+
+Deferred note from real usage, not current priority:
+
+- importing an older customer invoice can legitimately find a real client that
+  is still absent from the CRM
+- the launcher does not yet support creating that missing client from the
+  invoice workflow
+- the current client model also lacks some billing-specific fields needed for a
+  solid invoice-born customer draft
+- this must be handled later as an explicit slice:
+  - define the missing billing anagraphic fields first
+  - then allow AI-assisted client creation only with explicit confirmation
 
 Why this comes next:
 
-- the launcher now has all three base layers it needed:
+- the launcher now has the base layers it needed:
   - a real invoice workflow
   - a real CRM-wide read snapshot
-- a real CRM-wide read-only answer flow
-- a first practical route handoff from grounded answer to existing CRM surfaces
+  - a real CRM-wide read-only answer flow
+  - a first practical route handoff from grounded answer to existing CRM
+    surfaces
+  - a first approved commercial handoff toward real payment-oriented surfaces
 - the next Pareto gain is therefore not another raw Q&A surface, but a more
-  useful commercial handoff toward already approved actions
+  guided commercial handoff on top of those approved actions
 - the semantic/capability backbone is already strong enough for this next step
 
 Not the next step by default:

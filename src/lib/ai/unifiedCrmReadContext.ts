@@ -106,6 +106,7 @@ export type UnifiedCrmReadContext = {
     }>;
     pendingPayments: Array<{
       paymentId: string;
+      quoteId: string | null;
       clientId: string | null;
       projectId: string | null;
       clientName: string | null;
@@ -245,6 +246,7 @@ export const buildUnifiedCrmReadContext = ({
       })),
       pendingPayments: pendingPayments.slice(0, 5).map((payment) => ({
         paymentId: String(payment.id),
+        quoteId: payment.quote_id ? String(payment.quote_id) : null,
         clientId: payment.client_id ? String(payment.client_id) : null,
         projectId: payment.project_id ? String(payment.project_id) : null,
         clientName: getClientName(clientById, payment.client_id),
