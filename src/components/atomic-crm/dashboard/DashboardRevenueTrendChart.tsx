@@ -31,44 +31,40 @@ export const DashboardRevenueTrendChart = ({
       {data.every((item) => item.revenue === 0) ? (
         <EmptyChartMessage message="Nessun dato di fatturato disponibile" />
       ) : (
-        <div className="h-[320px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={data}
-              margin={{ top: 10, right: 12, left: 4, bottom: 4 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
-                strokeOpacity={0.18}
-              />
-              <XAxis
-                dataKey="label"
-                tickLine={false}
-                axisLine={false}
-                fontSize={12}
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                width={64}
-                fontSize={12}
-                tickFormatter={(value) =>
-                  formatCompactCurrency(value as number)
-                }
-              />
-              <Tooltip content={<RevenueTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="revenue"
-                stroke="#0ea5e9"
-                strokeWidth={3}
-                dot={{ r: 3, fill: "#0ea5e9" }}
-                activeDot={{ r: 5 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        <ResponsiveContainer width="100%" height={320}>
+          <LineChart
+            data={data}
+            margin={{ top: 10, right: 12, left: 4, bottom: 4 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              strokeOpacity={0.18}
+            />
+            <XAxis
+              dataKey="label"
+              tickLine={false}
+              axisLine={false}
+              fontSize={12}
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              width={64}
+              fontSize={12}
+              tickFormatter={(value) => formatCompactCurrency(value as number)}
+            />
+            <Tooltip content={<RevenueTooltip />} />
+            <Line
+              type="monotone"
+              dataKey="revenue"
+              stroke="#0ea5e9"
+              strokeWidth={3}
+              dot={{ r: 3, fill: "#0ea5e9" }}
+              activeDot={{ r: 5 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
       )}
     </CardContent>
   </Card>

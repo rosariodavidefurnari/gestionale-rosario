@@ -46,49 +46,47 @@ export const DashboardPipelineCard = ({
             Nessun preventivo disponibile
           </div>
         ) : (
-          <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={chartData}
-                layout="vertical"
-                margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
-                barCategoryGap={8}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal={false}
-                  strokeOpacity={0.12}
-                />
-                <XAxis
-                  type="number"
-                  tickLine={false}
-                  axisLine={false}
-                  fontSize={12}
-                  allowDecimals={false}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="label"
-                  width={132}
-                  tickLine={false}
-                  axisLine={false}
-                  fontSize={11}
-                />
-                <Tooltip
-                  content={<PipelineTooltip />}
-                  cursor={{ fill: "rgba(148,163,184,0.12)" }}
-                />
-                <Bar dataKey="count" radius={[0, 6, 6, 0]}>
-                  {chartData.map((item) => (
-                    <Cell
-                      key={item.status}
-                      fill={getPipelineColor(item.status)}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart
+              data={chartData}
+              layout="vertical"
+              margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
+              barCategoryGap={8}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                horizontal={false}
+                strokeOpacity={0.12}
+              />
+              <XAxis
+                type="number"
+                tickLine={false}
+                axisLine={false}
+                fontSize={12}
+                allowDecimals={false}
+              />
+              <YAxis
+                type="category"
+                dataKey="label"
+                width={132}
+                tickLine={false}
+                axisLine={false}
+                fontSize={11}
+              />
+              <Tooltip
+                content={<PipelineTooltip />}
+                cursor={{ fill: "rgba(148,163,184,0.12)" }}
+              />
+              <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+                {chartData.map((item) => (
+                  <Cell
+                    key={item.status}
+                    fill={getPipelineColor(item.status)}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         )}
       </CardContent>
     </Card>

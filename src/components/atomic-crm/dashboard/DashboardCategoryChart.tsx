@@ -34,51 +34,47 @@ export const DashboardCategoryChart = ({
           Nessun dato per categoria
         </div>
       ) : (
-        <div className="h-[320px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={data}
-              layout="vertical"
-              margin={{ top: 8, right: 20, left: 12, bottom: 8 }}
-              barCategoryGap={12}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                horizontal={false}
-                strokeOpacity={0.12}
-              />
-              <XAxis
-                type="number"
-                tickLine={false}
-                axisLine={false}
-                fontSize={12}
-                tickFormatter={(value) =>
-                  formatCompactCurrency(value as number)
-                }
-              />
-              <YAxis
-                type="category"
-                dataKey="label"
-                width={120}
-                tickLine={false}
-                axisLine={false}
-                fontSize={12}
-              />
-              <Tooltip
-                content={<CategoryTooltip />}
-                cursor={{ fill: "rgba(148,163,184,0.12)" }}
-              />
-              <Bar dataKey="revenue" radius={[0, 6, 6, 0]}>
-                {data.map((item, index) => (
-                  <Cell
-                    key={item.category}
-                    fill={colors[index % colors.length]}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <ResponsiveContainer width="100%" height={320}>
+          <BarChart
+            data={data}
+            layout="vertical"
+            margin={{ top: 8, right: 20, left: 12, bottom: 8 }}
+            barCategoryGap={12}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              horizontal={false}
+              strokeOpacity={0.12}
+            />
+            <XAxis
+              type="number"
+              tickLine={false}
+              axisLine={false}
+              fontSize={12}
+              tickFormatter={(value) => formatCompactCurrency(value as number)}
+            />
+            <YAxis
+              type="category"
+              dataKey="label"
+              width={120}
+              tickLine={false}
+              axisLine={false}
+              fontSize={12}
+            />
+            <Tooltip
+              content={<CategoryTooltip />}
+              cursor={{ fill: "rgba(148,163,184,0.12)" }}
+            />
+            <Bar dataKey="revenue" radius={[0, 6, 6, 0]}>
+              {data.map((item, index) => (
+                <Cell
+                  key={item.category}
+                  fill={colors[index % colors.length]}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       )}
     </CardContent>
   </Card>
