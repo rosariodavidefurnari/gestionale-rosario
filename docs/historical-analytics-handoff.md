@@ -144,13 +144,28 @@ The next Pareto step is now closed too:
     `payments` / `expenses`
   - smoke user and smoke CRM data were cleaned after verification
 
+The next Pareto step is now closed too:
+
+- the launcher now loads one read-only CRM snapshot in the same shell
+- the snapshot reuses:
+  - `crmSemanticRegistry`
+  - `crmCapabilityRegistry`
+  - one stable provider entry point:
+    - `dataProvider.getUnifiedCrmReadContext()`
+- the launcher now shows coherent counts and recent records for:
+  - `clients`
+  - `quotes`
+  - `projects`
+  - `payments`
+  - `expenses`
+- no new standalone AI page or route was added while doing this
+
 The next high-value step is now:
 
-- make the unified launcher read the core CRM consciously, not only invoices,
-- starting from one shared read context over the existing registries and core
-  resources (`clients`, `quotes`, `projects`, `payments`, `expenses`),
-- so the next AI evolution strengthens the single launcher instead of opening
-  new scattered page-level AI surfaces.
+- use that shared CRM-wide read context for the first real read-only AI answer
+  inside the unified launcher,
+- keeping it inside the same global shell,
+- and still avoiding new scattered page-level AI surfaces.
 
 Do not open new scattered AI surfaces while doing this. The launcher, the
 separate Gemini setting, and the existing semantic/capability foundations are

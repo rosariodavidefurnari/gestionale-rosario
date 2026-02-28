@@ -176,7 +176,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "unified_ai_launcher_sheet",
       label: "Chat AI unificata",
       description:
-        "Launcher globale flottante che apre la shell unica della chat AI sopra il CRM senza cambiare route.",
+        "Launcher globale flottante che apre la shell unica della chat AI sopra il CRM senza cambiare route e ora include anche una snapshot coerente del CRM core.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
       entryPoints: ["global_floating_button"],
     },
@@ -261,6 +261,15 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
         "Apre la shell AI globale dal bottone flottante disponibile ovunque nel CRM.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
       actsOn: [],
+      requiredFields: [],
+    },
+    {
+      id: "read_unified_crm_context",
+      label: "Leggi snapshot CRM unificata",
+      description:
+        "Carica nel launcher unificato un contesto read-only dei moduli core del CRM, riusando registri semantici e capability senza cambiare pagina.",
+      sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
+      actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
       requiredFields: [],
     },
     {

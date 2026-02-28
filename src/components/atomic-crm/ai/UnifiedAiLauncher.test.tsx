@@ -6,6 +6,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const useIsMobile = vi.fn();
+const getUnifiedCrmReadContext = vi.fn();
 const getInvoiceImportWorkspace = vi.fn();
 const uploadInvoiceImportFiles = vi.fn();
 const generateInvoiceImportDraft = vi.fn();
@@ -21,6 +22,7 @@ vi.mock("ra-core", async () => {
   return {
     ...actual,
     useDataProvider: () => ({
+      getUnifiedCrmReadContext,
       getInvoiceImportWorkspace,
       uploadInvoiceImportFiles,
       generateInvoiceImportDraft,
@@ -60,11 +62,172 @@ describe("UnifiedAiLauncher", () => {
   beforeEach(() => {
     useIsMobile.mockReset();
     useIsMobile.mockReturnValue(false);
+    getUnifiedCrmReadContext.mockReset();
     getInvoiceImportWorkspace.mockReset();
     uploadInvoiceImportFiles.mockReset();
     generateInvoiceImportDraft.mockReset();
     confirmInvoiceImportDraft.mockReset();
     notify.mockReset();
+
+    getUnifiedCrmReadContext.mockResolvedValue({
+      meta: {
+        generatedAt: "2026-02-28T22:00:00.000Z",
+        generatedAtLabel: "28/02/26, 23:00",
+        businessTimezone: "Europe/Rome",
+        routePrefix: "/#/",
+        scope: "crm_read_snapshot",
+      },
+      registries: {
+        semantic: {
+          dictionaries: {
+            clientTypes: [],
+            acquisitionSources: [],
+            projectCategories: [],
+            projectStatuses: [],
+            projectTvShows: [],
+            quoteStatuses: [],
+            quoteServiceTypes: [],
+            serviceTypes: [],
+            paymentTypes: [],
+            paymentMethods: [],
+            paymentStatuses: [],
+          },
+          fields: {
+            descriptions: [],
+            dates: [],
+          },
+          rules: {
+            serviceNetValue: {
+              formula: "",
+              taxableFlagField: "is_taxable",
+              meaning: "",
+            },
+            travelReimbursement: {
+              formula: "",
+              defaultKmRate: 0.19,
+              meaning: "",
+            },
+            dateRanges: {
+              allDayField: "all_day",
+              meaning: "",
+            },
+            quoteStatusEmail: {
+              outstandingDueFormula: "",
+              automaticBlockerField: "services.is_taxable",
+              meaning: "",
+            },
+            invoiceImport: {
+              customerInvoiceResource: "payments",
+              supplierInvoiceResource: "expenses",
+              confirmationRule: "",
+              meaning: "",
+            },
+            unifiedAiReadContext: {
+              scope: "clients + quotes + projects + payments + expenses",
+              freshnessField: "generatedAt",
+              meaning: "",
+            },
+          },
+        },
+        capability: {
+          routing: {
+            mode: "hash",
+            routePrefix: "/#/",
+            meaning: "",
+          },
+          resources: [],
+          pages: [],
+          dialogs: [],
+          actions: [],
+          communications: {
+            quoteStatusEmails: {
+              provider: "gmail_smtp",
+              description: "",
+              sharedBlocks: [],
+              safetyRules: [],
+              requiredEnvKeys: [],
+              templates: [],
+            },
+            internalPriorityNotifications: {
+              provider: "callmebot",
+              description: "",
+              useCases: [],
+              requiredEnvKeys: [],
+              rules: [],
+            },
+          },
+          integrationChecklist: [],
+        },
+      },
+      snapshot: {
+        counts: {
+          clients: 1,
+          quotes: 1,
+          openQuotes: 1,
+          activeProjects: 1,
+          pendingPayments: 1,
+          expenses: 1,
+        },
+        totals: {
+          openQuotesAmount: 1200,
+          pendingPaymentsAmount: 800,
+          expensesAmount: 300,
+        },
+        recentClients: [
+          {
+            clientId: "client-1",
+            clientName: "Mario Rossi",
+            email: "mario@example.com",
+            createdAt: "2026-02-20T10:00:00.000Z",
+          },
+        ],
+        openQuotes: [
+          {
+            quoteId: "quote-1",
+            clientName: "Mario Rossi",
+            projectName: "Wedding Mario",
+            amount: 1200,
+            status: "in_trattativa",
+            statusLabel: "In trattativa",
+            createdAt: "2026-02-20T10:00:00.000Z",
+          },
+        ],
+        activeProjects: [
+          {
+            projectId: "project-1",
+            projectName: "Wedding Mario",
+            clientName: "Mario Rossi",
+            status: "in_corso",
+            statusLabel: "In corso",
+            startDate: "2026-02-20T10:00:00.000Z",
+          },
+        ],
+        pendingPayments: [
+          {
+            paymentId: "payment-1",
+            clientName: "Mario Rossi",
+            projectName: "Wedding Mario",
+            amount: 800,
+            status: "in_attesa",
+            statusLabel: "In attesa",
+            paymentDate: "2026-03-10T00:00:00.000Z",
+          },
+        ],
+        recentExpenses: [
+          {
+            expenseId: "expense-1",
+            clientName: null,
+            projectName: null,
+            amount: 300,
+            expenseType: "noleggio",
+            expenseTypeLabel: "Noleggio",
+            expenseDate: "2026-02-18T00:00:00.000Z",
+            description: "Noleggio luci",
+          },
+        ],
+      },
+      caveats: [],
+    });
 
     getInvoiceImportWorkspace.mockResolvedValue({
       clients: [
@@ -94,12 +257,14 @@ describe("UnifiedAiLauncher", () => {
     fireEvent.click(launcherButton);
 
     expect(await screen.findByText("Chat AI fatture")).toBeInTheDocument();
+    expect(await screen.findByText("Snapshot CRM")).toBeInTheDocument();
     expect(
       screen.getByText(/Carica PDF, scansioni o foto/i),
     ).toBeInTheDocument();
     await waitFor(() =>
       expect(getInvoiceImportWorkspace).toHaveBeenCalledTimes(1),
     );
+    expect(getUnifiedCrmReadContext).toHaveBeenCalledTimes(1);
   });
 
   it("uploads files, generates a draft, and confirms the import", async () => {

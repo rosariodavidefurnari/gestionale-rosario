@@ -824,6 +824,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/ai/UnifiedCrmReadSnapshot.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
           "type": "registry:component"
         },

@@ -40,9 +40,52 @@ utente verso `payments` / `expenses`. Anche questa parte è ora verificata sul
 runtime remoto con `invoice_import_extract` deployata, smoke autenticato su
 file misti e cleanup finale. Il prossimo lavoro ad alto valore non è un’altra
 AI sparsa, ma rendere la stessa shell capace di leggere in modo coerente il
-CRM core attraverso il backbone semantico già approvato.
+CRM core attraverso il backbone semantico già approvato. Anche questo step è
+ora chiuso: il launcher carica una snapshot read-only di `clients`, `quotes`,
+`projects`, `payments` ed `expenses` riusando semantic registry, capability
+registry e un unico provider entry point. Il prossimo passo Pareto resta
+dentro la stessa superficie: usare quel contesto CRM-wide per il primo vero
+answer flow AI di lettura generale nel launcher unificato.
 
 ## Last Session
+
+### Sessione 57 (2026-02-28, read context CRM-wide nel launcher unificato)
+
+- Completed:
+  - **Il launcher ora legge anche il CRM core, non solo le fatture**:
+    - nuovo context builder:
+      - `buildUnifiedCrmReadContext()`
+    - nuovo provider entry point:
+      - `getUnifiedCrmReadContext()`
+    - snapshot read-only nello stesso launcher per:
+      - `clients`
+      - `quotes`
+      - `projects`
+      - `payments`
+      - `expenses`
+  - **Semantica e capability riallineate nello stesso passaggio**:
+    - semantic registry aggiornato con:
+      - regola `unifiedAiReadContext`
+    - capability registry aggiornato con:
+      - azione `read_unified_crm_context`
+      - dialog launcher descritto anche come snapshot CRM core
+  - **Launcher unificato esteso senza riaprire l’architettura**:
+    - nessuna nuova route AI
+    - nessuna nuova card AI di pagina
+    - stesso bottone flottante, stessa shell, piu contesto condiviso
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx src/lib/ai/unifiedCrmReadContext.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`
+  - `npm run registry:gen`
+
+- Decisions:
+  - il contesto CRM-wide va esposto da un solo provider entry point riusabile
+    da UI e AI futura
+  - il launcher deve diventare piu consapevole del CRM restando una superficie
+    unica, non moltiplicando piccoli strumenti separati
+  - il prossimo passo Pareto e' il primo answer flow AI read-only sopra questo
+    contesto condiviso
 
 ### Sessione 56 (2026-02-28, vertical slice fatture mista chiusa e verificata)
 

@@ -61,6 +61,10 @@ describe("crmSemanticRegistry", () => {
     expect(registry.rules.invoiceImport.confirmationRule).toContain(
       "conferma esplicita",
     );
+    expect(registry.rules.unifiedAiReadContext.freshnessField).toBe(
+      "generatedAt",
+    );
+    expect(registry.rules.unifiedAiReadContext.scope).toContain("quotes");
   });
 
   it("uses km and taxable helpers consistently", () => {

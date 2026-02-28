@@ -7,6 +7,7 @@ import fakeRestDataProvider from "ra-data-fakerest";
 
 import type {
   Client,
+  Expense,
   Payment,
   Project,
   Quote,
@@ -31,6 +32,10 @@ import {
   buildInvoiceImportWorkspace,
   confirmInvoiceImportDraftWithCreate,
 } from "@/lib/ai/invoiceImportProvider";
+import {
+  buildUnifiedCrmReadContext,
+  type UnifiedCrmReadContext,
+} from "@/lib/ai/unifiedCrmReadContext";
 import type { AnalyticsContext } from "@/lib/analytics/buildAnalyticsContext";
 import type { AnnualOperationsContext } from "@/lib/analytics/buildAnnualOperationsContext";
 import type { HistoricalCashInflowContext } from "@/lib/analytics/buildHistoricalCashInflowContext";
@@ -46,6 +51,7 @@ import {
   buildCrmSemanticRegistry,
   type CrmSemanticRegistry,
 } from "@/lib/semantics/crmSemanticRegistry";
+import { buildCrmCapabilityRegistry } from "@/lib/semantics/crmCapabilityRegistry";
 import {
   buildQuoteStatusEmailContext,
   type QuoteStatusEmailContext,
@@ -161,6 +167,47 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
   getCrmSemanticRegistry: async (): Promise<CrmSemanticRegistry> => {
     const config = await dataProvider.getConfiguration();
     return buildCrmSemanticRegistry(config);
+  },
+  getUnifiedCrmReadContext: async (): Promise<UnifiedCrmReadContext> => {
+    const [config, clientsResponse, quotesResponse, projectsResponse, paymentsResponse, expensesResponse] =
+      await Promise.all([
+        dataProvider.getConfiguration(),
+        baseDataProvider.getList<Client>("clients", {
+          filter: {},
+          pagination: { page: 1, perPage: 1000 },
+          sort: { field: "created_at", order: "DESC" },
+        }),
+        baseDataProvider.getList<Quote>("quotes", {
+          filter: {},
+          pagination: { page: 1, perPage: 1000 },
+          sort: { field: "created_at", order: "DESC" },
+        }),
+        baseDataProvider.getList<Project>("projects", {
+          filter: {},
+          pagination: { page: 1, perPage: 1000 },
+          sort: { field: "created_at", order: "DESC" },
+        }),
+        baseDataProvider.getList<Payment>("payments", {
+          filter: {},
+          pagination: { page: 1, perPage: 1000 },
+          sort: { field: "payment_date", order: "DESC" },
+        }),
+        baseDataProvider.getList<Expense>("expenses", {
+          filter: {},
+          pagination: { page: 1, perPage: 1000 },
+          sort: { field: "expense_date", order: "DESC" },
+        }),
+      ]);
+
+    return buildUnifiedCrmReadContext({
+      clients: clientsResponse.data,
+      quotes: quotesResponse.data,
+      projects: projectsResponse.data,
+      payments: paymentsResponse.data,
+      expenses: expensesResponse.data,
+      semanticRegistry: buildCrmSemanticRegistry(config),
+      capabilityRegistry: buildCrmCapabilityRegistry(),
+    });
   },
   getInvoiceImportWorkspace: async (): Promise<InvoiceImportWorkspace> => {
     const [clientsResponse, projectsResponse] = await Promise.all([

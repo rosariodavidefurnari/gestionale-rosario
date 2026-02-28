@@ -156,21 +156,36 @@ The invoice vertical-slice step is now closed too:
     `expenses`
   - smoke data cleaned after verification
 
+The read-context step is now closed too:
+
+- one stable provider entry point now exists:
+  - `getUnifiedCrmReadContext()`
+- the launcher now renders a read-only CRM snapshot in the same shell
+- the snapshot reuses semantic + capability registries instead of rebuilding
+  meanings inside the component
+- the snapshot now covers:
+  - `clients`
+  - `quotes`
+  - `projects`
+  - `payments`
+  - `expenses`
+- no new AI page or page-level AI widget was added to deliver this step
+
 The next open priority is:
 
-- start the first CRM-wide read context for the unified launcher, reusing the
-  semantic registry, capability registry, and stable provider entry points
-  across core resources
-- the target is one launcher that can read `clients`, `quotes`, `projects`,
-  `payments`, and `expenses` coherently before adding new write capabilities
+- use this shared CRM-wide read context for the first read-only AI answer flow
+  inside the unified launcher
+- keep the interaction in the global floating shell and do not reopen the
+  route/page-level AI architecture debate
 
 Why this comes next:
 
-- the invoice workflow is now real and runtime-verified
-- the next Pareto gain toward the final product goal is broader CRM awareness
-  inside the same launcher, not a second isolated AI trick
-- the semantic/capability backbone is already strong enough to start this read
-  context without reopening approved architecture decisions
+- the launcher now has both:
+  - a real invoice workflow
+  - a real CRM-wide read snapshot
+- the next Pareto gain is therefore to let the AI answer on top of that shared
+  read context, not to build another separate interface
+- the semantic/capability backbone is already strong enough for this next step
 
 Not the next step by default:
 

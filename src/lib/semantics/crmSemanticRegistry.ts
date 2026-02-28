@@ -78,6 +78,11 @@ export type CrmSemanticRegistry = {
       confirmationRule: string;
       meaning: string;
     };
+    unifiedAiReadContext: {
+      scope: string;
+      freshnessField: "generatedAt";
+      meaning: string;
+    };
   };
 };
 
@@ -257,6 +262,12 @@ export const buildCrmSemanticRegistry = (
           "nessuna scrittura nel CRM prima della conferma esplicita utente",
         meaning:
           "L'import fatture nella chat AI unificata deve proporre record strutturati e poi mappare le fatture cliente su payments e le fatture/costi fornitore su expenses solo dopo conferma utente.",
+      },
+      unifiedAiReadContext: {
+        scope: "clients + quotes + projects + payments + expenses",
+        freshnessField: "generatedAt",
+        meaning:
+          "Il primo contesto CRM-wide del launcher unificato e' una snapshot read-only dei moduli core; va letta insieme ai registri semantico e capability e non autorizza scritture implicite.",
       },
     },
   };

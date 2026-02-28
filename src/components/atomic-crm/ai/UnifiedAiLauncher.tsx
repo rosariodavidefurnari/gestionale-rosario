@@ -34,6 +34,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { InvoiceImportDraftEditor } from "./InvoiceImportDraftEditor";
+import { UnifiedCrmReadSnapshot } from "./UnifiedCrmReadSnapshot";
 import type { CrmDataProvider } from "../providers/types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 
@@ -70,6 +71,18 @@ export const UnifiedAiLauncher = () => {
   } = useQuery({
     queryKey: ["invoice-import-workspace"],
     queryFn: () => dataProvider.getInvoiceImportWorkspace(),
+    enabled: open,
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });
+
+  const {
+    data: readContext,
+    error: readContextError,
+    isPending: isReadContextPending,
+  } = useQuery({
+    queryKey: ["unified-crm-read-context"],
+    queryFn: () => dataProvider.getUnifiedCrmReadContext(),
     enabled: open,
     staleTime: 1000 * 60 * 5,
     retry: false,
@@ -273,6 +286,20 @@ export const UnifiedAiLauncher = () => {
               </div>
             </div>
           </div>
+
+          {readContextError ? (
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              Impossibile leggere la snapshot CRM del launcher unificato.
+            </div>
+          ) : null}
+
+          {isReadContextPending && open ? (
+            <div className="rounded-2xl border border-dashed px-4 py-4 text-sm text-muted-foreground">
+              Sto leggendo il contesto CRM unificato...
+            </div>
+          ) : null}
+
+          {readContext ? <UnifiedCrmReadSnapshot context={readContext} /> : null}
 
           <div className="rounded-2xl border bg-background p-4 shadow-sm">
             <div className="space-y-4">

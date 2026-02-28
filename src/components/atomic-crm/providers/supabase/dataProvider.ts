@@ -64,9 +64,14 @@ import {
   confirmInvoiceImportDraftWithCreate,
 } from "@/lib/ai/invoiceImportProvider";
 import {
+  buildUnifiedCrmReadContext,
+  type UnifiedCrmReadContext,
+} from "@/lib/ai/unifiedCrmReadContext";
+import {
   buildCrmSemanticRegistry,
   type CrmSemanticRegistry,
 } from "@/lib/semantics/crmSemanticRegistry";
+import { buildCrmCapabilityRegistry } from "@/lib/semantics/crmCapabilityRegistry";
 import {
   buildQuoteStatusEmailContext,
   type QuoteStatusEmailContext,
@@ -215,6 +220,58 @@ const getInvoiceImportWorkspaceFromResources =
         name: project.name,
         client_id: project.client_id,
       })),
+    });
+  };
+
+const getUnifiedCrmReadContextFromResources =
+  async (): Promise<UnifiedCrmReadContext> => {
+    const [
+      configuration,
+      clientsResponse,
+      quotesResponse,
+      projectsResponse,
+      paymentsResponse,
+      expensesResponse,
+    ] = await Promise.all([
+      baseDataProvider.getOne("configuration", { id: 1 }),
+      baseDataProvider.getList<Client>("clients", {
+        pagination: LARGE_PAGE,
+        sort: { field: "created_at", order: "DESC" },
+        filter: {},
+      }),
+      baseDataProvider.getList<Quote>("quotes", {
+        pagination: LARGE_PAGE,
+        sort: { field: "created_at", order: "DESC" },
+        filter: {},
+      }),
+      baseDataProvider.getList<Project>("projects", {
+        pagination: LARGE_PAGE,
+        sort: { field: "created_at", order: "DESC" },
+        filter: {},
+      }),
+      baseDataProvider.getList<Payment>("payments", {
+        pagination: LARGE_PAGE,
+        sort: { field: "payment_date", order: "DESC" },
+        filter: {},
+      }),
+      baseDataProvider.getList<Expense>("expenses", {
+        pagination: LARGE_PAGE,
+        sort: { field: "expense_date", order: "DESC" },
+        filter: {},
+      }),
+    ]);
+
+    const config =
+      (configuration.data?.config as ConfigurationContextValue | undefined) ?? {};
+
+    return buildUnifiedCrmReadContext({
+      clients: clientsResponse.data,
+      quotes: quotesResponse.data,
+      projects: projectsResponse.data,
+      payments: paymentsResponse.data,
+      expenses: expensesResponse.data,
+      semanticRegistry: buildCrmSemanticRegistry(config),
+      capabilityRegistry: buildCrmCapabilityRegistry(),
     });
   };
 
@@ -441,6 +498,9 @@ const dataProviderWithCustomMethods = {
   async getCrmSemanticRegistry(): Promise<CrmSemanticRegistry> {
     const config = await this.getConfiguration();
     return buildCrmSemanticRegistry(config);
+  },
+  async getUnifiedCrmReadContext(): Promise<UnifiedCrmReadContext> {
+    return getUnifiedCrmReadContextFromResources();
   },
   async getInvoiceImportWorkspace(): Promise<InvoiceImportWorkspace> {
     return getInvoiceImportWorkspaceFromResources();

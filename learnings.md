@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Se il launcher unificato deve iniziare a leggere tutto il CRM,
+  il passo corretto non e' una domanda AI in piu ma un provider entry point
+  read-only condiviso** — Prima di far rispondere l’AI su clienti, preventivi,
+  progetti, pagamenti e spese, conviene costruire una sola snapshot coerente
+  (`getUnifiedCrmReadContext`) che includa anche semantic registry e
+  capability registry. Cosi' UI attuale e answer flow futuro leggono lo stesso
+  perimetro e non ricostruiscono contesti diversi dentro i componenti.
+
 - [2026-02-28] **Se la chat AI propone record con cliente e progetto
   correggibili, la coerenza tra i due va protetta nel draft prima della
   conferma** — Nel launcher fatture non basta filtrare i progetti nel select:
