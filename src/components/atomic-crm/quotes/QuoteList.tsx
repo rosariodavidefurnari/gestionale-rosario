@@ -11,7 +11,7 @@ import { SearchInput } from "@/components/admin/search-input";
 import { DateInput } from "@/components/admin/date-input";
 import { SelectInput } from "@/components/admin/select-input";
 
-import type { Client, Quote } from "../types";
+import type { Client, Project, Quote } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { TopToolbar } from "../layout/TopToolbar";
 import { QuoteCreate } from "./QuoteCreate";
@@ -54,9 +54,17 @@ const QuoteList = () => {
       "client_id",
       "clients",
     );
+    const projects = await fetchRelatedRecords<Project>(
+      records.filter((quote) => !!quote.project_id),
+      "project_id",
+      "projects",
+    );
     const rows = records.map((q) => ({
       descrizione: q.description ?? "",
       cliente: clients[q.client_id]?.name ?? "",
+      progetto_collegato: q.project_id
+        ? (projects[q.project_id]?.name ?? "")
+        : "",
       tipo_servizio: typeLabels[q.service_type] ?? q.service_type,
       data_inizio_evento: q.event_start ?? "",
       data_fine_evento: q.event_end ?? "",

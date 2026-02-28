@@ -2,6 +2,7 @@ import { format, isValid } from "date-fns";
 import { FileDown } from "lucide-react";
 import { ShowBase, useGetOne, useRecordContext, useRedirect } from "ra-core";
 import { useState } from "react";
+import { Link } from "react-router";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { EditButton } from "@/components/admin/edit-button";
 import { Badge } from "@/components/ui/badge";
@@ -16,9 +17,11 @@ import { Separator } from "@/components/ui/separator";
 
 import type { Quote } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { CreateProjectFromQuoteDialog } from "./CreateProjectFromQuoteDialog";
 import { quoteStatusLabels } from "./quotesTypes";
 import { downloadQuotePDF } from "./QuotePDF";
 import { formatDateRange } from "../misc/formatDateRange";
+import { canCreateProjectFromQuote } from "./quoteProjectLinking";
 
 export const QuoteShow = ({ open, id }: { open: boolean; id?: string }) => {
   const redirect = useRedirect();
@@ -55,6 +58,15 @@ const QuoteShowContent = () => {
     },
     {
       enabled: !!record?.client_id,
+    },
+  );
+  const { data: project } = useGetOne(
+    "projects",
+    {
+      id: record?.project_id,
+    },
+    {
+      enabled: !!record?.project_id,
     },
   );
 
@@ -95,6 +107,13 @@ const QuoteShowContent = () => {
             <FileDown className="h-4 w-4 mr-1" />
             {pdfLoading ? "Generazione..." : "PDF"}
           </Button>
+          {project ? (
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/projects/${project.id}/show`}>Apri progetto</Link>
+            </Button>
+          ) : canCreateProjectFromQuote(record) ? (
+            <CreateProjectFromQuoteDialog client={client} quote={record} />
+          ) : null}
           <EditButton />
           <DeleteButton />
         </div>
@@ -102,6 +121,20 @@ const QuoteShowContent = () => {
 
       <div className="flex flex-wrap gap-8 mx-4">
         <InfoField label="Cliente" value={client?.name} />
+        <InfoField label="Progetto collegato">
+          {project ? (
+            <Link
+              to={`/projects/${project.id}/show`}
+              className="text-sm text-primary hover:underline"
+            >
+              {project.name}
+            </Link>
+          ) : (
+            <span className="text-sm text-muted-foreground">
+              Nessun progetto collegato
+            </span>
+          )}
+        </InfoField>
         <InfoField label="Tipo servizio" value={serviceLabel} />
         <InfoField label="Stato">
           <Badge variant="secondary">{statusLabel}</Badge>

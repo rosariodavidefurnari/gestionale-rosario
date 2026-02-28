@@ -6,7 +6,9 @@
 implementata sul solo contesto `annual_operations`, con hardening minimo
 anti-bufala sulle domande libere. Prossimo passo: chiudere il click-test
 browser di Annuale e poi spostare il focus dal prompt tuning al rollout
-`AI-driving` fondato su semantic layer e tool contract.
+`AI-driving` fondato su semantic layer e tool contract. In parallelo è partito
+il primo slice della spina dorsale commerciale `Preventivo -> Progetto ->
+Pagamento`, necessario prima di estendere l'AI al CRM intero.
 
 ## Last Session
 
@@ -199,6 +201,66 @@ browser di Annuale e poi spostare il focus dal prompt tuning al rollout
   - click-test browser finale della card AI di `Annuale`
   - poi definire il piano architetturale `AI-driving` e il prossimo modulo
     semantico/tool-safe, con `Pagamenti` come candidato naturale
+
+### Sessione 33 (2026-02-28, commercial backbone slice 1)
+
+- Completed:
+  - **Quote -> Project link introdotto**:
+    - nuova migration `20260228170000_add_quotes_project_link.sql`
+    - `Quote` ora supporta `project_id`
+    - il form preventivo può collegarsi a un progetto esistente
+  - **Create Project from Quote**:
+    - nuova dialog `CreateProjectFromQuoteDialog`
+    - accessibile dalla scheda preventivo quando il preventivo è in stato
+      operativo e non ha ancora un progetto collegato
+    - default sicuri ma sempre editabili:
+      - nome suggerito
+      - categoria precompilata solo se il mapping è univoco
+      - date/budget dal preventivo
+    - alla creazione il progetto viene anche collegato al preventivo
+  - **Payment flow più coerente**:
+    - `PaymentInputs` ora supporta `quote_id`
+    - selezionando un preventivo:
+      - il cliente viene allineato
+      - il progetto collegato viene precompilato se presente
+    - se il cliente cambia e i link diventano incoerenti:
+      - `quote_id` / `project_id` vengono puliti
+  - **UI cross-link migliorata**:
+    - `QuoteShow` mostra il progetto collegato o il CTA per crearlo
+    - `PaymentShow` e `PaymentListContent` mostrano anche il preventivo
+    - export CSV preventivi include `progetto_collegato`
+  - **Test helper aggiunti**:
+    - `quoteProjectLinking.test.ts`
+    - `paymentLinking.test.ts`
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/quotes/quoteProjectLinking.test.ts src/components/atomic-crm/payments/paymentLinking.test.ts` OK
+  - totale: `6` test verdi
+  - `npx supabase db push` OK
+    - migration applicata al remoto:
+      - `20260228170000_add_quotes_project_link.sql`
+
+- Decisions:
+  - non partire ancora con `quote_items` / PDF live / automazioni pesanti
+  - prima chiudere bene il grafo minimo:
+    - preventivo collegato a progetto
+    - pagamento collegato a preventivo/progetto
+  - riduzione click sì, ma senza automazioni irreversibili
+
+- Notes:
+  - questo è il primo slice della spina dorsale commerciale, non il rollout AI
+    del modulo preventivi
+  - la priorità architetturale resta: CRM affidabile prima dell'AI estesa
+
+- Next action:
+  - click-test browser dei nuovi flussi:
+    - collega preventivo a progetto esistente
+    - crea progetto dal preventivo
+    - registra pagamento con preventivo collegato
+  - poi decidere il secondo slice:
+    - smart-link / quick payment dal preventivo
+    - oppure quote items come base del builder
 
 ### Sessione 29 (2026-02-28, historical Q&A single-turn)
 

@@ -31,6 +31,7 @@ export const PaymentListContent = () => {
           <TableHead>Data</TableHead>
           <TableHead>Cliente</TableHead>
           <TableHead className="hidden lg:table-cell">Progetto</TableHead>
+          <TableHead className="hidden xl:table-cell">Preventivo</TableHead>
           <TableHead>Tipo</TableHead>
           <TableHead className="text-right">Importo</TableHead>
           <TableHead className="hidden md:table-cell">Rif. Fattura</TableHead>
@@ -65,6 +66,15 @@ const PaymentRow = ({ payment, link }: { payment: Payment; link: string }) => {
       enabled: !!payment.project_id,
     },
   );
+  const { data: quote } = useGetOne(
+    "quotes",
+    {
+      id: payment.quote_id ?? undefined,
+    },
+    {
+      enabled: !!payment.quote_id,
+    },
+  );
 
   return (
     <TableRow className="cursor-pointer hover:bg-muted/50">
@@ -80,6 +90,9 @@ const PaymentRow = ({ payment, link }: { payment: Payment; link: string }) => {
       </TableCell>
       <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
         {project?.name ?? ""}
+      </TableCell>
+      <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+        {quote?.description ?? ""}
       </TableCell>
       <TableCell className="text-sm">
         {paymentTypeLabels[payment.payment_type] ?? payment.payment_type}

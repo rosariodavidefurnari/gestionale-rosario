@@ -29,6 +29,21 @@ Minimal reading order for a new session:
 4. `progress.md`
 5. `learnings.md`
 
+## Parallel Track Started: Commercial Backbone
+
+Besides analytics/AI work, a new foundational track has now started to prepare
+the CRM for future `AI-driving` behavior:
+
+- goal:
+  - make the commercial chain explicit and reliable before extending AI across
+    the whole CRM
+- current chain:
+  - `Quote -> Project -> Payment`
+- principle:
+  - reduce clicks and keep the UX guided,
+  - but do not introduce forced automations when multiple interpretations are
+    possible.
+
 ## What Was Completed
 
 ### Product and semantic rules locked in code/docs
@@ -237,6 +252,35 @@ Decision:
   - semantic layer,
   - tool contract,
   - module-by-module drill-down.
+
+### Commercial backbone slice 1 now implemented
+
+What was added:
+
+- new migration:
+  - `supabase/migrations/20260228170000_add_quotes_project_link.sql`
+- `Quote` now supports `project_id`
+- quote form now supports linking to an existing project
+- quote show now:
+  - displays the linked project,
+  - or offers `CreateProjectFromQuoteDialog` when the quote is operational and
+    still has no project
+- payment form now supports:
+  - `quote_id`
+  - quote-driven autofill of `client_id`
+  - quote-driven autofill of `project_id` when available
+  - cleanup of incoherent links if the user changes the client afterward
+- payment list/show now display the linked quote too
+
+Important scope decision:
+
+- this is **not** the full quote-builder plan,
+- there are still no:
+  - `quote_items`,
+  - live PDF split editor,
+  - automatic status transitions,
+- this was the smallest safe slice to strengthen module integration before
+  broader AI expansion.
 
 ### Tests added
 

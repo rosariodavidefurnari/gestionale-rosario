@@ -43,6 +43,9 @@ Cross-surface note:
   `annual_operations` context.
 - `Annuale` is still **not** AI-enabled as a whole page: alert snapshot and
   fiscal simulation remain deliberately outside that context.
+- a parallel non-AI track has now started too:
+  - commercial backbone hardening for `Quote -> Project -> Payment`
+  - because global AI on weak cross-module links would stay fragile
 
 ## How To Use This Backlog In A New Chat
 
@@ -253,7 +256,41 @@ Ask the new session to:
     - tool contract
     - drill-down data contracts
 
+### Commercial backbone slice 1 added
+
+- Added migration:
+  - `20260228170000_add_quotes_project_link.sql`
+- Added quote/project linking in the UI
+- Added `CreateProjectFromQuoteDialog`
+- Added payment form support for `quote_id` with coherent autofill/cleanup
+- Added payment list/show visibility for linked quotes
+- Important scope note:
+  - this is only the first integration slice
+  - `quote_items` and full quote-builder automation are still open future work
+
 ## Priority 1
+
+### Browser click-test of the new quote/project/payment flow
+
+Why:
+
+- the first commercial backbone slice is implemented and typechecked,
+- the remote migration is applied,
+- but the new UX path has not yet been manually click-tested in the browser.
+
+Tasks:
+
+- open a quote without `project_id`,
+- create a project from the quote dialog,
+- verify the quote now shows the linked project,
+- open payment create/edit and verify quote selection aligns client/project.
+
+Acceptance:
+
+- the commercial chain `Quote -> Project -> Payment` is proven usable in the
+  real UI, not only in code.
+
+## Priority 2
 
 ### Optional browser click-test of the Annuale AI flow
 
@@ -274,7 +311,7 @@ Acceptance:
 - the annual AI flow is verified in the real browser runtime, not only in
   tests/remoto.
 
-## Priority 2
+## Priority 3
 
 ### Optional browser click-test of the free-question path
 

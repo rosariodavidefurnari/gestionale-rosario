@@ -36,6 +36,15 @@ const PaymentShowContent = () => {
       enabled: !!record?.project_id,
     },
   );
+  const { data: quote } = useGetOne(
+    "quotes",
+    {
+      id: record?.quote_id,
+    },
+    {
+      enabled: !!record?.quote_id,
+    },
+  );
 
   if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
@@ -76,6 +85,14 @@ const PaymentShowContent = () => {
                       className="text-primary hover:underline"
                     >
                       {project.name}
+                    </Link>
+                  )}
+                  {quote && (
+                    <Link
+                      to={`/quotes/${record.quote_id}/show`}
+                      className="text-primary hover:underline"
+                    >
+                      {quote.description || "Preventivo"}
                     </Link>
                   )}
                   {record.invoice_ref && (

@@ -306,6 +306,7 @@ const gestionaleMessages = {
       name: "Preventivo |||| Preventivi",
       fields: {
         client_id: "Cliente",
+        project_id: "Progetto collegato",
         service_type: "Tipo servizio",
         event_start: "Data inizio evento",
         event_end: "Data fine evento",

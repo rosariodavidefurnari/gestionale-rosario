@@ -10,6 +10,19 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Prima di rendere un CRM `AI-driving`, chiudi la spina dorsale
+  commerciale minima con link espliciti tra moduli** — In questo repo, il primo
+  salto di qualità non è stato "più AI", ma introdurre un collegamento nativo
+  `quote.project_id` e usare `payment.quote_id` davvero nel form/UI. Senza
+  queste relazioni, l'AI può solo parlare di moduli isolati.
+
+- [2026-02-28] **Nel form pagamenti il preventivo selezionato deve diventare la
+  fonte di verità per cliente e progetto, ma con pulizia dei link incoerenti se
+  il cliente cambia dopo** — Il compromesso giusto per ridurre click senza
+  accumulare stati impossibili è:
+  - seleziono il preventivo -> precompilo cliente/progetto
+  - cambio cliente in modo incompatibile -> pulisco `quote_id` / `project_id`
+
 - [2026-02-28] **Per un prodotto che vuole diventare `AI-driving`, il prompt
   tuning ha valore solo come hardening minimo anti-bufala** — Dopo i primi casi
   reali su `Annuale`, migliorare il prompt aiutava ma non cambiava la natura del

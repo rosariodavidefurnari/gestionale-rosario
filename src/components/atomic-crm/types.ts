@@ -157,6 +157,7 @@ export type Expense = {
 
 export type Quote = {
   client_id: Identifier;
+  project_id?: Identifier | null;
   service_type: string;
   event_start?: string;
   event_end?: string;

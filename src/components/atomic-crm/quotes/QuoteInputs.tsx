@@ -1,5 +1,6 @@
-import { required, minValue } from "ra-core";
-import { useWatch } from "react-hook-form";
+import { required, minValue, useGetOne } from "ra-core";
+import { useEffect } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { ReferenceInput } from "@/components/admin/reference-input";
 import { TextInput } from "@/components/admin/text-input";
@@ -11,14 +12,39 @@ import { SelectInput } from "@/components/admin/select-input";
 import { Separator } from "@/components/ui/separator";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import type { Project } from "../types";
 import { quoteStatuses } from "./quotesTypes";
+import { toOptionalIdentifier } from "./quoteProjectLinking";
 
 export const QuoteInputs = () => {
   const status = useWatch({ name: "status" });
+  const clientId = useWatch({ name: "client_id" });
+  const projectId = useWatch({ name: "project_id" });
   const allDay = useWatch({ name: "all_day" }) ?? true;
+  const { setValue } = useFormContext();
   const { quoteServiceTypes } = useConfigurationContext();
+  const { data: selectedProject } = useGetOne<Project>(
+    "projects",
+    {
+      id: projectId,
+    },
+    {
+      enabled: !!projectId,
+    },
+  );
 
   const DateComponent = allDay ? DateInput : DateTimeInput;
+
+  useEffect(() => {
+    if (!selectedProject) return;
+    if (String(clientId ?? "") === String(selectedProject.client_id ?? "")) {
+      return;
+    }
+    setValue("client_id", selectedProject.client_id, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [clientId, selectedProject, setValue]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -28,6 +54,20 @@ export const QuoteInputs = () => {
           optionText="name"
           validate={required()}
           helperText={false}
+        />
+      </ReferenceInput>
+
+      <ReferenceInput
+        source="project_id"
+        reference="projects"
+        filter={clientId ? { "client_id@eq": String(clientId) } : undefined}
+      >
+        <AutocompleteInput
+          label="Progetto collegato"
+          optionText="name"
+          helperText={false}
+          placeholder="Nessun progetto collegato"
+          parse={toOptionalIdentifier}
         />
       </ReferenceInput>
 
