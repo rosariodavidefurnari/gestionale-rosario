@@ -2,9 +2,38 @@
 
 ## Current Phase
 
-🟢 Colori semantici nella Dashboard. Typecheck 0 errori, build OK.
+🟢 Stabilizzazione accessibilita form e warning runtime dashboard. Typecheck 0 errori, build OK.
 
 ## Last Session
+
+### Sessione 20 (2026-02-28, Accessibilita form e warning dashboard)
+
+- Completed:
+  - **`SelectInput` label-safe**: corretto il collegamento `FormLabel` -> controllo reale nei select custom, eliminando issue Chrome su `label for=FORM_ELEMENT`
+  - **`AutocompleteInput` e `AutocompleteArrayInput` accessibili**: aggiunti `id` e `name` all'elemento interattivo reale dei campi basati su `Popover`/`Command`
+  - **Verifica promemoria**: creazione di un promemoria con cliente eseguita manualmente con esito positivo
+  - **Dashboard ripulita**: eliminato il warning Recharts `width(-1) and height(-1)` nei grafici con `ResponsiveContainer`
+  - **Verifica runtime dashboard**: controllo manuale confermato, warning sparito e grafici visibili correttamente
+
+- Decisions:
+  - Nei componenti form composti, `id`/`name` devono finire sul `button` o `input` che riceve focus, non su wrapper `div` o contenitori `Popover`
+  - Per i grafici dashboard con altezza nota, usare `ResponsiveContainer` con altezza numerica diretta invece di `height="100%"` annidato in un wrapper fisso
+  - Tenere separati i fix di accessibilita form dai fix dashboard per facilitare audit e revert
+
+- Files modified:
+  - `src/components/admin/select-input.tsx`
+  - `src/components/admin/autocomplete-input.tsx`
+  - `src/components/admin/autocomplete-array-input.tsx`
+  - `src/components/atomic-crm/dashboard/DashboardRevenueTrendChart.tsx`
+  - `src/components/atomic-crm/dashboard/DashboardCategoryChart.tsx`
+  - `src/components/atomic-crm/dashboard/DashboardPipelineCard.tsx`
+
+- Commits:
+  - `74b38b3` `fix: align select labels with form controls`
+  - `b874139` `fix: connect autocomplete fields to form labels`
+  - `ff93cca` `fix: stabilize dashboard chart sizing`
+
+- Next action: Push dei commit e smoke test trasversale sui form che usano `AutocompleteInput`
 
 ### Sessione 19 (2026-02-28, Stabilizzazione runtime e documentazione)
 

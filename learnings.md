@@ -10,6 +10,28 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **`FormLabel` + `FormControl` funzionano solo se `id` arriva
+  all'elemento interattivo reale** — Nei controlli composti con `Popover`,
+  `Select` o `combobox`, mettere `FormControl` attorno a un wrapper non basta.
+  Se `id` e `name` non arrivano al `button`/`input` effettivo, Chrome segnala
+  `Incorrect use of <label for=FORM_ELEMENT>` e il campo perde parte del
+  comportamento atteso per autofill/accessibilita.
+
+- [2026-02-28] **`AutocompleteInput` richiede `id/name` sul trigger del
+  popover** — Il componente usa un `Button` con `role="combobox"` come campo
+  reale. Se il trigger non riceve `id={id}` e `name={field.name}`, la label del
+  `ReferenceInput` non si collega al campo anche se il `FormField` ha un id
+  valido. Lo stesso principio vale per `AutocompleteArrayInput` e per qualsiasi
+  input custom basato su `Command`/`Popover`.
+
+- [2026-02-28] **Recharts puo emettere warning di mount con
+  `ResponsiveContainer height="100%"` dentro wrapper ad altezza fissa** — Se il
+  grafico parte prima che il contenitore sia misurato correttamente, Recharts
+  logga `width(-1) and height(-1) of chart should be greater than 0` anche se il
+  grafico poi si vede. Per card con altezza nota, passare un'altezza numerica
+  diretta a `ResponsiveContainer` (`height={320}`) e piu stabile del pattern
+  `div.h-[320px] > ResponsiveContainer height="100%"`.
+
 - [2026-02-28] **`useGetOne` di ra-core usa `options` come terzo argomento** — In
   `ra-core@5.14.2` la firma corretta è `useGetOne(resource, params, options)`.
   Mettere `enabled` dentro `params` non disabilita la query: il fetch parte lo
