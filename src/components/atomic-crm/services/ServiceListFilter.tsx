@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 
 import type { Project, Service } from "../types";
+import { DateRangeFilter } from "../filters/DateRangeFilter";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 
 export const ServiceListFilter = () => {
@@ -63,7 +64,6 @@ export const ServiceListFilter = () => {
     }
   };
 
-
   return (
     <div className="shrink-0 w-56 order-last hidden md:block">
       <div className="flex flex-col gap-6">
@@ -95,10 +95,10 @@ export const ServiceListFilter = () => {
                   >
                     <span className="truncate">
                       {filterValues["project_id@eq"]
-                        ? projects.find(
+                        ? (projects.find(
                             (p) =>
                               String(p.id) === filterValues["project_id@eq"],
-                          )?.name ?? "Tutti"
+                          )?.name ?? "Tutti")
                         : "Tutti"}
                     </span>
                     {filterValues["project_id@eq"] ? (
@@ -229,52 +229,13 @@ export const ServiceListFilter = () => {
           </FilterSection>
         )}
 
-        <FilterSection
-          icon={<Calendar className="size-4" />}
-          label="Periodo"
-        >
-          <div className="flex flex-col gap-2 w-full">
-            <div>
-              <label className="text-xs text-muted-foreground">Da</label>
-              <Input
-                type="date"
-                className="h-8 text-sm"
-                value={(filterValues["service_date@gte"] as string) ?? ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value) {
-                    setFilters({
-                      ...filterValues,
-                      "service_date@gte": value,
-                    });
-                  } else {
-                    const { "service_date@gte": _, ...rest } = filterValues;
-                    setFilters(rest);
-                  }
-                }}
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">A</label>
-              <Input
-                type="date"
-                className="h-8 text-sm"
-                value={(filterValues["service_date@lte"] as string) ?? ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value) {
-                    setFilters({
-                      ...filterValues,
-                      "service_date@lte": value,
-                    });
-                  } else {
-                    const { "service_date@lte": _, ...rest } = filterValues;
-                    setFilters(rest);
-                  }
-                }}
-              />
-            </div>
-          </div>
+        <FilterSection icon={<Calendar className="size-4" />} label="Periodo">
+          <DateRangeFilter
+            fromKey="service_date@gte"
+            toKey="service_date@lte"
+            filterValues={filterValues}
+            setFilters={setFilters}
+          />
         </FilterSection>
       </div>
     </div>

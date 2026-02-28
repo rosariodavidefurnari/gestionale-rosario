@@ -14,7 +14,6 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
 import {
   CircleDollarSign,
   FolderOpen,
@@ -25,6 +24,7 @@ import {
 } from "lucide-react";
 
 import type { Client, Project } from "../types";
+import { DateRangeFilter } from "../filters/DateRangeFilter";
 import { paymentStatusChoices } from "./paymentTypes";
 
 export const PaymentListFilter = () => {
@@ -67,10 +67,7 @@ export const PaymentListFilter = () => {
         </FilterSection>
 
         {clients && clients.length > 0 && (
-          <FilterSection
-            icon={<User className="size-4" />}
-            label="Cliente"
-          >
+          <FilterSection icon={<User className="size-4" />} label="Cliente">
             <div className="w-full">
               <Popover open={clientOpen} onOpenChange={setClientOpen}>
                 <PopoverTrigger asChild>
@@ -81,10 +78,10 @@ export const PaymentListFilter = () => {
                   >
                     <span className="truncate">
                       {filterValues["client_id@eq"]
-                        ? clients.find(
+                        ? (clients.find(
                             (c) =>
                               String(c.id) === filterValues["client_id@eq"],
-                          )?.name ?? "Tutti"
+                          )?.name ?? "Tutti")
                         : "Tutti"}
                     </span>
                     {filterValues["client_id@eq"] ? (
@@ -146,10 +143,10 @@ export const PaymentListFilter = () => {
                   >
                     <span className="truncate">
                       {filterValues["project_id@eq"]
-                        ? projects.find(
+                        ? (projects.find(
                             (p) =>
                               String(p.id) === filterValues["project_id@eq"],
-                          )?.name ?? "Tutti"
+                          )?.name ?? "Tutti")
                         : "Tutti"}
                     </span>
                     {filterValues["project_id@eq"] ? (
@@ -196,52 +193,13 @@ export const PaymentListFilter = () => {
           </FilterSection>
         )}
 
-        <FilterSection
-          icon={<Calendar className="size-4" />}
-          label="Periodo"
-        >
-          <div className="flex flex-col gap-2 w-full">
-            <div>
-              <label className="text-xs text-muted-foreground">Da</label>
-              <Input
-                type="date"
-                className="h-8 text-sm"
-                value={(filterValues["payment_date@gte"] as string) ?? ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value) {
-                    setFilters({
-                      ...filterValues,
-                      "payment_date@gte": value,
-                    });
-                  } else {
-                    const { "payment_date@gte": _, ...rest } = filterValues;
-                    setFilters(rest);
-                  }
-                }}
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">A</label>
-              <Input
-                type="date"
-                className="h-8 text-sm"
-                value={(filterValues["payment_date@lte"] as string) ?? ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value) {
-                    setFilters({
-                      ...filterValues,
-                      "payment_date@lte": value,
-                    });
-                  } else {
-                    const { "payment_date@lte": _, ...rest } = filterValues;
-                    setFilters(rest);
-                  }
-                }}
-              />
-            </div>
-          </div>
+        <FilterSection icon={<Calendar className="size-4" />} label="Periodo">
+          <DateRangeFilter
+            fromKey="payment_date@gte"
+            toKey="payment_date@lte"
+            filterValues={filterValues}
+            setFilters={setFilters}
+          />
         </FilterSection>
       </div>
     </div>

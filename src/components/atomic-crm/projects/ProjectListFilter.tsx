@@ -20,11 +20,13 @@ import {
   Folder,
   Activity,
   User,
+  Calendar,
   ChevronsUpDown,
   X,
 } from "lucide-react";
 
 import type { Client } from "../types";
+import { DateRangeFilter } from "../filters/DateRangeFilter";
 import { projectCategoryChoices, projectStatusChoices } from "./projectTypes";
 
 export const ProjectListFilter = () => {
@@ -62,10 +64,7 @@ export const ProjectListFilter = () => {
         </div>
 
         {clients && clients.length > 0 && (
-          <FilterSection
-            icon={<User className="size-4" />}
-            label="Cliente"
-          >
+          <FilterSection icon={<User className="size-4" />} label="Cliente">
             <div className="w-full">
               <Popover open={clientOpen} onOpenChange={setClientOpen}>
                 <PopoverTrigger asChild>
@@ -76,10 +75,10 @@ export const ProjectListFilter = () => {
                   >
                     <span className="truncate">
                       {filterValues["client_id@eq"]
-                        ? clients.find(
+                        ? (clients.find(
                             (c) =>
                               String(c.id) === filterValues["client_id@eq"],
-                          )?.name ?? "Tutti"
+                          )?.name ?? "Tutti")
                         : "Tutti"}
                     </span>
                     {filterValues["client_id@eq"] ? (
@@ -126,10 +125,7 @@ export const ProjectListFilter = () => {
           </FilterSection>
         )}
 
-        <FilterSection
-          icon={<Folder className="size-4" />}
-          label="Categoria"
-        >
+        <FilterSection icon={<Folder className="size-4" />} label="Categoria">
           {projectCategoryChoices.map((cat) => (
             <FilterBadge
               key={cat.id}
@@ -147,10 +143,7 @@ export const ProjectListFilter = () => {
           ))}
         </FilterSection>
 
-        <FilterSection
-          icon={<Activity className="size-4" />}
-          label="Stato"
-        >
+        <FilterSection icon={<Activity className="size-4" />} label="Stato">
           {projectStatusChoices.map((status) => (
             <FilterBadge
               key={status.id}
@@ -166,6 +159,15 @@ export const ProjectListFilter = () => {
               }}
             />
           ))}
+        </FilterSection>
+
+        <FilterSection icon={<Calendar className="size-4" />} label="Periodo">
+          <DateRangeFilter
+            fromKey="start_date@gte"
+            toKey="start_date@lte"
+            filterValues={filterValues}
+            setFilters={setFilters}
+          />
         </FilterSection>
       </div>
     </div>

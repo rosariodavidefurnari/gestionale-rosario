@@ -8,6 +8,7 @@ import { FilterButton } from "@/components/admin/filter-form";
 import { List } from "@/components/admin/list";
 import { ReferenceInput } from "@/components/admin/reference-input";
 import { SearchInput } from "@/components/admin/search-input";
+import { DateInput } from "@/components/admin/date-input";
 import { SelectInput } from "@/components/admin/select-input";
 
 import type { Client, Quote } from "../types";
@@ -26,7 +27,11 @@ const QuoteList = () => {
   const quoteFilters = [
     <SearchInput source="q" alwaysOn />,
     <ReferenceInput source="client_id" reference="clients">
-      <AutocompleteInput label={false} placeholder="Cliente" optionText="name" />
+      <AutocompleteInput
+        label={false}
+        placeholder="Cliente"
+        optionText="name"
+      />
     </ReferenceInput>,
     <SelectInput
       source="service_type"
@@ -35,6 +40,8 @@ const QuoteList = () => {
       optionText="label"
       optionValue="value"
     />,
+    <DateInput source="event_start@gte" label="Evento da" />,
+    <DateInput source="event_start@lte" label="Evento a" />,
   ];
 
   const typeLabels: Record<string, string> = Object.fromEntries(

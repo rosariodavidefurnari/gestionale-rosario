@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 
 import type { Client, Project } from "../types";
+import { DateRangeFilter } from "../filters/DateRangeFilter";
 import { expenseTypeChoices } from "./expenseTypes";
 
 export const ExpenseListFilter = () => {
@@ -71,10 +72,7 @@ export const ExpenseListFilter = () => {
           />
         </div>
 
-        <FilterSection
-          icon={<Receipt className="size-4" />}
-          label="Tipo spesa"
-        >
+        <FilterSection icon={<Receipt className="size-4" />} label="Tipo spesa">
           {expenseTypeChoices.map((type) => (
             <FilterBadge
               key={type.id}
@@ -96,10 +94,7 @@ export const ExpenseListFilter = () => {
         </FilterSection>
 
         {clients && clients.length > 0 && (
-          <FilterSection
-            icon={<User className="size-4" />}
-            label="Cliente"
-          >
+          <FilterSection icon={<User className="size-4" />} label="Cliente">
             <div className="w-full">
               <Popover open={clientOpen} onOpenChange={setClientOpen}>
                 <PopoverTrigger asChild>
@@ -110,10 +105,10 @@ export const ExpenseListFilter = () => {
                   >
                     <span className="truncate">
                       {filterValues["client_id@eq"]
-                        ? clients.find(
+                        ? (clients.find(
                             (c) =>
                               String(c.id) === filterValues["client_id@eq"],
-                          )?.name ?? "Tutti"
+                          )?.name ?? "Tutti")
                         : "Tutti"}
                     </span>
                     {filterValues["client_id@eq"] ? (
@@ -175,10 +170,10 @@ export const ExpenseListFilter = () => {
                   >
                     <span className="truncate">
                       {filterValues["project_id@eq"]
-                        ? projects.find(
+                        ? (projects.find(
                             (p) =>
                               String(p.id) === filterValues["project_id@eq"],
-                          )?.name ?? "Tutti"
+                          )?.name ?? "Tutti")
                         : "Tutti"}
                     </span>
                     {filterValues["project_id@eq"] ? (
@@ -225,52 +220,13 @@ export const ExpenseListFilter = () => {
           </FilterSection>
         )}
 
-        <FilterSection
-          icon={<Calendar className="size-4" />}
-          label="Periodo"
-        >
-          <div className="flex flex-col gap-2 w-full">
-            <div>
-              <label className="text-xs text-muted-foreground">Da</label>
-              <Input
-                type="date"
-                className="h-8 text-sm"
-                value={(filterValues["expense_date@gte"] as string) ?? ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value) {
-                    setFilters({
-                      ...filterValues,
-                      "expense_date@gte": value,
-                    });
-                  } else {
-                    const { "expense_date@gte": _, ...rest } = filterValues;
-                    setFilters(rest);
-                  }
-                }}
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">A</label>
-              <Input
-                type="date"
-                className="h-8 text-sm"
-                value={(filterValues["expense_date@lte"] as string) ?? ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value) {
-                    setFilters({
-                      ...filterValues,
-                      "expense_date@lte": value,
-                    });
-                  } else {
-                    const { "expense_date@lte": _, ...rest } = filterValues;
-                    setFilters(rest);
-                  }
-                }}
-              />
-            </div>
-          </div>
+        <FilterSection icon={<Calendar className="size-4" />} label="Periodo">
+          <DateRangeFilter
+            fromKey="expense_date@gte"
+            toKey="expense_date@lte"
+            filterValues={filterValues}
+            setFilters={setFilters}
+          />
         </FilterSection>
       </div>
     </div>
