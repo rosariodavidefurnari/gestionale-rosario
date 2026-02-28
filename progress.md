@@ -32,10 +32,41 @@ deploy function, secret `SMTP_*` e invoke autenticato hanno restituito un
 `accepted` reale con risposta SMTP `250 OK`. Da lì in poi il primo ponte
 corretto verso la chat unificata è adesso chiuso come launcher globale
 flottante, disponibile da tutto il CRM senza route dedicata. Il prossimo passo
-Pareto resta dentro la stessa shell: impostazione separata del modello Gemini
-e poi ingestione fatture miste con conferma utente.
+Pareto resta dentro la stessa shell: la configurazione Gemini separata è ora
+chiusa con default `gemini-2.5-pro`, quindi il prossimo lavoro è finalmente la
+vertical slice fatture miste con conferma utente.
 
 ## Last Session
+
+### Sessione 55 (2026-02-28, setting Gemini separato per estrazione fatture)
+
+- Completed:
+  - **Configurazione AI separata per le fatture aggiunta in Settings**:
+    - nuovo default:
+      - `gemini-2.5-pro`
+    - nuova lista modelli:
+      - `invoiceExtractionModelChoices`
+    - `Impostazioni -> AI` ora distingue:
+      - modelli analitici Storico/Annuale
+      - modello Gemini per estrazione fatture
+  - **Merge dei config reso compatibile con configurazioni persistite vecchie**:
+    - nuovo helper:
+      - `mergeConfigurationWithDefaults()`
+    - il nuovo campo nested in `aiConfig` non sparisce quando il DB contiene
+      ancora solo `historicalAnalysisModel`
+  - **Capability/docs allineati nello stesso passaggio**:
+    - pagina `settings` descritta anche come punto di scelta del modello
+      Gemini fatture
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/ai/invoiceExtractionModel.test.ts src/components/atomic-crm/root/ConfigurationContext.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts`
+
+- Decisions:
+  - il modello Gemini per fatture non va mischiato al modello usato per
+    Storico/Annuale
+  - prima di collegare `@google/genai`, la base corretta e' una config
+    esplicita e retrocompatibile
 
 ### Sessione 54 (2026-02-28, launcher globale flottante per la chat AI)
 

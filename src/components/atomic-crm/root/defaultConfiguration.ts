@@ -1,6 +1,7 @@
 import type { AIConfig, FiscalConfig, OperationalConfig } from "../types";
 import type { ConfigurationContextValue } from "./ConfigurationContext";
 import { defaultHistoricalAnalysisModel } from "@/lib/analytics/historicalAnalysis";
+import { defaultInvoiceExtractionModel } from "@/lib/ai/invoiceExtractionModel";
 
 export const defaultDarkModeLogo = "./logos/logo_atomic_crm_dark.svg";
 export const defaultLightModeLogo = "./logos/logo_atomic_crm_light.svg";
@@ -126,6 +127,7 @@ export const defaultFiscalConfig: FiscalConfig = {
 
 export const defaultAIConfig: AIConfig = {
   historicalAnalysisModel: defaultHistoricalAnalysisModel,
+  invoiceExtractionModel: defaultInvoiceExtractionModel,
 };
 
 export const defaultOperationalConfig: OperationalConfig = {

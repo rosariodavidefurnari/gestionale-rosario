@@ -10,6 +10,16 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Quando aggiungi un nuovo campo nested dentro `aiConfig`,
+  serve un merge esplicito dei default o i config persistiti vecchi lo
+  perdono** — La merge superficiale `...defaultConfiguration, ...config` non
+  basta: se nel DB esiste un `aiConfig` vecchio con solo
+  `historicalAnalysisModel`, l'oggetto intero sostituisce i default e il nuovo
+  campo scompare. Il pattern corretto e':
+  1) aggiungere il nuovo default
+  2) fare merge nested di `aiConfig`
+  3) testare la retrocompatibilita' con config gia salvati.
+
 - [2026-02-28] **Se l'obiettivo prodotto e' una chat AI unificata, il primo
   ponte corretto non e' una nuova route ma un launcher globale nel layout
   condiviso** — Per evitare di moltiplicare pagine AI temporanee, la shell

@@ -27,12 +27,37 @@ export interface ConfigurationContextValue {
   operationalConfig?: OperationalConfig;
 }
 
+type PartialConfigurationContextValue = Partial<ConfigurationContextValue> & {
+  fiscalConfig?: Partial<FiscalConfig>;
+  aiConfig?: Partial<AIConfig>;
+  operationalConfig?: Partial<OperationalConfig>;
+};
+
+export const mergeConfigurationWithDefaults = (
+  config?: PartialConfigurationContextValue,
+): ConfigurationContextValue => ({
+  ...defaultConfiguration,
+  ...config,
+  fiscalConfig: {
+    ...defaultConfiguration.fiscalConfig,
+    ...config?.fiscalConfig,
+  },
+  aiConfig: {
+    ...defaultConfiguration.aiConfig,
+    ...config?.aiConfig,
+  },
+  operationalConfig: {
+    ...defaultConfiguration.operationalConfig,
+    ...config?.operationalConfig,
+  },
+});
+
 export const useConfigurationContext = () => {
   const [config] = useStore<ConfigurationContextValue>(
     CONFIGURATION_STORE_KEY,
     defaultConfiguration,
   );
-  return useMemo(() => ({ ...defaultConfiguration, ...config }), [config]);
+  return useMemo(() => mergeConfigurationWithDefaults(config), [config]);
 };
 
 export const useConfigurationUpdater = () => {

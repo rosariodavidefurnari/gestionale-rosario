@@ -123,23 +123,27 @@ The floating launcher step is now closed too:
 - it does not add a new AI page in the main navigation
 - it is now declared in the capability registry as the unified AI entry point
 
+The separate settings step is now closed too:
+
+- `Impostazioni -> AI` now exposes a dedicated invoice-extraction model field
+- default:
+  - `gemini-2.5-pro`
+- old persisted configs now keep the new nested AI default safely
+
 The next open priority is:
 
-- add a separate settings field for the invoice-extraction model
-  (`gemini-2.5-pro` default),
-- then implement the first real unified-chat vertical slice there:
+- implement the first real unified-chat vertical slice there using
+  `@google/genai`:
   mixed invoice ingestion (`PDF` digitali + scansioni/foto con layout
   variabili), structured extraction proposal, direct user correction in chat,
   and confirmed write into existing CRM resources.
 
 Why this comes next:
 
-- the launcher now exists, so the next value is not more shell work but the
-  first real use case inside it
-- invoice ingestion is the first high-value operational case that justifies the
-  unified chat
-- model choice for invoice/OCR must be explicit in settings before wiring the
-  Gemini path
+- the launcher exists
+- the Gemini model setting is explicit and separate
+- the next value is therefore the first real user workflow inside the unified
+  chat, not more shell/config scaffolding
 
 Not the next step by default:
 

@@ -114,16 +114,23 @@ The next Pareto step is now closed too:
 - and it declares the write-safety rule explicitly before invoice ingestion is
   added.
 
+The next Pareto step is now closed too:
+
+- `Impostazioni -> AI` now has a separate invoice-extraction model field
+- the default is `gemini-2.5-pro`
+- older persisted configs keep working because nested AI defaults now merge
+  safely instead of replacing the whole `aiConfig` object
+
 The next high-value step is now:
 
-- add a separate AI setting for invoice extraction model selection,
-- keep `gemini-2.5-pro` as the default for invoice/OCR work,
-- then implement the first vertical slice inside the unified launcher:
-  mixed invoice upload (`PDF` digitali + scansioni/foto), structured proposal,
-  user correction in chat, and confirmed write into CRM resources.
+- implement the first vertical slice inside the unified launcher using
+  `@google/genai`,
+- support mixed invoice upload (`PDF` digitali + scansioni/foto),
+- return one structured proposal the user can correct directly in chat,
+- and write into CRM resources only after explicit confirmation.
 
-Do not open new scattered AI surfaces while doing this. The launcher must stay
-the bridge toward one unified chat, not become just another temporary AI page.
+Do not open new scattered AI surfaces while doing this. The launcher and the
+separate Gemini setting are now the approved entry points for invoice AI work.
 
 ## Parallel Track Started: Commercial Backbone
 

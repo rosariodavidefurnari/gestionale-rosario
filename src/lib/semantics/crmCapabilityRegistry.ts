@@ -162,7 +162,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       label: "Impostazioni",
       routePattern: "/#/settings",
       description:
-        "Config centrale per marchio, tipi, regole fiscali, AI e operativita'.",
+        "Config centrale per marchio, tipi, regole fiscali, AI analitica, modello Gemini fatture e operativita'.",
     },
     {
       id: "profile",

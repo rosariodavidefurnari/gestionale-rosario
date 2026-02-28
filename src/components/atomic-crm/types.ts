@@ -232,6 +232,7 @@ export interface FiscalConfig {
 
 export interface AIConfig {
   historicalAnalysisModel: string;
+  invoiceExtractionModel: string;
 }
 
 export interface OperationalConfig {

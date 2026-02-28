@@ -32,6 +32,13 @@ describe("crmCapabilityRegistry", () => {
         (action) => action.id === "open_unified_ai_launcher",
       ),
     ).toBe(true);
+    expect(
+      registry.pages.some(
+        (page) =>
+          page.id === "settings" &&
+          page.description.includes("Gemini fatture"),
+      ),
+    ).toBe(true);
   });
 
   it("exposes communication templates and future integration checklist", () => {
