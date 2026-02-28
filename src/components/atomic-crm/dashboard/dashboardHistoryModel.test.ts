@@ -107,7 +107,7 @@ describe("buildDashboardHistoryModel", () => {
     expect(model.kpis.yoyClosedYears.isComparable).toBe(true);
     expect(model.kpis.yoyClosedYears.valuePct).toBe(50);
     expect(model.kpis.yoyClosedYears.comparisonLabel).toBe("2025 vs 2024");
-    expect(model.yearlyRevenue.at(-1)?.label).toBe("2026 YTD");
+    expect(model.yearlyRevenue.at(-1)?.label).toBe("2026 finora");
     expect(model.qualityFlags).toContain("partial_current_year");
     expect(model.qualityFlags).toContain("future_services_excluded");
   });

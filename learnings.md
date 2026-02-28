@@ -10,6 +10,28 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Dashboard corretto ma incomprensibile = feature fallita** —
+  Anche con semantica giusta, view corrette e AI funzionante, il valore per il
+  titolare resta quasi nullo se la UI parla come un analyst. In questo
+  progetto, termini come `YTD`, `YoY` e `competenza` vanno tradotti in lingua
+  operativa direttamente nell'interfaccia e nel prompt AI. La "traduzione per
+  non esperti" va trattata come requisito di prodotto, non come semplice copy.
+
+- [2026-02-28] **Per i test UI in questo repo conviene dichiarare
+  `@vitest-environment jsdom` direttamente nei file quando la config globale non
+  viene applicata come atteso** — Dopo aver aggiunto `jsdom` e
+  `@testing-library/react`, Vitest continuava a eseguire i nuovi test in
+  ambiente Node (`document is not defined`). La soluzione più affidabile qui è
+  stata annotare i file UI con `// @vitest-environment jsdom` e importare
+  `src/setupTests.js` esplicitamente.
+
+- [2026-02-28] **Il markdown dentro card Tailwind ha bisogno di classi
+  esplicite per mostrare davvero le liste** — Nel riepilogo AI le sezioni erano
+  semanticamente corrette, ma i bullet risultavano poco leggibili. Con il reset
+  base di Tailwind conviene aggiungere classi come `list-disc`, `list-decimal`
+  e spacing su `p/ul/ol` direttamente nel contenitore markdown, altrimenti le
+  liste sembrano testo piatto anche quando il modello produce markdown giusto.
+
 - [2026-02-28] **Se una Edge Function dice che una key non e configurata,
   verificare i secret remoti reali con `supabase secrets list`, non i `.env`
   locali** — Nel flusso AI storico i file `.env` del repo contenevano

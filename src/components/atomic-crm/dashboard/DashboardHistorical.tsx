@@ -67,12 +67,21 @@ export const DashboardHistorical = () => {
 
 const HistoricalReadingGuide = () => (
   <div className="rounded-xl border bg-card px-4 py-3">
-    <p className="text-sm font-medium">Come leggere lo storico</p>
-    <p className="text-xs text-muted-foreground mt-1">
-      Qui stai guardando compensi per competenza, non incassi. L'anno corrente
-      viene trattato come YTD e il YoY confronta solo gli ultimi due anni
-      chiusi.
-    </p>
+    <p className="text-sm font-medium">Tradotto in semplice</p>
+    <div className="mt-2 space-y-2 text-xs text-muted-foreground">
+      <p>
+        Qui non stai guardando i soldi già entrati in banca: stai guardando il
+        valore del lavoro attribuito a ogni anno.
+      </p>
+      <p>
+        L'anno in corso è parziale: contiamo solo quello che risulta fino a
+        oggi.
+      </p>
+      <p>
+        La crescita si confronta solo tra anni completi, per evitare confronti
+        falsati.
+      </p>
+    </div>
   </div>
 );
 
@@ -83,50 +92,51 @@ const HistoricalContextCard = ({
 }) => (
   <Card>
     <CardHeader>
-      <CardTitle className="text-base">Contesto dei dati</CardTitle>
+      <CardTitle className="text-base">Spiegazione semplice dei numeri</CardTitle>
     </CardHeader>
     <CardContent className="space-y-4">
       <div className="space-y-1">
-        <p className="text-sm font-medium">Cosa stai vedendo</p>
+        <p className="text-sm font-medium">Che cosa stiamo contando</p>
         <p className="text-xs text-muted-foreground">
-          Compensi maturati per competenza dal{" "}
+          Qui stiamo misurando il valore del lavoro dal{" "}
           {model.meta.firstYearWithData ?? model.meta.currentYear} al{" "}
-          {model.meta.currentYear}. {model.meta.currentYear} mostrato come YTD
-          al {model.meta.asOfDateLabel}.
+          {model.meta.currentYear}, non i soldi già incassati. Il{" "}
+          {model.meta.currentYear} è ancora in corso, quindi si ferma al{" "}
+          {model.meta.asOfDateLabel}.
         </p>
       </div>
 
       <div className="space-y-1">
-        <p className="text-sm font-medium">Confronti consentiti</p>
+        <p className="text-sm font-medium">Confronto che ha senso fare</p>
         <p className="text-xs text-muted-foreground">
-          Il KPI YoY usa solo anni chiusi:{" "}
+          La crescita va letta solo tra anni completi:{" "}
           {model.kpis.yoyClosedYears.comparisonLabel}.
         </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Badge variant="outline">Base: competenza</Badge>
-        <Badge variant="outline">Timezone: {model.meta.businessTimezone}</Badge>
-        <Badge variant="outline">As of: {model.meta.asOfDateLabel}</Badge>
+        <Badge variant="outline">Conta il lavoro, non gli incassi</Badge>
+        <Badge variant="outline">Anno in corso parziale</Badge>
+        <Badge variant="outline">Foto al {model.meta.asOfDateLabel}</Badge>
       </div>
 
       {model.qualityFlags.includes("future_services_excluded") ? (
         <div className="rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300 px-3 py-2 text-xs">
-          Sono presenti servizi futuri, esclusi dal calcolo fino alla data di
-          osservazione.
+          Ci sono lavori futuri già inseriti, ma qui non li contiamo ancora.
         </div>
       ) : null}
 
       {model.qualityFlags.includes("zero_baseline") ? (
         <div className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-          YoY non confrontabile: l'anno base dell'ultimo confronto chiuso vale
-          0.
+          Non possiamo misurare la crescita rispetto all'anno prima perché
+          l'anno di partenza vale 0.
         </div>
       ) : null}
 
       {model.qualityFlags.includes("insufficient_closed_years") ? (
         <div className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-          YoY non disponibile: servono almeno due anni chiusi.
+          Per misurare la crescita tra un anno e l'altro servono almeno due
+          anni completi.
         </div>
       ) : null}
     </CardContent>

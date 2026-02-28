@@ -2,9 +2,113 @@
 
 ## Current Phase
 
-🟢 Dashboard storico AI-ready implementato, verificato sul remoto e con smoke test remoto OpenAI chiuso. Prossimo passo: browser click-test della card AI e test UI storici.
+🟢 Dashboard storico AI-ready implementato, verificato sul remoto e nel browser, con test UI base aggiunti e linguaggio tradotto per non esperti. Prossimo passo: solo polish opzionale o future estensioni richieste dal prodotto.
 
 ## Last Session
+
+### Sessione 28 (2026-02-28, plain-language UX layer)
+
+- Completed:
+  - **Traduzione del linguaggio UI**: rimosso il gergo più ostico dalla
+    superficie del dashboard storico
+    - `YTD` -> `finora` / `anno in corso fino a oggi`
+    - `YoY` -> `crescita rispetto all'anno prima`
+    - `competenza` -> spiegazione come `valore del lavoro`, non come termine
+      contabile
+  - **Dashboard più leggibile per il titolare**:
+    - KPI rinominati in linguaggio operativo
+    - card `Come leggere lo storico` riscritta come `Tradotto in semplice`
+    - card contesto riscritta senza lessico da analista
+  - **Prompt AI riscritto**:
+    - vietato il gergo non spiegato
+    - nuove sezioni `In breve`, `Cose importanti`, `Attenzione`,
+      `Cosa controllare adesso`
+  - **Deploy remoto aggiornato**:
+    - redeploy di `historical_analytics_summary`
+    - smoke remoto OK con risposta in italiano semplice
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts` OK
+  - remote prompt smoke OK con output che inizia da `## In breve`
+
+- Decisions:
+  - La correttezza semantica da sola non basta: il prodotto deve tradurre i
+    numeri in lingua imprenditoriale
+  - Da questo punto in poi il linguaggio semplice va considerato parte del
+    contratto UX, non un abbellimento facoltativo
+
+- Next action:
+  - nessun blocco tecnico aperto sul v1 storico
+  - se vuoi consolidare, commit/push di questa chiusura finale
+  - in futuro solo refine opzionale o nuove capability prodotto
+
+### Sessione 27 (2026-02-28, UI test closure)
+
+- Completed:
+  - **Infrastruttura test UI aggiunta**:
+    - `jsdom`
+    - `@testing-library/react`
+    - `src/setupTests.js` esteso con cleanup automatico e `ResizeObserver`
+      fallback
+  - **UI tests storici aggiunti**:
+    - `DashboardHistorical.ui.test.tsx`
+    - `DashboardHistoricalWidgets.test.tsx`
+  - **Copertura chiusa sui casi minimi critici**:
+    - empty state parent
+    - error state parent + retry
+    - warning contestuale YoY
+    - error state widget
+    - empty state widget
+    - YoY `N/D`
+  - **Polish card AI**: migliorata la leggibilità del markdown con bullets e
+    spacing visibile
+  - **Docs di continuità riallineati**: handoff/backlog/spec/progress
+    aggiornati allo stato quasi finale
+
+- Decisions:
+  - Per questo v1 il lavoro implementativo si considera sostanzialmente chiuso
+  - Le prossime modifiche non sono più fix strutturali ma solo polish o nuove
+    richieste di prodotto
+  - I widget storici ora vanno evoluti insieme ai loro test UI
+
+- Validation:
+  - `npm run typecheck` OK
+  - `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts` OK
+
+- Next action:
+  - nessun blocco tecnico aperto sul v1 storico
+  - fare commit/push di questa chiusura quando vuoi consolidarla
+  - in seguito, solo polish AI card o nuove capability richieste
+
+### Sessione 26 (2026-02-28, browser smoke evidence)
+
+- Completed:
+  - **Browser smoke test raccolto**: screenshot del runtime reale confermano
+    che `Storico` renderizza KPI, grafici, top client e contesto dati
+  - **Card AI verificata in UI**: `Analisi AI dello storico` genera e mostra un
+    output nel browser con badge modello `gpt-5.2`
+  - **Semantica confermata in pagina**:
+    - storico su due anni chiusi `2024-2025`
+    - `2026` mostrato come `YTD`
+    - `YoY` mostrato come `2025 vs 2024`
+  - **Docs di continuità riallineati**: handoff/backlog/progress aggiornati per
+    segnare chiuso anche il click-test browser
+
+- Decisions:
+  - Il primo flusso AI storico si considera verificato anche lato browser, non
+    più solo lato remoto/server
+  - Il prossimo step reale diventa la copertura test UI
+  - L'eventuale refine della card AI è solo di leggibilità, non di logica
+
+- Notes:
+  - Dalla resa attuale non emergono errori semantici
+  - L'unico spazio di miglioramento visibile è la leggibilità del markdown
+    generato, se si vuole una card più compatta o più scansionabile
+
+- Next action:
+  - aggiungere test UI per empty/error/N-D/subtitle states
+  - solo dopo valutare un piccolo polish di prompt/rendering markdown
 
 ### Sessione 25 (2026-02-28, remote AI smoke closure)
 

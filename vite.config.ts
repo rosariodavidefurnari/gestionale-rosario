@@ -1,5 +1,5 @@
 import path from "node:path";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
@@ -55,6 +55,10 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+  },
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./src/setupTests.js"],
   },
   resolve: {
     preserveSymlinks: true,

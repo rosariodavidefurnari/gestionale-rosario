@@ -39,8 +39,8 @@ export const Dashboard = () => {
           </ToggleGroupItem>
         </ToggleGroup>
         <p className="text-xs text-muted-foreground">
-          Annuale: vista operativa dell'anno selezionato. Storico: lettura
-          strategica dell'azienda con anno corrente trattato come YTD.
+          Annuale: numeri operativi dell'anno scelto. Storico: andamento degli
+          ultimi anni, con l'anno in corso letto solo fino a oggi.
         </p>
       </div>
 

@@ -599,6 +599,8 @@ Current implementation choice:
   dashboard,
 - and the OpenAI model is configured from Settings via a dropdown, with
   `gpt-5.2` as the default.
+- the visible UX now also includes a plain-language translation layer for
+  non-expert users, so the dashboard does not require finance jargon literacy.
 
 ## Remote Runtime Verification
 
@@ -619,6 +621,10 @@ Verified on `2026-02-28` against the linked project
 - the selected model resolved to `gpt-5.2`,
 - and the generated markdown summary correctly preserved the YTD / closed-year
   caveats.
+- browser evidence collected the same day also confirms the real UI path:
+  - the `Storico` tab renders the historical dashboard correctly,
+  - the AI card renders a generated answer in-browser,
+  - and the visible answer stays aligned with the same semantic contract.
 
 Operational note:
 
@@ -627,6 +633,22 @@ Operational note:
   - `SB_PUBLISHABLE_KEY`
 - and the shared auth middleware should still fall back to `SUPABASE_ANON_KEY`
   for resilience when `SB_PUBLISHABLE_KEY` is not present.
+
+UI testing note:
+
+- the shipped v1 now also has baseline component coverage for the historical
+  widgets and parent shell,
+- using `jsdom` and `@testing-library/react`,
+- covering empty/error/YoY-warning states without changing the approved
+  analytics semantics.
+
+Plain-language UX note:
+
+- semantic correctness alone was not enough for the product owner,
+- so the historical dashboard copy and AI prompt were rewritten in simpler
+  Italian,
+- translating terms like `YTD`, `YoY`, and `competenza` into everyday business
+  language without changing the underlying data rules.
 
 ## AI Interpretation Rules
 

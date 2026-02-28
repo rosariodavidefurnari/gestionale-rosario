@@ -24,19 +24,19 @@ export const DashboardHistoricalRevenueChart = ({
 }) => (
   <Card className="gap-0">
     <CardHeader className="px-4 pb-3">
-      <CardTitle className="text-base">Compensi per anno</CardTitle>
+      <CardTitle className="text-base">Andamento anno per anno</CardTitle>
       <p className="text-xs text-muted-foreground">
-        Compensi per competenza dal{" "}
+        Quanto vale il lavoro anno per anno dal{" "}
         {model.meta.firstYearWithData ?? model.meta.currentYear} al{" "}
-        {model.meta.currentYear}. {model.meta.currentYear} mostrato come YTD al{" "}
-        {model.meta.asOfDateLabel}.
+        {model.meta.currentYear}. Il {model.meta.currentYear} si ferma al{" "}
+        {model.meta.asOfDateLabel}, quindi non è un anno completo.
       </p>
     </CardHeader>
     <CardContent className="px-2 pb-2">
       {model.yearlyRevenue.length === 0 ||
       model.yearlyRevenue.every((item) => item.revenue === 0) ? (
         <div className="h-[320px] flex items-center justify-center text-sm text-muted-foreground">
-          Nessun compenso storico disponibile
+          Nessun dato storico disponibile
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={320}>
@@ -85,7 +85,7 @@ const HistoricalRevenueTooltip = ({ active, payload }: any) => {
   return (
     <div className="rounded-lg border bg-background px-3 py-2 shadow-sm">
       <p className="text-xs text-muted-foreground mb-1">
-        {point.isYtd ? `${point.year} YTD` : point.year}
+        {point.isYtd ? `${point.year} (fino a oggi)` : point.year}
       </p>
       <p className="text-sm font-medium">{formatCurrency(point.revenue)}</p>
       <p className="text-xs text-muted-foreground">

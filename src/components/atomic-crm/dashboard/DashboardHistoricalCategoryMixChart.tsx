@@ -32,7 +32,7 @@ export const DashboardHistoricalCategoryMixChart = ({
     return (
       <Card className="gap-0">
         <CardHeader className="px-4 pb-3">
-          <CardTitle className="text-base">Mix categorie per anno</CardTitle>
+          <CardTitle className="text-base">Da dove arrivano i guadagni</CardTitle>
         </CardHeader>
         <CardContent className="px-4 py-10 text-center text-sm text-muted-foreground">
           Impossibile caricare il mix categorie.
@@ -45,7 +45,7 @@ export const DashboardHistoricalCategoryMixChart = ({
     return (
       <Card className="gap-0">
         <CardHeader className="px-4 pb-3">
-          <CardTitle className="text-base">Mix categorie per anno</CardTitle>
+          <CardTitle className="text-base">Da dove arrivano i guadagni</CardTitle>
         </CardHeader>
         <CardContent className="px-4 py-10 text-center text-sm text-muted-foreground">
           Caricamento mix categorie...
@@ -63,10 +63,11 @@ export const DashboardHistoricalCategoryMixChart = ({
   return (
     <Card className="gap-0">
       <CardHeader className="px-4 pb-3">
-        <CardTitle className="text-base">Mix categorie per anno</CardTitle>
+        <CardTitle className="text-base">Da dove arrivano i guadagni</CardTitle>
         <p className="text-xs text-muted-foreground">
-          Compensi per competenza per categoria. {model.meta.currentYear}{" "}
-          mostrato come YTD al {model.meta.asOfDateLabel}.
+          Qui vedi quali tipi di lavoro pesano di più ogni anno. Il{" "}
+          {model.meta.currentYear} si ferma al {model.meta.asOfDateLabel},
+          quindi non è un anno completo.
         </p>
       </CardHeader>
       <CardContent className="px-2 pb-2">
@@ -149,7 +150,7 @@ const HistoricalCategoryMixTooltip = ({ active, payload, label }: any) => {
       </div>
       {"isYtd" in point && point.isYtd ? (
         <p className="text-[11px] text-muted-foreground mt-2">
-          Anno corrente YTD
+          Anno in corso, solo fino a oggi
         </p>
       ) : null}
     </div>

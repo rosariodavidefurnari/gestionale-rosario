@@ -22,13 +22,13 @@ export const DashboardHistoricalKpis = ({
 }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
     <HistoricalKpiCard
-      title="Compensi storici totali"
+      title="Valore totale del lavoro"
       value={formatCurrency(model.kpis.totalHistoricalRevenue)}
       icon={<CircleDollarSign className="h-4 w-4" />}
-      subtitle={`Compensi per competenza fino al ${model.meta.asOfDateLabel}.`}
+      subtitle={`Valore del lavoro attribuito a questi anni fino al ${model.meta.asOfDateLabel}.`}
     />
     <HistoricalKpiCard
-      title="Miglior anno chiuso"
+      title="Anno migliore"
       value={
         model.kpis.bestClosedYear.revenue == null
           ? "N/D"
@@ -37,12 +37,12 @@ export const DashboardHistoricalKpis = ({
       icon={<Trophy className="h-4 w-4" />}
       subtitle={
         model.kpis.bestClosedYear.year == null
-          ? "Servono anni chiusi per calcolare il migliore."
-          : `Anno ${model.kpis.bestClosedYear.year}.`
+          ? "Servono almeno due anni completi per capire quale sia il migliore."
+          : `Tra gli anni completi, il migliore è il ${model.kpis.bestClosedYear.year}.`
       }
     />
     <HistoricalKpiCard
-      title="Ultimo anno chiuso"
+      title="Ultimo anno completo"
       value={
         model.kpis.latestClosedYearRevenue.revenue == null
           ? "N/D"
@@ -51,12 +51,12 @@ export const DashboardHistoricalKpis = ({
       icon={<CalendarRange className="h-4 w-4" />}
       subtitle={
         model.kpis.latestClosedYearRevenue.year == null
-          ? "Ancora nessun anno chiuso disponibile."
-          : `Anno ${model.kpis.latestClosedYearRevenue.year}.`
+          ? "Non c'è ancora un anno completo disponibile."
+          : `Qui vedi il ${model.kpis.latestClosedYearRevenue.year}, l'ultimo anno completo disponibile.`
       }
     />
     <HistoricalKpiCard
-      title="Crescita YoY"
+      title="Crescita rispetto all'anno prima"
       value={model.kpis.yoyClosedYears.formattedValue}
       icon={<YoYIcon yoy={model.kpis.yoyClosedYears} />}
       footer={<YoYFooter yoy={model.kpis.yoyClosedYears} />}

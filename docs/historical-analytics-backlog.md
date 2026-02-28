@@ -21,8 +21,16 @@ layer:
 - the apparent "empty" result with the publishable/anon key was traced to RLS
   on security-invoker views, not to missing data.
 
-The next unfinished work is browser-level QA and UX hardening of the new AI
-summary flow.
+The implementation is now functionally closed for v1:
+
+- remote data/runtime verified,
+- authenticated browser path verified,
+- baseline UI tests added for the historical widgets,
+- visible dashboard copy translated into plain Italian for non-expert users,
+- and the AI summary card has basic readability polish applied.
+
+The next work is optional refinement or future expansion, not a missing core
+piece of the shipped flow.
 
 ## How To Use This Backlog In A New Chat
 
@@ -93,50 +101,81 @@ Ask the new session to:
   - `historical_analytics_summary` returned `200 OK`
   - model resolved to `gpt-5.2`
   - OpenAI summary included the expected YTD / closed-year framing
+- Authenticated browser smoke test completed on `2026-02-28`:
+  - `Storico` renders the historical KPIs/charts/cards in the real UI
+  - the `Analisi AI dello storico` card renders a generated answer in-browser
+  - the visible output is coherent with the approved semantics:
+    - two closed years: `2024-2025`
+    - `2026` framed as `YTD`
+    - `YoY` framed as `2025 vs 2024`
+
+### UI test coverage and AI card polish added
+
+- Added UI test infrastructure for React components:
+  - `jsdom`
+  - `@testing-library/react`
+- Added baseline widget/UI tests:
+  - `DashboardHistorical.ui.test.tsx`
+  - `DashboardHistoricalWidgets.test.tsx`
+- Covered states:
+  - parent empty state
+  - parent error state + retry
+  - contextual YoY warning state
+  - widget-level error states
+  - widget empty states
+  - YoY `N/D` rendering
+- Polished AI markdown rendering:
+  - visible list bullets
+  - better paragraph/list spacing inside the AI summary card
+
+### Plain-language translation layer added
+
+- Replaced user-facing jargon in the historical dashboard:
+  - `YTD` -> plain wording such as `finora` / `anno in corso fino a oggi`
+  - `YoY` -> `crescita rispetto all'anno prima`
+  - `competenza` -> explanation centered on `valore del lavoro`, not accounting terms
+- Rewrote historical cards and helper copy for a non-expert business owner
+- Reworked the OpenAI prompt so the AI explains the numbers in plain Italian,
+  translating any unavoidable technical term immediately
+- Remote function redeployed after the prompt rewrite
 
 ## Priority 1
 
-### Browser smoke test the AI summary card
+### Optional prompt / markdown polish of the AI card
 
 Why:
 
-- the server-side runtime path is now verified end-to-end,
-- but the final browser click-path still has not been exercised in this
-  environment.
+- the browser output is now semantically correct and understandable,
+- but product may still want a denser or more opinionated presentation.
 
 Tasks:
 
-- open `Storico` in the authenticated app,
-- click `Genera analisi`,
-- verify the loading / success / error states of the card,
-- verify the model selected in Settings is respected,
-- refine prompt/copy only if the live output is weak or ambiguous.
+- only if useful after UI review, tighten prompt formatting or card typography,
+- keep the semantic rules unchanged,
+- avoid introducing a chat flow at this stage.
 
 Acceptance:
 
-- the card works from the real authenticated browser app,
-- the output stays aligned with historical semantics,
-- no key is exposed client-side.
+- the generated summary is easier to scan without changing the business logic.
 
 ## Priority 2
 
-### Add UI tests for historical widgets
+### Keep the new UI tests updated if widgets evolve
 
 Why:
 
-- current tests lock semantic calculations,
-- but not visual behavior, empty states, or local widget error states.
+- the current v1 is now protected by UI tests,
+- so future widget changes should extend those tests instead of silently
+  bypassing them.
 
 Tasks:
 
-- test empty historical state,
-- test widget-level error rendering,
-- test contextual subtitles,
-- test YoY `N/D` rendering.
+- when historical widgets change, update the UI tests in the same branch,
+- keep coverage for empty/error/YTD/YoY semantics.
 
 Acceptance:
 
-- regressions in copy or semantic rendering get caught before shipping.
+- regressions in copy or semantic rendering keep getting caught before shipping.
 
 ## Priority 3
 

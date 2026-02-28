@@ -18,9 +18,11 @@ export const DashboardHistoricalTopClientsCard = ({
   return (
     <Card className="gap-0">
       <CardHeader className="px-4 pb-3">
-        <CardTitle className="text-base">Top clienti all-time</CardTitle>
+        <CardTitle className="text-base">Clienti più importanti finora</CardTitle>
         <p className="text-xs text-muted-foreground">
-          Compensi maturati fino al {model.meta.asOfDateLabel}, non incassi.
+          Chi ti ha portato più valore fino al {model.meta.asOfDateLabel}. Non
+          sono soldi già incassati: è il valore del lavoro attribuito a ciascun
+          cliente.
         </p>
       </CardHeader>
       <CardContent className="px-4 pb-4">

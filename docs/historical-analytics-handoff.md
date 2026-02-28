@@ -115,18 +115,31 @@ Current behavior:
 - the historical dashboard now has a manual `Analisi AI` card that calls the
   edge function only on user action,
 - the chosen model is configured in Settings and defaults to `gpt-5.2`,
+- the visible dashboard copy is now translated into plain Italian for a
+  non-expert business owner,
+- the AI prompt now explicitly avoids jargon and explains terms like `YTD`,
+  `YoY`, and `competenza` in simpler language,
+- the AI card now renders markdown lists with clearer bullets and spacing,
 - there is still no conversational assistant/chat flow in the UI.
 
 ### Tests added
 
 - `src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
+- `src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx`
+- `src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx`
 
 Covered today:
 
 - current year treated as YTD,
 - YoY based on last two closed years,
 - zero-baseline YoY returns `N/D`,
-- analytics context serialization.
+- analytics context serialization,
+- parent historical empty state,
+- parent historical error state with retry,
+- contextual YoY warning rendering,
+- widget-level error states,
+- widget-level empty states,
+- YoY `N/D` UI rendering.
 
 ## Validation Done
 
@@ -134,6 +147,7 @@ Successful commands:
 
 - `npm run typecheck`
 - `npm test -- --run src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
+- `npm test -- --run src/components/atomic-crm/dashboard/DashboardHistorical.ui.test.tsx src/components/atomic-crm/dashboard/DashboardHistoricalWidgets.test.tsx src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
 - `npx supabase db push`
 - `curl` verification against remote PostgREST with the linked project `service_role`
   key
@@ -188,8 +202,19 @@ Inference from the repository policies:
   - the selected model resolved to `gpt-5.2`,
   - and the generated markdown summary correctly framed `2026` as `YTD` and
     `2025 vs 2024` as the closed-year comparison,
-- this session still did not run a full browser UI smoke test in this
-  environment.
+- browser evidence collected on `2026-02-28` also confirms the real
+  authenticated UI path:
+  - the `Storico` dashboard renders KPIs, charts, top clients, and context
+    cards correctly,
+  - the `Analisi AI dello storico` card renders a generated answer in-browser,
+  - the visible answer remains aligned with the approved semantics,
+- therefore the first historical AI flow is now verified both at remote runtime
+  level and at browser click-path level.
+- after the plain-language prompt rewrite, the remote function was redeployed
+  and returned a simpler answer starting with:
+  - `## In breve`
+  - plain wording like `valore del lavoro`, `anno in corso fino a oggi`, and
+    `crescita rispetto all'anno prima`
 
 ### Remote AI runtime note
 
@@ -252,16 +277,13 @@ Impact:
 
 ## Known Risks / Open Edges
 
-- Browser-level smoke for the `Storico` tab was not executed in this
-  environment, even though the remote analytics resources and the AI function
-  were verified.
 - FakeRest/demo historical resources remain unimplemented, but this is now
   explicitly de-prioritized for the current product scope.
-- The OpenAI summary flow is deployed, but it was not exercised end-to-end from
-  an authenticated browser session in this environment.
 - The assistant-ready payload exists, but no conversational chat flow exists
   yet.
-- Component-level UI tests for the new history widgets are still missing.
+- The browser output is now understandable for non-expert users, but markdown
+  readability may still deserve further polish only if product wants a denser
+  or more scannable layout.
 
 ## Recommended Next Session Order
 
@@ -272,9 +294,9 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Execute an authenticated browser smoke test of `Storico -> Analisi AI` and
-   refine prompt/copy only if the rendered output looks weak in the real UI.
-2. Add UI tests for empty/error/historical rendering states.
+1. Only if useful after review, polish prompt/copy or markdown presentation of
+   the AI card further.
+2. Keep the new historical UI tests updated whenever the widgets evolve.
 3. Only later, if useful, evolve the summary card into a conversational
    assistant flow.
 4. Only later, if the product scope changes, revisit FakeRest/demo historical
@@ -289,5 +311,5 @@ Stable rollback note:
 - Read the backlog:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
-  - browser click-test of `Storico -> Analisi AI`
-  - UI tests for historical widgets
+  - optional AI card readability polish
+  - keeping historical UI tests aligned with future widget changes

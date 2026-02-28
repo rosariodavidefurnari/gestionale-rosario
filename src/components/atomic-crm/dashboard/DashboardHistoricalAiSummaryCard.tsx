@@ -47,13 +47,14 @@ export const DashboardHistoricalAiSummaryCard = () => {
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Bot className="h-4 w-4" />
-            Analisi AI dello storico
+            AI: spiegami questi numeri
           </CardTitle>
           <Badge variant="outline">{selectedModel}</Badge>
         </div>
         <p className="text-xs text-muted-foreground">
-          Genera una lettura sintetica dello storico usando il contesto
-          semantico già validato. La richiesta parte solo quando la lanci tu.
+          Ti spiega cosa sta succedendo in parole semplici, senza gergo
+          finanziario, usando solo i dati del gestionale. La richiesta parte
+          solo quando la lanci tu.
         </p>
       </CardHeader>
 
@@ -64,14 +65,14 @@ export const DashboardHistoricalAiSummaryCard = () => {
               <Badge variant="secondary">{data.model}</Badge>
               <span>Generata il {formatGeneratedAt(data.generatedAt)}</span>
             </div>
-            <Markdown className="text-sm leading-6 [&_h2]:text-sm [&_h2]:font-semibold [&_ul]:pl-5 [&_li]:mb-1">
+            <Markdown className="text-sm leading-6 [&_h2]:mt-4 [&_h2]:text-sm [&_h2]:font-semibold [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:font-semibold">
               {data.summaryMarkdown}
             </Markdown>
           </div>
         ) : (
           <div className="rounded-md border border-dashed px-4 py-6 text-sm text-muted-foreground">
-            Nessuna analisi generata. Usa il bottone qui sotto per ottenere una
-            sintesi in italiano basata solo sui dati storici aggregati.
+            Nessuna spiegazione generata. Usa il bottone qui sotto per farti
+            spiegare lo storico in italiano semplice.
           </div>
         )}
 
@@ -88,7 +89,7 @@ export const DashboardHistoricalAiSummaryCard = () => {
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            {data ? "Rigenera analisi" : "Genera analisi"}
+            {data ? "Rigenera spiegazione" : "Spiegami lo storico"}
           </Button>
         </div>
       </CardContent>

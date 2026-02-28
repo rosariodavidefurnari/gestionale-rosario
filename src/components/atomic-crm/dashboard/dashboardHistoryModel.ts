@@ -154,7 +154,7 @@ const formatAsOfDate = (value: string) => {
 };
 
 const formatYearLabel = (year: number, isYtd: boolean) =>
-  isYtd ? `${year} YTD` : `${year}`;
+  isYtd ? `${year} finora` : `${year}`;
 
 const pushQualityFlag = (
   flags: HistoricalQualityFlag[],
