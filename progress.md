@@ -2,9 +2,70 @@
 
 ## Current Phase
 
-🟢 Tipi servizio editabili da Impostazioni. CHECK constraint dinamici rimossi. Typecheck 0 errori.
+🟢 DateTime Range Support completo + bug fix audit. Migration pushata al remoto. Typecheck 0 errori, build OK, 42/42 test.
 
 ## Last Session
+
+### Sessione 16 (2026-02-28, DateTime Range Support)
+
+- Completed:
+  - **DB Migration**: `20260228120000_datetime_range_support.sql`
+    - quotes: event_date → event_start (TIMESTAMPTZ) + event_end (TIMESTAMPTZ) + all_day (BOOLEAN DEFAULT true)
+    - projects: start_date/end_date convertiti a TIMESTAMPTZ + all_day aggiunto; CHECK constraint droppato e ricreato
+    - services: service_date → TIMESTAMPTZ + service_end (TIMESTAMPTZ) + all_day (BOOLEAN DEFAULT true)
+    - client_tasks: all_day (BOOLEAN DEFAULT true) aggiunto
+  - **Utility condivise**: `src/components/atomic-crm/misc/formatDateRange.ts`
+    - `formatDateRange(start, end, allDay)` — per liste/card (dd/MM/yyyy o dd/MM/yyyy HH:mm)
+    - `formatDateLong(start, end, allDay)` — per PDF (formato lungo italiano con date-fns locale)
+  - **Types + i18n**: Aggiornati `types.ts` e `i18nProvider.tsx` per tutti i moduli
+  - **Preventivi** (5 file): QuoteInputs (BooleanInput + DateComponent condizionale), QuoteCard (formatDateRange), QuoteShow, QuotePDF (formatDateLong), QuoteList (exporter CSV aggiornato)
+  - **Servizi** (4 file): ServiceInputs (BooleanInput + service_end), ServiceShow, ServiceListContent, ServiceList (exporter CSV)
+  - **Progetti** (4 file): ProjectInputs (BooleanInput + DateComponent condizionale), ProjectShow (periodo combinato), ProjectListContent ("Periodo" con formatDateRange), ProjectList (exporter CSV)
+  - **Promemoria** (3 file): TaskFormContent (BooleanInput + DateComponent), TaskCreateSheet (default all_day + transform), Task (formatDateRange + postponeDate helper)
+  - **Verifica**: Typecheck 0 errori, build OK (6.27s), 42/42 test passati
+
+- Decisions:
+  - Pattern Google Calendar: all_day=true → DateInput (solo data), all_day=false → DateTimeInput (data+ora)
+  - DATE → TIMESTAMPTZ migration sicura (DATE_TRUNC funziona identicamente, PostgREST accetta YYYY-MM-DD)
+  - CHECK constraint: DROP → ALTER TYPE → RECREATE (pattern sicuro per cambio tipo colonna)
+  - postponeDate preserva il time component quando all_day=false
+  - Colonna "Periodo" nei progetti unifica start_date + end_date in una sola cella con formatDateRange
+
+- Migration created:
+  - `supabase/migrations/20260228120000_datetime_range_support.sql`
+
+- Files created:
+  - `src/components/atomic-crm/misc/formatDateRange.ts`
+
+- Files modified:
+  - `src/components/atomic-crm/types.ts` (Quote: +event_start/event_end/all_day, Project: +all_day, Service: +service_end/all_day, ClientTask: +all_day)
+  - `src/components/atomic-crm/root/i18nProvider.tsx` (labels per nuovi campi)
+  - `src/components/atomic-crm/quotes/QuoteInputs.tsx` (BooleanInput + DateComponent)
+  - `src/components/atomic-crm/quotes/QuoteCard.tsx` (formatDateRange)
+  - `src/components/atomic-crm/quotes/QuoteShow.tsx` (formatDateRange)
+  - `src/components/atomic-crm/quotes/QuotePDF.tsx` (formatDateLong)
+  - `src/components/atomic-crm/quotes/QuoteList.tsx` (exporter CSV)
+  - `src/components/atomic-crm/services/ServiceInputs.tsx` (BooleanInput + service_end)
+  - `src/components/atomic-crm/services/ServiceShow.tsx` (formatDateRange)
+  - `src/components/atomic-crm/services/ServiceListContent.tsx` (formatDateRange)
+  - `src/components/atomic-crm/services/ServiceList.tsx` (exporter CSV)
+  - `src/components/atomic-crm/projects/ProjectInputs.tsx` (BooleanInput + DateComponent)
+  - `src/components/atomic-crm/projects/ProjectShow.tsx` (formatDateRange, "Periodo" combinato)
+  - `src/components/atomic-crm/projects/ProjectListContent.tsx` (formatDateRange, "Periodo")
+  - `src/components/atomic-crm/projects/ProjectList.tsx` (exporter CSV)
+  - `src/components/atomic-crm/tasks/TaskFormContent.tsx` (BooleanInput + DateComponent)
+  - `src/components/atomic-crm/tasks/TaskCreateSheet.tsx` (default all_day + transform)
+  - `src/components/atomic-crm/tasks/Task.tsx` (formatDateRange + postponeDate)
+
+- Continued (bug fix audit):
+  - **Migration fix**: DROP VIEW monthly_revenue + project_financials prima di ALTER TYPE service_date, poi RECREATE
+  - **Migration pushata** al DB remoto con successo
+  - **Validazione date range** aggiunta: event_end >= event_start (QuoteInputs), service_end >= service_date (ServiceInputs)
+  - **Default all_day mancanti**: aggiunti a ProjectCreate, ServiceCreate, QuoteCreate, AddTask
+  - **AddTask transform**: ora condizionale su all_day (non forza mezzanotte se all_day=false)
+  - **Dashboard UpcomingServiceAlert**: aggiunto serviceEnd + allDay al tipo e al builder, DashboardAlertsCard usa formatDateRange quando allDay=false
+
+- Next action: Test visivo completo, deploy Vercel
 
 ### Sessione 15 (2026-02-28, tipi servizio configurabili)
 

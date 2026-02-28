@@ -388,3 +388,59 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   `{ id, name }`. Quando si migra, aggiornare TUTTI i consumatori: `type.id` → `type.value`,
   `type.name` → `type.label`. Se un SelectInput usa `optionValue="value"` e `optionText="label"`,
   i choices devono avere quei campi.
+
+- [2026-02-28] **DateTimeInput già disponibile in admin/** — Il componente
+  `src/components/admin/date-time-input.tsx` usa `<input type="datetime-local">` e gestisce
+  conversione ISO automatica (format: ISO→local, parse: local→ISO via `.toISOString()`).
+  Mai usato finora nel gestionale, ma pronto per datetime range support.
+
+- [2026-02-28] **DATE → TIMESTAMPTZ migration sicura** — `ALTER COLUMN TYPE TIMESTAMPTZ USING
+  col::TIMESTAMPTZ` converte DATE a mezzanotte UTC. DATE_TRUNC funziona identicamente su
+  TIMESTAMPTZ (monthly_revenue, project_financials non necessitano modifiche). PostgREST
+  accetta stringhe `YYYY-MM-DD` per colonne TIMESTAMPTZ (cast automatico a mezzanotte UTC).
+
+- [2026-02-28] **Pattern all_day per date/datetime (stile Google Calendar)** — Aggiungere un
+  campo `all_day BOOLEAN DEFAULT true` accanto alle colonne TIMESTAMPTZ. Nel form: toggle
+  BooleanInput che commuta tra DateInput (all_day=true) e DateTimeInput (all_day=false).
+  Nel display: formattare con/senza ora in base al flag. Questo pattern è compatibile con
+  Google Calendar API e copre tutti i casi (giorno singolo, range, con/senza orario).
+
+- [2026-02-28] **CHECK constraints: DROP prima di ALTER TYPE, poi RECREATE** — Se una colonna
+  ha un CHECK constraint e si fa ALTER TYPE, PostgreSQL può rifiutare o generare risultati
+  inaspettati. Pattern sicuro: DROP CONSTRAINT → ALTER TYPE → ADD CONSTRAINT (la comparazione
+  >= funziona ugualmente con TIMESTAMPTZ).
+
+- [2026-02-28] **Utility condivise in misc/ per formattazione date** — Quando lo stesso pattern
+  di formattazione data (con varianti all_day/range) serve in 10+ file, creare una utility
+  condivisa in `src/components/atomic-crm/misc/` (max 50 righe). Evita duplicazione e garantisce
+  coerenza. Pattern: `formatDateRange(start, end, allDay)` + `formatDateLong(date, allDay)`.
+
+- [2026-02-28] **Conditional DateComponent con useWatch** — Pattern per toggle all_day nei form:
+  `const allDay = useWatch({ name: "all_day" }) ?? true;` +
+  `const DateComponent = allDay ? DateInput : DateTimeInput;`. Usare `<DateComponent source="..." />`
+  per commutare automaticamente tra data e data+ora. Importare sempre sia DateInput che DateTimeInput.
+
+- [2026-02-28] **postponeDate deve preservare il time** — Quando si rimanda un task (domani,
+  prossima settimana), se `all_day=false` il time component va preservato: restituire
+  `.toISOString()` completo, non `.slice(0, 10)`. Il flag all_day guida il formato output.
+
+- [2026-02-28] **Migration con DROP + ALTER TYPE + RECREATE per CHECK** — Quando si converte
+  una colonna con CHECK constraint (es: `end_date >= start_date`) da DATE a TIMESTAMPTZ, il
+  pattern sicuro è: `DROP CONSTRAINT` → `ALTER TYPE USING col::TIMESTAMPTZ` → `ADD CONSTRAINT`.
+  La comparazione `>=` funziona identicamente con TIMESTAMPTZ.
+
+- [2026-02-28] **event_date → event_start + event_end richiede data migration** — Quando si
+  rinomina/split una colonna (quote.event_date → event_start), nella migration serve l'UPDATE
+  per copiare i dati esistenti prima del DROP della colonna vecchia:
+  `UPDATE SET event_start = event_date::TIMESTAMPTZ WHERE event_date IS NOT NULL;`
+
+- [2026-02-28] **ALTER TYPE fallisce se una VIEW dipende dalla colonna** — PostgreSQL impedisce
+  `ALTER COLUMN TYPE` se una view referenzia quella colonna. Pattern: `DROP VIEW` prima
+  dell'ALTER, poi `CREATE VIEW` dopo. Verificare TUTTE le views che usano la colonna (non solo
+  quelle ovvie). Nel gestionale: `services.service_date` era usato da `monthly_revenue` E
+  `project_financials` — entrambe andavano droppate e ricreate.
+
+- [2026-02-28] **Transform nel CreateSheet per all_day** — Quando `all_day=true` e il form usa
+  DateInput (che salva `YYYY-MM-DD`), il transform deve impostare le ore a mezzanotte:
+  `if (data.all_day) { dueDate.setHours(0, 0, 0, 0); return {...data, due_date: dueDate.toISOString()}; }`
+  Questo garantisce coerenza con TIMESTAMPTZ nel DB.

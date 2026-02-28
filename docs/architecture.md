@@ -5,7 +5,7 @@
 Fork di Atomic CRM personalizzato per gestire l'attività professionale
 di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
-## Stato Infrastruttura (verificato sessione 14, aggiornato)
+## Stato Infrastruttura (verificato sessione 16, aggiornato)
 
 ### Certezze — Audit superato
 
@@ -31,9 +31,10 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 | Signup pubblico | DISABILITATO (config.toml) | sessione 4 |
 | Keep-alive workflow | Attivo, testato con successo (HTTP 200) | `gh workflow run` |
 | Localizzazione IT | Completa su ~70+ file, 3 livelli | audit sessione 4 |
-| Typecheck | 0 errori | sessione 11 |
-| Build produzione (`npm run build`) | OK | sessione 11 |
-| Test | 42/42 passati | sessione 11 |
+| DateTime Range Support (all_day pattern) | Implementato su 4 moduli | sessione 16 |
+| Typecheck | 0 errori | sessione 16 |
+| Build produzione (`npm run build`) | OK (6.27s) | sessione 16 |
+| Test | 42/42 passati | sessione 16 |
 | Lint | 0 nuovi errori | sessione 11 |
 | Deploy Vercel | gestionale-rosario.vercel.app | sessione 5 |
 
@@ -51,12 +52,12 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 | Tabella | Scopo | RLS | Colonne |
 |---------|-------|-----|---------|
 | clients | Anagrafica clienti | auth.uid() IS NOT NULL | 12 col (incl. tags BIGINT[]), 2 CHECK |
-| projects | Progetti/programmi | auth.uid() IS NOT NULL | 12 col, 3 CHECK |
-| services | Registro lavori (cuore) | auth.uid() IS NOT NULL | 14 col (incl. discount), no CHECK service_type (dinamico) |
-| quotes | Preventivi + pipeline Kanban | auth.uid() IS NOT NULL | 13 col (incl. index), 1 CHECK (10 stati), no CHECK service_type (dinamico) |
+| projects | Progetti/programmi | auth.uid() IS NOT NULL | 13 col (+all_day), start_date/end_date TIMESTAMPTZ, 3 CHECK |
+| services | Registro lavori (cuore) | auth.uid() IS NOT NULL | 16 col (+service_end, +all_day, service_date TIMESTAMPTZ), no CHECK service_type (dinamico) |
+| quotes | Preventivi + pipeline Kanban | auth.uid() IS NOT NULL | 15 col (+event_start, +event_end, +all_day, -event_date), 1 CHECK (10 stati), no CHECK service_type (dinamico) |
 | payments | Tracking pagamenti | auth.uid() IS NOT NULL | 12 col, 3 CHECK + tipo rimborso |
 | expenses | Spese e km | auth.uid() IS NOT NULL | 11 col, 1 CHECK + tipo credito_ricevuto |
-| client_tasks | Promemoria (opzionalmente legati a un cliente) | auth.uid() IS NOT NULL | 8 col, FK opzionale |
+| client_tasks | Promemoria (opzionalmente legati a un cliente) | auth.uid() IS NOT NULL | 9 col (+all_day), due_date TIMESTAMPTZ, FK opzionale |
 | client_notes | Note clienti (con allegati) | auth.uid() IS NOT NULL | 7 col, FK obbligatoria |
 | settings | Configurazione | auth.uid() IS NOT NULL | 3 col (key-value) |
 | keep_alive | Heartbeat free tier | SELECT public | 3 col |
@@ -118,6 +119,7 @@ PK esplicite nel dataProvider:
 | `20260227224515_unique_project_client_name.sql` | UNIQUE (client_id, name) su projects |
 | `20260227230519_add_quotes_service_type_check.sql` | CHECK su quotes.service_type (poi droppato) |
 | `20260227231714_drop_service_type_checks.sql` | DROP CHECK su quotes + services service_type (tipi ora dinamici) |
+| `20260228120000_datetime_range_support.sql` | DateTime Range Support: DATE→TIMESTAMPTZ, event_date→event_start/end, all_day su 4 tabelle |
 
 ## Moduli Frontend (sessione 11)
 
@@ -225,6 +227,15 @@ expenses, quotes                           ← CRUD/Kanban con pagine
 client_tasks                               ← Lista con pagina desktop + mobile
 client_notes, sales, tags                  ← Headless (senza pagina dedicata)
 ```
+
+### Utility condivise (misc/)
+
+| File | Scopo |
+|------|-------|
+| `misc/formatDateRange.ts` | `formatDateRange(start, end, allDay)` e `formatDateLong(start, end, allDay)` — formattazione date coerente con supporto range e all_day |
+| `misc/ErrorMessage.tsx` | Componente errore riutilizzabile con AlertCircle |
+| `misc/CreateSheet.tsx` | Sheet mobile per creazione record |
+| `misc/FormToolbar.tsx` | Toolbar form con Save/Delete |
 
 ## Tipi TypeScript (types.ts)
 
