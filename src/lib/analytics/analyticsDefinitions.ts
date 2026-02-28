@@ -67,6 +67,32 @@ export const analyticsMetricDefinitions: AnalyticsMetricDefinition[] = [
       "Confronta sempre gli ultimi due anni chiusi. Mai anno corrente YTD vs anno pieno.",
     defaultSubtitle: "Crescita su anni chiusi.",
   },
+  {
+    id: "historical_total_cash_inflow",
+    label: "Incassi storici totali",
+    basis: "cash_inflow",
+    grain: "all_time",
+    unit: "currency",
+    formula:
+      "Somma annuale degli incassi ricevuti dal primo anno con pagamenti fino alla as_of_date.",
+    naPolicy: "0 se non esistono pagamenti ricevuti fino alla as_of_date.",
+    interpretationRule:
+      "Usa pagamenti ricevuti con base temporale payment_date e non va confrontato direttamente con i compensi per competenza.",
+    defaultSubtitle:
+      "Incassi ricevuti, inclusa la quota YTD dell'anno corrente.",
+  },
+  {
+    id: "latest_closed_year_cash_inflow",
+    label: "Ultimo anno chiuso incassato",
+    basis: "cash_inflow",
+    grain: "year",
+    unit: "currency",
+    formula: "Incassi ricevuti nell'ultimo anno chiuso disponibile.",
+    naPolicy: "N/D se non esistono anni chiusi con pagamenti nella serie.",
+    interpretationRule:
+      "Legge solo gli incassi ricevuti con payment_date nell'ultimo anno chiuso disponibile.",
+    defaultSubtitle: "Ultimo anno chiuso disponibile per incassi ricevuti.",
+  },
 ];
 
 export const analyticsMetricDefinitionMap = new Map(

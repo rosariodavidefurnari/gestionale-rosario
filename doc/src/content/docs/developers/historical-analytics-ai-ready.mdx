@@ -166,6 +166,13 @@ Phase 2 optional views:
 - `analytics_yearly_cash_inflow`
 - `analytics_yearly_quote_outcomes`
 
+Implementation note as of `2026-02-28`:
+
+- `analytics_yearly_cash_inflow` now exists as a semantic resource,
+- but it is intentionally not merged into the first `Storico` UI release,
+- because `compensi` and `incassi` must remain visually and semantically
+  separate.
+
 ### `analytics_business_clock`
 
 Purpose:
@@ -438,6 +445,86 @@ cross join clock
 where timezone(clock.business_timezone, s.service_date)::date <= clock.as_of_date
 group by c.id, c.name
 order by lifetime_revenue desc, c.name asc;
+```
+
+### `analytics_yearly_cash_inflow`
+
+Purpose:
+
+- expose yearly received cash inflow as a separate historical basis,
+- keep it explicitly distinct from competence-based revenue,
+- prepare future AI or UI consumers that need payment history without reading
+  raw `payments`.
+
+Columns:
+
+- `year`
+- `is_closed_year`
+- `is_ytd`
+- `as_of_date`
+- `cash_inflow`
+- `payments_count`
+- `projects_count`
+- `clients_count`
+
+Suggested definition:
+
+```sql
+create or replace view public.analytics_yearly_cash_inflow
+with (security_invoker=on) as
+with clock as (
+  select * from public.analytics_business_clock
+),
+payment_rows as (
+  select
+    timezone(clock.business_timezone, p.payment_date)::date as payment_local_date,
+    extract(year from timezone(clock.business_timezone, p.payment_date))::int as year,
+    p.amount,
+    p.project_id,
+    p.client_id
+  from public.payments p
+  cross join clock
+  where p.payment_date is not null
+    and timezone(clock.business_timezone, p.payment_date)::date <= clock.as_of_date
+    and p.status = 'ricevuto'
+    and p.payment_type <> 'rimborso'
+),
+bounds as (
+  select min(payment_rows.year) as first_year_with_payments
+  from payment_rows
+),
+years as (
+  select
+    generate_series(bounds.first_year_with_payments, clock.current_year, 1)::int as year
+  from bounds
+  cross join clock
+  where bounds.first_year_with_payments is not null
+),
+aggregated as (
+  select
+    payment_rows.year,
+    sum(payment_rows.amount) as cash_inflow,
+    count(*) as payments_count,
+    count(distinct payment_rows.project_id) filter (
+      where payment_rows.project_id is not null
+    ) as projects_count,
+    count(distinct payment_rows.client_id) as clients_count
+  from payment_rows
+  group by payment_rows.year
+)
+select
+  years.year,
+  years.year < clock.current_year as is_closed_year,
+  years.year = clock.current_year as is_ytd,
+  clock.as_of_date,
+  coalesce(aggregated.cash_inflow, 0) as cash_inflow,
+  coalesce(aggregated.payments_count, 0) as payments_count,
+  coalesce(aggregated.projects_count, 0) as projects_count,
+  coalesce(aggregated.clients_count, 0) as clients_count
+from years
+cross join clock
+left join aggregated on aggregated.year = years.year
+order by years.year asc;
 ```
 
 ## Why These Views Are Better Than Raw Fetching

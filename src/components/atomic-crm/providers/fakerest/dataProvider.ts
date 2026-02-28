@@ -13,6 +13,7 @@ import generateData from "./dataGenerator";
 import { withSupabaseFilterAdapter } from "./internal/supabaseAdapter";
 import type { AnalyticsContext } from "@/lib/analytics/buildAnalyticsContext";
 import type { AnnualOperationsContext } from "@/lib/analytics/buildAnnualOperationsContext";
+import type { HistoricalCashInflowContext } from "@/lib/analytics/buildHistoricalCashInflowContext";
 import type {
   AnnualOperationsAnalyticsAnswer,
   AnnualOperationsAnalyticsSummary,
@@ -130,6 +131,12 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
       "Historical analytics AI context is not available in the FakeRest provider.",
     );
   },
+  getHistoricalCashInflowContext:
+    async (): Promise<HistoricalCashInflowContext> => {
+      throw new Error(
+        "Historical cash inflow analytics context is not available in the FakeRest provider.",
+      );
+    },
   getAnnualOperationsAnalyticsContext:
     async (): Promise<AnnualOperationsContext> => {
       throw new Error(

@@ -10,6 +10,32 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-02-28] **Per una view storica con `generate_series` e limiti derivati
+  dai dati, separare prima i bounds in un CTE dedicato** — La prima versione di
+  `analytics_yearly_cash_inflow` usava `generate_series(min(payment_rows.year),
+  clock.current_year, 1)` nello stesso CTE dell'aggregazione e il push remoto
+  falliva con errore SQL su `GROUP BY`. Il pattern sicuro è:
+  1) calcolare `min(...)` in `bounds`
+  2) fare `generate_series(bounds.first_year..., clock.current_year, 1)` nel
+     CTE successivo
+
+- [2026-02-28] **Per provare che una nuova view Supabase serva davvero il
+  frontend, la verifica importante non è solo `service_role` ma anche una
+  lettura con utente autenticato** — Con `service_role` si conferma che schema e
+  dati esistono, ma il provider client userà publishable key + sessione utente.
+  Sul layer storico `incassi`, la chiusura corretta è stata:
+  1) query REST con `service_role`
+  2) creazione utente temporaneo
+  3) login password grant
+  4) query REST alla stessa view con token utente
+
+- [2026-02-28] **Su questa macchina, per i click-test browser del CRM conviene
+  usare Playwright via `npx` con il Chrome già installato** — Il pilotaggio
+  CDP raw era abbastanza forte per leggere il DOM, ma fragile sulle interazioni
+  più ricche nella parte bassa della pagina. Lo smoke di `Annuale` è diventato
+  stabile appena il browser test è passato a Playwright contro il Chrome locale
+  già presente.
+
 - [2026-02-28] **Quando aggiungi un payload semantico nuovo per l'AI ma non
   cambi la UI, uno smoke remoto autenticato può chiudere il dubbio più in
   fretta di un browser test completo** — Per il drill-down Annuale su
@@ -190,6 +216,12 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   mostrava dati reali. Se una view usa `security_invoker=on`, un risultato vuoto
   con ruolo anonimo puo essere solo l'effetto normale delle policy RLS sulle
   tabelle base, non un segnale che la migration non sia applicata.
+
+- [2026-02-28] **`supabase db dump` può non essere utile per verifiche remote
+  veloci su questa macchina perché passa da Docker** — Nel push del layer
+  storico `incassi`, `supabase db push` ha funzionato, ma `supabase db dump`
+  si è fermato subito con errore sul Docker daemon locale. Per view singole da
+  verificare al volo, qui conviene restare su REST API e auth temporanea.
 
 - [2026-02-28] **Per validare rapidamente Supabase remoto senza psql, usare
   `supabase projects api-keys` e poi interrogare PostgREST** — Quando il pooler

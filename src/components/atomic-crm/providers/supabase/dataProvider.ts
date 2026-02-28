@@ -38,6 +38,11 @@ import {
   type AnnualOperationsContext,
 } from "@/lib/analytics/buildAnnualOperationsContext";
 import {
+  buildHistoricalCashInflowContext,
+  type AnalyticsYearlyCashInflowRow,
+  type HistoricalCashInflowContext,
+} from "@/lib/analytics/buildHistoricalCashInflowContext";
+import {
   type AnnualOperationsAnalyticsAnswer,
   type AnnualOperationsAnalyticsSummary,
 } from "@/lib/analytics/annualAnalysis";
@@ -65,6 +70,7 @@ const baseDataProvider = supabaseDataProvider({
     .set("analytics_business_clock", ["id"])
     .set("analytics_history_meta", ["id"])
     .set("analytics_yearly_competence_revenue", ["year"])
+    .set("analytics_yearly_cash_inflow", ["year"])
     .set("analytics_yearly_competence_revenue_by_category", [
       "year",
       "category",
@@ -120,6 +126,27 @@ const getHistoricalAnalyticsContextFromViews = async () => {
   });
 
   return buildAnalyticsContext(historyModel);
+};
+
+const getHistoricalCashInflowContextFromViews = async () => {
+  const [metaResponse, cashInflowResponse] = await Promise.all([
+    baseDataProvider.getOne<AnalyticsHistoryMetaRow>("analytics_history_meta", {
+      id: 1,
+    }),
+    baseDataProvider.getList<AnalyticsYearlyCashInflowRow>(
+      "analytics_yearly_cash_inflow",
+      {
+        pagination: { page: 1, perPage: 200 },
+        sort: { field: "year", order: "ASC" },
+        filter: {},
+      },
+    ),
+  ]);
+
+  return buildHistoricalCashInflowContext({
+    meta: metaResponse.data,
+    yearlyCashInflowRows: cashInflowResponse.data,
+  });
 };
 
 const getConfiguredHistoricalAnalysisModel = async () => {
@@ -300,6 +327,9 @@ const dataProviderWithCustomMethods = {
   },
   async getHistoricalAnalyticsContext(): Promise<AnalyticsContext> {
     return getHistoricalAnalyticsContextFromViews();
+  },
+  async getHistoricalCashInflowContext(): Promise<HistoricalCashInflowContext> {
+    return getHistoricalCashInflowContextFromViews();
   },
   async getAnnualOperationsAnalyticsContext(
     year: number,

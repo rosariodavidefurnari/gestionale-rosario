@@ -105,6 +105,7 @@ New library files:
 Provider entry point added:
 
 - `dataProvider.getHistoricalAnalyticsContext()`
+- `dataProvider.getHistoricalCashInflowContext()`
 - `dataProvider.generateHistoricalAnalyticsSummary()`
 - `dataProvider.askHistoricalAnalyticsQuestion()`
 
@@ -143,6 +144,55 @@ Current behavior:
 - the Q&A flow includes suggested questions, a `300` character limit, and no
   memory between turns,
 - there is still no multi-turn conversational assistant/chat flow in the UI.
+
+### Historical cash-inflow semantic entry point added
+
+Migration created:
+
+- `supabase/migrations/20260228193000_add_historical_cash_inflow_view.sql`
+
+Semantic resource introduced:
+
+- `analytics_yearly_cash_inflow`
+
+Supporting frontend/library pieces:
+
+- `src/lib/analytics/buildHistoricalCashInflowContext.ts`
+- `src/lib/analytics/buildHistoricalCashInflowContext.test.ts`
+- `src/lib/analytics/analyticsDefinitions.ts`
+- `src/components/atomic-crm/providers/supabase/dataProvider.ts`
+
+Purpose:
+
+- expose historical `incassi` as a separate semantic basis,
+- keep them explicitly distinct from `compensi per competenza`,
+- give future AI or UI consumers a safe entry point without reading raw
+  `payments`.
+
+Current behavior:
+
+- the view groups only received payments by `payment_date`,
+- `rimborso` rows are excluded,
+- the current year is still marked as `YTD`,
+- the custom provider now exposes
+  `dataProvider.getHistoricalCashInflowContext()`,
+- but the existing `Storico` UI still does not render this resource directly.
+
+Remote validation completed on `2026-02-28`:
+
+- `npx supabase db push` applied the migration on the linked project
+- `service_role` REST query confirmed the new rows existed remotely
+- authenticated REST query with a temporary user confirmed the same resource is
+  readable on the real frontend auth path too
+- observed remote rows:
+  - `2025`:
+    - closed year
+    - `cash_inflow = 22241.64`
+    - `payments_count = 11`
+  - `2026`:
+    - `YTD`
+    - `cash_inflow = 1744.00`
+    - `payments_count = 1`
 
 ### Annual dashboard normalization completed before any AI rollout there
 
@@ -389,6 +439,28 @@ Validation now completed on the real answer path too:
   perimetro
 - no extra code change or edge-function deploy was needed after the context
   rollout
+
+Validation now completed on the real browser path too:
+
+- authenticated browser click-test completed on `2026-02-28`
+- local runtime used:
+  - `http://127.0.0.1:4173/`
+- automation used:
+  - Playwright via `npx`
+  - installed Google Chrome binary
+- verified UI path:
+  - login with temporary authenticated user
+  - open `Annuale`
+  - trigger the suggested payment/quote question
+  - wait for the answer in browser
+- observed result:
+  - the answer cited `Diego Caltabiano`
+  - the answer correctly stated that no open quotes were present in the same
+    `2026` perimetro
+  - browser console errors:
+    - none
+  - browser page errors:
+    - none
 
 ### Browser click-tests now completed on both active tracks
 
@@ -701,9 +773,11 @@ Impact:
 - `Annuale` is still not AI-ready as a whole page:
   - only `annual_operations` has a dedicated AI context today
   - alerts and fiscal simulation remain outside that context
-- the richer `annual_operations` drill-down is now validated on the remote
-  answer path, but still deserves one narrow browser click-test on the same
-  payment/quote question set.
+- the richer `annual_operations` drill-down is now validated on both:
+  - the remote answer path
+  - the real browser UI path
+- the historical `incassi` resource now exists, but no user-facing consumer is
+  wired to it yet
 - The browser output is now understandable for non-expert users, but markdown
   readability may still deserve further polish only if product wants a denser
   or more scannable layout.
@@ -722,10 +796,8 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Browser-validate Annuale AI on questions about:
-   - pending payments
-   - open quotes
-   so the same drill-down evidence is also confirmed on the real UI path.
+1. Add the first AI-safe consumer of historical `incassi`, keeping
+   `compensi` and `incassi` clearly separated.
 2. Keep the new historical / annual / commercial tests updated whenever the
    widgets evolve.
 3. Only if useful after review, polish prompt/copy or markdown presentation of
@@ -744,6 +816,6 @@ Stable rollback note:
 - Read the backlog:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
-  - browser-validating Annuale AI on payment / open-quote questions
+  - adding the first AI-safe consumer of historical `incassi`
   - keeping historical, annual and commercial tests aligned with future widget changes
   - optional AI card readability polish

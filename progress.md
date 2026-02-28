@@ -2,20 +2,116 @@
 
 ## Current Phase
 
-🟢 Dashboard storico AI-ready stabile e nuova AI operativa su `Annuale`
-implementata sul solo contesto `annual_operations`, con click-test browser
-chiuso anche sul runtime reale. Anche il free-question path di `Storico` è ora
-browser-validato, e il primo slice della spina dorsale commerciale
-`Preventivo -> Progetto -> Pagamento` è validato sul percorso autenticato. In
-più, il quick payment da preventivo è ora validato anche per il caso semplice
-senza progetto, e la foundation `quote_items` è implementata e validata sul
-runtime reale. In più, `annual_operations` ora espone anche un drill-down
-AI-safe su `pagamenti da ricevere` e `preventivi aperti`. Prossimo passo:
-chiudere un click-test browser mirato di `Annuale` sulle domande
-`pagamenti/preventivi`, visto che la validazione remota del nuovo drill-down è
-già passata senza derive su alert o fiscale.
+🟢 Dashboard storico AI-ready stabile, AI operativa su `Annuale` chiusa sul
+solo contesto `annual_operations`, e primo ponte semantico storico sul lato
+pagamenti ormai aperto davvero: gli `incassi` hanno ora una resource dedicata,
+separata dai `compensi`, già testata localmente e verificata anche sul remoto
+sia con `service_role` sia con un utente autenticato normale. Anche il
+backbone commerciale minimo `Preventivo -> Progetto -> Pagamento` resta chiuso
+sul runtime reale, con quick payment senza progetto e foundation
+`quote_items` già validati. Prossimo passo sensato: decidere il primo consumer
+AI-safe del nuovo layer `incassi`, senza mischiarlo alla UI `Storico`
+esistente finché copy e caveat non sono pronti.
 
 ## Last Session
+
+### Sessione 41 (2026-02-28, semantica storica incassi)
+
+- Completed:
+  - **Primo layer semantico storico degli `incassi` aggiunto**:
+    - nuova view:
+      - `analytics_yearly_cash_inflow`
+    - nuovo context builder:
+      - `buildHistoricalCashInflowContext()`
+    - nuovo entry point nel provider:
+      - `dataProvider.getHistoricalCashInflowContext()`
+  - **Separazione esplicita mantenuta**:
+    - `compensi`
+      - base temporale `services.service_date`
+    - `incassi`
+      - base temporale `payments.payment_date`
+      - solo pagamenti `ricevuto`
+      - `rimborso` esclusi
+  - **Copertura minima aggiunta**:
+    - metriche semantiche:
+      - `historical_total_cash_inflow`
+      - `latest_closed_year_cash_inflow`
+    - test mirati sul context builder
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/analytics/buildHistoricalCashInflowContext.test.ts src/components/atomic-crm/dashboard/dashboardHistoryModel.test.ts`
+  - `npx supabase db push`
+  - query remota con `service_role` OK sulla nuova view:
+    - `2025` anno chiuso:
+      - `cash_inflow = 22241.64`
+      - `payments_count = 11`
+    - `2026` YTD:
+      - `cash_inflow = 1744.00`
+      - `payments_count = 1`
+  - query remota autenticata con utente temporaneo OK:
+    - `analytics_history_meta`
+    - `analytics_yearly_cash_inflow`
+
+- Decisions:
+  - il layer storico degli `incassi` vive per ora come resource semantica
+    separata, non dentro la UI `Storico`
+  - il prossimo passo non è rifare il dashboard storico, ma decidere un primo
+    consumer AI-safe del nuovo context
+
+- Notes:
+  - la migration iniziale falliva per una `generate_series(min(...),
+    current_year)` scritta nello stesso CTE dell'aggregazione:
+    - il fix corretto è stato separare i bounds in un CTE dedicato
+  - su questa macchina `supabase db dump` non è stato utile per la verifica
+    remota perché richiede Docker attivo:
+    - per confermare la leggibilità reale lato frontend, la verifica utile è
+      stata REST autenticata
+
+- Next action:
+  - definire il primo consumer AI-safe del nuovo context `incassi`
+  - mantenendo esplicito che:
+    - `compensi != incassi`
+
+### Sessione 40 (2026-02-28, browser click-test Annuale payment/open-quote)
+
+- Completed:
+  - **Click-test browser mirato di `Annuale` chiuso**:
+    - login reale con utente temporaneo
+    - apertura della dashboard `Annuale`
+    - trigger della domanda suggerita:
+      - `Cosa raccontano pagamenti e preventivi del 2026?`
+    - risposta AI renderizzata correttamente nel browser reale
+  - **Evidenza raccolta sul comportamento reale**:
+    - la risposta ha citato `Diego Caltabiano`
+    - la risposta ha spiegato correttamente che nel perimetro `2026` non
+      risultavano preventivi aperti
+    - nessun errore console
+    - nessun page error
+
+- Validation:
+  - click-test browser autenticato OK su `2026-02-28`
+  - runtime locale Vite:
+    - `http://127.0.0.1:4173/`
+  - automazione usata:
+    - Playwright via `npx`
+    - Google Chrome installato nella macchina
+
+- Decisions:
+  - il question set `pagamenti/preventivi` di `Annuale` è ora chiuso sia lato
+    remote smoke sia lato browser reale
+  - il prossimo step utile non è altro hardening su Annuale, ma il ponte
+    semantico storico degli `incassi`
+
+- Notes:
+  - per smoke browser locali su questa macchina, `playwright` via `npx` con il
+    Chrome già installato è molto più affidabile del pilotaggio CDP raw
+
+- Next action:
+  - aprire la semantica storica degli `incassi`
+  - mantenendo esplicita la distinzione:
+    - `compensi`
+    - `incassi`
 
 ### Sessione 39 (2026-02-28, remote validation Annuale drill-down)
 

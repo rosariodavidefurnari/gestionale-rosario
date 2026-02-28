@@ -45,11 +45,16 @@ The implementation is now functionally closed for v1:
   `pagamenti da ricevere` and `preventivi aperti`,
 - the Annuale AI answer path is now remotely validated on a real question about
   payments/open quotes using that richer drill-down,
-- and the `Annuale` AI card is now browser-validated on the real authenticated
-  UI path.
+- the `Annuale` AI card is now browser-validated on the real authenticated
+  UI path also on the specific payment/open-quote question set,
+- and a first historical `incassi` semantic resource now exists too:
+  - `analytics_yearly_cash_inflow`
+  - `buildHistoricalCashInflowContext()`
+  - `dataProvider.getHistoricalCashInflowContext()`
+  - with authenticated remote verification already closed.
 
-The next work is optional refinement or future expansion, not a missing core
-piece of the shipped flow.
+The next work is now future expansion on top of a stable shipped core, not a
+missing foundation piece.
 
 Cross-surface note:
 
@@ -453,31 +458,83 @@ Ask the new session to:
   - it is also actually used by the real AI answer path without additional
     code changes or new deploys.
 
+### Annuale browser click-test on payment/quote questions completed
+
+- Real authenticated browser click-test completed on `2026-02-28`
+- Validation setup:
+  - temporary authenticated user created on `qvdmzhyzpyaveniirsmo`
+  - local Vite runtime on `127.0.0.1:4173`
+  - real browser automation executed with Playwright using the installed
+    Google Chrome binary
+- Verified path:
+  - open login page
+  - sign in with the temporary user
+  - land on the real `Annuale` dashboard
+  - trigger the suggested question:
+    - `Cosa raccontano pagamenti e preventivi del 2026?`
+  - wait for the in-browser answer to render
+- Observed result:
+  - the answer cited `Diego Caltabiano`
+  - the answer stated correctly that no open quotes were present in the same
+    `2026` perimetro
+  - browser console errors observed during the path:
+    - `0`
+  - browser page errors observed during the path:
+    - `0`
+- Outcome:
+  - the Annuale AI payment/open-quote question set is now closed both:
+    - on the remote answer path
+    - and on the real browser UI path
+
+### Historical `incassi` semantic entry point added
+
+- Added migration:
+  - `20260228193000_add_historical_cash_inflow_view.sql`
+- Added semantic resource:
+  - `analytics_yearly_cash_inflow`
+- Added provider method:
+  - `dataProvider.getHistoricalCashInflowContext()`
+- Added semantic builder:
+  - `buildHistoricalCashInflowContext()`
+- Added metric definitions:
+  - `historical_total_cash_inflow`
+  - `latest_closed_year_cash_inflow`
+- Added tests:
+  - `buildHistoricalCashInflowContext.test.ts`
+- Added remote verification on `2026-02-28`:
+  - `service_role` REST query showed:
+    - `2025` closed year
+    - `2026` as `YTD`
+  - authenticated REST query with a temporary user showed the same rows
+- Scope rule preserved:
+  - do not merge `incassi` into the existing `Storico` UI yet
+  - keep `compensi` and `incassi` as separate semantic bases
+
 ## Priority 1
 
-### Browser-validate Annuale AI on the payment/open-quote question set
+### Add the first AI-safe consumer of historical `incassi`
 
 Why:
 
-- the remote answer path is now validated,
-- the remaining narrow gap is the real browser click-path for this specific
-  question family inside `Annuale`.
+- the historical `incassi` resource now exists and is already verified,
+- but no end-user or AI consumer reads it yet,
+- the next durable gain is to expose that resource without collapsing it into
+  the existing `compensi` UI.
 
 Tasks:
 
-- run an authenticated browser validation on Annuale,
-- ask a question specifically about payments/open quotes,
-- verify the answer still cites concrete entities from the drill-down when
-  useful,
-- verify the answer still avoids drifting into:
-  - alert snapshot
-  - fiscal simulation
-  - fake certainty.
+- define one dedicated consumer for the new context:
+  - AI-only helper
+  - or separate card/surface clearly labeled as `incassi`
+- keep the rule explicit:
+  - `compensi` != `incassi`
+- avoid mutating the current `Storico` widgets into mixed-basis widgets
+- keep labels and caveats as plain Italian, not accounting shorthand
 
 Acceptance:
 
-- the same targeted question set works end-to-end from the real Annuale UI,
-  not only from remote smoke.
+- the repo exposes one safe consumer of historical `incassi` that cannot be
+  confused with historical `compensi`.
 
 ## Priority 2
 
