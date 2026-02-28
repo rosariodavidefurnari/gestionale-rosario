@@ -1,10 +1,10 @@
 import { Draggable } from "@hello-pangea/dnd";
-import { format, isValid } from "date-fns";
 import { useGetOne, useRedirect } from "ra-core";
 import { Card, CardContent } from "@/components/ui/card";
 
 import type { Quote } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { formatDateRange } from "../misc/formatDateRange";
 
 export const QuoteCard = ({
   quote,
@@ -53,10 +53,11 @@ const QuoteCardContent = ({
   const serviceLabel =
     quoteServiceTypes.find((t) => t.value === quote.service_type)?.label ??
     quote.service_type;
-  const eventDate =
-    quote.event_date && isValid(new Date(quote.event_date))
-      ? format(new Date(quote.event_date), "dd/MM/yyyy")
-      : null;
+  const eventDate = formatDateRange(
+    quote.event_start,
+    quote.event_end,
+    quote.all_day,
+  );
 
   return (
     <div
@@ -84,7 +85,7 @@ const QuoteCardContent = ({
           )}
           <p className="text-xs text-muted-foreground truncate">
             {serviceLabel}
-            {eventDate ? ` - ${eventDate}` : ""}
+            {eventDate && ` - ${eventDate}`}
           </p>
           <p className="text-xs font-medium mt-1">
             {quote.amount.toLocaleString("it-IT", {

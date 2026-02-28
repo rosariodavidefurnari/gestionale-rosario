@@ -8,7 +8,7 @@ export const ProjectCreate = () => (
   <CreateBase redirect="show">
     <div className="mt-2 flex">
       <div className="flex-1">
-        <Form>
+        <Form defaultValues={{ all_day: true }}>
           <Card>
             <CardContent>
               <ProjectInputs />

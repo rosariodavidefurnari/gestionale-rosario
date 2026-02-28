@@ -84,16 +84,17 @@ export const AddTask = ({
         resource="client_tasks"
         record={{
           type: "none",
+          all_day: true,
           client_id: client?.id ?? null,
           due_date: new Date().toISOString().slice(0, 10),
         }}
         transform={(data) => {
-          const dueDate = new Date(data.due_date);
-          dueDate.setHours(0, 0, 0, 0);
-          return {
-            ...data,
-            due_date: dueDate.toISOString(),
-          };
+          if (data.all_day) {
+            const dueDate = new Date(data.due_date);
+            dueDate.setHours(0, 0, 0, 0);
+            return { ...data, due_date: dueDate.toISOString() };
+          }
+          return data;
         }}
         mutationOptions={{ onSuccess: handleSuccess }}
       >

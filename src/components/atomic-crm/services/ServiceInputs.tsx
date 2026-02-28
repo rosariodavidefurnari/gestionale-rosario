@@ -6,6 +6,8 @@ import { SelectInput } from "@/components/admin/select-input";
 import { ReferenceInput } from "@/components/admin/reference-input";
 import { NumberInput } from "@/components/admin/number-input";
 import { DateInput } from "@/components/admin/date-input";
+import { DateTimeInput } from "@/components/admin/date-time-input";
+import { BooleanInput } from "@/components/admin/boolean-input";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { ServiceTotals } from "./ServiceTotals";
@@ -33,13 +35,31 @@ export const ServiceInputs = () => {
 
 const ServiceIdentityInputs = () => {
   const { serviceTypeChoices } = useConfigurationContext();
+  const allDay = useWatch({ name: "all_day" }) ?? true;
+  const DateComponent = allDay ? DateInput : DateTimeInput;
+
   return (
     <div className="flex flex-col gap-4">
       <h6 className="text-lg font-semibold">Servizio</h6>
-      <DateInput
+      <BooleanInput
+        source="all_day"
+        label="Tutto il giorno"
+        defaultValue={true}
+      />
+      <DateComponent
         source="service_date"
-        label="Data servizio"
+        label="Data inizio"
         validate={required()}
+        helperText={false}
+      />
+      <DateComponent
+        source="service_end"
+        label="Data fine"
+        validate={(value: string, allValues: Record<string, unknown>) => {
+          if (value && allValues.service_date && value < (allValues.service_date as string)) {
+            return "La data fine non può essere prima della data inizio";
+          }
+        }}
         helperText={false}
       />
       <ReferenceInput source="project_id" reference="projects">

@@ -71,6 +71,7 @@ const exporter: Exporter<Project> = async (
     stato: project.status,
     data_inizio: project.start_date ?? "",
     data_fine: project.end_date ?? "",
+    tutto_il_giorno: project.all_day ? "Sì" : "No",
     budget: project.budget ?? "",
     note: project.notes ?? "",
   }));

@@ -59,6 +59,7 @@ export type ClientTask = {
   text: string;
   type: string;
   due_date: string;
+  all_day: boolean;
   done_date?: string | null;
   created_at: string;
   updated_at: string;
@@ -91,6 +92,7 @@ export type Project = {
   status: "in_corso" | "completato" | "in_pausa" | "cancellato";
   start_date?: string;
   end_date?: string;
+  all_day: boolean;
   budget?: number;
   notes?: string;
   created_at: string;
@@ -100,6 +102,8 @@ export type Project = {
 export type Service = {
   project_id: Identifier;
   service_date: string;
+  service_end?: string;
+  all_day: boolean;
   service_type:
     | "riprese"
     | "montaggio"
@@ -150,7 +154,9 @@ export type Expense = {
 export type Quote = {
   client_id: Identifier;
   service_type: string;
-  event_date?: string;
+  event_start?: string;
+  event_end?: string;
+  all_day: boolean;
   description?: string;
   amount: number;
   status: string;

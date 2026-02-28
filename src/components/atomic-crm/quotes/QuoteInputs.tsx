@@ -5,6 +5,8 @@ import { ReferenceInput } from "@/components/admin/reference-input";
 import { TextInput } from "@/components/admin/text-input";
 import { NumberInput } from "@/components/admin/number-input";
 import { DateInput } from "@/components/admin/date-input";
+import { DateTimeInput } from "@/components/admin/date-time-input";
+import { BooleanInput } from "@/components/admin/boolean-input";
 import { SelectInput } from "@/components/admin/select-input";
 import { Separator } from "@/components/ui/separator";
 
@@ -13,7 +15,10 @@ import { quoteStatuses } from "./quotesTypes";
 
 export const QuoteInputs = () => {
   const status = useWatch({ name: "status" });
+  const allDay = useWatch({ name: "all_day" }) ?? true;
   const { quoteServiceTypes } = useConfigurationContext();
+
+  const DateComponent = allDay ? DateInput : DateTimeInput;
 
   return (
     <div className="flex flex-col gap-4">
@@ -36,7 +41,26 @@ export const QuoteInputs = () => {
         helperText={false}
       />
 
-      <DateInput source="event_date" label="Data evento" helperText={false} />
+      <BooleanInput
+        source="all_day"
+        label="Tutto il giorno"
+        defaultValue={true}
+      />
+      <DateComponent
+        source="event_start"
+        label="Data inizio evento"
+        helperText={false}
+      />
+      <DateComponent
+        source="event_end"
+        label="Data fine evento"
+        validate={(value: string, allValues: Record<string, unknown>) => {
+          if (value && allValues.event_start && value < (allValues.event_start as string)) {
+            return "La data fine non può essere prima della data inizio";
+          }
+        }}
+        helperText={false}
+      />
 
       <TextInput
         source="description"

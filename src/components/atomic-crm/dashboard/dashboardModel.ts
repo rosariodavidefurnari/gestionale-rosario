@@ -82,6 +82,8 @@ export type PaymentAlert = {
 export type UpcomingServiceAlert = {
   id: string;
   serviceDate: string;
+  serviceEnd?: string;
+  allDay: boolean;
   projectName: string;
   clientName: string;
   serviceType: string;
@@ -405,6 +407,8 @@ export const buildDashboardModel = ({
       return {
         id: String(service.id),
         serviceDate: service.service_date,
+        serviceEnd: service.service_end ?? undefined,
+        allDay: service.all_day,
         projectName: project?.name ?? "Progetto",
         clientName,
         serviceType: service.service_type,

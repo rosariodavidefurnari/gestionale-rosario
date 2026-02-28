@@ -3,7 +3,6 @@ import { MoreVertical } from "lucide-react";
 import { useDeleteWithUndoController, useNotify, useUpdate } from "ra-core";
 import { useEffect, useState } from "react";
 import { ReferenceField } from "@/components/admin/reference-field";
-import { DateField } from "@/components/admin/date-field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -18,6 +17,7 @@ import type { Client, ClientTask } from "../types";
 import { TaskEdit } from "./TaskEdit";
 import { TaskEditSheet } from "./TaskEditSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatDateRange } from "../misc/formatDateRange";
 
 export const Task = ({
   task,
@@ -107,7 +107,7 @@ export const Task = ({
             </div>
             <div className="text-sm text-muted-foreground">
               scadenza&nbsp;
-              <DateField source="due_date" record={task} />
+              {formatDateRange(task.due_date, undefined, task.all_day)}
               {showClient && task.client_id && (
                 <ReferenceField<ClientTask, Client>
                   source="client_id"
@@ -146,13 +146,10 @@ export const Task = ({
             <DropdownMenuItem
               className="cursor-pointer h-12 md:h-8 px-4 md:px-2 text-base md:text-sm"
               onClick={() => {
+                const postponed = postponeDate(task.due_date, 1, task.all_day);
                 update("client_tasks", {
                   id: task.id,
-                  data: {
-                    due_date: new Date(Date.now() + 24 * 60 * 60 * 1000)
-                      .toISOString()
-                      .slice(0, 10),
-                  },
+                  data: { due_date: postponed },
                   previousData: task,
                 });
               }}
@@ -162,13 +159,10 @@ export const Task = ({
             <DropdownMenuItem
               className="cursor-pointer h-12 md:h-8 px-4 md:px-2 text-base md:text-sm"
               onClick={() => {
+                const postponed = postponeDate(task.due_date, 7, task.all_day);
                 update("client_tasks", {
                   id: task.id,
-                  data: {
-                    due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-                      .toISOString()
-                      .slice(0, 10),
-                  },
+                  data: { due_date: postponed },
                   previousData: task,
                 });
               }}
@@ -202,4 +196,11 @@ export const Task = ({
       )}
     </>
   );
+};
+
+/** Postpone a due_date by N days, preserving time when all_day=false */
+const postponeDate = (dueDate: string, days: number, allDay: boolean) => {
+  const d = new Date(dueDate);
+  d.setDate(d.getDate() + days);
+  return allDay ? d.toISOString().slice(0, 10) : d.toISOString();
 };

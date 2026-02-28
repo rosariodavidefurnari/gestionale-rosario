@@ -16,6 +16,7 @@ import {
   projectStatusLabels,
   projectTvShowLabels,
 } from "./projectTypes";
+import { formatDateRange } from "../misc/formatDateRange";
 
 export const ProjectListContent = () => {
   const { data, isPending } = useListContext<Project>();
@@ -31,7 +32,7 @@ export const ProjectListContent = () => {
           <TableHead>Cliente</TableHead>
           <TableHead>Categoria</TableHead>
           <TableHead className="hidden md:table-cell">Stato</TableHead>
-          <TableHead className="hidden lg:table-cell">Data inizio</TableHead>
+          <TableHead className="hidden lg:table-cell">Periodo</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -85,9 +86,7 @@ const ProjectRow = ({
         <ProjectStatusBadge status={project.status} />
       </TableCell>
       <TableCell className="hidden lg:table-cell text-muted-foreground text-sm">
-        {project.start_date
-          ? new Date(project.start_date).toLocaleDateString("it-IT")
-          : ""}
+        {formatDateRange(project.start_date, project.end_date, project.all_day)}
       </TableCell>
     </TableRow>
   );

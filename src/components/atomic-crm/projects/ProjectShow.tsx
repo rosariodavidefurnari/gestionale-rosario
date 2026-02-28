@@ -12,6 +12,7 @@ import { projectTvShowLabels } from "./projectTypes";
 import { QuickEpisodeDialog } from "./QuickEpisodeDialog";
 import { QuickPaymentDialog } from "./QuickPaymentDialog";
 import { ErrorMessage } from "../misc/ErrorMessage";
+import { formatDateRange } from "../misc/formatDateRange";
 
 export const ProjectShow = () => (
   <ShowBase>
@@ -92,15 +93,8 @@ const ProjectDetails = ({ record }: { record: Project }) => (
       {record.start_date && (
         <InfoRow
           icon={<Calendar className="size-4" />}
-          label="Inizio"
-          value={new Date(record.start_date).toLocaleDateString("it-IT")}
-        />
-      )}
-      {record.end_date && (
-        <InfoRow
-          icon={<Calendar className="size-4" />}
-          label="Fine prevista"
-          value={new Date(record.end_date).toLocaleDateString("it-IT")}
+          label="Periodo"
+          value={formatDateRange(record.start_date, record.end_date, record.all_day)}
         />
       )}
       {record.budget != null && record.budget > 0 && (

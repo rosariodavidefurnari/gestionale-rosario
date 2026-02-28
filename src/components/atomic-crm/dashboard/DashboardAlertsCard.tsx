@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { quoteStatusLabels } from "../quotes/quotesTypes";
+import { formatDateRange } from "../misc/formatDateRange";
 import {
   formatCompactCurrency,
   formatDayMonth,
@@ -45,7 +46,9 @@ export const DashboardAlertsCard = ({
           alerts.upcomingServices.map((service) => (
             <div key={service.id} className="text-sm">
               <p className="font-medium">
-                {formatDayMonth(service.serviceDate)} · {service.projectName}
+                {service.allDay
+                  ? formatDayMonth(service.serviceDate)
+                  : formatDateRange(service.serviceDate, service.serviceEnd, false)} · {service.projectName}
               </p>
               <p className="text-xs text-muted-foreground">
                 {service.clientName} · {prettifyServiceType(service.serviceType)} ·

@@ -26,7 +26,9 @@ export const ServiceList = () => {
         "projects",
       );
       const rows = records.map((s) => ({
-        data: s.service_date,
+        data_inizio: s.service_date,
+        data_fine: s.service_end ?? "",
+        tutto_il_giorno: s.all_day ? "Sì" : "No",
         progetto: projects[s.project_id]?.name ?? "",
         tipo: typeLabels[s.service_type] ?? s.service_type,
         riprese: s.fee_shooting,

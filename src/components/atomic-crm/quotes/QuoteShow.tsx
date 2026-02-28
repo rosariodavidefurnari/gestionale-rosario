@@ -1,13 +1,16 @@
 import { format, isValid } from "date-fns";
+import { FileDown } from "lucide-react";
 import {
   ShowBase,
   useGetOne,
   useRecordContext,
   useRedirect,
 } from "ra-core";
+import { useState } from "react";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { EditButton } from "@/components/admin/edit-button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +22,8 @@ import { Separator } from "@/components/ui/separator";
 import type { Quote } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { quoteStatusLabels } from "./quotesTypes";
+import { downloadQuotePDF } from "./QuotePDF";
+import { formatDateRange } from "../misc/formatDateRange";
 
 export const QuoteShow = ({ open, id }: { open: boolean; id?: string }) => {
   const redirect = useRedirect();
@@ -46,6 +51,7 @@ export const QuoteShow = ({ open, id }: { open: boolean; id?: string }) => {
 const QuoteShowContent = () => {
   const record = useRecordContext<Quote>();
   const { quoteServiceTypes } = useConfigurationContext();
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const { data: client } = useGetOne("clients", {
     id: record?.client_id,
@@ -59,6 +65,20 @@ const QuoteShowContent = () => {
     quoteServiceTypes.find((t) => t.value === record.service_type)?.label ??
     record.service_type;
 
+  const handleDownloadPDF = async () => {
+    setPdfLoading(true);
+    try {
+      await downloadQuotePDF({
+        quote: record,
+        client,
+        serviceLabel,
+        statusLabel,
+      });
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-start mb-8">
@@ -66,6 +86,15 @@ const QuoteShowContent = () => {
           {record.description || "Preventivo"}
         </h2>
         <div className="flex gap-2 pr-12">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPDF}
+            disabled={pdfLoading}
+          >
+            <FileDown className="h-4 w-4 mr-1" />
+            {pdfLoading ? "Generazione..." : "PDF"}
+          </Button>
           <EditButton />
           <DeleteButton />
         </div>
@@ -87,10 +116,10 @@ const QuoteShowContent = () => {
       </div>
 
       <div className="flex flex-wrap gap-8 mx-4 mt-4">
-        {record.event_date && isValid(new Date(record.event_date)) && (
+        {record.event_start && (
           <InfoField
-            label="Data evento"
-            value={format(new Date(record.event_date), "dd/MM/yyyy")}
+            label="Evento"
+            value={formatDateRange(record.event_start, record.event_end, record.all_day)}
           />
         )}
         {record.sent_date && isValid(new Date(record.sent_date)) && (

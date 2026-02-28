@@ -9,6 +9,7 @@ import { Link } from "react-router";
 import type { Service } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { ErrorMessage } from "../misc/ErrorMessage";
+import { formatDateRange } from "../misc/formatDateRange";
 
 const eur = (n: number) =>
   n.toLocaleString("it-IT", { minimumFractionDigits: 2 });
@@ -65,7 +66,7 @@ const ServiceHeader = ({ record }: { record: Service }) => {
         <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
           <span className="flex items-center gap-1">
             <Calendar className="size-3" />
-            {new Date(record.service_date).toLocaleDateString("it-IT")}
+            {formatDateRange(record.service_date, record.service_end, record.all_day)}
           </span>
           {project && (
             <Link

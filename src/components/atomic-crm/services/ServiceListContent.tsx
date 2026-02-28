@@ -12,6 +12,7 @@ import {
 import type { Service } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { ErrorMessage } from "../misc/ErrorMessage";
+import { formatDateRange } from "../misc/formatDateRange";
 
 const eur = (n: number) =>
   n ? n.toLocaleString("it-IT", { minimumFractionDigits: 2 }) : "--";
@@ -71,11 +72,7 @@ const ServiceRow = ({
     <TableRow className="cursor-pointer hover:bg-muted/50">
       <TableCell className="text-sm">
         <Link to={link} className="text-primary hover:underline">
-          {new Date(service.service_date).toLocaleDateString("it-IT", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })}
+          {formatDateRange(service.service_date, service.service_end, service.all_day)}
         </Link>
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">

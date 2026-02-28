@@ -10,6 +10,7 @@ export const ServiceCreate = () => (
       <div className="flex-1">
         <Form
           defaultValues={{
+            all_day: true,
             fee_shooting: 0,
             fee_editing: 0,
             fee_other: 0,
