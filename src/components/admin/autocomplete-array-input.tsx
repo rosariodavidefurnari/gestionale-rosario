@@ -193,6 +193,8 @@ export const AutocompleteArrayInput = (
               ))}
               {/* Avoid having the "Search" Icon by not using CommandInput */}
               <CommandPrimitive.Input
+                id={id}
+                name={field.name}
                 ref={inputRef}
                 value={filterValue}
                 onValueChange={(filter) => {

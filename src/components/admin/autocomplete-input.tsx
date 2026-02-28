@@ -218,6 +218,8 @@ export const AutocompleteInput = (
           <Popover open={open} onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
               <Button
+                id={id}
+                name={field.name}
                 variant="outline"
                 role="combobox"
                 aria-expanded={open}
