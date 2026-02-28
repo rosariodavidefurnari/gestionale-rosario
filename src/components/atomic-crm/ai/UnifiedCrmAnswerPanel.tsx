@@ -191,6 +191,9 @@ export const UnifiedCrmAnswerPanel = ({
                         <span className="space-y-1">
                           <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
                             <span>{action.label}</span>
+                            {action.recommended ? (
+                              <Badge>Consigliata ora</Badge>
+                            ) : null}
                             {action.kind === "approved_action" ? (
                               <Badge variant="secondary">Azione approvata</Badge>
                             ) : null}
@@ -198,6 +201,11 @@ export const UnifiedCrmAnswerPanel = ({
                           <span className="block text-xs text-muted-foreground">
                             {action.description}
                           </span>
+                          {action.recommendationReason ? (
+                            <span className="block text-xs text-foreground/80">
+                              {action.recommendationReason}
+                            </span>
+                          ) : null}
                         </span>
                         <ArrowRight className="size-4 shrink-0" />
                       </a>

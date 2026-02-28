@@ -290,12 +290,14 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "follow_unified_crm_handoff",
       label: "Segui handoff del launcher unificato",
       description:
-        "Apre dal launcher una route o una superficie commerciale gia approvata del CRM suggerita dalla risposta AI, senza eseguire direttamente azioni di scrittura.",
+        "Apre dal launcher una route o una superficie commerciale gia approvata del CRM suggerita dalla risposta AI, con una raccomandazione primaria deterministica quando il contesto lo permette e senza eseguire direttamente azioni di scrittura.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedCrmAnswerPanel.tsx",
       actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
       requiredFields: [
         "answer.suggestedActions[].href",
         "answer.suggestedActions[].capabilityActionId",
+        "answer.suggestedActions[].recommended",
+        "answer.suggestedActions[].recommendationReason",
       ],
     },
     {

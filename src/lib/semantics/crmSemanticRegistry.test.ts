@@ -71,6 +71,9 @@ describe("crmSemanticRegistry", () => {
     expect(registry.rules.unifiedAiReadContext.meaning).toContain(
       "route o azioni gia approvate",
     );
+    expect(registry.rules.unifiedAiReadContext.meaning).toContain(
+      "recommendation primaria",
+    );
   });
 
   it("uses km and taxable helpers consistently", () => {

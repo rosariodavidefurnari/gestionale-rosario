@@ -93,10 +93,60 @@ describe("unifiedCrmAnswer", () => {
         resource: "quotes",
         kind: "show",
         href: "/#/quotes/quote-1/show",
+        recommended: true,
       }),
     );
+    expect(actions[0]?.recommendationReason).toContain("verificare il preventivo");
     expect(actions.some((action) => action.capabilityActionId === "quote_create_payment")).toBe(
       true,
     );
+  });
+
+  it("prioritizes the approved payment action when the question already asks to register it", () => {
+    const actions = buildUnifiedCrmSuggestedActions({
+      question: "Da dove posso registrare un pagamento sul preventivo aperto?",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          routePrefix: "/#/",
+        },
+        snapshot: {
+          recentClients: [
+            {
+              clientId: "client-1",
+            },
+          ],
+          openQuotes: [
+            {
+              quoteId: "quote-1",
+              clientId: "client-1",
+              projectId: "project-1",
+              status: "accettato",
+            },
+          ],
+          activeProjects: [
+            {
+              projectId: "project-1",
+            },
+          ],
+          pendingPayments: [],
+          recentExpenses: [],
+        },
+        registries: {
+          semantic: {},
+          capability: {},
+        },
+      },
+    });
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        kind: "approved_action",
+        capabilityActionId: "quote_create_payment",
+        href: "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1",
+        recommended: true,
+      }),
+    );
+    expect(actions[0]?.recommendationReason).toContain("precompilato");
   });
 });

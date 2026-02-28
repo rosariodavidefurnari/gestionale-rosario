@@ -15,6 +15,8 @@ export type UnifiedCrmSuggestedAction = {
   label: string;
   description: string;
   href: string;
+  recommended?: boolean;
+  recommendationReason?: string;
   capabilityActionId?:
     | "quote_create_payment"
     | "client_create_payment"
@@ -90,6 +92,88 @@ const includesAny = (value: string, patterns: string[]) =>
 const canCreatePaymentFromQuoteStatus = (status: string | null) =>
   Boolean(status && quoteStatusesEligibleForPaymentCreation.has(status));
 
+const buildRecommendedReason = ({
+  suggestion,
+  focusPayments,
+  focusQuotes,
+  focusProjects,
+  focusClients,
+  quoteStatus,
+}: {
+  suggestion: UnifiedCrmSuggestedAction;
+  focusPayments: boolean;
+  focusQuotes: boolean;
+  focusProjects: boolean;
+  focusClients: boolean;
+  quoteStatus: string | null;
+}) => {
+  if (suggestion.capabilityActionId === "quote_create_payment") {
+    if (quoteStatus) {
+      return `Consigliata perche il preventivo rilevante e' in stato ${quoteStatus} e qui il pagamento si apre gia precompilato dal record corretto.`;
+    }
+
+    return "Consigliata perche apre il pagamento gia precompilato dal preventivo corretto, senza inventare un nuovo workflow.";
+  }
+
+  if (suggestion.capabilityActionId === "client_create_payment") {
+    return "Consigliata perche la domanda e' orientata all'incasso e qui il form pagamenti si apre gia sul cliente coerente.";
+  }
+
+  if (suggestion.capabilityActionId === "project_quick_payment") {
+    return "Consigliata perche il progetto collegato e' gia la superficie approvata per proseguire il flusso commerciale.";
+  }
+
+  if (focusPayments && suggestion.resource === "quotes") {
+    return "Consigliata perche prima di agire conviene verificare il preventivo collegato al pagamento pendente principale.";
+  }
+
+  if (focusQuotes && suggestion.resource === "quotes") {
+    return "Consigliata perche il preventivo aperto principale e' il punto giusto da controllare prima di proseguire.";
+  }
+
+  if (focusProjects && suggestion.resource === "projects") {
+    return "Consigliata perche il progetto attivo principale e' la superficie piu coerente da cui continuare.";
+  }
+
+  if (focusClients && suggestion.resource === "clients") {
+    return "Consigliata perche la scheda cliente e' il punto piu diretto per verificare il contesto commerciale collegato.";
+  }
+
+  return "Consigliata come prossimo passo piu coerente con lo snapshot corrente.";
+};
+
+const markRecommendedSuggestion = ({
+  suggestions,
+  focusPayments,
+  focusQuotes,
+  focusProjects,
+  focusClients,
+  quoteStatus,
+}: {
+  suggestions: UnifiedCrmSuggestedAction[];
+  focusPayments: boolean;
+  focusQuotes: boolean;
+  focusProjects: boolean;
+  focusClients: boolean;
+  quoteStatus: string | null;
+}) =>
+  suggestions.map((suggestion, index) =>
+    index === 0
+      ? {
+          ...suggestion,
+          recommended: true,
+          recommendationReason: buildRecommendedReason({
+            suggestion,
+            focusPayments,
+            focusQuotes,
+            focusProjects,
+            focusClients,
+            quoteStatus,
+          }),
+        }
+      : suggestion,
+  );
+
 export const buildUnifiedCrmSuggestedActions = ({
   question,
   context,
@@ -160,6 +244,17 @@ export const buildUnifiedCrmSuggestedActions = ({
     "anagraf",
     "contatt",
   ]);
+  const preferPaymentAction =
+    (focusPayments || focusQuotes || focusProjects || focusClients) &&
+    includesAny(normalizedQuestion, [
+      "registr",
+      "aggiung",
+      "inser",
+      "crea",
+      "segn",
+      "incass",
+      "precompilat",
+    ]);
   const genericSummary =
     includesAny(normalizedQuestion, [
       "riepilog",
@@ -311,56 +406,60 @@ export const buildUnifiedCrmSuggestedActions = ({
           },
     );
   } else if (focusPayments) {
-    pushSuggestion(
-      paymentQuoteHref
+    const paymentShowSuggestion = paymentQuoteHref
+      ? {
+          id: "open-linked-quote-from-payment",
+          kind: "show" as const,
+          resource: "quotes" as const,
+          capabilityActionId: "follow_unified_crm_handoff" as const,
+          label: "Apri il preventivo collegato",
+          description:
+            "Vai al preventivo collegato al pagamento pendente piu rilevante.",
+          href: paymentQuoteHref,
+        }
+      : paymentHref
         ? {
-            id: "open-linked-quote-from-payment",
-            kind: "show",
-            resource: "quotes",
-            capabilityActionId: "follow_unified_crm_handoff",
-            label: "Apri il preventivo collegato",
+            id: "open-first-pending-payment",
+            kind: "show" as const,
+            resource: "payments" as const,
+            capabilityActionId: "follow_unified_crm_handoff" as const,
+            label: "Apri il pagamento piu urgente",
             description:
-              "Vai al preventivo collegato al pagamento pendente piu rilevante.",
-            href: paymentQuoteHref,
+              "Vai al dettaglio del primo pagamento pendente nello snapshot corrente.",
+            href: paymentHref,
           }
-        : paymentHref
-          ? {
-              id: "open-first-pending-payment",
-              kind: "show",
-              resource: "payments",
-              capabilityActionId: "follow_unified_crm_handoff",
-              label: "Apri il pagamento piu urgente",
-              description:
-                "Vai al dettaglio del primo pagamento pendente nello snapshot corrente.",
-              href: paymentHref,
-            }
-          : null,
-    );
-    pushSuggestion(
-      quoteCreatePaymentHref
+        : null;
+    const paymentApprovedSuggestion = quoteCreatePaymentHref
+      ? {
+          id: "quote-create-payment-handoff",
+          kind: "approved_action" as const,
+          resource: "payments" as const,
+          capabilityActionId: "quote_create_payment" as const,
+          label: "Registra un altro pagamento dal preventivo",
+          description:
+            "Apre il form pagamenti gia precompilato dal preventivo aperto piu rilevante.",
+          href: quoteCreatePaymentHref,
+        }
+      : paymentClientCreateHref
         ? {
-            id: "quote-create-payment-handoff",
-            kind: "approved_action",
-            resource: "payments",
-            capabilityActionId: "quote_create_payment",
-            label: "Registra un altro pagamento dal preventivo",
+            id: "client-create-payment-from-payment-context",
+            kind: "approved_action" as const,
+            resource: "payments" as const,
+            capabilityActionId: "client_create_payment" as const,
+            label: "Registra un pagamento diretto dal cliente",
             description:
-              "Apre il form pagamenti gia precompilato dal preventivo aperto piu rilevante.",
-            href: quoteCreatePaymentHref,
+              "Apre il form pagamenti precompilato sul cliente del pagamento pendente principale.",
+            href: paymentClientCreateHref,
           }
-        : paymentClientCreateHref
-          ? {
-              id: "client-create-payment-from-payment-context",
-              kind: "approved_action",
-              resource: "payments",
-              capabilityActionId: "client_create_payment",
-              label: "Registra un pagamento diretto dal cliente",
-              description:
-                "Apre il form pagamenti precompilato sul cliente del pagamento pendente principale.",
-              href: paymentClientCreateHref,
-            }
-          : null,
-    );
+        : null;
+
+    if (preferPaymentAction) {
+      pushSuggestion(paymentApprovedSuggestion);
+      pushSuggestion(paymentShowSuggestion);
+    } else {
+      pushSuggestion(paymentShowSuggestion);
+      pushSuggestion(paymentApprovedSuggestion);
+    }
     pushSuggestion(
       paymentProjectHref
         ? {
@@ -387,45 +486,49 @@ export const buildUnifiedCrmSuggestedActions = ({
           : null,
     );
   } else if (focusQuotes) {
-    pushSuggestion(
-      quoteHref
+    const quoteShowSuggestion = quoteHref
+      ? {
+          id: "open-first-open-quote",
+          kind: "show" as const,
+          resource: "quotes" as const,
+          capabilityActionId: "follow_unified_crm_handoff" as const,
+          label: "Apri il preventivo aperto piu rilevante",
+          description:
+            "Vai al dettaglio del primo preventivo aperto nello snapshot corrente.",
+          href: quoteHref,
+        }
+      : null;
+    const quoteApprovedSuggestion = quoteCreatePaymentHref
+      ? {
+          id: "quote-create-payment-handoff",
+          kind: "approved_action" as const,
+          resource: "payments" as const,
+          capabilityActionId: "quote_create_payment" as const,
+          label: "Registra pagamento dal preventivo",
+          description:
+            "Apre il form pagamenti gia precompilato dal preventivo aperto principale.",
+          href: quoteCreatePaymentHref,
+        }
+      : quoteProjectHref
         ? {
-            id: "open-first-open-quote",
-            kind: "show",
-            resource: "quotes",
-            capabilityActionId: "follow_unified_crm_handoff",
-            label: "Apri il preventivo aperto piu rilevante",
+            id: "project-quick-payment-handoff-from-quote",
+            kind: "approved_action" as const,
+            resource: "projects" as const,
+            capabilityActionId: "project_quick_payment" as const,
+            label: "Apri il progetto e usa Pagamento",
             description:
-              "Vai al dettaglio del primo preventivo aperto nello snapshot corrente.",
-            href: quoteHref,
+              "Apre il progetto collegato; da li puoi usare il quick payment gia approvato.",
+            href: quoteProjectHref,
           }
-        : null,
-    );
-    pushSuggestion(
-      quoteCreatePaymentHref
-        ? {
-            id: "quote-create-payment-handoff",
-            kind: "approved_action",
-            resource: "payments",
-            capabilityActionId: "quote_create_payment",
-            label: "Registra pagamento dal preventivo",
-            description:
-              "Apre il form pagamenti gia precompilato dal preventivo aperto principale.",
-            href: quoteCreatePaymentHref,
-          }
-        : quoteProjectHref
-          ? {
-              id: "project-quick-payment-handoff-from-quote",
-              kind: "approved_action",
-              resource: "projects",
-              capabilityActionId: "project_quick_payment",
-              label: "Apri il progetto e usa Pagamento",
-              description:
-                "Apre il progetto collegato; da li puoi usare il quick payment gia approvato.",
-              href: quoteProjectHref,
-            }
-          : null,
-    );
+        : null;
+
+    if (preferPaymentAction) {
+      pushSuggestion(quoteApprovedSuggestion);
+      pushSuggestion(quoteShowSuggestion);
+    } else {
+      pushSuggestion(quoteShowSuggestion);
+      pushSuggestion(quoteApprovedSuggestion);
+    }
     pushSuggestion(
       quoteClientHref
         ? {
@@ -450,34 +553,38 @@ export const buildUnifiedCrmSuggestedActions = ({
           },
     );
   } else if (focusProjects) {
-    pushSuggestion(
-      projectHref
-        ? {
-            id: "open-first-active-project",
-            kind: "show",
-            resource: "projects",
-            capabilityActionId: "follow_unified_crm_handoff",
-            label: "Apri il progetto attivo principale",
-            description:
-              "Vai al dettaglio del primo progetto attivo nello snapshot corrente.",
-            href: projectHref,
-          }
-        : null,
-    );
-    pushSuggestion(
-      projectQuickPaymentHref
-        ? {
-            id: "project-quick-payment-handoff",
-            kind: "approved_action",
-            resource: "projects",
-            capabilityActionId: "project_quick_payment",
-            label: "Apri il progetto e usa Pagamento",
-            description:
-              "Apre il progetto attivo principale; da li puoi usare il quick payment gia approvato.",
-            href: projectQuickPaymentHref,
-          }
-        : null,
-    );
+    const projectShowSuggestion = projectHref
+      ? {
+          id: "open-first-active-project",
+          kind: "show" as const,
+          resource: "projects" as const,
+          capabilityActionId: "follow_unified_crm_handoff" as const,
+          label: "Apri il progetto attivo principale",
+          description:
+            "Vai al dettaglio del primo progetto attivo nello snapshot corrente.",
+          href: projectHref,
+        }
+      : null;
+    const projectApprovedSuggestion = projectQuickPaymentHref
+      ? {
+          id: "project-quick-payment-handoff",
+          kind: "approved_action" as const,
+          resource: "projects" as const,
+          capabilityActionId: "project_quick_payment" as const,
+          label: "Apri il progetto e usa Pagamento",
+          description:
+            "Apre il progetto attivo principale; da li puoi usare il quick payment gia approvato.",
+          href: projectQuickPaymentHref,
+        }
+      : null;
+
+    if (preferPaymentAction) {
+      pushSuggestion(projectApprovedSuggestion);
+      pushSuggestion(projectShowSuggestion);
+    } else {
+      pushSuggestion(projectShowSuggestion);
+      pushSuggestion(projectApprovedSuggestion);
+    }
     pushSuggestion(
       projectClientHref
         ? {
@@ -540,43 +647,47 @@ export const buildUnifiedCrmSuggestedActions = ({
         : null,
     );
   } else if (focusClients) {
-    pushSuggestion(
-      clientHref
-        ? {
-            id: "open-first-recent-client",
-            kind: "show",
-            resource: "clients",
-            capabilityActionId: "follow_unified_crm_handoff",
-            label: "Apri il cliente piu recente",
-            description:
-              "Vai alla scheda del cliente piu recente presente nello snapshot corrente.",
-            href: clientHref,
-          }
-        : null,
-    );
-    pushSuggestion(
-      clientCreatePaymentHref
-        ? {
-            id: "client-create-payment-handoff",
-            kind: "approved_action",
-            resource: "payments",
-            capabilityActionId: "client_create_payment",
-            label: "Registra pagamento dal cliente",
-            description:
-              "Apre il form pagamenti precompilato sul cliente piu recente dello snapshot.",
-            href: clientCreatePaymentHref,
-          }
-        : {
-            id: "open-clients-list",
-            kind: "list",
-            resource: "clients",
-            capabilityActionId: "follow_unified_crm_handoff",
-            label: "Apri tutti i clienti",
-            description:
-              "Controlla l'anagrafica completa per approfondire i clienti nel CRM.",
-            href: buildListHref(routePrefix, "clients"),
-          },
-    );
+    const clientShowSuggestion = clientHref
+      ? {
+          id: "open-first-recent-client",
+          kind: "show" as const,
+          resource: "clients" as const,
+          capabilityActionId: "follow_unified_crm_handoff" as const,
+          label: "Apri il cliente piu recente",
+          description:
+            "Vai alla scheda del cliente piu recente presente nello snapshot corrente.",
+          href: clientHref,
+        }
+      : null;
+    const clientApprovedSuggestion = clientCreatePaymentHref
+      ? {
+          id: "client-create-payment-handoff",
+          kind: "approved_action" as const,
+          resource: "payments" as const,
+          capabilityActionId: "client_create_payment" as const,
+          label: "Registra pagamento dal cliente",
+          description:
+            "Apre il form pagamenti precompilato sul cliente piu recente dello snapshot.",
+          href: clientCreatePaymentHref,
+        }
+      : {
+          id: "open-clients-list",
+          kind: "list" as const,
+          resource: "clients" as const,
+          capabilityActionId: "follow_unified_crm_handoff" as const,
+          label: "Apri tutti i clienti",
+          description:
+            "Controlla l'anagrafica completa per approfondire i clienti nel CRM.",
+          href: buildListHref(routePrefix, "clients"),
+        };
+
+    if (preferPaymentAction && clientCreatePaymentHref) {
+      pushSuggestion(clientApprovedSuggestion);
+      pushSuggestion(clientShowSuggestion);
+    } else {
+      pushSuggestion(clientShowSuggestion);
+      pushSuggestion(clientApprovedSuggestion);
+    }
     pushSuggestion(
       quoteHref
         ? {
@@ -605,7 +716,14 @@ export const buildUnifiedCrmSuggestedActions = ({
     });
   }
 
-  return suggestions.slice(0, 3);
+  return markRecommendedSuggestion({
+    suggestions: suggestions.slice(0, 3),
+    focusPayments,
+    focusQuotes,
+    focusProjects,
+    focusClients,
+    quoteStatus: getString(firstQuote?.status),
+  });
 };
 
 export const validateUnifiedCrmAnswerPayload = (payload: unknown) => {

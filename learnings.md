@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se il launcher propone piu handoff commerciali, la
+  recommendation primaria deve essere unica e costruita dal sistema** — Non
+  basta ordinare le `suggestedActions`: quando l'intent della domanda e la
+  snapshot puntano chiaramente a un'azione approvata, conviene marcare una
+  sola azione come `recommended` e spiegare il motivo con
+  `recommendationReason`. La scelta deve nascere da intent + stato record +
+  entry point approvati, non dal testo libero del modello.
+
 - [2026-03-01] **Quando il launcher passa dal semplice salto di route al
   handoff commerciale, conviene preferire entry point approvati e
   deterministicamente costruiti** — Se la domanda utente è già orientata a un

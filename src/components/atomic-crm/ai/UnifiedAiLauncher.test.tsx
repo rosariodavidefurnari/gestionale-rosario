@@ -292,6 +292,9 @@ describe("UnifiedAiLauncher", () => {
           capabilityActionId: "quote_create_payment",
           label: "Registra pagamento dal preventivo",
           description: "Apre il form pagamenti precompilato dal preventivo.",
+          recommended: true,
+          recommendationReason:
+            "Consigliata perche il preventivo rilevante e' in stato accettato e qui il pagamento si apre gia precompilato dal record corretto.",
           href: "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1",
         },
         {
@@ -334,7 +337,13 @@ describe("UnifiedAiLauncher", () => {
     expect(await screen.findByText("Tutto sotto controllo.")).toBeInTheDocument();
     expect(await screen.findByText("Azioni suggerite")).toBeInTheDocument();
     expect(screen.getByText("Registra pagamento dal preventivo")).toBeInTheDocument();
+    expect(screen.getByText("Consigliata ora")).toBeInTheDocument();
     expect(screen.getByText("Azione approvata")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Consigliata perche il preventivo rilevante e' in stato accettato e qui il pagamento si apre gia precompilato dal record corretto.",
+      ),
+    ).toBeInTheDocument();
     expect(
       screen
         .getByText("Registra pagamento dal preventivo")

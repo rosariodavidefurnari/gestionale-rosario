@@ -239,6 +239,33 @@ The next open priority is:
   approved entry point before any future write-execution discussion
 - keep the general CRM chat without direct write execution
 
+That guided commercial handoff step is now closed too:
+
+- `suggestedActions` can now carry one explicit primary recommendation
+- payment-oriented questions that already ask to register/add a payment now
+  prioritize the approved action handoff instead of a generic show route
+- the recommendation metadata stays deterministic:
+  - `recommended`
+  - `recommendationReason`
+- runtime verification is now closed too on `qvdmzhyzpyaveniirsmo`:
+  - `unified_crm_answer` redeployed
+  - authenticated smoke question
+    `Da dove posso registrare un pagamento sul preventivo aperto?` returned
+    HTTP `200`
+  - response included:
+    - first action `quote_create_payment`
+    - `recommended = true`
+    - deterministic reason text
+  - smoke user cleaned after verification
+
+The next open priority is:
+
+- keep the general launcher inside approved commercial surfaces, but deepen the
+  landing quality on those surfaces
+- hand off the user to the destination that already exists with the strongest
+  usable prefill/context, before any future chat-side write draft
+- still do not give the general CRM chat direct write execution
+
 Deferred note from real usage, not current priority:
 
 - importing an older customer invoice can legitimately find a real client that
@@ -260,8 +287,9 @@ Why this comes next:
   - a first practical route handoff from grounded answer to existing CRM
     surfaces
   - a first approved commercial handoff toward real payment-oriented surfaces
-- the next Pareto gain is therefore not another raw Q&A surface, but a more
-  guided commercial handoff on top of those approved actions
+- a first deterministic primary recommendation on top of those approved actions
+- the next Pareto gain is therefore not another raw Q&A surface, but a richer
+  landing on those approved commercial surfaces
 - the semantic/capability backbone is already strong enough for this next step
 
 Not the next step by default:

@@ -53,15 +53,61 @@ Pareto dentro la stessa shell e' ora chiuso anche lui: le risposte del
 launcher propongono handoff strutturati verso route gia approvate del CRM.
 Anche lo step successivo e' ora chiuso: quel handoff e' stato alzato al primo
 handoff commerciale orientato ad azioni gia approvate, sempre senza
-esecuzione diretta dalla chat generale. Il prossimo lavoro ad alto valore non
-e' un'altra AI sparsa, ma rendere piu guidata la scelta della superficie
-commerciale approvata corretta dentro la stessa shell, prima di discutere
-qualunque write execution generale. Nota differita gia registrata da test
-reale utente: l'import fatture incontra anche clienti storici assenti dal CRM
-e in quel caso mancano ancora creazione assistita cliente e alcuni campi
-anagrafici da fatturazione; non e' il focus adesso, ma il backlog lo conserva.
+esecuzione diretta dalla chat generale. Anche quel passo piu guidato e' ora
+chiuso: il launcher sa marcare una recommendation primaria deterministica
+sulle azioni gia approvate quando la domanda e il contesto commerciale lo
+consentono. Il prossimo lavoro ad alto valore non e' un'altra AI sparsa, ma
+far atterrare l'utente sulla superficie commerciale gia approvata con il
+miglior prefill e contesto disponibile, prima di discutere qualunque write
+execution generale. Nota differita gia registrata da test reale utente:
+l'import fatture incontra anche clienti storici assenti dal CRM e in quel
+caso mancano ancora creazione assistita cliente e alcuni campi anagrafici da
+fatturazione; non e' il focus adesso, ma il backlog lo conserva.
 
 ## Last Session
+
+### Sessione 61 (2026-03-01, recommendation primaria sui handoff commerciali)
+
+- Completed:
+  - **Il launcher non si limita piu a ordinare i handoff: ora espone anche
+    una recommendation primaria esplicita**:
+    - una sola `suggestedAction` puo essere marcata come:
+      - `recommended`
+      - con `recommendationReason`
+    - il pannello answer rende visibili:
+      - badge `Consigliata ora`
+      - motivo sintetico della scelta
+  - **Le domande gia orientate a registrare un pagamento privilegiano il
+    punto giusto gia approvato**:
+    - se la domanda chiede di `registrare`/`aggiungere` un pagamento e il
+      preventivo e' in stato coerente:
+      - `quote_create_payment` sale in testa
+    - il resto dei suggerimenti resta disponibile come fallback
+  - **La recommendation resta deterministicamente costruita dal sistema**:
+    - non viene chiesta al modello
+    - usa solo:
+      - intent della domanda
+      - stato preventivo
+      - record gia presenti nello snapshot
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts supabase/functions/_shared/unifiedCrmAnswer.test.ts`
+  - `npx supabase functions deploy unified_crm_answer --project-ref qvdmzhyzpyaveniirsmo --no-verify-jwt`
+  - smoke autenticato remoto riuscito su `unified_crm_answer` con domanda
+    `Da dove posso registrare un pagamento sul preventivo aperto?` e ritorno
+    reale di:
+    - `quote_create_payment` come prima action
+    - `recommended = true`
+    - `recommendationReason` deterministica
+
+- Decisions:
+  - se il launcher suggerisce piu handoff commerciali, solo uno puo essere
+    promosso a recommendation primaria
+  - la recommendation primaria deve restare costruita dal sistema, non dal
+    modello
+  - il caso `cliente mancante da fattura storica` resta fuori dal focus finche'
+    non si chiude il percorso prioritario del launcher unificato
 
 ### Sessione 60 (2026-03-01, handoff commerciale orientato ad azioni approvate)
 

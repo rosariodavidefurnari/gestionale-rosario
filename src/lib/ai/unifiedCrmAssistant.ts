@@ -22,6 +22,8 @@ export type UnifiedCrmSuggestedAction = {
   label: string;
   description: string;
   href: string;
+  recommended?: boolean;
+  recommendationReason?: string;
   capabilityActionId?:
     | "quote_create_payment"
     | "client_create_payment"

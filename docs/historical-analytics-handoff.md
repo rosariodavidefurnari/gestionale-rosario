@@ -246,6 +246,37 @@ The next high-value step is now:
   - no auto-execution
   - no new scattered AI surfaces
 
+That next high-value step is now closed too:
+
+- launcher `suggestedActions` now expose one explicit primary recommendation
+  when the snapshot + question intent make it deterministic
+- payment-oriented questions that already ask to `registrare`/`aggiungere`
+  something now prioritize the approved payment entry point instead of a
+  generic record jump
+- the recommendation stays system-built, not model-invented:
+  - exactly one action can be marked as recommended
+  - the recommendation reason is derived from snapshot state and action type
+  - the answer panel renders `Consigliata ora` plus the reason inline
+- runtime verification is now closed too on the linked remote project:
+  - `unified_crm_answer` redeployed remotely on `qvdmzhyzpyaveniirsmo`
+  - authenticated smoke question
+    `Da dove posso registrare un pagamento sul preventivo aperto?`
+    returned HTTP `200`
+  - the response included:
+    - first `suggestedAction` = `quote_create_payment`
+    - `recommended = true`
+    - deterministic `recommendationReason`
+  - smoke user cleaned after verification
+
+The next high-value step is now:
+
+- keep the launcher inside approved commercial surfaces, but make the landing
+  on those surfaces richer and more contextual
+- pass the user from recommendation to the right approved destination with the
+  strongest existing prefill/context before discussing any chat-side write
+  draft
+- still no general write execution from the CRM Q&A shell
+
 Deferred note from real user trial:
 
 - invoice import can already read a valid historical customer invoice even when
