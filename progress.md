@@ -2,9 +2,35 @@
 
 ## Current Phase
 
-🟢 DateTime Range Support completo + bug fix audit. Migration pushata al remoto. Typecheck 0 errori, build OK, 42/42 test.
+🟢 Simulatore Fiscale + KPI Salute Aziendale implementato. Typecheck 0 errori, build OK, 42/42 test.
 
 ## Last Session
+
+### Sessione 17 (2026-02-28, Simulatore Fiscale)
+
+- Completed:
+  - **Tipi fiscali**: `FiscalTaxProfile` + `FiscalConfig` in types.ts
+  - **ConfigurationContext**: aggiunto `fiscalConfig` con default (ATECO 731102 78%, 621000 67%)
+  - **Settings UI**: nuova sezione "Fiscale" in Impostazioni con profili ATECO, aliquota auto, INPS, tetto
+  - **Modello fiscale** (`fiscalModel.ts`): logica pura (KPI, ATECO breakdown, scadenze, business health, warnings)
+  - **Dashboard desktop**: 4 nuovi componenti (FiscalKpis, AtecoChart, DeadlinesCard, BusinessHealthCard)
+  - **Dashboard mobile**: 3 KPI compatti (accantonamento, prossima scadenza, tetto)
+  - **Data integration**: query expenses + fiscalConfig integrati nel dashboard model
+  - **Verifica**: Typecheck 0 errori, build OK (6.09s), 42/42 test passati
+
+- Files created:
+  - `src/components/atomic-crm/settings/FiscalSettingsSection.tsx`
+  - `src/components/atomic-crm/dashboard/fiscalModel.ts`
+  - `src/components/atomic-crm/dashboard/DashboardFiscalKpis.tsx`
+  - `src/components/atomic-crm/dashboard/DashboardAtecoChart.tsx`
+  - `src/components/atomic-crm/dashboard/DashboardDeadlinesCard.tsx`
+  - `src/components/atomic-crm/dashboard/DashboardBusinessHealthCard.tsx`
+
+- Files modified:
+  - types.ts, ConfigurationContext.tsx, defaultConfiguration.ts, SettingsPage.tsx
+  - dashboardModel.ts, useDashboardData.ts, Dashboard.tsx, MobileDashboard.tsx
+
+- Next action: Test visivo completo, deploy Vercel
 
 ### Sessione 16 (2026-02-28, DateTime Range Support)
 

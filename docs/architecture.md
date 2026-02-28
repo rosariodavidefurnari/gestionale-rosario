@@ -5,7 +5,7 @@
 Fork di Atomic CRM personalizzato per gestire l'attività professionale
 di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
-## Stato Infrastruttura (verificato sessione 16, aggiornato)
+## Stato Infrastruttura (verificato sessione 17, aggiornato)
 
 ### Certezze — Audit superato
 
@@ -32,9 +32,10 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 | Keep-alive workflow | Attivo, testato con successo (HTTP 200) | `gh workflow run` |
 | Localizzazione IT | Completa su ~70+ file, 3 livelli | audit sessione 4 |
 | DateTime Range Support (all_day pattern) | Implementato su 4 moduli | sessione 16 |
-| Typecheck | 0 errori | sessione 16 |
-| Build produzione (`npm run build`) | OK (6.27s) | sessione 16 |
-| Test | 42/42 passati | sessione 16 |
+| Simulatore Fiscale + KPI Salute Aziendale | Implementato | sessione 17 |
+| Typecheck | 0 errori | sessione 17 |
+| Build produzione (`npm run build`) | OK (6.09s) | sessione 17 |
+| Test | 42/42 passati | sessione 17 |
 | Lint | 0 nuovi errori | sessione 11 |
 | Deploy Vercel | gestionale-rosario.vercel.app | sessione 5 |
 
@@ -135,7 +136,7 @@ PK esplicite nel dataProvider:
 | **Spese** | `expenses/` | 8 file | CRUD (Table) | Completo |
 | **Promemoria** | `tasks/` | 11 file | Lista con filtri temporali | Completo |
 | **Tags** | `tags/` | 4 file | CRUD + array su clients | Completo |
-| **Dashboard** | `dashboard/` | 14 file | Recharts + KPI + alert | Completo |
+| **Dashboard** | `dashboard/` | 19 file | Recharts + KPI + alert + fiscale | Completo |
 
 ### Struttura moduli CRUD
 
@@ -190,23 +191,28 @@ src/components/atomic-crm/tags/
 └── colors.ts              # Palette colori
 ```
 
-### Dashboard (Recharts)
+### Dashboard (Recharts + Fiscale)
 
 ```
 src/components/atomic-crm/dashboard/
-├── Dashboard.tsx                  # Desktop (KPI + charts + pipeline + alert)
-├── MobileDashboard.tsx            # Mobile (KPI-only)
-├── useDashboardData.ts            # useGetList multipli
-├── dashboardModel.ts              # Aggregazioni KPI/grafici/pipeline/alert
-├── DashboardKpiCards.tsx          # 4 KPI cards
-├── DashboardRevenueTrendChart.tsx # Line chart (12 mesi)
-├── DashboardCategoryChart.tsx     # Bar chart per categoria
-├── DashboardPipelineCard.tsx      # Pipeline preventivi
-├── DashboardTopClientsCard.tsx    # Top 5 clienti
-├── DashboardAlertsCard.tsx        # Alert urgenti
-├── DashboardLoading.tsx           # Skeleton loading
-├── TasksListFilter.tsx            # Helper filtro task per dashboard
-└── TasksListEmpty.tsx             # Helper stato vuoto task
+├── Dashboard.tsx                       # Desktop (KPI + charts + pipeline + alert + fiscale)
+├── MobileDashboard.tsx                 # Mobile (KPI + fiscale compatti)
+├── useDashboardData.ts                 # useGetList multipli + expenses + fiscalConfig
+├── dashboardModel.ts                   # Aggregazioni KPI/grafici/pipeline/alert + fiscal
+├── fiscalModel.ts                      # Logica pura calcoli fiscali regime forfettario
+├── DashboardKpiCards.tsx               # 4 KPI cards fatturato/pagamenti
+├── DashboardFiscalKpis.tsx             # 4 KPI cards fiscali (netto, tasse, accantonamento, tetto)
+├── DashboardAtecoChart.tsx             # Bar chart orizzontale fatturato vs reddito per ATECO
+├── DashboardDeadlinesCard.tsx          # Scadenze fiscali con countdown ed espansione dettagli
+├── DashboardBusinessHealthCard.tsx     # Salute aziendale (conversione, DSO, concentrazione, margini)
+├── DashboardRevenueTrendChart.tsx      # Line chart (12 mesi)
+├── DashboardCategoryChart.tsx          # Bar chart per categoria
+├── DashboardPipelineCard.tsx           # Pipeline preventivi
+├── DashboardTopClientsCard.tsx         # Top 5 clienti
+├── DashboardAlertsCard.tsx             # Alert urgenti
+├── DashboardLoading.tsx                # Skeleton loading
+├── TasksListFilter.tsx                 # Helper filtro task per dashboard
+└── TasksListEmpty.tsx                  # Helper stato vuoto task
 ```
 
 ## Navigazione (sessione 11)
@@ -246,6 +252,7 @@ ClientTask, ClientNote                     ← Tasks/Notes adattati
 Tag, Sale, SalesFormData, SignUpData        ← Infrastruttura
 RAFile, AttachmentNote                     ← File/allegati
 LabeledValue, NoteStatus                  ← Config
+FiscalConfig, FiscalTaxProfile             ← Fiscale
 ```
 
 ## Authentication
@@ -283,6 +290,6 @@ LabeledValue, NoteStatus                  ← Config
 /expenses       → Spese e km
 /expenses/:id   → Dettaglio spesa
 /client_tasks   → Lista promemoria (filtri: scaduti, oggi, domani, settimana, più avanti)
-/settings       → Impostazioni (Marchio, Tipi preventivo, Tipi servizio, Note, Attività)
+/settings       → Impostazioni (Marchio, Tipi preventivo, Tipi servizio, Note, Attività, Fiscale)
 /profile        → Profilo utente
 ```

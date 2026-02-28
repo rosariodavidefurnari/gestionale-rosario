@@ -444,3 +444,22 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   DateInput (che salva `YYYY-MM-DD`), il transform deve impostare le ore a mezzanotte:
   `if (data.all_day) { dueDate.setHours(0, 0, 0, 0); return {...data, due_date: dueDate.toISOString()}; }`
   Questo garantisce coerenza con TIMESTAMPTZ nel DB.
+
+- [2026-02-28] **FiscalConfig via ConfigurationContext, non tabella separata** — I parametri fiscali
+  (profili ATECO, aliquote, tetto) sono salvati nel JSONB di configuration come campo `fiscalConfig`.
+  Questo evita una tabella dedicata e sfrutta il meccanismo di persistenza già esistente di ra-core
+  (`useStore` + EditBase su configuration). Il default viene unito alla config utente in
+  `useConfigurationContext()` con spread operator.
+
+- [2026-02-28] **Aliquota sostitutiva auto-calcolata, non manuale** — L'aliquota imposta sostitutiva
+  (5% startup / 15% ordinaria) viene calcolata automaticamente da `annoInizioAttivita` sia nel form
+  (Settings) che nel modello fiscale. L'override manuale è opzionale (checkbox + select). Questo
+  previene errori: l'utente non deve ricordarsi di cambiarla quando scadono i 5 anni startup.
+
+- [2026-02-28] **Modello fiscale come funzione pura, non hook** — `buildFiscalModel()` è una funzione
+  pura che prende dati e config, ritorna un oggetto. Integrata nel `buildDashboardModel()` già esistente
+  (non un hook separato). Vantaggi: testabile senza React, cacheable via useMemo, nessun re-render extra.
+
+- [2026-02-28] **Acconti forfettari 50/50 dal 2019** — D.L. 124/2019, art. 58: per forfettari e
+  soggetti ISA, gli acconti sono 50%+50% (non 40/60). Soglie: >257.52€ → due acconti, 51.65-257.52€ →
+  acconto unico a novembre, <51.65€ → nessun acconto. INPS: acconti su 80% del totale stimato.
