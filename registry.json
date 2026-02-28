@@ -572,6 +572,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/filters/DateRangeFilter.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/expenses/index.tsx",
           "type": "registry:component"
         },
