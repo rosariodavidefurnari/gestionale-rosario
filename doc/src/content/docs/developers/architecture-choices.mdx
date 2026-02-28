@@ -27,9 +27,11 @@ The Atomic CRM code primarily lives in the `src/components/atomic-crm` directory
 The Atomic CRM code also contains some mutable dependencies, i.e. libraries that are directly integrated into the codebase to be modified if needed. These dependencies are located in the following directories:
 
 - `src/components/admin`: [Shadcn Admin Kit](https://marmelab/shadcn-admin-kit), providing the frontend architecture and the glue code to integrate the various libraries.
-- `src/copmponents/ui`: [Shadcn UI](https://ui.shadcn.com/), providing beautiful, accessible, and customizable components powered by Tailwind CSS.
+- `src/components/ui`: [Shadcn UI](https://ui.shadcn.com/), providing beautiful, accessible, and customizable components powered by Tailwind CSS.
 
-You can modify or replaces the files in these directories. It's the recommended way to customize the application.
+You can modify or replace the files in these directories. It's the recommended way to customize the application.
+
+Shared CRM primitives that are not tied to a single entity, such as reusable list filter widgets, live in the `src/components/atomic-crm/filters` directory.
 
 If you want to upgrade these dependencies, you can follow the instructions in their respective documentation.
 
