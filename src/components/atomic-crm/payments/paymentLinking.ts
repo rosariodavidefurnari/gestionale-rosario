@@ -32,13 +32,16 @@ export const buildPaymentCreateDefaultsFromQuote = ({
   ...(quote.project_id ? { project_id: quote.project_id } : {}),
 });
 
-export const buildPaymentCreatePathFromQuote = ({
-  quote,
+export const buildPaymentCreateDefaultsFromClient = ({
+  client,
 }: {
-  quote: Pick<Quote, "id" | "client_id" | "project_id">;
-}) => {
+  client: Pick<Payment, "client_id">;
+}): PaymentCreateDefaults => ({
+  client_id: client.client_id,
+});
+
+const buildPaymentCreatePath = (defaults: PaymentCreateDefaults) => {
   const searchParams = new URLSearchParams();
-  const defaults = buildPaymentCreateDefaultsFromQuote({ quote });
 
   Object.entries(defaults).forEach(([key, value]) => {
     if (value != null && value !== "") {
@@ -49,6 +52,18 @@ export const buildPaymentCreatePathFromQuote = ({
   const search = searchParams.toString();
   return search ? `/payments/create?${search}` : "/payments/create";
 };
+
+export const buildPaymentCreatePathFromQuote = ({
+  quote,
+}: {
+  quote: Pick<Quote, "id" | "client_id" | "project_id">;
+}) => buildPaymentCreatePath(buildPaymentCreateDefaultsFromQuote({ quote }));
+
+export const buildPaymentCreatePathFromClient = ({
+  client,
+}: {
+  client: Pick<Payment, "client_id">;
+}) => buildPaymentCreatePath(buildPaymentCreateDefaultsFromClient({ client }));
 
 export const getPaymentCreateDefaultsFromSearch = (
   search: string,

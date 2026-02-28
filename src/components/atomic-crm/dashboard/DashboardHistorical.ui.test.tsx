@@ -34,6 +34,12 @@ vi.mock("./DashboardHistoricalTopClientsCard", () => ({
   ),
 }));
 
+vi.mock("./DashboardHistoricalCashInflowCard", () => ({
+  DashboardHistoricalCashInflowCard: () => (
+    <div data-testid="historical-cash-inflow-card" />
+  ),
+}));
+
 vi.mock("./DashboardHistoricalAiSummaryCard", () => ({
   DashboardHistoricalAiSummaryCard: () => (
     <div data-testid="historical-ai-summary-card" />
@@ -205,6 +211,9 @@ describe("DashboardHistorical", () => {
       screen.getByText(
         "Per misurare la crescita tra un anno e l'altro servono almeno due anni completi.",
       ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("historical-cash-inflow-card"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("historical-ai-summary-card")).toBeInTheDocument();
     expect(

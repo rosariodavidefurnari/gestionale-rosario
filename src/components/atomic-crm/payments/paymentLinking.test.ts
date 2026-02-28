@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPaymentCreateDefaultsFromClient,
+  buildPaymentCreatePathFromClient,
   buildPaymentCreateDefaultsFromQuote,
   buildPaymentCreatePathFromQuote,
   canCreatePaymentFromQuote,
@@ -97,6 +99,26 @@ describe("paymentLinking", () => {
     );
   });
 
+  it("builds direct-payment defaults and path from a client", () => {
+    expect(
+      buildPaymentCreateDefaultsFromClient({
+        client: {
+          client_id: "client-2",
+        },
+      }),
+    ).toEqual({
+      client_id: "client-2",
+    });
+
+    expect(
+      buildPaymentCreatePathFromClient({
+        client: {
+          client_id: "client-2",
+        },
+      }),
+    ).toBe("/payments/create?client_id=client-2");
+  });
+
   it("parses quick-payment defaults from the create URL search params", () => {
     expect(
       getPaymentCreateDefaultsFromSearch(
@@ -110,6 +132,10 @@ describe("paymentLinking", () => {
 
     expect(getPaymentCreateDefaultsFromSearch("?quote_id=quote-7")).toEqual({
       quote_id: "quote-7",
+    });
+
+    expect(getPaymentCreateDefaultsFromSearch("?client_id=client-2")).toEqual({
+      client_id: "client-2",
     });
   });
 

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardLoading } from "./DashboardLoading";
 import { DashboardHistoricalCategoryMixChart } from "./DashboardHistoricalCategoryMixChart";
 import { DashboardHistoricalAiSummaryCard } from "./DashboardHistoricalAiSummaryCard";
+import { DashboardHistoricalCashInflowCard } from "./DashboardHistoricalCashInflowCard";
 import { DashboardHistoricalCashInflowAiCard } from "./DashboardHistoricalCashInflowAiCard";
 import { DashboardHistoricalKpis } from "./DashboardHistoricalKpis";
 import { DashboardHistoricalRevenueChart } from "./DashboardHistoricalRevenueChart";
@@ -60,6 +61,8 @@ export const DashboardHistorical = () => {
         />
         <HistoricalContextCard model={data} />
       </div>
+
+      <DashboardHistoricalCashInflowCard />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
         <DashboardHistoricalAiSummaryCard />

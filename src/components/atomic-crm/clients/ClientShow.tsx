@@ -1,9 +1,11 @@
 import { ShowBase, useShowContext } from "ra-core";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EditButton } from "@/components/admin/edit-button";
 import { DeleteButton } from "@/components/admin/delete-button";
-import { Phone, Mail, MapPin, FileText } from "lucide-react";
+import { Phone, Mail, MapPin, FileText, Euro } from "lucide-react";
+import { Link } from "react-router";
 
 import type { Client } from "../types";
 import { ClientTypeBadge } from "./ClientListContent";
@@ -13,6 +15,7 @@ import { ClientNotesSection } from "./ClientNotesSection";
 import { ClientTasksSection } from "./ClientTasksSection";
 import { ClientFinancialSummary } from "./ClientFinancialSummary";
 import { ErrorMessage } from "../misc/ErrorMessage";
+import { buildPaymentCreatePathFromClient } from "../payments/paymentLinking";
 
 export const ClientShow = () => (
   <ShowBase>
@@ -80,6 +83,16 @@ const ClientHeader = ({ record }: { record: Client }) => (
       </div>
     </div>
     <div className="flex gap-2">
+      <Button asChild size="sm" variant="outline">
+        <Link
+          to={buildPaymentCreatePathFromClient({
+            client: { client_id: record.id },
+          })}
+        >
+          <Euro className="mr-1 size-4" />
+          Nuovo pagamento
+        </Link>
+      </Button>
       <EditButton />
       <DeleteButton redirect="list" />
     </div>

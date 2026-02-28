@@ -26,6 +26,7 @@ import {
   getQuoteItemLineTotal,
   sanitizeQuoteItems,
 } from "./quoteItems";
+import { QuotePaymentsSection } from "./QuotePaymentsSection";
 import {
   buildPaymentCreatePathFromQuote,
   canCreatePaymentFromQuote,
@@ -189,6 +190,8 @@ const QuoteShowContent = () => {
           />
         )}
       </div>
+
+      <QuotePaymentsSection quote={record} />
 
       {quoteItems.length > 0 && (
         <>
