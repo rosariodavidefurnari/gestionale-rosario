@@ -228,6 +228,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/quotes/QuotePDF.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/quotes/QuoteListContent.tsx",
           "type": "registry:component"
         },
@@ -441,6 +445,10 @@
         },
         {
           "path": "src/components/atomic-crm/misc/isLinkedInUrl.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/misc/formatDateRange.ts",
           "type": "registry:component"
         },
         {
