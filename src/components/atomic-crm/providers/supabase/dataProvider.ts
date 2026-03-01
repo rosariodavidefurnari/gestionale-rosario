@@ -67,7 +67,10 @@ import {
   buildUnifiedCrmReadContext,
   type UnifiedCrmReadContext,
 } from "@/lib/ai/unifiedCrmReadContext";
-import { type UnifiedCrmAnswer } from "@/lib/ai/unifiedCrmAssistant";
+import type {
+  UnifiedCrmAnswer,
+  UnifiedCrmConversationTurn,
+} from "@/lib/ai/unifiedCrmAssistant";
 import {
   buildCrmSemanticRegistry,
   type CrmSemanticRegistry,
@@ -518,6 +521,7 @@ const dataProviderWithCustomMethods = {
   async askUnifiedCrmQuestion(
     question: string,
     context: UnifiedCrmReadContext,
+    conversationHistory: UnifiedCrmConversationTurn[] = [],
   ): Promise<UnifiedCrmAnswer> {
     const trimmedQuestion = question.trim();
 
@@ -535,6 +539,7 @@ const dataProviderWithCustomMethods = {
         context,
         question: trimmedQuestion,
         model,
+        conversationHistory,
       },
     });
 

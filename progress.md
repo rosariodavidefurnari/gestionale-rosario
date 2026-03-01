@@ -3259,3 +3259,21 @@ invece separato e ancora aperto.
   - first action `expense_create_km`
   - handoff `/#/expenses/create` con `km_distance=160.98` e `km_rate=0.19`
 - [x] Utente smoke remoto ripulito dopo la verifica
+
+## Sessione 81 (2026-03-01, launcher expense routing + chat continuity)
+
+- [x] Corretto il parser `spostamento_km` per frasi naturali come
+  `da ... fino al ...`, date italiane esplicite e formule tipo
+  `sia l'andata che il ritorno`
+- [x] Bloccato il fallback errato a `payments` quando l'intento reale e'
+  creare una `spesa` / rimborso km
+- [x] Aggiunto reset esplicito `Nuova` nella chat del launcher
+- [x] Aggiunta history recente dei turni passata alla Edge Function del launcher
+- [x] UI mantenuta pulita: una sola answer card visibile, non un log lungo
+- [x] Test verdi:
+  - `npm run typecheck`
+  - `vitest --run supabase/functions/_shared/unifiedCrmAnswer.test.ts src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx`
+- [x] Guardrail documentato:
+  - il launcher puo' ancorarsi al progetto trovato in snapshot
+  - ma non deve inventare l'esistenza del servizio/lavoro specifico se quel
+    livello non e' realmente nel contesto read-only

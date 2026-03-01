@@ -1458,6 +1458,17 @@ Only after the base is stable:
 - optionally evolve the current single-turn AI card into a multi-turn
   conversational assistant.
 
+## Current Launcher Guardrails
+
+- Travel-expense questions in the launcher must resolve to `expenses/create`
+  and never fall back to payment drafts or payment handoff.
+- Natural-language route wording such as `da ... fino al ...` must stay covered
+  by tests before broadening the parser further.
+- When the user references a project/service in free text, the launcher may
+  ground itself on the project found in snapshot, but it must not claim that
+  the specific service/work item already exists unless that granularity is
+  really present in the read context.
+
 ## Non-Negotiable Rules
 
 These rules must remain true in all future work:

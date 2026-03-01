@@ -1950,3 +1950,28 @@ Stable rollback note:
   Postmark has been removed from the product direction.
 - If any real secret has already been committed in repository history, rotate it;
   ignoring the file now does not retroactively protect an exposed key.
+
+## Launcher Travel-Expense / Chat Continuity Fixes
+
+- Natural-language travel-expense questions now match the deterministic
+  `spostamento_km` branch even when written as:
+  - `da ... fino al ...`
+  - with explicit Italian dates such as `giorno 2 febbraio 2026`
+  - with round-trip wording such as `sia l'andata che il ritorno`
+- Payment handoff and payment draft generation are now explicitly suppressed
+  when the detected intent is expense creation/travel reimbursement; this closes
+  the bad first-test behavior where the launcher proposed `payments` instead of
+  `expenses`.
+- The launcher chat now has:
+  - explicit `Nuova` / reset action in the header
+  - recent conversation history passed back to `unified_crm_answer`
+  - last answer still rendered as a single clean card, not as a noisy chat log
+
+Risks kept explicit:
+
+- conversation history is capped to the last 6 turns and is launcher-local only;
+  it survives close/reopen of the drawer, but not a full page refresh
+- the model now sees recent Q&A turns, but it still does not see transient UI
+  state from other launcher views such as half-edited invoice-import drafts
+- travel parsing remains heuristic for very free-form Italian phrasing, so new
+  route phrasings should extend tests before further broadening the prompt layer

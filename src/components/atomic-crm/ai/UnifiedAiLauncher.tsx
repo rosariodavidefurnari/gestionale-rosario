@@ -14,6 +14,7 @@ import {
 } from "@/lib/ai/invoiceImport";
 import type {
   UnifiedCrmAnswer,
+  UnifiedCrmConversationTurn,
   UnifiedCrmPaymentDraft,
 } from "@/lib/ai/unifiedCrmAssistant";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,9 @@ export const UnifiedAiLauncher = () => {
   const [activeView, setActiveView] = useState<UnifiedAiLauncherView>("chat");
   const [chatQuestion, setChatQuestion] = useState("");
   const [chatAnswer, setChatAnswer] = useState<UnifiedCrmAnswer | null>(null);
+  const [chatConversationHistory, setChatConversationHistory] = useState<
+    UnifiedCrmConversationTurn[]
+  >([]);
   const [chatPaymentDraft, setChatPaymentDraft] =
     useState<UnifiedCrmPaymentDraft | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -152,6 +156,18 @@ export const UnifiedAiLauncher = () => {
 
   const hasBlockingErrors = blockingErrors.length > 0;
   const selectedAnswerModel = aiConfig?.historicalAnalysisModel ?? "gpt-5.2";
+  const canResetChat =
+    chatAnswer !== null ||
+    chatConversationHistory.length > 0 ||
+    chatQuestion.trim().length > 0 ||
+    chatPaymentDraft !== null;
+
+  const resetChat = () => {
+    setChatQuestion("");
+    setChatAnswer(null);
+    setChatConversationHistory([]);
+    setChatPaymentDraft(null);
+  };
 
   const onFileSelection = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextFiles = Array.from(event.target.files ?? []);
@@ -249,6 +265,8 @@ export const UnifiedAiLauncher = () => {
         <AiLauncherHeader
           activeView={activeView}
           onViewChange={setActiveView}
+          canResetChat={activeView === "chat" && canResetChat}
+          onResetChat={resetChat}
         />
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
@@ -269,9 +287,26 @@ export const UnifiedAiLauncher = () => {
                 question={chatQuestion}
                 onQuestionChange={setChatQuestion}
                 answer={chatAnswer}
-                onAnswerChange={setChatAnswer}
+                onAnswerChange={(nextAnswer) => {
+                  setChatAnswer(nextAnswer);
+                  if (!nextAnswer) {
+                    setChatConversationHistory([]);
+                    return;
+                  }
+
+                  setChatConversationHistory((current) => [
+                    ...current,
+                    {
+                      question: nextAnswer.question,
+                      answerMarkdown: nextAnswer.answerMarkdown,
+                      generatedAt: nextAnswer.generatedAt,
+                      model: nextAnswer.model,
+                    },
+                  ]);
+                }}
                 paymentDraft={chatPaymentDraft}
                 onPaymentDraftChange={setChatPaymentDraft}
+                conversationHistory={chatConversationHistory}
                 onNavigate={() => setOpen(false)}
                 onOpenView={setActiveView}
               />

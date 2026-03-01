@@ -36,7 +36,10 @@ import {
   buildUnifiedCrmReadContext,
   type UnifiedCrmReadContext,
 } from "@/lib/ai/unifiedCrmReadContext";
-import type { UnifiedCrmAnswer } from "@/lib/ai/unifiedCrmAssistant";
+import type {
+  UnifiedCrmAnswer,
+  UnifiedCrmConversationTurn,
+} from "@/lib/ai/unifiedCrmAssistant";
 import type { AnalyticsContext } from "@/lib/analytics/buildAnalyticsContext";
 import type { AnnualOperationsContext } from "@/lib/analytics/buildAnnualOperationsContext";
 import type { HistoricalCashInflowContext } from "@/lib/analytics/buildHistoricalCashInflowContext";
@@ -223,7 +226,11 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
       capabilityRegistry: buildCrmCapabilityRegistry(),
     });
   },
-  askUnifiedCrmQuestion: async (): Promise<UnifiedCrmAnswer> => {
+  askUnifiedCrmQuestion: async (
+    _question?: string,
+    _context?: UnifiedCrmReadContext,
+    _conversationHistory?: UnifiedCrmConversationTurn[],
+  ): Promise<UnifiedCrmAnswer> => {
     throw new Error(
       "Unified CRM AI answers are not available in the FakeRest provider.",
     );

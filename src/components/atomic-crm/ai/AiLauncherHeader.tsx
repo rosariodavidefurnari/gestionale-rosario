@@ -1,4 +1,4 @@
-import { ArrowLeft, Bot } from "lucide-react";
+import { ArrowLeft, Bot, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,15 +18,32 @@ const viewTitles: Record<UnifiedAiLauncherView, string> = {
 export const AiLauncherHeader = ({
   activeView,
   onViewChange,
+  canResetChat,
+  onResetChat,
 }: {
   activeView: UnifiedAiLauncherView;
   onViewChange: (view: UnifiedAiLauncherView) => void;
+  canResetChat?: boolean;
+  onResetChat?: () => void;
 }) => (
   <SheetHeader className="border-b bg-background/95 pb-2 pr-14">
     {activeView === "chat" ? (
       <div className="flex items-center gap-2 text-left">
         <Bot className="size-4" />
         <SheetTitle>{viewTitles.chat}</SheetTitle>
+        {canResetChat ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="ml-auto h-8 gap-1 px-2 text-xs"
+            onClick={onResetChat}
+            aria-label="Resetta chat AI"
+          >
+            <RotateCcw className="size-3.5" />
+            Nuova
+          </Button>
+        ) : null}
       </div>
     ) : (
       <div className="flex items-center gap-2 text-left">

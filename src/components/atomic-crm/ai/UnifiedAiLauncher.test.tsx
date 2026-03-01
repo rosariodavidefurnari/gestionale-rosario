@@ -403,6 +403,7 @@ describe("UnifiedAiLauncher", () => {
           scope: "crm_read_snapshot",
         }),
       }),
+      [],
     );
 
     expect(
@@ -460,6 +461,76 @@ describe("UnifiedAiLauncher", () => {
     ).toBeInTheDocument();
     expect(await screen.findByText("Bozza pagamento proposta")).toBeInTheDocument();
     expect(askUnifiedCrmQuestion).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes recent conversation turns back into the launcher AI and lets the user reset them", async () => {
+    askUnifiedCrmQuestion
+      .mockResolvedValueOnce({
+        question: "Dammi un riepilogo operativo rapido del CRM.",
+        model: "gpt-5.2",
+        generatedAt: "2026-02-28T22:05:00.000Z",
+        answerMarkdown: "## Risposta breve\nPrima risposta.",
+        paymentDraft: null,
+        suggestedActions: [],
+      })
+      .mockResolvedValueOnce({
+        question: "E quindi cosa devo controllare per primo?",
+        model: "gpt-5.2",
+        generatedAt: "2026-02-28T22:06:00.000Z",
+        answerMarkdown: "## Risposta breve\nSeconda risposta.",
+        paymentDraft: null,
+        suggestedActions: [],
+      });
+
+    renderLauncher();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri chat AI unificata" }),
+    );
+
+    const firstSuggestion = await screen.findByRole("button", {
+      name: "Dammi un riepilogo operativo rapido del CRM.",
+    });
+    await waitFor(() => expect(firstSuggestion).toBeEnabled());
+
+    fireEvent.click(firstSuggestion);
+
+    expect(await screen.findByTestId("unified-crm-answer")).toBeInTheDocument();
+
+    const textarea = screen.getByLabelText("Fai una domanda sul CRM corrente");
+    fireEvent.change(textarea, {
+      target: { value: "E quindi cosa devo controllare per primo?" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Invia" }));
+
+    await waitFor(() =>
+      expect(screen.getAllByTestId("unified-crm-answer")).toHaveLength(1),
+    );
+    expect(askUnifiedCrmQuestion).toHaveBeenNthCalledWith(
+      2,
+      "E quindi cosa devo controllare per primo?",
+      expect.objectContaining({
+        meta: expect.objectContaining({
+          scope: "crm_read_snapshot",
+        }),
+      }),
+      [
+        {
+          question: "Dammi un riepilogo operativo rapido del CRM.",
+          answerMarkdown: "## Risposta breve\nPrima risposta.",
+          generatedAt: "2026-02-28T22:05:00.000Z",
+          model: "gpt-5.2",
+        },
+      ],
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Resetta chat AI" }));
+
+    expect(screen.queryByTestId("unified-crm-answer")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Dammi un riepilogo operativo rapido del CRM.",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("uploads files, generates a draft, and confirms the import", async () => {

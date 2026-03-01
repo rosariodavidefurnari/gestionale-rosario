@@ -1294,3 +1294,26 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   Regola pratica: `secrets set` in modo sequenziale, poi verifica, poi smoke
   autenticato. Altrimenti si perde tempo a leggere un `500` che dipende solo da
   runtime non ancora allineato.
+
+- [2026-03-01] **Intento `spesa km` deve escludere hard il fallback `payments`** —
+  Nel launcher, un testo che contiene insieme segnali di progetto e verbi come
+  `aggiungere/registrare/preparare` puo' accidentalmente scivolare nel ramo
+  `payment draft` se non si marca esplicitamente l'intento `expense creation`.
+  Regola pratica: quando il testo combina `spesa/rimborso/spostamento/km` con
+  verbi di creazione, il builder dei suggerimenti e dei draft deve disattivare
+  il corridoio `quote_create_payment` / `project_quick_payment`.
+
+- [2026-03-01] **Per la tratta libera in italiano servono regex piu' naturali** —
+  I primi match `X - Y` / `da X a Y` non bastano per uso reale. Nel caso
+  `da Valguarnera ... fino al McDonald's di Acireale` il ramo deterministico e'
+  partito solo dopo aver coperto anche:
+  - `da ... fino al ...`
+  - date italiane esplicite come `giorno 2 febbraio 2026`
+  - round-trip espresso come `sia l'andata che il ritorno`
+
+- [2026-03-01] **Snapshot progetto non equivale a servizio esistente** —
+  Se il launcher trova un progetto coerente nello snapshot, puo' usarlo come
+  ancora operativa; non deve pero' raccontare che il servizio/lavoro citato nel
+  messaggio esista gia' davvero se il read context non espone quel livello di
+  dettaglio. Prima regola: dichiarare il progetto trovato, non inventare il
+  servizio specifico.

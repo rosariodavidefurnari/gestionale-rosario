@@ -1,6 +1,7 @@
 import { UnifiedCrmAnswerPanel } from "./UnifiedCrmAnswerPanel";
 import type {
   UnifiedCrmAnswer,
+  UnifiedCrmConversationTurn,
   UnifiedCrmPaymentDraft,
 } from "@/lib/ai/unifiedCrmAssistant";
 import type { UnifiedCrmReadContext } from "@/lib/ai/unifiedCrmReadContext";
@@ -14,6 +15,7 @@ export const AiChatView = ({
   onQuestionChange,
   answer,
   onAnswerChange,
+  conversationHistory,
   paymentDraft,
   onPaymentDraftChange,
   onNavigate,
@@ -27,6 +29,7 @@ export const AiChatView = ({
   onQuestionChange: (question: string) => void;
   answer: UnifiedCrmAnswer | null;
   onAnswerChange: (answer: UnifiedCrmAnswer | null) => void;
+  conversationHistory: UnifiedCrmConversationTurn[];
   paymentDraft: UnifiedCrmPaymentDraft | null;
   onPaymentDraftChange: (draft: UnifiedCrmPaymentDraft | null) => void;
   onNavigate?: () => void;
@@ -53,6 +56,7 @@ export const AiChatView = ({
         onQuestionChange={onQuestionChange}
         answer={answer}
         onAnswerChange={onAnswerChange}
+        conversationHistory={conversationHistory}
         paymentDraft={paymentDraft}
         onPaymentDraftChange={onPaymentDraftChange}
         onNavigate={onNavigate}

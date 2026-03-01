@@ -9,6 +9,13 @@ export const unifiedCrmSuggestedQuestions = [
   "Che cosa emerge dalle spese recenti?",
 ] as const;
 
+export type UnifiedCrmConversationTurn = {
+  question: string;
+  answerMarkdown: string;
+  generatedAt: string;
+  model: string;
+};
+
 export type UnifiedCrmSuggestedAction = {
   id: string;
   kind: "page" | "list" | "show" | "approved_action";

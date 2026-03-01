@@ -45,6 +45,12 @@ export type UnifiedCrmAnswerPayload = {
   context: Record<string, unknown>;
   question: string;
   model: string;
+  conversationHistory?: Array<{
+    question: string;
+    answerMarkdown: string;
+    generatedAt: string;
+    model: string;
+  }>;
 };
 
 export type ParsedUnifiedCrmTravelExpenseQuestion = {
@@ -67,6 +73,21 @@ export type UnifiedCrmTravelExpenseEstimate = {
   reimbursementAmount: number | null;
 };
 
+const italianMonthNumbers: Record<string, number> = {
+  gennaio: 1,
+  febbraio: 2,
+  marzo: 3,
+  aprile: 4,
+  maggio: 5,
+  giugno: 6,
+  luglio: 7,
+  agosto: 8,
+  settembre: 9,
+  ottobre: 10,
+  novembre: 11,
+  dicembre: 12,
+};
+
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
@@ -86,6 +107,48 @@ const formatNumber = (value: number) =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+
+const includesAny = (value: string, patterns: string[]) =>
+  patterns.some((pattern) => value.includes(pattern));
+
+const hasTravelIntent = (normalizedQuestion: string) =>
+  includesAny(normalizedQuestion, [
+    "tratta",
+    "tragitt",
+    "percor",
+    "chilometr",
+    "km",
+    "spostament",
+    "trasfert",
+    "andata e ritorno",
+    "a/r",
+    "distanz",
+    "viaggi",
+  ]);
+
+const hasExpenseIntent = (normalizedQuestion: string) =>
+  includesAny(normalizedQuestion, [
+    "spes",
+    "rimbor",
+    "costo",
+    "spostament",
+    "uscit",
+    "fornitor",
+    "nolegg",
+  ]);
+
+const hasExpenseCreationIntent = (normalizedQuestion: string) =>
+  hasExpenseIntent(normalizedQuestion) &&
+  includesAny(normalizedQuestion, [
+    "registr",
+    "aggiung",
+    "inser",
+    "crea",
+    "segn",
+    "precompilat",
+    "prepar",
+    "bozza",
+  ]);
 
 const getRoutePrefix = (context: Record<string, unknown>) => {
   const meta = isObject(context.meta) ? context.meta : null;
@@ -128,7 +191,7 @@ const stripTrailingTravelContext = (value: string) =>
       "",
     )
     .replace(
-      /\s*(?:[,.!?;:]\s*)?(?:calcola|quanti|quanto|dimmi|come|devo|vorrei|posso|registr|caric|inser|preparami)\b.*$/i,
+      /\s*(?:e\s+)?(?:[,.!?;:]\s*)?(?:bisogna\s+)?(?:calcol\w*|quanti|quanto|dimmi|come|devo|vorrei|posso|registr|caric|inser|preparami)\b.*$/i,
       "",
     )
     .replace(/^[\s\-–—/]+|[\s\-–—/.,;:]+$/g, "")
@@ -152,13 +215,52 @@ const splitTravelRoute = (value: string) => {
     };
   }
 
+  const fromUntilMatch = value.match(
+    /\bda\s+(.+?)\s+fino\s+a(?:l|lla|llo|ll')?\s+(.+)$/i,
+  );
+  if (fromUntilMatch) {
+    return {
+      origin: stripTrailingTravelContext(fromUntilMatch[1] ?? ""),
+      destination: stripTrailingTravelContext(fromUntilMatch[2] ?? ""),
+    };
+  }
+
+  const fromVersusMatch = value.match(/\bda\s+(.+?)\s+(?:verso|fino\s+in)\s+(.+)$/i);
+  if (fromVersusMatch) {
+    return {
+      origin: stripTrailingTravelContext(fromVersusMatch[1] ?? ""),
+      destination: stripTrailingTravelContext(fromVersusMatch[2] ?? ""),
+    };
+  }
+
   return null;
 };
 
 const inferExpenseDateFromQuestion = (
+  question: string,
   normalizedQuestion: string,
   timeZone: string,
 ) => {
+  const explicitDateMatch = normalizeText(question).match(
+    /\b(?:giorno\s+)?(\d{1,2})\s+(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s+(\d{4})\b/i,
+  );
+
+  if (explicitDateMatch) {
+    const day = Number(explicitDateMatch[1]);
+    const month = italianMonthNumbers[explicitDateMatch[2].toLowerCase()];
+    const year = Number(explicitDateMatch[3]);
+
+    if (
+      Number.isInteger(day) &&
+      day >= 1 &&
+      day <= 31 &&
+      Number.isInteger(month) &&
+      Number.isInteger(year)
+    ) {
+      return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+  }
+
   const now = new Date();
 
   if (includesAny(normalizedQuestion, ["oggi", "stasera", "stamattina"])) {
@@ -183,26 +285,8 @@ export const parseUnifiedCrmTravelExpenseQuestion = ({
   context: Record<string, unknown>;
 }): ParsedUnifiedCrmTravelExpenseQuestion | null => {
   const normalizedQuestion = normalizeText(question);
-  const travelIntent = includesAny(normalizedQuestion, [
-    "tratta",
-    "tragitt",
-    "percor",
-    "chilometr",
-    "km",
-    "spostament",
-    "trasfert",
-    "andata e ritorno",
-    "a/r",
-    "distanz",
-  ]);
-  const expenseIntent = includesAny(normalizedQuestion, [
-    "spes",
-    "rimbor",
-    "registr",
-    "caric",
-    "inser",
-    "crm",
-  ]);
+  const travelIntent = hasTravelIntent(normalizedQuestion);
+  const expenseIntent = hasExpenseIntent(normalizedQuestion);
 
   if (!travelIntent || !expenseIntent) {
     return null;
@@ -225,10 +309,13 @@ export const parseUnifiedCrmTravelExpenseQuestion = ({
     isRoundTrip: includesAny(normalizedQuestion, [
       "andata e ritorno",
       "andata ritorno",
+      "andata che il ritorno",
+      "sia l'andata che il ritorno",
       "a/r",
       "a-r",
     ]),
     expenseDate: inferExpenseDateFromQuestion(
+      question,
       normalizedQuestion,
       getBusinessTimezone(context),
     ),
@@ -262,6 +349,31 @@ const buildCreateHref = (
   return search
     ? `${routePrefix}${resource}/create?${search}`
     : `${routePrefix}${resource}/create`;
+};
+
+const normalizeConversationHistory = (
+  value: unknown,
+): UnifiedCrmAnswerPayload["conversationHistory"] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(isObject)
+    .map((item) => ({
+      question: getString(item.question)?.trim() ?? "",
+      answerMarkdown: getString(item.answerMarkdown)?.trim() ?? "",
+      generatedAt: getString(item.generatedAt)?.trim() ?? "",
+      model: getString(item.model)?.trim() ?? "",
+    }))
+    .filter(
+      (item) =>
+        item.question &&
+        item.answerMarkdown &&
+        item.generatedAt &&
+        item.model,
+    )
+    .slice(-6);
 };
 
 const buildShowHrefWithSearch = (
@@ -313,9 +425,6 @@ export const buildTravelExpenseCreateHref = ({
 
 const getObjectArray = (value: unknown): Array<Record<string, unknown>> =>
   Array.isArray(value) ? value.filter(isObject) : [];
-
-const includesAny = (value: string, patterns: string[]) =>
-  patterns.some((pattern) => value.includes(pattern));
 
 const canCreatePaymentFromQuoteStatus = (status: string | null) =>
   Boolean(status && quoteStatusesEligibleForPaymentCreation.has(status));
@@ -765,6 +874,7 @@ export const buildUnifiedCrmSuggestedActions = ({
     "rimbor",
     "nolegg",
   ]);
+  const expenseCreationIntent = hasExpenseCreationIntent(normalizedQuestion);
   const focusClients = includesAny(normalizedQuestion, [
     "client",
     "anagraf",
@@ -772,6 +882,7 @@ export const buildUnifiedCrmSuggestedActions = ({
   ]);
   const preferPaymentAction =
     (focusPayments || focusQuotes || focusProjects || focusClients) &&
+    !expenseCreationIntent &&
     includesAny(normalizedQuestion, [
       "registr",
       "aggiung",
@@ -893,17 +1004,6 @@ export const buildUnifiedCrmSuggestedActions = ({
     routePrefix,
     "expenses",
     getString(firstExpense?.expenseId),
-  );
-  const expenseProjectHref = buildShowHrefWithSearch(
-    routePrefix,
-    "projects",
-    getString(firstExpense?.projectId),
-    {
-      launcher_source: "unified_ai_launcher",
-      launcher_action: "project_quick_payment",
-      open_dialog: "quick_payment",
-      payment_type: inferredPaymentType,
-    },
   );
   const clientHref = buildShowHref(
     routePrefix,
@@ -1173,6 +1273,44 @@ export const buildUnifiedCrmSuggestedActions = ({
             href: buildListHref(routePrefix, "quotes"),
           },
     );
+  } else if (focusExpenses || expenseCreationIntent) {
+    pushSuggestion(
+      expenseHref
+        ? {
+            id: "open-first-recent-expense",
+            kind: "show",
+            resource: "expenses",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri la spesa piu recente",
+            description:
+              "Vai al dettaglio della prima spesa recente nello snapshot corrente.",
+            href: expenseHref,
+          }
+        : null,
+    );
+    pushSuggestion({
+      id: "open-expenses-list",
+      kind: "list",
+      resource: "expenses",
+      label: "Apri tutte le spese",
+      description:
+        "Controlla la lista completa delle spese per proseguire sul flusso costi e rimborsi, non su quello pagamenti.",
+      href: buildListHref(routePrefix, "expenses"),
+    });
+    pushSuggestion(
+      projectHref
+        ? {
+            id: "open-first-active-project-from-expense-context",
+            kind: "show",
+            resource: "projects",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri il progetto collegato",
+            description:
+              "Usa il progetto attivo come contesto operativo, ma continua il salvataggio dalla risorsa spese.",
+            href: projectHref,
+          }
+        : null,
+    );
   } else if (focusProjects) {
     const projectShowSuggestion = projectHref
       ? {
@@ -1228,44 +1366,6 @@ export const buildUnifiedCrmSuggestedActions = ({
               "Controlla la lista completa dei progetti per approfondire stato e lavori attivi.",
             href: buildListHref(routePrefix, "projects"),
           },
-    );
-  } else if (focusExpenses) {
-    pushSuggestion(
-      expenseHref
-        ? {
-            id: "open-first-recent-expense",
-            kind: "show",
-            resource: "expenses",
-            capabilityActionId: "follow_unified_crm_handoff",
-            label: "Apri la spesa piu recente",
-            description:
-              "Vai al dettaglio della prima spesa recente nello snapshot corrente.",
-            href: expenseHref,
-          }
-        : null,
-    );
-    pushSuggestion({
-      id: "open-expenses-list",
-      kind: "list",
-      resource: "expenses",
-      label: "Apri tutte le spese",
-      description:
-        "Controlla la lista completa delle spese per approfondire costi e rimborsi.",
-      href: buildListHref(routePrefix, "expenses"),
-    });
-    pushSuggestion(
-      expenseProjectHref
-        ? {
-            id: "open-linked-project-from-expense",
-            kind: "approved_action",
-            resource: "projects",
-            capabilityActionId: "project_quick_payment",
-            label: "Apri il progetto collegato",
-            description:
-              "Apre il progetto collegato alla spesa con contesto launcher e quick payment pronto da aprire.",
-            href: expenseProjectHref,
-          }
-        : null,
     );
   } else if (focusClients) {
     const clientShowSuggestion = clientHref
@@ -1386,8 +1486,10 @@ export const buildUnifiedCrmPaymentDraftFromContext = ({
     "anagraf",
     "contatt",
   ]);
+  const expenseCreationIntent = hasExpenseCreationIntent(normalizedQuestion);
   const preferPaymentAction =
     (focusPayments || focusQuotes || focusProjects || focusClients) &&
+    !expenseCreationIntent &&
     includesAny(normalizedQuestion, [
       "registr",
       "aggiung",
@@ -1464,6 +1566,9 @@ export const validateUnifiedCrmAnswerPayload = (payload: unknown) => {
       context: payload.context,
       question: trimmedQuestion,
       model: payload.model,
+      conversationHistory: normalizeConversationHistory(
+        payload.conversationHistory,
+      ),
     } satisfies UnifiedCrmAnswerPayload,
   };
 };

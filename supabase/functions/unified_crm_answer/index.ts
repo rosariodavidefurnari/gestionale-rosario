@@ -72,7 +72,7 @@ async function answerUnifiedCrmQuestion(req: Request, currentUserSale: unknown) 
     return createErrorResponse(400, payloadResult.error ?? "Payload non valido");
   }
 
-  const { context, question, model } = payloadResult.data;
+  const { context, question, model, conversationHistory } = payloadResult.data;
   const selectedModel =
     typeof model === "string" && allowedModels.has(model)
       ? model
@@ -162,6 +162,13 @@ async function answerUnifiedCrmQuestion(req: Request, currentUserSale: unknown) 
       model: selectedModel,
       instructions,
       input:
+        (conversationHistory && conversationHistory.length > 0
+          ? `Conversazione recente nel launcher (dal piu vecchio al piu nuovo):\n${JSON.stringify(
+              conversationHistory,
+              null,
+              2,
+            )}\n\n`
+          : "") +
         `Domanda dell'utente:\n${question}\n\n` +
         `Contesto CRM unificato read-only:\n${JSON.stringify(context, null, 2)}`,
       reasoning: {

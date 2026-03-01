@@ -30,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   unifiedCrmSuggestedQuestions,
   type UnifiedCrmAnswer,
+  type UnifiedCrmConversationTurn,
   type UnifiedCrmPaymentDraft,
 } from "@/lib/ai/unifiedCrmAssistant";
 import type { UnifiedCrmReadContext } from "@/lib/ai/unifiedCrmReadContext";
@@ -118,6 +119,7 @@ type UnifiedCrmAnswerPanelProps = {
   onQuestionChange: (question: string) => void;
   answer: UnifiedCrmAnswer | null;
   onAnswerChange: (answer: UnifiedCrmAnswer | null) => void;
+  conversationHistory: UnifiedCrmConversationTurn[];
   paymentDraft: UnifiedCrmPaymentDraft | null;
   onPaymentDraftChange: (draft: UnifiedCrmPaymentDraft | null) => void;
   onNavigate?: () => void;
@@ -131,6 +133,7 @@ export const UnifiedCrmAnswerPanel = ({
   onQuestionChange,
   answer,
   onAnswerChange,
+  conversationHistory,
   paymentDraft,
   onPaymentDraftChange,
   onNavigate,
@@ -156,7 +159,11 @@ export const UnifiedCrmAnswerPanel = ({
         );
       }
 
-      return dataProvider.askUnifiedCrmQuestion(nextQuestion, context);
+      return dataProvider.askUnifiedCrmQuestion(
+        nextQuestion,
+        context,
+        conversationHistory,
+      );
     },
     onSuccess: () => {
       onQuestionChange("");
@@ -174,8 +181,9 @@ export const UnifiedCrmAnswerPanel = ({
   });
 
   const trimmedQuestion = question.trim();
-  const suggestedActions = answer?.suggestedActions ?? [];
-  const hasConversation = !!answer || isPending || !!error;
+  const latestAnswer = answer;
+  const suggestedActions = latestAnswer?.suggestedActions ?? [];
+  const hasConversation = !!latestAnswer || isPending || !!error;
   const canOpenExpandedComposer = composerLineCount >= composerExpandTriggerLine;
 
   const resetTextareaHeight = () => {
@@ -273,19 +281,22 @@ export const UnifiedCrmAnswerPanel = ({
             </div>
           ) : null}
 
-          {answer ? (
+          {latestAnswer ? (
             <div
               data-testid="unified-crm-answer"
               className="space-y-3 rounded-xl border px-4 py-4"
             >
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span>Risposta del {formatGeneratedAt(answer.generatedAt)}</span>
+                <span>
+                  Risposta del {formatGeneratedAt(latestAnswer.generatedAt)}
+                </span>
               </div>
               <div className="rounded-md bg-muted/50 px-3 py-2 text-sm">
-                <span className="font-medium">Domanda:</span> {answer.question}
+                <span className="font-medium">Domanda:</span>{" "}
+                {latestAnswer.question}
               </div>
               <Markdown className="overflow-hidden wrap-break-word text-sm leading-6 [&_h2]:mt-4 [&_h2]:text-sm [&_h2]:font-semibold [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:font-semibold">
-                {answer.answerMarkdown}
+                {latestAnswer.answerMarkdown}
               </Markdown>
 
               {paymentDraft ? (

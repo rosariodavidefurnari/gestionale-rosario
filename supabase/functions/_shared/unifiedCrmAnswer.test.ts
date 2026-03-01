@@ -305,6 +305,92 @@ describe("unifiedCrmAnswer", () => {
     expect(parsed?.expenseDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
+  it("parses a natural-language travel expense with 'fino al' and explicit italian date", () => {
+    const parsed = parseUnifiedCrmTravelExpenseQuestion({
+      question:
+        "senti, vorrei aggiungere al servizio che ho fatto per il progetto vale il viaggio di giorno 2 febbraio 2026 una spesa di spostamento da Valguarnera europea in provincia di Enna fino al McDonald's di Acireale e bisogna calcolare sia l'andata che il ritorno",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          businessTimezone: "Europe/Rome",
+        },
+      },
+    });
+
+    expect(parsed).toEqual({
+      origin: "Valguarnera europea in provincia di Enna",
+      destination: "McDonald's di Acireale",
+      isRoundTrip: true,
+      expenseDate: "2026-02-02",
+    });
+  });
+
+  it("does not propose payment handoff or draft when the question is really about registering a travel expense on a project", () => {
+    const question =
+      "senti, vorrei aggiungere al servizio che ho fatto per il progetto vale il viaggio di giorno 2 febbraio 2026 una spesa di spostamento da Valguarnera europea in provincia di Enna fino al McDonald's di Acireale e bisogna calcolare sia l'andata che il ritorno";
+    const context = {
+      meta: {
+        scope: "crm_read_snapshot",
+        routePrefix: "/#/",
+      },
+      snapshot: {
+        openQuotes: [
+          {
+            quoteId: "quote-1",
+            clientId: "client-1",
+            projectId: "project-1",
+            status: "accettato",
+            remainingAmount: 156,
+          },
+        ],
+        activeProjects: [
+          {
+            projectId: "project-1",
+            clientId: "client-1",
+            totalFees: 1000,
+            totalExpenses: 0,
+            balanceDue: 156,
+          },
+        ],
+        recentExpenses: [
+          {
+            expenseId: "expense-1",
+            projectId: "project-1",
+          },
+        ],
+      },
+      registries: {
+        semantic: {},
+        capability: {},
+      },
+    };
+
+    const draft = buildUnifiedCrmPaymentDraftFromContext({
+      question,
+      context,
+    });
+    const actions = buildUnifiedCrmSuggestedActions({
+      question,
+      context,
+    });
+
+    expect(draft).toBeNull();
+    expect(
+      actions.some((action) =>
+        [
+          "quote_create_payment",
+          "client_create_payment",
+          "project_quick_payment",
+        ].includes(action.capabilityActionId ?? ""),
+      ),
+    ).toBe(false);
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        resource: "expenses",
+      }),
+    );
+  });
+
   it("builds a travel-expense handoff and answer grounded on routing data", () => {
     const estimate = buildUnifiedCrmTravelExpenseEstimate({
       context: {
