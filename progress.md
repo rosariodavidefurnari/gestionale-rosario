@@ -94,10 +94,47 @@ non impila piu tutto in un unico scroll. Ora apre su `Chat AI`, mentre
 `Snapshot CRM` e `Importa fatture e ricevute` stanno dietro un menu `+`; lo stato della
 chat resta preservato mentre si cambia vista nella stessa sessione. La chat
 ora segue anche un layout standard: risposta sopra, composer in basso, `+` a
-sinistra del campo di scrittura e lontano dalla `X` di chiusura.
+sinistra del campo di scrittura e lontano dalla `X` di chiusura. Il prossimo
+passo commerciale legittimo dentro questa stessa fase e' ora chiuso anche lui:
+la chat puo preparare una seconda bozza pagamento stretta sul ramo
+`project -> quick payment`, usando financials di progetto aggregati in modo
+deterministico nel contesto read-only e portando `tipo/importo/stato` dentro
+il dialog approvato senza scrivere dal launcher.
 
 ## Last Session
 
+### Sessione 70 (2026-03-01, project quick-payment draft nel launcher)
+
+- Completed:
+  - **Il launcher supporta ora un secondo write-draft stretto sul percorso
+    `project -> quick payment`**:
+    - la chat puo proporre una bozza pagamento project-driven
+    - la bozza resta modificabile nel launcher
+    - la conferma resta nel dialog approvato del progetto
+  - **La snapshot CRM read-only ora include financials minimi del progetto
+    attivo**:
+    - `totalFees`
+    - `totalExpenses`
+    - `totalPaid`
+    - `balanceDue`
+    - questi valori sono derivati deterministicamente da servizi, spese e
+      pagamenti ricevuti
+  - **Il quick payment di progetto consuma la bozza senza aprire write
+    generale**:
+    - il deep-link porta `payment_type`, `amount` e `status`
+    - `QuickPaymentDialog` si apre con quei valori precompilati
+    - il dialog resta manuale e confermato solo dall'utente
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/ai/unifiedCrmReadContext.test.ts src/components/atomic-crm/payments/paymentLinking.test.ts supabase/functions/_shared/unifiedCrmAnswer.test.ts src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx`
+
+- Decisions:
+  - il secondo write-draft era legittimo solo riusando una superficie gia
+    approvata con financials locali deterministici
+  - oltre questo punto non apro altri casi write-assisted per default nella
+    stessa fase
+  - la chat generale resta senza write execution diretta
 ### Sessione 69 (2026-03-01, redesign UX del launcher AI)
 
 - Completed:

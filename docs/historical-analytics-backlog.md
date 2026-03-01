@@ -406,13 +406,25 @@ The next open priority is now closed too:
   - no new write capability
   - validation closed with `npm run typecheck` plus targeted Vitest
 
-The next open priority is:
+The next open priority is now closed too:
 
-- keep future work selective:
-  - either do one more short hardening pass if a meaningful ambiguity still
-    remains in the launcher/payment corridor
-  - or open a second write-assisted case only if it is equally deterministic
-- still do not give the general CRM chat direct write execution
+- the launcher now supports a second narrow payment write-draft on the
+  approved `project_quick_payment` surface
+- the CRM read snapshot now exposes deterministic active-project financials
+  derived from services, expenses and received payments
+- the project quick-payment dialog can now consume a launcher draft carrying:
+  - `payment_type`
+  - `amount`
+  - `status`
+- this still does not give the general CRM chat direct write execution:
+  - chat only prepares the draft
+  - confirmation still happens inside the approved project dialog
+
+Default line after this:
+
+- do not open another write-assisted case by default
+- only resume expansion if a new real workflow gap appears or the next scope is
+  made explicit
 
 Tactical UX slice closed out of sequence:
 

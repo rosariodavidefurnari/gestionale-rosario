@@ -290,15 +290,17 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "prepare_payment_write_draft",
       label: "Prepara bozza pagamento nel launcher",
       description:
-        "Propone nel launcher una bozza pagamento stretta, modificabile dall'utente e trasportabile verso payments/create senza scrivere direttamente nel CRM; la superficie di arrivo deve preservare gli edit espliciti gia fatti nel launcher finche l'utente non sceglie un valore diverso e finche resta sullo stesso preventivo della bozza, segnalando esplicitamente quando quel contesto non vale piu. Dopo il primo edit manuale dell'importo, il form non deve ricalcolarlo automaticamente.",
+        "Propone nel launcher una bozza pagamento stretta, modificabile dall'utente e trasportabile solo verso superfici gia approvate senza scrivere direttamente nel CRM: `payments/create` per il caso quote-driven e `project quick payment` per il caso project-driven. Sul form pagamenti la superficie di arrivo deve preservare gli edit espliciti gia fatti nel launcher finche l'utente non sceglie un valore diverso e finche resta sullo stesso preventivo della bozza, segnalando esplicitamente quando quel contesto non vale piu. Sul quick payment di progetto la bozza puo portare importo, tipo e stato gia derivati dai financials del progetto attivo. Dopo il primo edit manuale dell'importo sul form pagamenti, il ricalcolo automatico non deve piu riprendersi il campo.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedCrmAnswerPanel.tsx",
-      actsOn: ["quotes", "payments"],
+      actsOn: ["quotes", "projects", "payments"],
       requiredFields: [
-        "answer.paymentDraft.quoteId",
+        "answer.paymentDraft.originActionId",
         "answer.paymentDraft.clientId",
+        "answer.paymentDraft.projectId",
         "answer.paymentDraft.paymentType",
         "answer.paymentDraft.amount",
         "answer.paymentDraft.status",
+        "answer.paymentDraft.draftKind",
       ],
     },
     {
@@ -406,7 +408,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "project_quick_payment",
       label: "Registra pagamento rapido dal progetto",
       description:
-        "Crea un pagamento leggendo il saldo operativo dal progetto e puo aprirsi da handoff guidato con tipo pagamento gia selezionato.",
+        "Crea un pagamento leggendo il saldo operativo dal progetto e puo aprirsi da handoff guidato con tipo pagamento gia selezionato o con una bozza stretta che porta anche importo e stato derivati dai financials del progetto.",
       sourceFile: "src/components/atomic-crm/projects/QuickPaymentDialog.tsx",
       actsOn: ["projects", "payments"],
       requiredFields: ["project_id", "client_id", "amount", "payment_type"],

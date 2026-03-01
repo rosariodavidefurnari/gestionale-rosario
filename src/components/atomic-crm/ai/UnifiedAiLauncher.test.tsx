@@ -326,6 +326,7 @@ describe("UnifiedAiLauncher", () => {
         id: "payment-draft-from-open-quote",
         resource: "payments",
         originActionId: "quote_create_payment",
+        draftKind: "payment_create",
         label: "Bozza pagamento dal preventivo aperto",
         explanation:
           "Questa bozza usa il residuo ancora non collegato del preventivo aperto principale. Puoi correggerla qui e poi aprire il form pagamenti per confermare davvero.",

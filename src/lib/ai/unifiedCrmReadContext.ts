@@ -9,9 +9,14 @@ import type {
   Payment,
   Project,
   Quote,
+  Service,
 } from "@/components/atomic-crm/types";
 import type { CrmCapabilityRegistry } from "@/lib/semantics/crmCapabilityRegistry";
-import type { CrmSemanticRegistry } from "@/lib/semantics/crmSemanticRegistry";
+import {
+  calculateKmReimbursement,
+  calculateServiceNetValue,
+  type CrmSemanticRegistry,
+} from "@/lib/semantics/crmSemanticRegistry";
 
 const openQuoteClosedStatuses = new Set([
   "saldato",
@@ -40,6 +45,99 @@ const formatDateTimeLabel = (value: string) => {
     dateStyle: "short",
     timeStyle: "short",
   });
+};
+
+const getExpenseOperationalAmount = (expense: Expense) => {
+  if (expense.expense_type === "credito_ricevuto") {
+    return -Number(expense.amount ?? 0);
+  }
+
+  if (expense.expense_type === "spostamento_km") {
+    return calculateKmReimbursement({
+      kmDistance: expense.km_distance,
+      kmRate: expense.km_rate,
+    });
+  }
+
+  return Number(expense.amount ?? 0) * (1 + Number(expense.markup_percent ?? 0) / 100);
+};
+
+const buildProjectFinancialSummaries = ({
+  projects,
+  services,
+  payments,
+  expenses,
+}: {
+  projects: Project[];
+  services: Service[];
+  payments: Payment[];
+  expenses: Expense[];
+}) => {
+  const summaries = new Map(
+    projects.map((project) => [
+      String(project.id),
+      {
+        totalServices: 0,
+        totalFees: 0,
+        totalExpenses: 0,
+        totalPaid: 0,
+        balanceDue: 0,
+      },
+    ]),
+  );
+
+  services.forEach((service) => {
+    const projectId = service.project_id ? String(service.project_id) : null;
+    if (!projectId) {
+      return;
+    }
+
+    const current = summaries.get(projectId);
+    if (!current) {
+      return;
+    }
+
+    current.totalServices += 1;
+    current.totalFees += calculateServiceNetValue(service);
+  });
+
+  expenses.forEach((expense) => {
+    const projectId = expense.project_id ? String(expense.project_id) : null;
+    if (!projectId) {
+      return;
+    }
+
+    const current = summaries.get(projectId);
+    if (!current) {
+      return;
+    }
+
+    current.totalExpenses += getExpenseOperationalAmount(expense);
+  });
+
+  payments.forEach((payment) => {
+    const projectId = payment.project_id ? String(payment.project_id) : null;
+    if (!projectId || payment.status !== "ricevuto") {
+      return;
+    }
+
+    const current = summaries.get(projectId);
+    if (!current) {
+      return;
+    }
+
+    current.totalPaid +=
+      payment.payment_type === "rimborso"
+        ? -Number(payment.amount ?? 0)
+        : Number(payment.amount ?? 0);
+  });
+
+  summaries.forEach((summary) => {
+    summary.balanceDue =
+      summary.totalFees + summary.totalExpenses - summary.totalPaid;
+  });
+
+  return summaries;
 };
 
 const getClientName = (
@@ -106,6 +204,11 @@ export type UnifiedCrmReadContext = {
       status: string;
       statusLabel: string;
       startDate: string | null;
+      totalServices: number;
+      totalFees: number;
+      totalExpenses: number;
+      totalPaid: number;
+      balanceDue: number;
     }>;
     pendingPayments: Array<{
       paymentId: string;
@@ -139,6 +242,7 @@ export const buildUnifiedCrmReadContext = ({
   clients,
   quotes,
   projects,
+  services,
   payments,
   expenses,
   semanticRegistry,
@@ -148,6 +252,7 @@ export const buildUnifiedCrmReadContext = ({
   clients: Client[];
   quotes: Quote[];
   projects: Project[];
+  services: Service[];
   payments: Payment[];
   expenses: Expense[];
   semanticRegistry: CrmSemanticRegistry;
@@ -158,6 +263,12 @@ export const buildUnifiedCrmReadContext = ({
   const projectById = new Map(
     projects.map((project) => [String(project.id), project]),
   );
+  const projectFinancialsById = buildProjectFinancialSummaries({
+    projects,
+    services,
+    payments,
+    expenses,
+  });
   const paymentsByQuoteId = new Map<string, Payment[]>();
 
   payments.forEach((payment) => {
@@ -260,15 +371,31 @@ export const buildUnifiedCrmReadContext = ({
           createdAt: quote.created_at,
         };
       }),
-      activeProjects: activeProjects.slice(0, 5).map((project) => ({
-        projectId: String(project.id),
-        clientId: project.client_id ? String(project.client_id) : null,
-        projectName: project.name,
-        clientName: getClientName(clientById, project.client_id),
-        status: project.status,
-        statusLabel: projectStatusLabels[project.status] ?? project.status,
-        startDate: project.start_date ?? null,
-      })),
+      activeProjects: activeProjects.slice(0, 5).map((project) => {
+        const projectFinancials =
+          projectFinancialsById.get(String(project.id)) ?? {
+            totalServices: 0,
+            totalFees: 0,
+            totalExpenses: 0,
+            totalPaid: 0,
+            balanceDue: 0,
+          };
+
+        return {
+          projectId: String(project.id),
+          clientId: project.client_id ? String(project.client_id) : null,
+          projectName: project.name,
+          clientName: getClientName(clientById, project.client_id),
+          status: project.status,
+          statusLabel: projectStatusLabels[project.status] ?? project.status,
+          startDate: project.start_date ?? null,
+          totalServices: projectFinancials.totalServices,
+          totalFees: projectFinancials.totalFees,
+          totalExpenses: projectFinancials.totalExpenses,
+          totalPaid: projectFinancials.totalPaid,
+          balanceDue: projectFinancials.balanceDue,
+        };
+      }),
       pendingPayments: pendingPayments.slice(0, 5).map((payment) => ({
         paymentId: String(payment.id),
         quoteId: payment.quote_id ? String(payment.quote_id) : null,

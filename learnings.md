@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se apri un secondo write-draft nella chat generale, deve
+  riusare una superficie che possiede gia' financials locali deterministici**
+  — Dopo il draft quote-driven, l'unico secondo caso ancora legittimo in
+  questa fase era `project -> quick payment`: la superficie esisteva gia, il
+  calcolo locale del progetto era forte, e la chat poteva limitarsi a portare
+  `tipo/importo/stato` dentro quel dialog senza inventare un nuovo form o una
+  write generale.
+
 - [2026-03-01] **Se una shell AI vive dentro un drawer, il composer deve stare
   in basso e la navigazione secondaria non va appoggiata alla `X` di
   chiusura** — Nel launcher AI il layout con input in alto e risposta sotto

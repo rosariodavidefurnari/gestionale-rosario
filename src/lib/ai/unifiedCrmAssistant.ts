@@ -34,13 +34,14 @@ export type UnifiedCrmSuggestedAction = {
 export type UnifiedCrmPaymentDraft = {
   id: string;
   resource: "payments";
-  originActionId: "quote_create_payment";
+  originActionId: "quote_create_payment" | "project_quick_payment";
+  draftKind: "payment_create" | "project_quick_payment";
   label: string;
   explanation: string;
-  quoteId: string;
+  quoteId: string | null;
   clientId: string;
   projectId: string | null;
-  paymentType: "acconto" | "saldo" | "parziale";
+  paymentType: "acconto" | "saldo" | "parziale" | "rimborso_spese";
   amount: number;
   status: "in_attesa" | "ricevuto";
   href: string;

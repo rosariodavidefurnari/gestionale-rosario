@@ -14,7 +14,10 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Euro } from "lucide-react";
 import type { Project } from "../types";
-import { getUnifiedAiHandoffContextFromSearch } from "../payments/paymentLinking";
+import {
+  getProjectQuickPaymentDraftContextFromSearch,
+  getUnifiedAiHandoffContextFromSearch,
+} from "../payments/paymentLinking";
 
 const eur = (n: number) =>
   n.toLocaleString("it-IT", {
@@ -60,15 +63,18 @@ const getAmountHint = (type: string): string => {
 
 export const QuickPaymentDialog = ({ record }: { record: Project }) => {
   const [open, setOpen] = useState(false);
-  const [lastAutoOpenedSearch, setLastAutoOpenedSearch] = useState<string | null>(
-    null,
-  );
+  const [lastAutoOpenedSearch, setLastAutoOpenedSearch] = useState<
+    string | null
+  >(null);
   const [create] = useCreate();
   const notify = useNotify();
   const refresh = useRefresh();
   const [saving, setSaving] = useState(false);
   const location = useLocation();
   const launcherHandoff = getUnifiedAiHandoffContextFromSearch(location.search);
+  const draftContext = getProjectQuickPaymentDraftContextFromSearch(
+    location.search,
+  );
 
   const { data: financials } = useGetOne("project_financials", {
     id: record.id,
@@ -82,7 +88,8 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
 
   const totals = { fees: totalFees, expenses: totalExpenses, paid: totalPaid };
 
-  const getInitialPaymentType = () => launcherHandoff?.paymentType ?? "acconto";
+  const getInitialPaymentType = () =>
+    draftContext?.paymentType ?? launcherHandoff?.paymentType ?? "acconto";
 
   const [amount, setAmount] = useState(0);
   const [paymentType, setPaymentType] = useState("acconto");
@@ -101,10 +108,12 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
       const nextPaymentType = getInitialPaymentType();
       setPaymentType(nextPaymentType);
       setPaymentDate("");
-      setStatus("ricevuto");
+      setStatus(draftContext?.status ?? "ricevuto");
       setMethod("bonifico");
       setNotes("");
-      setAmount(getSuggestedAmount(nextPaymentType, totals));
+      setAmount(
+        draftContext?.amount ?? getSuggestedAmount(nextPaymentType, totals),
+      );
     }
     setOpen(v);
   };
@@ -179,8 +188,9 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
 
         {launcherHandoff?.action === "project_quick_payment" ? (
           <div className="rounded-lg border border-dashed bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-            Apertura guidata dalla chat AI unificata. Il dialog resta manuale:
-            controlla i dati prima di confermare.
+            {draftContext
+              ? "Apertura guidata dalla chat AI unificata con una bozza quick payment modificabile. Importo, tipo e stato arrivano gia precompilati, ma il dialog resta manuale: controlla i dati prima di confermare."
+              : "Apertura guidata dalla chat AI unificata. Il dialog resta manuale: controlla i dati prima di confermare."}
           </div>
         ) : null}
 

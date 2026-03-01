@@ -443,13 +443,39 @@ The next high-value step is now closed too:
   - no function redeploy
   - local validation closed with `npm run typecheck` and targeted Vitest
 
-The next high-value step is now:
+The next high-value step is now closed too:
 
-- decide whether one more short hardening pass is still higher value than
-  opening a second write-assisted case
-- if not, only ship another commercial draft when it is as deterministic and as
-  tightly bounded as the quote-driven payment path
-- still no general write execution from the CRM Q&A shell
+- the launcher now supports a second narrow payment write-draft on the already
+  approved `project_quick_payment` surface
+- the read-only CRM snapshot now carries deterministic active-project
+  financials derived from services, expenses and received payments:
+  - `totalFees`
+  - `totalExpenses`
+  - `totalPaid`
+  - `balanceDue`
+- when the user asks to prepare a payment from the active project, the launcher
+  can now propose a project-driven payment draft with:
+  - `paymentType`
+  - `amount`
+  - `status`
+- that draft still does not write from chat:
+  - it deep-links only to the existing quick payment dialog on the project
+  - the dialog remains manual and confirmation still happens there
+- this closes the only remaining second write-assisted case that was still
+  legitimate in this phase because it stays as deterministic and as tightly
+  bounded as the quote-driven payment path
+- local validation closed with:
+  - `npm run typecheck`
+  - targeted Vitest on read context, payment linking, shared AI answer builder,
+    and launcher UI
+
+Default continuation after this:
+
+- do not widen the general CRM chat into direct write execution
+- do not open another write-assisted case by default unless a new real workflow
+  gap is demonstrated
+- treat further expansion as explicit next-scope work, not as automatic
+  continuation of this phase
 
 Tactical UX slice closed out of sequence:
 

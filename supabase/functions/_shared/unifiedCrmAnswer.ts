@@ -27,13 +27,14 @@ export type UnifiedCrmSuggestedAction = {
 export type UnifiedCrmPaymentDraft = {
   id: string;
   resource: "payments";
-  originActionId: "quote_create_payment";
+  originActionId: "quote_create_payment" | "project_quick_payment";
+  draftKind: "payment_create" | "project_quick_payment";
   label: string;
   explanation: string;
-  quoteId: string;
+  quoteId: string | null;
   clientId: string;
   projectId: string | null;
-  paymentType: "acconto" | "saldo" | "parziale";
+  paymentType: "acconto" | "saldo" | "parziale" | "rimborso_spese";
   amount: number;
   status: "in_attesa" | "ricevuto";
   href: string;
@@ -54,7 +55,8 @@ const normalizeText = (value: string) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
-const getString = (value: unknown) => (typeof value === "string" ? value : null);
+const getString = (value: unknown) =>
+  typeof value === "string" ? value : null;
 const getNumber = (value: unknown) =>
   typeof value === "number" && Number.isFinite(value) ? value : null;
 
@@ -122,9 +124,7 @@ const buildShowHref = (
   recordId: string | null,
 ) => (recordId ? `${routePrefix}${resource}/${recordId}/show` : null);
 
-const getObjectArray = (
-  value: unknown,
-): Array<Record<string, unknown>> =>
+const getObjectArray = (value: unknown): Array<Record<string, unknown>> =>
   Array.isArray(value) ? value.filter(isObject) : [];
 
 const includesAny = (value: string, patterns: string[]) =>
@@ -153,7 +153,7 @@ const inferPreferredPaymentType = (normalizedQuestion: string) => {
   return null;
 };
 
-const inferDraftPaymentType = (normalizedQuestion: string) => {
+const inferQuoteDraftPaymentType = (normalizedQuestion: string) => {
   const inferred = inferPreferredPaymentType(normalizedQuestion);
 
   if (
@@ -165,6 +165,20 @@ const inferDraftPaymentType = (normalizedQuestion: string) => {
   }
 
   return "parziale";
+};
+
+const inferProjectDraftPaymentType = (normalizedQuestion: string) => {
+  const inferred = inferPreferredPaymentType(normalizedQuestion);
+
+  if (
+    inferred === "acconto" ||
+    inferred === "saldo" ||
+    inferred === "rimborso_spese"
+  ) {
+    return inferred;
+  }
+
+  return "saldo";
 };
 
 const buildRecommendedReason = ({
@@ -253,18 +267,92 @@ export const buildUnifiedCrmPaymentDraft = ({
   normalizedQuestion,
   routePrefix,
   firstQuote,
+  firstProject,
   preferPaymentAction,
+  preferProjectDraft,
 }: {
   normalizedQuestion: string;
   routePrefix: string;
   firstQuote: Record<string, unknown> | undefined;
+  firstProject: Record<string, unknown> | undefined;
   preferPaymentAction: boolean;
+  preferProjectDraft: boolean;
 }): UnifiedCrmPaymentDraft | null => {
   if (
     !preferPaymentAction ||
-    !includesAny(normalizedQuestion, ["prepar", "bozza", "registr", "aggiung", "crea"])
+    !includesAny(normalizedQuestion, [
+      "prepar",
+      "bozza",
+      "registr",
+      "aggiung",
+      "crea",
+    ])
   ) {
     return null;
+  }
+
+  const buildProjectDraft = () => {
+    const projectId = getString(firstProject?.projectId);
+    const clientId = getString(firstProject?.clientId);
+    const totalFees = getNumber(firstProject?.totalFees);
+    const totalExpenses = getNumber(firstProject?.totalExpenses);
+    const balanceDue = getNumber(firstProject?.balanceDue);
+
+    if (!projectId || !clientId) {
+      return null;
+    }
+
+    const paymentType = inferProjectDraftPaymentType(normalizedQuestion);
+    const amount =
+      paymentType === "rimborso_spese"
+        ? totalExpenses
+        : paymentType === "acconto"
+          ? totalFees
+          : balanceDue;
+
+    if (amount == null || amount <= 0) {
+      return null;
+    }
+
+    const href = buildShowHrefWithSearch(routePrefix, "projects", projectId, {
+      project_id: projectId,
+      client_id: clientId,
+      launcher_source: "unified_ai_launcher",
+      launcher_action: "project_quick_payment",
+      open_dialog: "quick_payment",
+      payment_type: paymentType,
+      amount: String(amount),
+      status: "in_attesa",
+      draft_kind: "project_quick_payment",
+    });
+
+    if (!href) {
+      return null;
+    }
+
+    return {
+      id: "payment-draft-from-active-project",
+      resource: "payments" as const,
+      originActionId: "project_quick_payment" as const,
+      draftKind: "project_quick_payment" as const,
+      label: "Bozza quick payment dal progetto attivo",
+      explanation:
+        "Questa bozza usa i financials del progetto attivo principale. Puoi correggere importo, tipo e stato qui e poi aprire il quick payment del progetto per confermare davvero.",
+      quoteId: null,
+      clientId,
+      projectId,
+      paymentType,
+      amount,
+      status: "in_attesa" as const,
+      href,
+    };
+  };
+
+  if (preferProjectDraft) {
+    const projectDraft = buildProjectDraft();
+    if (projectDraft) {
+      return projectDraft;
+    }
   }
 
   const quoteId = getString(firstQuote?.quoteId);
@@ -280,10 +368,10 @@ export const buildUnifiedCrmPaymentDraft = ({
     remainingAmount == null ||
     remainingAmount <= 0
   ) {
-    return null;
+    return preferProjectDraft ? buildProjectDraft() : null;
   }
 
-  const paymentType = inferDraftPaymentType(normalizedQuestion);
+  const paymentType = inferQuoteDraftPaymentType(normalizedQuestion);
   const href = buildCreateHref(routePrefix, "payments", {
     quote_id: quoteId,
     client_id: clientId,
@@ -300,6 +388,7 @@ export const buildUnifiedCrmPaymentDraft = ({
     id: "payment-draft-from-open-quote",
     resource: "payments",
     originActionId: "quote_create_payment",
+    draftKind: "payment_create",
     label: "Bozza pagamento dal preventivo aperto",
     explanation:
       "Questa bozza usa il residuo ancora non collegato del preventivo aperto principale. Puoi correggerla qui e poi aprire il form pagamenti per confermare davvero.",
@@ -397,7 +486,10 @@ export const buildUnifiedCrmSuggestedActions = ({
       "bozza",
     ]);
   const preferProjectQuickPaymentLanding =
-    focusProjects && preferPaymentAction && Boolean(firstProject) && !firstPayment;
+    focusProjects &&
+    preferPaymentAction &&
+    Boolean(firstProject) &&
+    !firstPayment;
   const genericSummary =
     includesAny(normalizedQuestion, [
       "riepilog",
@@ -968,6 +1060,7 @@ export const buildUnifiedCrmPaymentDraftFromContext = ({
   const snapshot = isObject(context.snapshot) ? context.snapshot : {};
   const routePrefix = getRoutePrefix(context);
   const firstQuote = getObjectArray(snapshot.openQuotes)[0];
+  const firstProject = getObjectArray(snapshot.activeProjects)[0];
   const focusPayments = includesAny(normalizedQuestion, [
     "pagament",
     "incass",
@@ -1008,12 +1101,18 @@ export const buildUnifiedCrmPaymentDraftFromContext = ({
       "prepar",
       "bozza",
     ]);
+  const preferProjectDraft =
+    focusProjects &&
+    !focusQuotes &&
+    includesAny(normalizedQuestion, ["progett", "attiv", "lavor"]);
 
   return buildUnifiedCrmPaymentDraft({
     normalizedQuestion,
     routePrefix,
     firstQuote,
+    firstProject,
     preferPaymentAction,
+    preferProjectDraft,
   });
 };
 

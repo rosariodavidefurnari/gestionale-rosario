@@ -97,12 +97,18 @@ describe("unifiedCrmAnswer", () => {
         recommended: true,
       }),
     );
-    expect(actions[0]?.recommendationReason).toContain("verificare il preventivo");
-    expect(actions.some((action) => action.capabilityActionId === "quote_create_payment")).toBe(
-      true,
+    expect(actions[0]?.recommendationReason).toContain(
+      "verificare il preventivo",
     );
     expect(
-      actions.find((action) => action.capabilityActionId === "quote_create_payment")?.href,
+      actions.some(
+        (action) => action.capabilityActionId === "quote_create_payment",
+      ),
+    ).toBe(true);
+    expect(
+      actions.find(
+        (action) => action.capabilityActionId === "quote_create_payment",
+      )?.href,
     ).toContain("launcher_source=unified_ai_launcher");
   });
 
@@ -147,8 +153,7 @@ describe("unifiedCrmAnswer", () => {
       expect.objectContaining({
         kind: "approved_action",
         capabilityActionId: "quote_create_payment",
-        href:
-          "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&launcher_action=quote_create_payment&launcher_source=unified_ai_launcher",
+        href: "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&launcher_action=quote_create_payment&launcher_source=unified_ai_launcher",
         recommended: true,
       }),
     );
@@ -185,8 +190,7 @@ describe("unifiedCrmAnswer", () => {
     expect(actions[0]).toEqual(
       expect.objectContaining({
         capabilityActionId: "project_quick_payment",
-        href:
-          "/#/projects/project-1/show?launcher_source=unified_ai_launcher&launcher_action=project_quick_payment&open_dialog=quick_payment&payment_type=saldo",
+        href: "/#/projects/project-1/show?launcher_source=unified_ai_launcher&launcher_action=project_quick_payment&open_dialog=quick_payment&payment_type=saldo",
       }),
     );
   });
@@ -220,14 +224,56 @@ describe("unifiedCrmAnswer", () => {
     expect(draft).toEqual(
       expect.objectContaining({
         originActionId: "quote_create_payment",
+        draftKind: "payment_create",
         quoteId: "quote-1",
         clientId: "client-1",
         projectId: "project-1",
         paymentType: "saldo",
         amount: 450,
         status: "in_attesa",
-        href:
-          "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
+        href: "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
+      }),
+    );
+  });
+
+  it("builds a narrow quick-payment write-draft for the active project when the question asks to prepare it", () => {
+    const draft = buildUnifiedCrmPaymentDraftFromContext({
+      question: "Preparami il saldo del progetto attivo.",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          routePrefix: "/#/",
+        },
+        snapshot: {
+          openQuotes: [],
+          activeProjects: [
+            {
+              projectId: "project-1",
+              clientId: "client-1",
+              totalFees: 1800,
+              totalExpenses: 200,
+              balanceDue: 950,
+            },
+          ],
+        },
+        registries: {
+          semantic: {},
+          capability: {},
+        },
+      },
+    });
+
+    expect(draft).toEqual(
+      expect.objectContaining({
+        originActionId: "project_quick_payment",
+        draftKind: "project_quick_payment",
+        quoteId: null,
+        clientId: "client-1",
+        projectId: "project-1",
+        paymentType: "saldo",
+        amount: 950,
+        status: "in_attesa",
+        href: "/#/projects/project-1/show?project_id=project-1&client_id=client-1&launcher_source=unified_ai_launcher&launcher_action=project_quick_payment&open_dialog=quick_payment&payment_type=saldo&amount=950&status=in_attesa&draft_kind=project_quick_payment",
       }),
     );
   });

@@ -53,6 +53,23 @@ describe("unifiedCrmReadContext", () => {
           updated_at: "2026-02-01T10:00:00.000Z",
         },
       ],
+      services: [
+        {
+          id: "service-1",
+          project_id: "project-1",
+          service_date: "2026-02-20T00:00:00.000Z",
+          all_day: true,
+          is_taxable: true,
+          service_type: "riprese_montaggio",
+          fee_shooting: 1600,
+          fee_editing: 400,
+          fee_other: 200,
+          discount: 0,
+          km_distance: 0,
+          km_rate: 0.19,
+          created_at: "2026-02-18T10:00:00.000Z",
+        },
+      ],
       payments: [
         {
           id: "payment-1",
@@ -104,6 +121,9 @@ describe("unifiedCrmReadContext", () => {
     expect(context.snapshot.openQuotes[0]?.statusLabel).toBe("In trattativa");
     expect(context.snapshot.pendingPayments[0]?.statusLabel).toBe("In attesa");
     expect(context.snapshot.recentExpenses[0]?.expenseTypeLabel).toBe("Noleggio");
+    expect(context.snapshot.activeProjects[0]?.totalFees).toBe(2200);
+    expect(context.snapshot.activeProjects[0]?.totalExpenses).toBe(300);
+    expect(context.snapshot.activeProjects[0]?.balanceDue).toBe(2500);
     expect(context.registries.capability.routing.mode).toBe("hash");
     expect(context.registries.semantic.rules.invoiceImport.customerInvoiceResource).toBe(
       "payments",

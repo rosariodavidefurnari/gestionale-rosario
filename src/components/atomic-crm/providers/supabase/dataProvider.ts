@@ -231,6 +231,7 @@ const getUnifiedCrmReadContextFromResources =
       clientsResponse,
       quotesResponse,
       projectsResponse,
+      servicesResponse,
       paymentsResponse,
       expensesResponse,
     ] = await Promise.all([
@@ -250,6 +251,11 @@ const getUnifiedCrmReadContextFromResources =
         sort: { field: "created_at", order: "DESC" },
         filter: {},
       }),
+      baseDataProvider.getList<Service>("services", {
+        pagination: LARGE_PAGE,
+        sort: { field: "service_date", order: "DESC" },
+        filter: {},
+      }),
       baseDataProvider.getList<Payment>("payments", {
         pagination: LARGE_PAGE,
         sort: { field: "payment_date", order: "DESC" },
@@ -263,12 +269,14 @@ const getUnifiedCrmReadContextFromResources =
     ]);
 
     const config =
-      (configuration.data?.config as ConfigurationContextValue | undefined) ?? {};
+      (configuration.data?.config as ConfigurationContextValue | undefined) ??
+      {};
 
     return buildUnifiedCrmReadContext({
       clients: clientsResponse.data,
       quotes: quotesResponse.data,
       projects: projectsResponse.data,
+      services: servicesResponse.data,
       payments: paymentsResponse.data,
       expenses: expensesResponse.data,
       semanticRegistry: buildCrmSemanticRegistry(config),

@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import {
   buildPaymentCreateDefaultsFromClient,
   getPaymentCreateDraftContextFromSearch,
+  getProjectQuickPaymentDraftContextFromSearch,
   buildPaymentCreatePathFromClient,
   buildPaymentCreateDefaultsFromQuote,
   buildPaymentCreatePathFromQuote,
   buildPaymentCreatePathFromDraft,
+  buildProjectQuickPaymentPathFromDraft,
   canCreatePaymentFromQuote,
   buildQuoteSearchFilter,
   buildPaymentPatchFromQuote,
@@ -201,6 +203,24 @@ describe("paymentLinking", () => {
     ).toBeNull();
   });
 
+  it("parses the editable project quick-payment draft context from the launcher search params", () => {
+    expect(
+      getProjectQuickPaymentDraftContextFromSearch(
+        "?project_id=project-9&client_id=client-2&payment_type=saldo&amount=820&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=project_quick_payment&open_dialog=quick_payment&draft_kind=project_quick_payment",
+      ),
+    ).toEqual({
+      source: "unified_ai_launcher",
+      action: "project_quick_payment",
+      openDialog: "quick_payment",
+      paymentType: "saldo",
+      draftKind: "project_quick_payment",
+      clientId: "client-2",
+      projectId: "project-9",
+      amount: 820,
+      status: "in_attesa",
+    });
+  });
+
   it("keeps the launcher draft active only while the same quote stays selected", () => {
     const draftContext = getPaymentCreateDraftContextFromSearch(
       "?quote_id=quote-7&client_id=client-2&project_id=project-9&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
@@ -244,6 +264,24 @@ describe("paymentLinking", () => {
       }),
     ).toBe(
       "/payments/create?quote_id=quote-7&client_id=client-2&project_id=project-9&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
+    );
+  });
+
+  it("builds a project quick-payment path from an editable launcher draft", () => {
+    expect(
+      buildProjectQuickPaymentPathFromDraft({
+        draft: {
+          client_id: "client-2",
+          project_id: "project-9",
+          payment_type: "saldo",
+          amount: 820,
+          status: "in_attesa",
+          launcherAction: "project_quick_payment",
+          draftKind: "project_quick_payment",
+        },
+      }),
+    ).toBe(
+      "/projects/project-9/show?project_id=project-9&client_id=client-2&payment_type=saldo&amount=820&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=project_quick_payment&open_dialog=quick_payment&draft_kind=project_quick_payment",
     );
   });
 

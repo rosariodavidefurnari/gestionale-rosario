@@ -4,7 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { type UnifiedCrmPaymentDraft } from "@/lib/ai/unifiedCrmAssistant";
 
-import { buildPaymentCreatePathFromDraft } from "../payments/paymentLinking";
+import {
+  buildPaymentCreatePathFromDraft,
+  buildProjectQuickPaymentPathFromDraft,
+} from "../payments/paymentLinking";
 import {
   paymentStatusChoices,
   paymentTypeChoices,
@@ -32,19 +35,47 @@ export const PaymentDraftCard = ({
     Number.isFinite(draft.amount) && draft.amount > 0 ? draft.amount : 0;
   const href =
     normalizedAmount > 0
-      ? `${routePrefix}${buildPaymentCreatePathFromDraft({
-          draft: {
-            quote_id: draft.quoteId,
-            client_id: draft.clientId,
-            project_id: draft.projectId,
-            payment_type: draft.paymentType,
-            amount: normalizedAmount,
-            status: draft.status,
-            launcherAction: draft.originActionId,
-            draftKind: "payment_create",
-          },
-        }).replace(/^\//, "")}`
+      ? draft.originActionId === "project_quick_payment"
+        ? (() => {
+            const path = buildProjectQuickPaymentPathFromDraft({
+              draft: {
+                client_id: draft.clientId,
+                project_id: draft.projectId,
+                payment_type: draft.paymentType,
+                amount: normalizedAmount,
+                status: draft.status,
+                launcherAction: draft.originActionId,
+                draftKind: draft.draftKind,
+              },
+            });
+
+            return path ? `${routePrefix}${path.replace(/^\//, "")}` : null;
+          })()
+        : `${routePrefix}${buildPaymentCreatePathFromDraft({
+            draft: {
+              quote_id: draft.quoteId,
+              client_id: draft.clientId,
+              project_id: draft.projectId,
+              payment_type: draft.paymentType,
+              amount: normalizedAmount,
+              status: draft.status,
+              launcherAction: draft.originActionId,
+              draftKind: draft.draftKind,
+            },
+          }).replace(/^\//, "")}`
       : null;
+  const ctaLabel =
+    draft.originActionId === "project_quick_payment"
+      ? "Apri quick payment del progetto con questa bozza"
+      : "Apri form pagamenti con questa bozza";
+  const helperCopy =
+    draft.originActionId === "project_quick_payment"
+      ? "La scrittura non parte da qui: apri il quick payment del progetto con la bozza e conferma li dentro."
+      : "La scrittura non parte da qui: apri il form pagamenti con la bozza e conferma li dentro.";
+  const allowedPaymentTypes =
+    draft.originActionId === "project_quick_payment"
+      ? new Set(["acconto", "saldo", "rimborso_spese"])
+      : new Set(["acconto", "saldo", "parziale"]);
 
   return (
     <div className="space-y-3 rounded-lg border border-dashed bg-muted/20 px-3 py-3">
@@ -54,8 +85,10 @@ export const PaymentDraftCard = ({
       </div>
 
       <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-        <Badge variant="outline">Preventivo {draft.quoteId}</Badge>
         <Badge variant="outline">Cliente {draft.clientId}</Badge>
+        {draft.quoteId ? (
+          <Badge variant="outline">Preventivo {draft.quoteId}</Badge>
+        ) : null}
         {draft.projectId ? (
           <Badge variant="outline">Progetto {draft.projectId}</Badge>
         ) : null}
@@ -77,12 +110,7 @@ export const PaymentDraftCard = ({
             }
           >
             {paymentTypeChoices
-              .filter(
-                (choice) =>
-                  choice.id === "acconto" ||
-                  choice.id === "saldo" ||
-                  choice.id === "parziale",
-              )
+              .filter((choice) => allowedPaymentTypes.has(choice.id))
               .map((choice) => (
                 <option key={choice.id} value={choice.id}>
                   {choice.name}
@@ -137,14 +165,12 @@ export const PaymentDraftCard = ({
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-muted-foreground">
-          La scrittura non parte da qui: apri il form pagamenti con la bozza e
-          conferma li dentro. Importo attuale {formatCurrency(normalizedAmount)}
-          .
+          {helperCopy} Importo attuale {formatCurrency(normalizedAmount)}.
         </p>
         {href ? (
           <Button asChild variant="outline">
             <a href={href} onClick={onNavigate}>
-              Apri form pagamenti con questa bozza
+              {ctaLabel}
             </a>
           </Button>
         ) : (

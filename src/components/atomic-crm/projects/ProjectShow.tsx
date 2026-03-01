@@ -32,8 +32,9 @@ const ProjectShowContent = () => {
     <div className="mt-2 mb-2 flex flex-col gap-6">
       {launcherHandoff?.action === "project_quick_payment" ? (
         <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-          Aperto dalla chat AI unificata: questo progetto e' stato indicato
-          come superficie giusta per il quick payment gia approvato.
+          {launcherHandoff.draftKind === "project_quick_payment"
+            ? "Aperto dalla chat AI unificata con una bozza quick payment: questo progetto e' la superficie approvata dove controllare e confermare il pagamento."
+            : "Aperto dalla chat AI unificata: questo progetto e' stato indicato come superficie giusta per il quick payment gia approvato."}
         </div>
       ) : null}
       <Card>

@@ -91,7 +91,26 @@ describe("crmCapabilityRegistry", () => {
       registry.actions.find(
         (action) => action.id === "prepare_payment_write_draft",
       )?.description,
-    ).toContain("ricalcolarlo automaticamente");
+    ).toContain("ricalcolo automatico");
+    expect(
+      registry.actions.find(
+        (action) => action.id === "prepare_payment_write_draft",
+      )?.requiredFields,
+    ).toContain("answer.paymentDraft.originActionId");
+    expect(
+      registry.actions.find(
+        (action) => action.id === "prepare_payment_write_draft",
+      )?.requiredFields,
+    ).toContain("answer.paymentDraft.draftKind");
+    expect(
+      registry.actions.find(
+        (action) => action.id === "prepare_payment_write_draft",
+      )?.description,
+    ).toContain("project quick payment");
+    expect(
+      registry.actions.find((action) => action.id === "project_quick_payment")
+        ?.description,
+    ).toContain("importo e stato");
     expect(
       registry.actions.some((action) => action.id === "invoice_import_extract"),
     ).toBe(true);

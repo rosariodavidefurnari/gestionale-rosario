@@ -29,17 +29,25 @@ export type UnifiedAiHandoffAction =
   | "follow_unified_crm_handoff";
 
 type UnifiedAiHandoffSource = "unified_ai_launcher";
+type UnifiedAiDraftKind = "payment_create" | "project_quick_payment";
 
 export type UnifiedAiHandoffContext = {
   source: UnifiedAiHandoffSource;
   action: UnifiedAiHandoffAction | null;
   openDialog: "quick_payment" | null;
   paymentType: Payment["payment_type"] | null;
-  draftKind: "payment_create" | null;
+  draftKind: UnifiedAiDraftKind | null;
 };
 
 export type PaymentCreateDraftContext = UnifiedAiHandoffContext & {
   quoteId: Identifier | null;
+  clientId: Identifier | null;
+  projectId: Identifier | null;
+  amount: number | null;
+  status: Payment["status"] | null;
+};
+
+export type ProjectQuickPaymentDraftContext = UnifiedAiHandoffContext & {
   clientId: Identifier | null;
   projectId: Identifier | null;
   amount: number | null;
@@ -128,6 +136,28 @@ const buildPaymentCreatePath = (
   return search ? `/payments/create?${search}` : "/payments/create";
 };
 
+const buildProjectShowPath = (
+  projectId: Identifier | null | undefined,
+  defaults: Record<string, string | number | null | undefined>,
+) => {
+  if (projectId == null || projectId === "") {
+    return null;
+  }
+
+  const searchParams = new URLSearchParams();
+
+  Object.entries(defaults).forEach(([key, value]) => {
+    if (value != null && value !== "") {
+      searchParams.set(key, String(value));
+    }
+  });
+
+  const search = searchParams.toString();
+  return search
+    ? `/projects/${projectId}/show?${search}`
+    : `/projects/${projectId}/show`;
+};
+
 export const buildPaymentCreatePathFromQuote = ({
   quote,
 }: {
@@ -201,8 +231,9 @@ export const getUnifiedAiHandoffContextFromSearch = (
     openDialog: openDialog === "quick_payment" ? "quick_payment" : null,
     paymentType: getOptionalPaymentType(searchParams.get("payment_type")),
     draftKind:
-      searchParams.get("draft_kind") === "payment_create"
-        ? "payment_create"
+      searchParams.get("draft_kind") === "payment_create" ||
+      searchParams.get("draft_kind") === "project_quick_payment"
+        ? (searchParams.get("draft_kind") as UnifiedAiDraftKind)
         : null,
   };
 };
@@ -219,6 +250,28 @@ export const getPaymentCreateDraftContextFromSearch = (
   return {
     ...handoff,
     quoteId: defaults.quote_id ?? null,
+    clientId: defaults.client_id ?? null,
+    projectId: defaults.project_id ?? null,
+    amount: defaults.amount ?? null,
+    status: defaults.status ?? null,
+  };
+};
+
+export const getProjectQuickPaymentDraftContextFromSearch = (
+  search: string,
+): ProjectQuickPaymentDraftContext | null => {
+  const handoff = getUnifiedAiHandoffContextFromSearch(search);
+  if (
+    !handoff ||
+    handoff.action !== "project_quick_payment" ||
+    handoff.draftKind !== "project_quick_payment"
+  ) {
+    return null;
+  }
+
+  const defaults = getPaymentCreateDefaultsFromSearch(search);
+  return {
+    ...handoff,
     clientId: defaults.client_id ?? null,
     projectId: defaults.project_id ?? null,
     amount: defaults.amount ?? null,
@@ -244,7 +297,7 @@ export const buildPaymentCreatePathFromDraft = ({
 }: {
   draft: PaymentCreateDefaults & {
     launcherAction?: UnifiedAiHandoffAction | null;
-    draftKind?: "payment_create" | null;
+    draftKind?: UnifiedAiDraftKind | null;
   };
 }) =>
   buildPaymentCreatePath({
@@ -261,6 +314,26 @@ export const buildPaymentCreatePathFromDraft = ({
         }
       : {}),
     ...(draft.draftKind ? { draft_kind: draft.draftKind } : {}),
+  });
+
+export const buildProjectQuickPaymentPathFromDraft = ({
+  draft,
+}: {
+  draft: PaymentCreateDefaults & {
+    launcherAction?: UnifiedAiHandoffAction | null;
+    draftKind?: UnifiedAiDraftKind | null;
+  };
+}) =>
+  buildProjectShowPath(draft.project_id, {
+    project_id: draft.project_id,
+    client_id: draft.client_id,
+    payment_type: draft.payment_type,
+    amount: draft.amount,
+    status: draft.status,
+    launcher_source: "unified_ai_launcher",
+    launcher_action: draft.launcherAction ?? "project_quick_payment",
+    open_dialog: "quick_payment",
+    draft_kind: draft.draftKind ?? "project_quick_payment",
   });
 
 export const shouldAutoApplySuggestedPaymentAmount = ({

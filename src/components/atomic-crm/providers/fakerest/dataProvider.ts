@@ -170,40 +170,53 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
     return buildCrmSemanticRegistry(config);
   },
   getUnifiedCrmReadContext: async (): Promise<UnifiedCrmReadContext> => {
-    const [config, clientsResponse, quotesResponse, projectsResponse, paymentsResponse, expensesResponse] =
-      await Promise.all([
-        dataProvider.getConfiguration(),
-        baseDataProvider.getList<Client>("clients", {
-          filter: {},
-          pagination: { page: 1, perPage: 1000 },
-          sort: { field: "created_at", order: "DESC" },
-        }),
-        baseDataProvider.getList<Quote>("quotes", {
-          filter: {},
-          pagination: { page: 1, perPage: 1000 },
-          sort: { field: "created_at", order: "DESC" },
-        }),
-        baseDataProvider.getList<Project>("projects", {
-          filter: {},
-          pagination: { page: 1, perPage: 1000 },
-          sort: { field: "created_at", order: "DESC" },
-        }),
-        baseDataProvider.getList<Payment>("payments", {
-          filter: {},
-          pagination: { page: 1, perPage: 1000 },
-          sort: { field: "payment_date", order: "DESC" },
-        }),
-        baseDataProvider.getList<Expense>("expenses", {
-          filter: {},
-          pagination: { page: 1, perPage: 1000 },
-          sort: { field: "expense_date", order: "DESC" },
-        }),
-      ]);
+    const [
+      config,
+      clientsResponse,
+      quotesResponse,
+      projectsResponse,
+      servicesResponse,
+      paymentsResponse,
+      expensesResponse,
+    ] = await Promise.all([
+      dataProvider.getConfiguration(),
+      baseDataProvider.getList<Client>("clients", {
+        filter: {},
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: "created_at", order: "DESC" },
+      }),
+      baseDataProvider.getList<Quote>("quotes", {
+        filter: {},
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: "created_at", order: "DESC" },
+      }),
+      baseDataProvider.getList<Project>("projects", {
+        filter: {},
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: "created_at", order: "DESC" },
+      }),
+      baseDataProvider.getList<Service>("services", {
+        filter: {},
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: "service_date", order: "DESC" },
+      }),
+      baseDataProvider.getList<Payment>("payments", {
+        filter: {},
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: "payment_date", order: "DESC" },
+      }),
+      baseDataProvider.getList<Expense>("expenses", {
+        filter: {},
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: "expense_date", order: "DESC" },
+      }),
+    ]);
 
     return buildUnifiedCrmReadContext({
       clients: clientsResponse.data,
       quotes: quotesResponse.data,
       projects: projectsResponse.data,
+      services: servicesResponse.data,
       payments: paymentsResponse.data,
       expenses: expensesResponse.data,
       semanticRegistry: buildCrmSemanticRegistry(config),
