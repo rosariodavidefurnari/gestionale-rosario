@@ -49,6 +49,30 @@ Anche i file di orchestrazione agentica hanno una gerarchia esplicita:
 
 Questo evita di mantenere due prompt completi che poi divergono nel tempo.
 
+## Two AI Layers
+
+Nel progetto esistono due piani diversi che non vanno confusi:
+
+- `agent runtime`
+  - riguarda gli agenti di sviluppo che lavorano sul repo
+  - vive in `AGENTS.md`, `CLAUDE.md`, `.claude/rules/`, `.claude/skills/`
+  - usa `progress.md` e `learnings.md` solo come archivio operativo/storico
+- `product runtime`
+  - riguarda l'AI interna del CRM vista dall'utente finale
+  - vive in `src/components/atomic-crm/ai/`, `src/lib/semantics/`,
+    `supabase/functions/`, `docs/architecture.md`,
+    `docs/historical-analytics-handoff.md`,
+    `docs/historical-analytics-backlog.md`,
+    `docs/contacts-client-project-architecture.md`
+
+Regola pratica:
+
+- se cambia come lavora l'agente sul repo, aggiornare i file di orchestrazione
+- se cambia la chat AI del CRM, i suoi modelli, tool, route, handoff o limiti,
+  aggiornare codice prodotto + docs `canonical/working`
+- i due piani si toccano solo nella continuita' di sviluppo, non nella
+  semantica funzionale del prodotto
+
 ## Required Structure For New Docs
 
 Ogni nuovo documento importante dovrebbe dichiarare all'inizio, in forma breve:

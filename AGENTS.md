@@ -17,6 +17,22 @@
 - scrivere codice, commenti, nomi variabili e commit in ENGLISH
 - non spiegare concetti base quando non servono
 
+## BOUNDARY WITH PRODUCT AI
+
+- questo file governa gli agenti che sviluppano il repo, non la chat AI interna
+  del CRM
+- l'AI utente del prodotto vive in:
+  - `src/components/atomic-crm/ai/`
+  - `src/lib/semantics/`
+  - `supabase/functions/`
+  - `docs/architecture.md`
+  - `docs/historical-analytics-handoff.md`
+  - `docs/historical-analytics-backlog.md`
+- se cambia l'orchestrazione agentica:
+  - aggiornare `AGENTS.md` e, se serve, `CLAUDE.md`
+- se cambia l'AI del prodotto:
+  - aggiornare codice prodotto, registry/semantica, test e docs di continuita'
+
 ## DEPLOYMENT RULES - NON DIMENTICARE
 
 - `git push` su `main` aggiorna automaticamente il frontend su `Vercel`
@@ -160,12 +176,31 @@ The codebase includes mutable dependencies that should be modified directly if n
 
 #### Configuration via `<CRM>` Component
 
-The `src/App.tsx` file renders the `<CRM>` component, which accepts props for domain-specific configuration:
-- `title`: Branding
-- `logo`: Branding
-- `taskTypes`: Reminder types
-- `lightTheme`, `darkTheme`: Theme customization
-- `disableTelemetry`: Opt-out of anonymous usage tracking
+The `src/App.tsx` file renders the `<CRM>` component. In this repo the active
+configuration contract is aligned with `ConfigurationContext` and
+`defaultConfiguration`, not the old upstream Atomic CRM props list.
+
+Important active props/config keys include:
+- `title`
+- `darkModeLogo`
+- `lightModeLogo`
+- `taskTypes`
+- `noteStatuses`
+- `quoteServiceTypes`
+- `serviceTypeChoices`
+- `operationalConfig.defaultKmRate`
+- `fiscalConfig.*`
+- `aiConfig.historicalAnalysisModel`
+- `aiConfig.invoiceExtractionModel`
+- `googleWorkplaceDomain`
+- `disableEmailPasswordAuthentication`
+- `disableTelemetry`
+
+If this contract changes, also update:
+- `src/components/atomic-crm/root/ConfigurationContext.tsx`
+- `src/components/atomic-crm/root/defaultConfiguration.ts`
+- `src/components/atomic-crm/settings/SettingsPage.tsx`
+- the relevant settings section in `src/components/atomic-crm/settings/**`
 
 #### Database Views
 
@@ -173,7 +208,11 @@ Complex queries are handled via database views to simplify frontend code and red
 
 #### Database Triggers
 
-User data syncs between Supabase's `auth.users` table and the CRM's `sales` table via triggers (see `supabase/migrations/20240730075425_init_triggers.sql`).
+User data syncs between Supabase's `auth.users` table and the CRM's `sales`
+table via triggers. The baseline lives in
+`supabase/migrations/20240730075425_init_triggers.sql` and later auth/SSO
+adjustments also touch the same flow in
+`supabase/migrations/20260128165057_sso_handling.sql`.
 
 #### Edge Functions
 

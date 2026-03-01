@@ -57,7 +57,7 @@ Regola pratica:
 | Notes clienti | Funzionanti con client_notes | sessione 11 |
 | Tags clienti | Funzionanti (BIGINT[] su clients) | sessione 11 |
 | RLS policies | Attive su tutte le tabelle | audit manuale |
-| Signup pubblico | DISABILITATO (config.toml) | sessione 4 |
+| Signup pubblico libero | Non supportato; resta solo il bootstrap del primo utente quando l'app non e' inizializzata | 2026-03-01 |
 | Keep-alive workflow | Attivo, testato con successo (HTTP 200) | `gh workflow run` |
 | Localizzazione IT | Completa su ~70+ file, 3 livelli | audit sessione 4 |
 | DateTime Range Support (all_day pattern) | Implementato su 4 moduli | sessione 16 |
@@ -133,6 +133,7 @@ acconto_ricevuto → in_lavorazione → completato → saldato → rifiutato / p
 |------|-------|
 | project_financials | Riepilogo finanziario per progetto (fees - discount, km, paid, balance) |
 | monthly_revenue | Fatturato mensile per categoria (fees - discount) |
+| analytics_* | Base storica/AI per Storico e consumer analytics (`analytics_business_clock`, `analytics_history_meta`, `analytics_yearly_competence_revenue`, `analytics_yearly_competence_revenue_by_category`, `analytics_client_lifetime_competence_revenue`, `analytics_yearly_cash_inflow`) |
 
 PK esplicite nel dataProvider:
 - `monthly_revenue` → PK composita `month + category`
@@ -199,10 +200,23 @@ PK esplicite nel dataProvider:
 | **Spese** | `expenses/` | CRUD + km/travel flows | Completo |
 | **Promemoria** | `tasks/` | Lista con filtri temporali | Completo |
 | **Tags** | `tags/` | Gestione embedded + modali + array su clients/contacts | Completo |
+| **Travel / KM** | `travel/` | Dialog cross-cutting per suggerimenti luogo e calcolo tratta | Completo |
 | **Dashboard** | `dashboard/` | Recharts + KPI + alert + fiscale + storico | Completo |
 | **AI unificata** | `ai/` | Launcher, snapshot, import, handoff, chat read-only | Completo |
 
 ### Struttura moduli CRUD
+
+Pattern base valido per i moduli CRUD classici (`clients`, `contacts`,
+`projects`, `services`, `payments`, `expenses`).
+
+Eccezioni reali da ricordare:
+
+- `quotes` usa una board/lista che ospita `create/show/edit` come dialog
+  agganciati alle route, quindi non espone il classico export CRUD completo in
+  `index.tsx`
+- `tasks` usa una lista dedicata con dialog/sheet invece di un CRUD classico
+- `travel` non e' una resource autonoma: e' un helper cross-cutting riusato da
+  spese, servizi e quick flows progetto
 
 ```
 src/components/atomic-crm/[modulo]/
@@ -266,11 +280,19 @@ in `Impostazioni`.
 
 ```
 src/components/atomic-crm/dashboard/
-├── Dashboard.tsx                       # Desktop (KPI + charts + pipeline + alert + fiscale + year nav)
-├── MobileDashboard.tsx                 # Mobile (KPI + fiscale compatti)
+├── Dashboard.tsx                       # Desktop toggle Annuale / Storico
+├── MobileDashboard.tsx                 # Mobile con Annuale compatta + accesso a Storico
 ├── useDashboardData.ts                 # useGetList multipli + expenses + fiscalConfig (year param)
+├── useHistoricalDashboardData.ts       # Context builder per la vista Storico
 ├── dashboardModel.ts                   # Aggregazioni KPI/grafici/pipeline/alert + fiscal (year-aware)
+├── dashboardHistoryModel.ts            # Aggregazioni storiche e quality flags
 ├── fiscalModel.ts                      # Logica pura calcoli fiscali regime forfettario
+├── DashboardAnnual.tsx                 # Vista Annuale con guida lettura, AI card e simulazione fiscale
+├── DashboardHistorical.tsx             # Vista Storico con guida, KPI, cash inflow e AI card
+├── DashboardAnnualAiSummaryCard.tsx    # AI guidata sul contesto annual_operations
+├── DashboardHistoricalAiSummaryCard.tsx # AI guidata sul contesto storico
+├── DashboardHistoricalCashInflowAiCard.tsx # AI dedicata agli incassi storici
+├── DashboardHistoricalCashInflowCard.tsx # Vista non-AI degli incassi storici
 ├── DashboardKpiCards.tsx               # 4 KPI cards fatturato/pagamenti
 ├── DashboardFiscalKpis.tsx             # 4 KPI cards fiscali (netto, tasse, accantonamento, tetto)
 ├── DashboardAtecoChart.tsx             # Bar chart orizzontale fatturato vs reddito per ATECO
@@ -281,6 +303,10 @@ src/components/atomic-crm/dashboard/
 ├── DashboardPipelineCard.tsx           # Pipeline preventivi
 ├── DashboardTopClientsCard.tsx         # Top 5 clienti
 ├── DashboardAlertsCard.tsx             # Alert urgenti
+├── DashboardHistoricalKpis.tsx         # KPI storici multi-year
+├── DashboardHistoricalRevenueChart.tsx # Trend storico ricavi di competenza
+├── DashboardHistoricalCategoryMixChart.tsx # Mix categorie storico
+├── DashboardHistoricalTopClientsCard.tsx # Top clienti storico lifetime
 ├── DashboardLoading.tsx                # Skeleton loading
 ├── TasksListFilter.tsx                 # Helper filtro task per dashboard
 └── TasksListEmpty.tsx                  # Helper stato vuoto task
@@ -305,6 +331,8 @@ Nel menu `Altro` mobile:
 - Pagamenti
 - Spese
 - Impostazioni
+- toggle tema `sistema / chiaro / scuro`
+- logout
 
 ## Risorse registrate in CRM.tsx
 
@@ -344,9 +372,16 @@ FiscalConfig, FiscalTaxProfile             ← Fiscale
 
 ## Authentication
 
-- Method: Supabase Auth, email/password
+- Method: Supabase Auth
+- Access paths attivi:
+  - email/password
+  - Google Workplace SSO se `googleWorkplaceDomain` e' configurato
 - User: rosariodavide.furnari@gmail.com (unico)
-- Signup pubblico: DISABILITATO in config.toml
+- Signup pubblico libero: non supportato
+- Bootstrap primo utente:
+  - disponibile solo quando l'app non e' ancora inizializzata
+  - usa la route `/sign-up` e poi reindirizza al login normale quando esiste gia'
+    un utente
 - API Keys: VITE_SB_PUBLISHABLE_KEY (formato sb_publishable_...)
 
 ## Supabase Config
@@ -363,7 +398,12 @@ FiscalConfig, FiscalTaxProfile             ← Fiscale
 ## Pages Map
 
 ```
-/login               → Login (unica pagina pubblica)
+/login               → Entry auth principale; se l'app non e' inizializzata puo' reindirizzare al bootstrap `/sign-up`
+/sign-up             → Bootstrap primo utente (non signup pubblico generico)
+/sign-up/confirm     → Schermata conferma email del bootstrap iniziale
+/forgot-password     → Recupero password
+/set-password        → Impostazione/reset password
+/oauth/consent       → Consenso OAuth
 /                    → Dashboard finanziaria (Recharts: KPI, grafici, pipeline, alert, navigazione anno)
 /clients             → Lista clienti
 /clients/create      → Crea cliente
