@@ -215,6 +215,10 @@ const getInvoiceImportWorkspaceFromResources =
         id: client.id,
         name: client.name,
         email: client.email ?? null,
+        billing_name: client.billing_name ?? null,
+        vat_number: client.vat_number ?? null,
+        fiscal_code: client.fiscal_code ?? null,
+        billing_city: client.billing_city ?? null,
       })),
       projects: projectsResponse.data.map((project) => ({
         id: project.id,

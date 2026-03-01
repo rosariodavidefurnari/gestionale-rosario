@@ -40,13 +40,13 @@ export type CrmSemanticRegistry = {
   };
   fields: {
     descriptions: Array<{
-      resource: "quotes" | "payments" | "services" | "expenses";
+      resource: "clients" | "quotes" | "payments" | "services" | "expenses";
       field: string;
       label: string;
       meaning: string;
     }>;
     dates: Array<{
-      resource: "quotes" | "payments" | "services" | "expenses";
+      resource: "clients" | "quotes" | "payments" | "services" | "expenses";
       field: string;
       label: string;
       meaning: string;
@@ -172,6 +172,55 @@ export const buildCrmSemanticRegistry = (
     fields: {
       descriptions: [
         {
+          resource: "clients",
+          field: "billing_name",
+          label: "Denominazione fatturazione",
+          meaning:
+            "Nome fiscale o ragione sociale che compare nei documenti di fatturazione, distinto dal nome operativo se serve.",
+        },
+        {
+          resource: "clients",
+          field: "vat_number",
+          label: "Partita IVA",
+          meaning:
+            "Identificativo IVA del cliente da tenere separato dal codice fiscale quando disponibile.",
+        },
+        {
+          resource: "clients",
+          field: "fiscal_code",
+          label: "Codice fiscale",
+          meaning:
+            "Codice fiscale del cliente, separato dalla partita IVA anche quando coincidono.",
+        },
+        {
+          resource: "clients",
+          field: "billing_address_street",
+          label: "Via / Piazza fatturazione",
+          meaning:
+            "Prima riga dell'indirizzo fiscale usato per fatture o documenti elettronici.",
+        },
+        {
+          resource: "clients",
+          field: "billing_city",
+          label: "Comune fatturazione",
+          meaning:
+            "Comune fiscale del cliente, da leggere insieme a CAP, provincia e nazione.",
+        },
+        {
+          resource: "clients",
+          field: "billing_sdi_code",
+          label: "Codice destinatario",
+          meaning:
+            "Codice SDI / destinatario per la fatturazione elettronica quando presente.",
+        },
+        {
+          resource: "clients",
+          field: "billing_pec",
+          label: "PEC fatturazione",
+          meaning:
+            "Casella PEC usata come recapito fiscale del cliente quando disponibile.",
+        },
+        {
           resource: "quotes",
           field: "description",
           label: "Descrizione preventivo",
@@ -266,7 +315,7 @@ export const buildCrmSemanticRegistry = (
         confirmationRule:
           "nessuna scrittura nel CRM prima della conferma esplicita utente",
         meaning:
-          "L'import fatture nella chat AI unificata deve proporre record strutturati e poi mappare le fatture cliente su payments e le fatture/costi fornitore su expenses solo dopo conferma utente.",
+          "L'import fatture nella chat AI unificata deve proporre record strutturati, trasportare anche l'anagrafica fiscale letta dal documento e poi mappare le fatture cliente su payments e le fatture/costi fornitore su expenses solo dopo conferma utente. Se manca il cliente, il passo corretto e' aprire il form cliente gia precompilato con quei campi, non creare automaticamente il record.",
       },
       unifiedAiReadContext: {
         scope: "clients + quotes + projects + payments + expenses",

@@ -35,6 +35,9 @@ describe("invoiceImportExtract", () => {
             resource: "payments",
             confidence: "medium",
             documentType: "customer_invoice",
+            billingName: "LAURUS S.R.L.",
+            vatNumber: "12345678901",
+            billingCity: "Catania",
             amount: 1200,
             paymentType: "saldo",
             paymentStatus: "in_attesa",
@@ -46,5 +49,8 @@ describe("invoiceImportExtract", () => {
     expect(draft.model).toBe("gemini-2.5-pro");
     expect(draft.records[0]?.id).toBe("invoice-draft-1");
     expect(draft.records[0]?.resource).toBe("payments");
+    expect(draft.records[0]?.billingName).toBe("LAURUS S.R.L.");
+    expect(draft.records[0]?.vatNumber).toBe("12345678901");
+    expect(draft.records[0]?.billingCity).toBe("Catania");
   });
 });

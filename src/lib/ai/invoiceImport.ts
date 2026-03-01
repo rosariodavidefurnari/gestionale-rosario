@@ -7,6 +7,17 @@ import type {
   Project,
 } from "@/components/atomic-crm/types";
 
+export type InvoiceImportWorkspaceClient = Pick<
+  Client,
+  | "id"
+  | "name"
+  | "email"
+  | "billing_name"
+  | "vat_number"
+  | "fiscal_code"
+  | "billing_city"
+>;
+
 export type InvoiceImportFileHandle = {
   path: string;
   name: string;
@@ -15,8 +26,22 @@ export type InvoiceImportFileHandle = {
 };
 
 export type InvoiceImportWorkspace = {
-  clients: Array<Pick<Client, "id" | "name" | "email">>;
+  clients: InvoiceImportWorkspaceClient[];
   projects: Array<Pick<Project, "id" | "name" | "client_id">>;
+};
+
+export type InvoiceImportBillingProfileDraft = {
+  billingName?: string | null;
+  vatNumber?: string | null;
+  fiscalCode?: string | null;
+  billingAddressStreet?: string | null;
+  billingAddressNumber?: string | null;
+  billingPostalCode?: string | null;
+  billingCity?: string | null;
+  billingProvince?: string | null;
+  billingCountry?: string | null;
+  billingSdiCode?: string | null;
+  billingPec?: string | null;
 };
 
 export type InvoiceImportRecordDraft = {
@@ -40,7 +65,7 @@ export type InvoiceImportRecordDraft = {
   paymentStatus?: Payment["status"] | null;
   expenseType?: Expense["expense_type"] | null;
   description?: string | null;
-};
+} & InvoiceImportBillingProfileDraft;
 
 export type InvoiceImportDraft = {
   model: string;
@@ -85,6 +110,10 @@ export const normalizeInvoiceImportRecord = (
     record.amount == null || Number.isNaN(Number(record.amount))
       ? null
       : Number(record.amount);
+  const normalizeOptionalString = (value?: string | null) => {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
+  };
 
   return {
     ...defaultPaymentDraft,
@@ -94,6 +123,17 @@ export const normalizeInvoiceImportRecord = (
     confidence: record.confidence ?? "medium",
     documentType: record.documentType ?? "unknown",
     amount: normalizedAmount,
+    billingName: normalizeOptionalString(record.billingName),
+    vatNumber: normalizeOptionalString(record.vatNumber),
+    fiscalCode: normalizeOptionalString(record.fiscalCode),
+    billingAddressStreet: normalizeOptionalString(record.billingAddressStreet),
+    billingAddressNumber: normalizeOptionalString(record.billingAddressNumber),
+    billingPostalCode: normalizeOptionalString(record.billingPostalCode),
+    billingCity: normalizeOptionalString(record.billingCity),
+    billingProvince: normalizeOptionalString(record.billingProvince),
+    billingCountry: normalizeOptionalString(record.billingCountry),
+    billingSdiCode: normalizeOptionalString(record.billingSdiCode),
+    billingPec: normalizeOptionalString(record.billingPec),
   };
 };
 
@@ -156,14 +196,36 @@ export const getInvoiceImportRecordValidationErrors = (
 
 export const buildInvoiceImportRecordNotes = (
   record: InvoiceImportRecordDraft,
-) =>
-  [
+) => {
+  const billingAddress = [
+    record.billingAddressStreet?.trim(),
+    record.billingAddressNumber?.trim(),
+    record.billingPostalCode?.trim(),
+    record.billingCity?.trim(),
+    record.billingProvince?.trim(),
+    record.billingCountry?.trim(),
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return [
     record.notes?.trim(),
     record.dueDate ? `Scadenza documento: ${record.dueDate}` : null,
+    record.billingName
+      ? `Denominazione fatturazione: ${record.billingName}`
+      : null,
+    record.vatNumber ? `P.IVA: ${record.vatNumber}` : null,
+    record.fiscalCode ? `CF: ${record.fiscalCode}` : null,
+    billingAddress ? `Indirizzo fatturazione: ${billingAddress}` : null,
+    record.billingSdiCode
+      ? `Codice destinatario: ${record.billingSdiCode}`
+      : null,
+    record.billingPec ? `PEC: ${record.billingPec}` : null,
     "Importato dalla chat AI fatture",
   ]
     .filter(Boolean)
     .join("\n");
+};
 
 export const getClientLabel = (
   workspace: InvoiceImportWorkspace,

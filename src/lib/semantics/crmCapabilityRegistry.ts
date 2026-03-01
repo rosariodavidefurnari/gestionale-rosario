@@ -321,11 +321,25 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "invoice_import_extract",
       label: "Analizza fatture nella chat AI",
       description:
-        "Carica PDF, scansioni o foto nella chat AI unificata e genera una proposta strutturata orientata a payments o expenses.",
+        "Carica PDF, scansioni o foto nella chat AI unificata e genera una proposta strutturata orientata a payments o expenses, includendo quando leggibile anche l'anagrafica fiscale della controparte.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
       actsOn: ["payments", "expenses", "clients", "projects"],
       requiredFields: ["files", "aiConfig.invoiceExtractionModel"],
       sideEffects: ["upload temporaneo file", "invoke Gemini", "pulizia upload temporanei"],
+    },
+    {
+      id: "invoice_import_open_client_create",
+      label: "Apri nuovo cliente da import fatture",
+      description:
+        "Dalla bozza import fatture apre il form clienti gia precompilato con denominazione, identificativi fiscali e indirizzo fatturazione letti dal documento, senza creare nulla automaticamente.",
+      sourceFile: "src/components/atomic-crm/ai/InvoiceImportDraftEditor.tsx",
+      actsOn: ["clients"],
+      requiredFields: [
+        "record.counterpartyName",
+        "record.billingName",
+        "record.vatNumber",
+        "record.fiscalCode",
+      ],
     },
     {
       id: "invoice_import_confirm",

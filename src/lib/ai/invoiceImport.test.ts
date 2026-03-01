@@ -15,12 +15,16 @@ describe("invoiceImport", () => {
       confidence: "medium",
       documentType: "customer_invoice",
       amount: 1200,
+      billingName: "  LAURUS S.R.L.  ",
+      vatNumber: "  12345678901 ",
     });
 
     expect(record.paymentType).toBe("saldo");
     expect(record.paymentMethod).toBe("bonifico");
     expect(record.paymentStatus).toBe("in_attesa");
     expect(record.expenseType).toBe("acquisto_materiale");
+    expect(record.billingName).toBe("LAURUS S.R.L.");
+    expect(record.vatNumber).toBe("12345678901");
   });
 
   it("reports blocking fields before confirmation", () => {
@@ -57,7 +61,17 @@ describe("invoiceImport", () => {
           projectId: "project-b",
         },
         {
-          clients: [{ id: "client-a", name: "Cliente A", email: null }],
+          clients: [
+            {
+              id: "client-a",
+              name: "Cliente A",
+              email: null,
+              billing_name: null,
+              vat_number: null,
+              fiscal_code: null,
+              billing_city: null,
+            },
+          ],
           projects: [
             { id: "project-b", name: "Progetto B", client_id: "client-b" },
           ],
@@ -77,7 +91,19 @@ describe("invoiceImport", () => {
         amount: 500,
         dueDate: "2026-03-10",
         notes: "Documento letto via OCR",
+        billingName: "LAURUS S.R.L.",
       }),
     ).toContain("Importato dalla chat AI fatture");
+    expect(
+      buildInvoiceImportRecordNotes({
+        id: "draft-1",
+        sourceFileNames: ["fattura.pdf"],
+        resource: "payments",
+        confidence: "medium",
+        documentType: "customer_invoice",
+        amount: 500,
+        billingName: "LAURUS S.R.L.",
+      }),
+    ).toContain("Denominazione fatturazione: LAURUS S.R.L.");
   });
 });

@@ -115,6 +115,16 @@ describe("crmCapabilityRegistry", () => {
       registry.actions.some((action) => action.id === "invoice_import_extract"),
     ).toBe(true);
     expect(
+      registry.actions.some(
+        (action) => action.id === "invoice_import_open_client_create",
+      ),
+    ).toBe(true);
+    expect(
+      registry.actions.find(
+        (action) => action.id === "invoice_import_open_client_create",
+      )?.description,
+    ).toContain("precompilato");
+    expect(
       registry.actions.some((action) => action.id === "invoice_import_confirm"),
     ).toBe(true);
     expect(

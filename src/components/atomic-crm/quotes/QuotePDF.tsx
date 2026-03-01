@@ -10,6 +10,11 @@ import {
 import { format, isValid } from "date-fns";
 import { it } from "date-fns/locale";
 import type { Quote, Client, QuoteItem } from "../types";
+import {
+  formatClientBillingAddress,
+  getClientBillingDisplayName,
+  getClientBillingIdentityLines,
+} from "../clients/clientBilling";
 import { formatDateLong } from "../misc/formatDateRange";
 import {
   getQuoteItemLineTotal,
@@ -270,15 +275,21 @@ const QuotePDFDocument = ({
       <View style={styles.infoRow}>
         <View style={styles.infoBlock}>
           <Text style={styles.infoLabel}>Cliente</Text>
-          <Text style={styles.infoBold}>{client?.name ?? "—"}</Text>
-          {client?.address && (
-            <Text style={styles.infoText}>{client.address}</Text>
+          <Text style={styles.infoBold}>
+            {getClientBillingDisplayName(client) ?? client?.name ?? "—"}
+          </Text>
+          {formatClientBillingAddress(client) && (
+            <Text style={styles.infoText}>
+              {formatClientBillingAddress(client)}
+            </Text>
           )}
           {client?.email && <Text style={styles.infoText}>{client.email}</Text>}
           {client?.phone && <Text style={styles.infoText}>{client.phone}</Text>}
-          {client?.tax_id && (
-            <Text style={styles.infoText}>P.IVA/CF: {client.tax_id}</Text>
-          )}
+          {getClientBillingIdentityLines(client).map((line) => (
+            <Text key={line} style={styles.infoText}>
+              {line}
+            </Text>
+          ))}
         </View>
         <View style={styles.infoBlock}>
           <Text style={styles.infoLabel}>Date</Text>

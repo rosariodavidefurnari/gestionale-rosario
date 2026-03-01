@@ -1,7 +1,6 @@
 import type { Identifier } from "ra-core";
 
 import type {
-  Client,
   Expense,
   Payment,
   Project,
@@ -13,6 +12,7 @@ import {
   normalizeInvoiceImportDraft,
   type InvoiceImportConfirmation,
   type InvoiceImportDraft,
+  type InvoiceImportWorkspaceClient,
   type InvoiceImportWorkspace,
 } from "./invoiceImport";
 
@@ -27,7 +27,7 @@ export const buildInvoiceImportWorkspace = ({
   clients,
   projects,
 }: {
-  clients: Array<Pick<Client, "id" | "name" | "email">>;
+  clients: InvoiceImportWorkspaceClient[];
   projects: Array<Pick<Project, "id" | "name" | "client_id">>;
 }): InvoiceImportWorkspace => ({
   clients,

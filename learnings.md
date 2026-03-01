@@ -10,6 +10,21 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Quando l'import fatture trova un cliente reale non ancora nel
+  CRM, il ponte corretto non e' una creazione automatica ma un handoff
+  precompilato verso `clients/create`** — Dopo aver introdotto i campi fiscali
+  veri nel modello cliente, il passo piu sicuro non e' scrivere il record
+  dalla chat ma aprire il form cliente gia compilato con denominazione, P.IVA,
+  CF e indirizzo fiscale. Cosi' l'utente corregge e conferma sulla superficie
+  approvata senza trasformare l'import in una write autonoma.
+
+- [2026-03-01] **Se un documento contiene piu struttura di quanta il CRM possa
+  ancora salvare direttamente, quei dati non vanno persi nel passaggio di
+  conferma** — Nel workflow fatture, finche' il tema fornitori resta separato e
+  non esiste ancora una resource dedicata, i campi fiscali letti devono almeno
+  sopravvivere nel draft e nelle note del record creato. Meglio una traccia
+  auditabile che una perdita silenziosa di informazioni.
+
 - [2026-03-01] **Se l'import storico incontra clienti assenti dal CRM, prima
   di aprire creazione assistita cliente serve derivare il profilo fiscale dai
   documenti reali** — Nel gestionale Rosario la scorciatoia `name + address +

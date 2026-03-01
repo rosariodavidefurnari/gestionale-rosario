@@ -61,6 +61,17 @@ describe("crmSemanticRegistry", () => {
     expect(registry.rules.invoiceImport.confirmationRule).toContain(
       "conferma esplicita",
     );
+    expect(
+      registry.fields.descriptions.some(
+        (item) =>
+          item.resource === "clients" &&
+          item.field === "billing_name" &&
+          item.meaning.includes("fatturazione"),
+      ),
+    ).toBe(true);
+    expect(registry.rules.invoiceImport.meaning).toContain(
+      "form cliente gia precompilato",
+    );
     expect(registry.rules.unifiedAiReadContext.freshnessField).toBe(
       "generatedAt",
     );
@@ -82,7 +93,7 @@ describe("crmSemanticRegistry", () => {
     );
     expect(registry.rules.unifiedAiWriteDraft.approvedResource).toBe("payments");
     expect(registry.rules.unifiedAiWriteDraft.confirmationRule).toContain(
-      "form pagamenti",
+      "superfici pagamento",
     );
     expect(registry.rules.unifiedAiWriteDraft.meaning).toContain(
       "preservare quel valore",

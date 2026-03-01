@@ -19,6 +19,7 @@ export const ClientInputs = () => {
           className="flex-shrink-0 hidden md:block"
         />
         <div className="flex flex-col gap-10 flex-1">
+          <ClientBillingInputs />
           <ClientDetailInputs />
         </div>
       </div>
@@ -52,6 +53,11 @@ const ClientIdentityInputs = () => {
         validate={[required(), validateUniqueName]}
         helperText={false}
       />
+      <TextInput
+        source="billing_name"
+        label="Denominazione fatturazione"
+        helperText={false}
+      />
       <SelectInput
         source="client_type"
         label="Tipo cliente"
@@ -68,7 +74,53 @@ const ClientContactInputs = () => (
     <h6 className="text-lg font-semibold">Contatti</h6>
     <TextInput source="phone" label="Telefono" helperText={false} />
     <TextInput source="email" label="Email" helperText={false} />
-    <TextInput source="address" label="Indirizzo" helperText={false} />
+    <TextInput
+      source="address"
+      label="Indirizzo operativo / recapito"
+      helperText={false}
+    />
+  </div>
+);
+
+const ClientBillingInputs = () => (
+  <div className="flex flex-col gap-4">
+    <h6 className="text-lg font-semibold">Fatturazione</h6>
+    <div className="grid gap-4 md:grid-cols-2">
+      <TextInput source="vat_number" label="Partita IVA" helperText={false} />
+      <TextInput
+        source="fiscal_code"
+        label="Codice fiscale"
+        helperText={false}
+      />
+      <TextInput
+        source="billing_sdi_code"
+        label="Codice destinatario"
+        helperText={false}
+      />
+      <TextInput source="billing_pec" label="PEC" helperText={false} />
+      <TextInput
+        source="billing_address_street"
+        label="Via / Piazza"
+        helperText={false}
+      />
+      <TextInput
+        source="billing_address_number"
+        label="Numero civico"
+        helperText={false}
+      />
+      <TextInput
+        source="billing_postal_code"
+        label="CAP"
+        helperText={false}
+      />
+      <TextInput source="billing_city" label="Comune" helperText={false} />
+      <TextInput
+        source="billing_province"
+        label="Provincia"
+        helperText={false}
+      />
+      <TextInput source="billing_country" label="Nazione" helperText={false} />
+    </div>
   </div>
 );
 
@@ -77,7 +129,7 @@ const ClientDetailInputs = () => (
     <h6 className="text-lg font-semibold">Dettagli</h6>
     <TextInput
       source="tax_id"
-      label="Partita IVA / Codice Fiscale"
+      label="Identificativo fiscale legacy"
       helperText={false}
     />
     <SelectInput

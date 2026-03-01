@@ -1,4 +1,5 @@
 import { Trash2 } from "lucide-react";
+import { Link } from "react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,8 @@ import {
   expenseTypeChoices,
   expenseTypeLabels,
 } from "../expenses/expenseTypes";
+import { buildClientCreatePathFromInvoiceDraft } from "../clients/clientLinking";
+import { getClientInvoiceWorkspaceLabel } from "../clients/clientBilling";
 import {
   paymentMethodChoices,
   paymentStatusChoices,
@@ -35,6 +38,21 @@ const resourceLabels = {
   payments: "Pagamento",
   expenses: "Spesa",
 };
+
+const hasBillingProfileDraft = (record: InvoiceImportRecordDraft) =>
+  [
+    record.billingName,
+    record.vatNumber,
+    record.fiscalCode,
+    record.billingAddressStreet,
+    record.billingAddressNumber,
+    record.billingPostalCode,
+    record.billingCity,
+    record.billingProvince,
+    record.billingCountry,
+    record.billingSdiCode,
+    record.billingPec,
+  ].some((value) => value?.trim());
 
 const Field = ({
   label,
@@ -156,6 +174,33 @@ export const InvoiceImportDraftEditor = ({
                 />
               </Field>
 
+              <Field label="Denominazione fatturazione">
+                <Input
+                  value={record.billingName ?? ""}
+                  onChange={(event) =>
+                    onChange(index, { billingName: event.target.value })
+                  }
+                />
+              </Field>
+
+              <Field label="Partita IVA">
+                <Input
+                  value={record.vatNumber ?? ""}
+                  onChange={(event) =>
+                    onChange(index, { vatNumber: event.target.value })
+                  }
+                />
+              </Field>
+
+              <Field label="Codice fiscale">
+                <Input
+                  value={record.fiscalCode ?? ""}
+                  onChange={(event) =>
+                    onChange(index, { fiscalCode: event.target.value })
+                  }
+                />
+              </Field>
+
               <Field label="Rif. fattura">
                 <Input
                   value={record.invoiceRef ?? ""}
@@ -224,12 +269,24 @@ export const InvoiceImportDraftEditor = ({
                   <option value="">Seleziona cliente</option>
                   {workspace.clients.map((client) => (
                     <option key={client.id} value={String(client.id)}>
-                      {client.name}
-                      {client.email ? ` · ${client.email}` : ""}
+                      {getClientInvoiceWorkspaceLabel(client)}
                     </option>
                   ))}
                 </SelectField>
               </Field>
+
+              {!record.clientId &&
+              (record.resource === "payments" ||
+                hasBillingProfileDraft(record) ||
+                record.counterpartyName) ? (
+                <div className="md:col-span-2">
+                  <Button asChild type="button" variant="outline">
+                    <Link to={buildClientCreatePathFromInvoiceDraft({ record })}>
+                      Apri nuovo cliente precompilato
+                    </Link>
+                  </Button>
+                </div>
+              ) : null}
 
               <Field label="Progetto CRM">
                 <SelectField
@@ -351,6 +408,84 @@ export const InvoiceImportDraftEditor = ({
                   </Field>
                 </>
               )}
+
+              <Field label="Via / Piazza fatturazione">
+                <Input
+                  value={record.billingAddressStreet ?? ""}
+                  onChange={(event) =>
+                    onChange(index, {
+                      billingAddressStreet: event.target.value,
+                    })
+                  }
+                />
+              </Field>
+
+              <Field label="Numero civico">
+                <Input
+                  value={record.billingAddressNumber ?? ""}
+                  onChange={(event) =>
+                    onChange(index, {
+                      billingAddressNumber: event.target.value,
+                    })
+                  }
+                />
+              </Field>
+
+              <Field label="CAP">
+                <Input
+                  value={record.billingPostalCode ?? ""}
+                  onChange={(event) =>
+                    onChange(index, {
+                      billingPostalCode: event.target.value,
+                    })
+                  }
+                />
+              </Field>
+
+              <Field label="Comune">
+                <Input
+                  value={record.billingCity ?? ""}
+                  onChange={(event) =>
+                    onChange(index, { billingCity: event.target.value })
+                  }
+                />
+              </Field>
+
+              <Field label="Provincia">
+                <Input
+                  value={record.billingProvince ?? ""}
+                  onChange={(event) =>
+                    onChange(index, { billingProvince: event.target.value })
+                  }
+                />
+              </Field>
+
+              <Field label="Nazione">
+                <Input
+                  value={record.billingCountry ?? ""}
+                  onChange={(event) =>
+                    onChange(index, { billingCountry: event.target.value })
+                  }
+                />
+              </Field>
+
+              <Field label="Codice destinatario">
+                <Input
+                  value={record.billingSdiCode ?? ""}
+                  onChange={(event) =>
+                    onChange(index, { billingSdiCode: event.target.value })
+                  }
+                />
+              </Field>
+
+              <Field label="PEC">
+                <Input
+                  value={record.billingPec ?? ""}
+                  onChange={(event) =>
+                    onChange(index, { billingPec: event.target.value })
+                  }
+                />
+              </Field>
 
               <Field label="Note import" className="md:col-span-2">
                 <Textarea

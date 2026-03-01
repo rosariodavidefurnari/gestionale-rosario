@@ -106,8 +106,44 @@ cliente da fatturazione. L'analisi sui file reali in `Fatture/2023-2025`
 conferma che il modello attuale `name/address/tax_id` e' troppo povero; il gap
 fornitori esiste davvero, ma resta un task separato perche' oggi le spese
 puntano ancora a `client_id` e non va mischiato con questa prima migration.
+Anche quel slice adesso e' chiuso davvero: la migration remota ha aggiunto un
+profilo fiscale cliente strutturato, il CRM lo espone nei form/show/export/PDF
+e l'import fatture trasporta gli stessi campi fino al draft editor. Se il
+cliente storico manca ancora dal CRM, il launcher non si blocca piu: puo
+aprire `clients/create` gia precompilato, sempre con conferma esplicita sul
+form. Il tema fornitori resta invece separato e ancora aperto.
 
 ## Last Session
+
+### Sessione 72 (2026-03-01, foundation anagrafica cliente fiscale)
+
+- Completed:
+  - **Chiusa la foundation anagrafica cliente da fatturazione nel CRM**:
+    - migration `20260301153000_add_client_billing_profile.sql`
+    - nuovi campi strutturati per denominazione, P.IVA, CF, indirizzo fiscale,
+      codice destinatario e PEC
+    - `ClientCreate`, `ClientInputs`, `ClientShow`, export clienti e `QuotePDF`
+      riallineati nello stesso passaggio
+  - **Chiusa la continuita' dei campi fiscali nel workflow import fatture**:
+    - schema Gemini e parser aggiornati
+    - prompt edge function aggiornato
+    - draft editor aggiornato con campi modificabili
+    - se il cliente manca, il draft apre `clients/create` gia precompilato
+  - **Chiuso anche il fallback di tracciabilita'**:
+    - se l'utente conferma direttamente `payments` / `expenses`, i dati fiscali
+      letti restano nelle note del record creato invece di perdersi
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/ai/invoiceImport.test.ts src/lib/ai/invoiceImportProvider.test.ts supabase/functions/_shared/invoiceImportExtract.test.ts src/components/atomic-crm/clients/clientBilling.test.ts src/components/atomic-crm/clients/clientLinking.test.ts src/lib/semantics/crmSemanticRegistry.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx`
+  - `npx supabase db push --linked --include-all --yes`
+  - `npx supabase functions deploy invoice_import_extract --project-ref qvdmzhyzpyaveniirsmo`
+  - smoke remoto autenticato su PDF reale `FPR 1/23`:
+    - `billingName = LAURUS S.R.L.`
+    - `vatNumber = IT04126560871`
+    - `billingCity = Pozzallo`
+    - `billingSdiCode = M5UXCR1`
+    - warning coerente su cliente mancante nel CRM
 
 ### Sessione 71 (2026-03-01, analisi anagrafica cliente da fatturazione)
 

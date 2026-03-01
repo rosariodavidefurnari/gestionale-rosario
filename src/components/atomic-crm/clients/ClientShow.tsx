@@ -10,6 +10,11 @@ import { Link } from "react-router";
 import type { Client } from "../types";
 import { ClientTypeBadge } from "./ClientListContent";
 import { clientSourceLabels } from "./clientTypes";
+import {
+  formatClientBillingAddress,
+  getClientBillingDisplayName,
+  getClientBillingIdentityLines,
+} from "./clientBilling";
 import { ClientTagsListEdit } from "../tags/ClientTagsListEdit";
 import { ClientNotesSection } from "./ClientNotesSection";
 import { ClientTasksSection } from "./ClientTasksSection";
@@ -114,22 +119,41 @@ const ClientDetails = ({ record }: { record: Client }) => (
       {record.address && (
         <InfoRow icon={<MapPin className="size-4" />} value={record.address} />
       )}
-      {record.tax_id && (
+    </div>
+    <div className="space-y-3">
+      <h6 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+        Fatturazione
+      </h6>
+      {getClientBillingDisplayName(record) && (
         <InfoRow
           icon={<FileText className="size-4" />}
-          label="P.IVA / CF"
-          value={record.tax_id}
+          label="Denominazione"
+          value={getClientBillingDisplayName(record) ?? ""}
         />
       )}
+      {formatClientBillingAddress(record) && (
+        <InfoRow
+          icon={<MapPin className="size-4" />}
+          label="Indirizzo fiscale"
+          value={formatClientBillingAddress(record) ?? ""}
+        />
+      )}
+      {getClientBillingIdentityLines(record).map((line) => (
+        <InfoRow
+          key={line}
+          icon={<FileText className="size-4" />}
+          value={line}
+        />
+      ))}
     </div>
-    {record.notes && (
-      <div className="space-y-3">
+    {record.notes ? (
+      <div className="space-y-3 md:col-span-2">
         <h6 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
           Note generali
         </h6>
         <p className="text-sm whitespace-pre-wrap">{record.notes}</p>
       </div>
-    )}
+    ) : null}
   </div>
 );
 

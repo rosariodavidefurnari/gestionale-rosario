@@ -493,6 +493,39 @@ analysis is now closed:
   - do not mix supplier-resource design into the customer billing-profile
     migration unless a hard blocker appears
 
+That customer billing-profile slice is now closed too:
+
+- new nullable client billing fields now exist in DB schema:
+  - `billing_name`
+  - `vat_number`
+  - `fiscal_code`
+  - split billing address fields
+  - `billing_sdi_code`
+  - `billing_pec`
+- client create/edit/show/export and quote PDF now consume those structured
+  fields with fallback to the old legacy fields
+- invoice import now carries the same fiscal fields end-to-end:
+  - Gemini schema
+  - edge-function prompt
+  - draft payload
+  - draft editor
+- when an imported customer is still missing from the CRM, the draft can now
+  open `clients/create` already prefilled instead of forcing a dead end
+- if the user still confirms only `payments` / `expenses`, the extracted fiscal
+  fields are at least preserved in the created record notes for traceability
+- runtime verification is now closed too on `qvdmzhyzpyaveniirsmo`:
+  - migration `20260301153000_add_client_billing_profile.sql` pushed remotely
+  - `invoice_import_extract` redeployed remotely
+  - authenticated smoke on real PDF `FPR 1/23` returned:
+    - `billingName = LAURUS S.R.L.`
+    - `vatNumber = IT04126560871`
+    - `billingCity = Pozzallo`
+    - `billingSdiCode = M5UXCR1`
+    - warning for missing client still not present in CRM
+- supplier/vendor modeling remains intentionally deferred to its own slice:
+  - `expenses` still links through `client_id`
+  - no supplier resource/page was introduced here
+
 Why this comes next:
 
 - the launcher now has the base layers it needed:

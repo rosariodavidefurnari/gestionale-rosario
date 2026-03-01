@@ -1620,8 +1620,8 @@ Additional runtime note for the annual flow:
 
 ## Current Explicit Next Slice
 
-The next explicit slice is now `anagrafica cliente da fatturazione/import
-storico`.
+The previously explicit slice `anagrafica cliente da fatturazione/import
+storico` is now closed.
 
 Analysis is now closed before implementation:
 
@@ -1664,6 +1664,36 @@ Important boundary:
 - but that is a different slice:
   - do not mix supplier-resource design into the customer billing-profile
     migration unless it becomes a hard blocker for the current step
+
+Implementation is now closed too:
+
+- new nullable client billing fields now exist in DB schema:
+  - `billing_name`
+  - `vat_number`
+  - `fiscal_code`
+  - split billing address fields
+  - `billing_sdi_code`
+  - `billing_pec`
+- client create/edit/show/export and quote PDF now consume those structured
+  fields with fallback to legacy values
+- invoice import now carries the same fiscal fields end-to-end:
+  - Gemini response schema
+  - edge-function prompt
+  - draft payload
+  - draft editor
+- if the imported customer is still missing from the CRM, the draft can now
+  open `clients/create` already prefilled instead of stopping on a dead end
+- if the user still confirms only `payments` / `expenses`, the extracted
+  billing fields are preserved at least in the created record notes
+- runtime verification is now closed too on `qvdmzhyzpyaveniirsmo`:
+  - migration `20260301153000_add_client_billing_profile.sql` pushed remotely
+  - `invoice_import_extract` redeployed remotely
+  - authenticated smoke on real PDF `FPR 1/23` returned:
+    - `billingName = LAURUS S.R.L.`
+    - `vatNumber = IT04126560871`
+    - `billingCity = Pozzallo`
+    - `billingSdiCode = M5UXCR1`
+    - warning for missing client still absent from the CRM
 
 ## Environment Blockers
 
@@ -1735,16 +1765,18 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Implement the customer billing-profile schema from the real invoice
-   evidence, without inventing a supplier model inside the same branch.
-2. Extend invoice-import extraction and draft transport so the launcher can
-   keep those billing fields coherently before any client-creation flow.
-3. Only after those two pieces are stable, open the explicit
-   client-creation-from-invoice slice with confirmation.
-4. Keep the existing historical / annual / launcher tests aligned while doing
-   that work.
-5. Treat the supplier resource/page as a later dedicated slice unless it
-   blocks the customer billing-profile work directly.
+1. Keep the new client billing-profile tests aligned whenever client, quote PDF
+   or invoice-import surfaces evolve.
+2. If import-born counterparties become the next priority, open the supplier
+   resource/page as a separate slice and stop routing supplier expenses through
+   `client_id`.
+3. Only after the supplier boundary is explicit, decide whether invoice import
+   should also support richer client update/create assistance inside the
+   launcher itself.
+4. Keep the historical / annual / launcher tests aligned while doing that
+   work.
+5. Do not add new scattered AI surfaces while this operational base is being
+   strengthened.
 
 ## Quick Resume Checklist
 
@@ -1755,8 +1787,8 @@ Stable rollback note:
 - Read the backlog:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
-  - implementing the customer billing-profile fields from real invoice
-    evidence
-  - extending invoice import so those fields survive extraction and draft
-    editing
-  - only later opening assisted missing-client creation with confirmation
+  - keeping the new client billing-profile foundation aligned across client UI,
+    quote PDF and invoice import
+  - deciding separately if/when to open the dedicated supplier slice
+  - only later evaluating deeper launcher-side create/update assistance on top
+    of this stronger base

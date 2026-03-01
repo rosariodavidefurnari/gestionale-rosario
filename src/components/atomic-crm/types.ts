@@ -31,6 +31,7 @@ export type Sale = {
 
 export type Client = {
   name: string;
+  billing_name?: string;
   client_type:
     | "produzione_tv"
     | "azienda_locale"
@@ -41,6 +42,16 @@ export type Client = {
   email?: string;
   address?: string;
   tax_id?: string;
+  vat_number?: string;
+  fiscal_code?: string;
+  billing_address_street?: string;
+  billing_address_number?: string;
+  billing_postal_code?: string;
+  billing_city?: string;
+  billing_province?: string;
+  billing_country?: string;
+  billing_sdi_code?: string;
+  billing_pec?: string;
   source?: "instagram" | "facebook" | "passaparola" | "google" | "altro" | null;
   notes?: string;
   tags: Identifier[];

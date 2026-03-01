@@ -68,6 +68,17 @@ export const invoiceImportResponseJsonSchema = {
           },
           rationale: { type: ["string", "null"] },
           counterpartyName: { type: ["string", "null"] },
+          billingName: { type: ["string", "null"] },
+          vatNumber: { type: ["string", "null"] },
+          fiscalCode: { type: ["string", "null"] },
+          billingAddressStreet: { type: ["string", "null"] },
+          billingAddressNumber: { type: ["string", "null"] },
+          billingPostalCode: { type: ["string", "null"] },
+          billingCity: { type: ["string", "null"] },
+          billingProvince: { type: ["string", "null"] },
+          billingCountry: { type: ["string", "null"] },
+          billingSdiCode: { type: ["string", "null"] },
+          billingPec: { type: ["string", "null"] },
           invoiceRef: { type: ["string", "null"] },
           amount: { type: ["number", "null"] },
           currency: { type: ["string", "null"] },
@@ -227,6 +238,40 @@ export const parseInvoiceImportModelResponse = ({
           typeof record.counterpartyName === "string"
             ? record.counterpartyName
             : null,
+        billingName:
+          typeof record.billingName === "string" ? record.billingName : null,
+        vatNumber:
+          typeof record.vatNumber === "string" ? record.vatNumber : null,
+        fiscalCode:
+          typeof record.fiscalCode === "string" ? record.fiscalCode : null,
+        billingAddressStreet:
+          typeof record.billingAddressStreet === "string"
+            ? record.billingAddressStreet
+            : null,
+        billingAddressNumber:
+          typeof record.billingAddressNumber === "string"
+            ? record.billingAddressNumber
+            : null,
+        billingPostalCode:
+          typeof record.billingPostalCode === "string"
+            ? record.billingPostalCode
+            : null,
+        billingCity:
+          typeof record.billingCity === "string" ? record.billingCity : null,
+        billingProvince:
+          typeof record.billingProvince === "string"
+            ? record.billingProvince
+            : null,
+        billingCountry:
+          typeof record.billingCountry === "string"
+            ? record.billingCountry
+            : null,
+        billingSdiCode:
+          typeof record.billingSdiCode === "string"
+            ? record.billingSdiCode
+            : null,
+        billingPec:
+          typeof record.billingPec === "string" ? record.billingPec : null,
         invoiceRef:
           typeof record.invoiceRef === "string" ? record.invoiceRef : null,
         amount:

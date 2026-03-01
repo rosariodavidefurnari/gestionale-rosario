@@ -40,7 +40,15 @@ const buildPrompt = ({
   projects,
 }: {
   userInstructions?: string | null;
-  clients: Array<{ id: string; name: string; email: string | null }>;
+  clients: Array<{
+    id: string;
+    name: string;
+    email: string | null;
+    billing_name: string | null;
+    vat_number: string | null;
+    fiscal_code: string | null;
+    billing_city: string | null;
+  }>;
   projects: Array<{ id: string; name: string; client_id: string }>;
 }) => `
 Sei l'assistente AI unificato del CRM Rosario Furnari.
@@ -58,6 +66,23 @@ Regole di mapping obbligatorie:
 - per i pagamenti, usa di default \`paymentType = "saldo"\` salvo segnali chiari di acconto/parziale/rimborso
 - per le spese, usa di default \`expenseType = "acquisto_materiale"\` salvo segnali chiari diversi
 - \`documentDate\` e \`dueDate\` devono essere in formato YYYY-MM-DD se leggibili
+- quando il documento contiene un'anagrafica fiscale leggibile, valorizza anche:
+  - \`billingName\`
+  - \`vatNumber\`
+  - \`fiscalCode\`
+  - \`billingAddressStreet\`
+  - \`billingAddressNumber\`
+  - \`billingPostalCode\`
+  - \`billingCity\`
+  - \`billingProvince\`
+  - \`billingCountry\`
+  - \`billingSdiCode\`
+  - \`billingPec\`
+- non inventare mai quei campi: se non sono leggibili, lasciali a null
+- usa \`counterpartyName\` come nome principale leggibile nel documento e
+  \`billingName\` come denominazione fiscale quando disponibile
+- il match cliente e' piu affidabile se coincidono denominazione, partita IVA
+  o codice fiscale con un cliente CRM esistente
 
 CRM clients disponibili:
 ${JSON.stringify(clients, null, 2)}
@@ -97,7 +122,9 @@ async function extractInvoiceImportDraft(req: Request, currentUserSale: unknown)
     const [clientsResponse, projectsResponse] = await Promise.all([
       supabaseAdmin
         .from("clients")
-        .select("id,name,email")
+        .select(
+          "id,name,email,billing_name,vat_number,fiscal_code,billing_city",
+        )
         .order("name", { ascending: true })
         .limit(1000),
       supabaseAdmin
