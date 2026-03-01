@@ -2006,3 +2006,16 @@ Risks kept explicit:
   must remain user-editable before saving
 - `QuickEpisodeForm` now exposes `km_rate` explicitly, but no dedicated browser
   smoke was run in this session on that dialog after the change
+
+## Travel Route Auth Stabilization
+
+- The first real mobile-browser test of `travel_route_estimate` exposed a
+  `401 Invalid JWT` path from the km calculator dialog.
+- Two hardening steps are now mandatory together for UI-invoked Edge Functions:
+  - keep the function declared in `supabase/config.toml` with
+    `verify_jwt = false` when the project uses the custom auth middleware model
+  - resolve a fresh user access token client-side and pass
+    `Authorization: Bearer <token>` explicitly when invoking the function
+- This closes the fragile fallback where the browser-side SDK could otherwise
+  hit the function with a publishable-key context or stale session state,
+  especially on mobile Safari / reopened sessions.

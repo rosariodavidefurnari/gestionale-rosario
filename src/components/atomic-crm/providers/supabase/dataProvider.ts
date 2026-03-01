@@ -20,6 +20,7 @@ import type {
 } from "../../types";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import { getIsInitialized } from "./authProvider";
+import { getEdgeFunctionAuthorizationHeaders } from "./edgeFunctions";
 import { supabase } from "./supabase";
 import { buildDashboardModel } from "../../dashboard/dashboardModel";
 import {
@@ -118,6 +119,20 @@ const baseDataProvider = supabaseDataProvider({
 });
 
 const LARGE_PAGE = { page: 1, perPage: 1000 };
+
+const invokeAuthenticatedEdgeFunction = async <T>(
+  functionName: string,
+  options: Parameters<typeof supabase.functions.invoke<T>>[1] = {},
+) => {
+  const authHeaders = await getEdgeFunctionAuthorizationHeaders(supabase.auth);
+  return supabase.functions.invoke<T>(functionName, {
+    ...options,
+    headers: {
+      ...options.headers,
+      ...authHeaders,
+    },
+  });
+};
 
 const getHistoricalAnalyticsContextFromViews = async () => {
   const [
@@ -431,7 +446,9 @@ const dataProviderWithCustomMethods = {
     };
   },
   async salesCreate(body: SalesFormData) {
-    const { data, error } = await supabase.functions.invoke<{ data: Sale }>(
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
+      data: Sale;
+    }>(
       "users",
       {
         method: "POST",
@@ -460,7 +477,7 @@ const dataProviderWithCustomMethods = {
     const { email, first_name, last_name, administrator, avatar, disabled } =
       data;
 
-    const { data: updatedData, error } = await supabase.functions.invoke<{
+    const { data: updatedData, error } = await invokeAuthenticatedEdgeFunction<{
       data: Sale;
     }>("users", {
       method: "PATCH",
@@ -484,7 +501,7 @@ const dataProviderWithCustomMethods = {
   },
   async updatePassword(id: Identifier) {
     const { data: passwordUpdated, error } =
-      await supabase.functions.invoke<boolean>("update_password", {
+      await invokeAuthenticatedEdgeFunction<boolean>("update_password", {
         method: "PATCH",
         body: {
           sales_id: id,
@@ -535,7 +552,7 @@ const dataProviderWithCustomMethods = {
 
     const model = await getConfiguredHistoricalAnalysisModel();
 
-    const { data, error } = await supabase.functions.invoke<{
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
       data: UnifiedCrmAnswer;
     }>("unified_crm_answer", {
       method: "POST",
@@ -567,7 +584,7 @@ const dataProviderWithCustomMethods = {
   async estimateTravelRoute(
     request: TravelRouteEstimateRequest,
   ): Promise<TravelRouteEstimate> {
-    const { data, error } = await supabase.functions.invoke<{
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
       data: TravelRouteEstimate;
     }>("travel_route_estimate", {
       method: "POST",
@@ -603,7 +620,7 @@ const dataProviderWithCustomMethods = {
   ): Promise<InvoiceImportDraft> {
     const model = await getConfiguredInvoiceExtractionModel();
 
-    const { data, error } = await supabase.functions.invoke<{
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
       data: InvoiceImportDraft;
     }>("invoice_import_extract", {
       method: "POST",
@@ -661,7 +678,7 @@ const dataProviderWithCustomMethods = {
       getConfiguredHistoricalAnalysisModel(),
     ]);
 
-    const { data, error } = await supabase.functions.invoke<{
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
       data: HistoricalAnalyticsSummary;
     }>("historical_analytics_summary", {
       method: "POST",
@@ -694,7 +711,7 @@ const dataProviderWithCustomMethods = {
       getConfiguredHistoricalAnalysisModel(),
     ]);
 
-    const { data, error } = await supabase.functions.invoke<{
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
       data: HistoricalAnalyticsSummary;
     }>("historical_cash_inflow_summary", {
       method: "POST",
@@ -729,7 +746,7 @@ const dataProviderWithCustomMethods = {
       getConfiguredHistoricalAnalysisModel(),
     ]);
 
-    const { data, error } = await supabase.functions.invoke<{
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
       data: AnnualOperationsAnalyticsSummary;
     }>("annual_operations_summary", {
       method: "POST",
@@ -770,7 +787,7 @@ const dataProviderWithCustomMethods = {
       getConfiguredHistoricalAnalysisModel(),
     ]);
 
-    const { data, error } = await supabase.functions.invoke<{
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
       data: HistoricalAnalyticsAnswer;
     }>("historical_analytics_answer", {
       method: "POST",
@@ -812,7 +829,7 @@ const dataProviderWithCustomMethods = {
       getConfiguredHistoricalAnalysisModel(),
     ]);
 
-    const { data, error } = await supabase.functions.invoke<{
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
       data: HistoricalAnalyticsAnswer;
     }>("historical_cash_inflow_answer", {
       method: "POST",
@@ -855,7 +872,7 @@ const dataProviderWithCustomMethods = {
       getConfiguredHistoricalAnalysisModel(),
     ]);
 
-    const { data, error } = await supabase.functions.invoke<{
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
       data: AnnualOperationsAnalyticsAnswer;
     }>("annual_operations_answer", {
       method: "POST",
@@ -892,7 +909,7 @@ const dataProviderWithCustomMethods = {
       );
     }
 
-    const { data, error } = await supabase.functions.invoke<{
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
       data: QuoteStatusEmailSendResponse;
     }>("quote_status_email_send", {
       method: "POST",

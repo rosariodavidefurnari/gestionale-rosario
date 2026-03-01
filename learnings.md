@@ -1350,3 +1350,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   per la tariffa corrente, conviene riusarlo. Ricalcolare sempre lato client da
   float (`distance * kmRate`) puo' introdurre centesimi sbagliati (`40.24`
   invece di `40.25`) per precisione binaria.
+
+- [2026-03-01] **Per una nuova Edge Function usata dalla UI non basta il deploy: va chiusa anche la coppia `config.toml` + auth header client** —
+  Il primo test reale del dialog `Calcola tratta` da mobile/Vercel mostrava
+  `Invalid JWT`. La causa pratica era doppia:
+  1) `travel_route_estimate` non era ancora dichiarata in
+     `supabase/config.toml` come le altre function UI
+  2) il client si affidava al comportamento implicito di `functions.invoke()`
+     invece di passare un bearer token utente fresco in modo esplicito
+  Pattern corretto: aggiungere sempre la function al `config.toml` del progetto
+  e centralizzare un helper provider che risolve/refresh-a la sessione prima
+  delle invoke autenticate.

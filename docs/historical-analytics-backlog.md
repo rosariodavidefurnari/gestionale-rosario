@@ -1481,6 +1481,11 @@ Only after the base is stable:
   - any generated travel description/location before save
 - Route estimation must stay server-side through a provider entry point; do not
   move ORS calls into the browser bundle.
+- `travel_route_estimate` must stay declared in `supabase/config.toml`
+  alongside the other UI-invoked Edge Functions; forgetting the entry regresses
+  browser calls to `401 Invalid JWT` before the function code runs.
+- Frontend invokes of authenticated Edge Functions should resolve a fresh user
+  access token explicitly instead of relying on SDK fallback behavior.
 
 ## Non-Negotiable Rules
 

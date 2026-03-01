@@ -3339,3 +3339,19 @@ invece separato e ancora aperto.
 - [x] Validation:
   - `pnpm typecheck`
   - `pnpm vitest run supabase/functions/_shared/unifiedCrmAnswer.test.ts src/components/atomic-crm/expenses/expenseLinking.test.ts src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx`
+
+## Sessione 85 (2026-03-01, travel-route invalid JWT stabilization)
+
+- [x] Corretto il corridoio auth del dialog `Calcola tratta` dopo il primo
+  smoke reale su mobile/Vercel con toast `Invalid JWT`
+- [x] Riallineato `supabase/config.toml`
+  - aggiunta entry `[functions.travel_route_estimate]`
+  - `verify_jwt = false` coerente col modello già usato dalle altre function UI
+- [x] Rafforzato il provider Supabase
+  - le invoke delle Edge Function risolvono ora un access token utente fresco
+  - l'header `Authorization` viene passato esplicitamente, senza affidarsi al
+    fallback implicito dell'SDK
+- [x] Aggiunta copertura test sul nuovo helper auth
+- [x] Validation:
+  - `npm run typecheck`
+  - `npx vitest --run src/components/atomic-crm/providers/supabase/edgeFunctions.test.ts src/components/atomic-crm/travel/TravelRouteCalculatorDialog.test.tsx`
