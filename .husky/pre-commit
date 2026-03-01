@@ -1,1 +1,4 @@
-make registry-gen
+npm run registry:gen
+git add registry.json
+npm exec lint-staged
+npm run continuity:check

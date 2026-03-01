@@ -24,6 +24,18 @@ categorie:
   - i documenti `canonical` vanno aggiornati nello stesso passaggio
 - se un file non e' canonico, deve dichiararlo chiaramente
 
+## Automation Guardrails
+
+Il repository non si affida piu' solo alla disciplina manuale.
+
+Prima dei commit gira anche un controllo automatico di continuita':
+
+- `scripts/check-continuity.mjs`
+
+Questo hook verifica che le modifiche su codice prodotto, schema, AI,
+document-import e configurazione condivisa si portino dietro almeno i documenti
+o le superfici companion minime richieste.
+
 ## Required Structure For New Docs
 
 Ogni nuovo documento importante dovrebbe dichiarare all'inizio, in forma breve:

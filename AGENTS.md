@@ -71,6 +71,12 @@ make registry-gen     # Generate registry.json (runs automatically on pre-commit
 make registry-build   # Build Shadcn registry
 ```
 
+### Pre-commit Guardrails
+
+- `npm exec lint-staged` formats/fixes staged files
+- `npm run continuity:check` blocks commits that change product code without the
+  expected continuity docs or companion surfaces
+
 ## Architecture
 
 ### Technology Stack

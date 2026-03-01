@@ -24,6 +24,29 @@ La regola operativa e' semplice:
   pagine, modali/sheet/dialog, helper, linking, provider ed eventuali Edge
   Functions connesse
 
+## Automation
+
+La continuita' non e' affidata solo alla memoria.
+
+Il repository ora usa anche un guardrail automatico in pre-commit:
+
+- `scripts/check-continuity.mjs`
+
+Il controllo legge i file staged e blocca il commit se:
+
+- cambia codice prodotto senza alcun aggiornamento nei docs di continuita'
+- cambia schema/provider/resource senza aggiornare almeno architettura o
+  continuity map
+- cambia il dominio `clienti/referenti/progetti` senza toccare la doc
+  canonica relativa
+- cambia il flusso import documenti senza aggiornare caso reale o handoff
+- cambia AI/analytics senza aggiornare handoff, backlog o architettura
+- cambia configurazione condivisa senza toccare `Settings` o senza lasciare
+  traccia del motivo nei docs
+
+Questo non sostituisce il giudizio tecnico, ma riduce il rischio di chiudere un
+commit lasciando il progetto semanticamente spezzato.
+
 ## Reading Order For A New Chat
 
 1. `docs/README.md`
