@@ -320,6 +320,7 @@ describe("UnifiedAiLauncher", () => {
           email: "mario@example.com",
         },
       ],
+      contacts: [],
       projects: [
         {
           id: "project-1",

@@ -74,6 +74,7 @@ describe("invoiceImport", () => {
               billing_city: null,
             },
           ],
+          contacts: [],
           projects: [
             { id: "project-b", name: "Progetto B", client_id: "client-b" },
           ],
@@ -107,6 +108,7 @@ describe("invoiceImport", () => {
               billing_city: null,
             },
           ],
+          contacts: [],
           projects: [],
         },
       ),
@@ -204,6 +206,7 @@ describe("invoiceImport", () => {
               billing_city: "Adrano",
             },
           ],
+          contacts: [],
           projects: [],
         },
       ).records[0]?.clientId,
@@ -243,6 +246,7 @@ describe("invoiceImport", () => {
               billing_city: "Adrano",
             },
           ],
+          contacts: [],
           projects: [
             {
               id: "project-gs",
@@ -250,6 +254,55 @@ describe("invoiceImport", () => {
               client_id: "client-gs",
             },
           ],
+        },
+      ).records[0]?.clientId,
+    ).toBe("client-gs");
+  });
+
+  it("resolves the fiscal client from a known contact when only the referent name is present", () => {
+    expect(
+      applyInvoiceImportWorkspaceHints(
+        {
+          model: "gemini-2.5-pro",
+          generatedAt: "2026-03-01T12:00:00.000Z",
+          summary: "Bozza",
+          warnings: [],
+          records: [
+            {
+              id: "draft-1",
+              sourceFileNames: ["fpr.xml"],
+              resource: "payments",
+              confidence: "medium",
+              documentType: "customer_invoice",
+              counterpartyName: "Diego Caltabiano",
+              billingName: null,
+              fiscalCode: null,
+              amount: 997,
+              documentDate: "2024-12-19",
+            },
+          ],
+        },
+        {
+          clients: [
+            {
+              id: "client-gs",
+              name: "ASSOCIAZIONE CULTURALE GUSTARE SICILIA",
+              email: null,
+              billing_name: null,
+              vat_number: null,
+              fiscal_code: "05416820875",
+              billing_city: "Adrano",
+            },
+          ],
+          contacts: [
+            {
+              id: "contact-diego",
+              client_id: "client-gs",
+              first_name: "Diego",
+              last_name: "Caltabiano",
+            },
+          ],
+          projects: [],
         },
       ).records[0]?.clientId,
     ).toBe("client-gs");

@@ -277,18 +277,24 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
     );
   },
   getInvoiceImportWorkspace: async (): Promise<InvoiceImportWorkspace> => {
-    const [clientsResponse, projectsResponse] = await Promise.all([
-      baseDataProvider.getList<Client>("clients", {
-        filter: {},
-        pagination: { page: 1, perPage: 1000 },
-        sort: { field: "name", order: "ASC" },
-      }),
-      baseDataProvider.getList<Project>("projects", {
-        filter: {},
-        pagination: { page: 1, perPage: 1000 },
-        sort: { field: "name", order: "ASC" },
-      }),
-    ]);
+    const [clientsResponse, contactsResponse, projectsResponse] =
+      await Promise.all([
+        baseDataProvider.getList<Client>("clients", {
+          filter: {},
+          pagination: { page: 1, perPage: 1000 },
+          sort: { field: "name", order: "ASC" },
+        }),
+        baseDataProvider.getList<Contact>("contacts", {
+          filter: {},
+          pagination: { page: 1, perPage: 1000 },
+          sort: { field: "updated_at", order: "DESC" },
+        }),
+        baseDataProvider.getList<Project>("projects", {
+          filter: {},
+          pagination: { page: 1, perPage: 1000 },
+          sort: { field: "name", order: "ASC" },
+        }),
+      ]);
 
     return buildInvoiceImportWorkspace({
       clients: clientsResponse.data.map((client) => ({
@@ -299,6 +305,12 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
         vat_number: client.vat_number ?? null,
         fiscal_code: client.fiscal_code ?? null,
         billing_city: client.billing_city ?? null,
+      })),
+      contacts: contactsResponse.data.map((contact) => ({
+        id: contact.id,
+        client_id: contact.client_id ?? null,
+        first_name: contact.first_name ?? null,
+        last_name: contact.last_name ?? null,
       })),
       projects: projectsResponse.data.map((project) => ({
         id: project.id,

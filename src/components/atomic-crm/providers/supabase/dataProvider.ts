@@ -225,18 +225,24 @@ const getConfiguredInvoiceExtractionModel = async () => {
 
 const getInvoiceImportWorkspaceFromResources =
   async (): Promise<InvoiceImportWorkspace> => {
-    const [clientsResponse, projectsResponse] = await Promise.all([
-      baseDataProvider.getList<Client>("clients", {
-        pagination: LARGE_PAGE,
-        sort: { field: "name", order: "ASC" },
-        filter: {},
-      }),
-      baseDataProvider.getList<Project>("projects", {
-        pagination: LARGE_PAGE,
-        sort: { field: "name", order: "ASC" },
-        filter: {},
-      }),
-    ]);
+    const [clientsResponse, contactsResponse, projectsResponse] =
+      await Promise.all([
+        baseDataProvider.getList<Client>("clients", {
+          pagination: LARGE_PAGE,
+          sort: { field: "name", order: "ASC" },
+          filter: {},
+        }),
+        baseDataProvider.getList<Contact>("contacts", {
+          pagination: LARGE_PAGE,
+          sort: { field: "updated_at", order: "DESC" },
+          filter: {},
+        }),
+        baseDataProvider.getList<Project>("projects", {
+          pagination: LARGE_PAGE,
+          sort: { field: "name", order: "ASC" },
+          filter: {},
+        }),
+      ]);
 
     return buildInvoiceImportWorkspace({
       clients: clientsResponse.data.map((client) => ({
@@ -247,6 +253,12 @@ const getInvoiceImportWorkspaceFromResources =
         vat_number: client.vat_number ?? null,
         fiscal_code: client.fiscal_code ?? null,
         billing_city: client.billing_city ?? null,
+      })),
+      contacts: contactsResponse.data.map((contact) => ({
+        id: contact.id,
+        client_id: contact.client_id ?? null,
+        first_name: contact.first_name ?? null,
+        last_name: contact.last_name ?? null,
       })),
       projects: projectsResponse.data.map((project) => ({
         id: project.id,

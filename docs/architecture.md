@@ -219,6 +219,21 @@ Espone in modo strutturato almeno:
 Questa snapshot resta read-only e serve a far ragionare la chat AI interna del
 prodotto sul modello corretto del dominio, senza inferire tutto dalle note.
 
+### Import documenti AI
+
+Il workspace dell'import documenti non usa piu solo `clients + projects`.
+
+Per ridurre i falsi match persona -> cliente, il resolver runtime legge anche i
+`contacts` e puo risalire dal referente noto al cliente fiscale collegato.
+
+L'ordine corretto resta:
+
+1. progetto/cliente gia selezionati
+2. identificativi fiscali forti
+3. denominazione fiscale
+4. referente noto collegato a un cliente
+5. nome libero della controparte solo come ultimo fallback
+
 ### Struttura moduli CRUD
 
 Pattern base valido per i moduli CRUD classici (`clients`, `contacts`,

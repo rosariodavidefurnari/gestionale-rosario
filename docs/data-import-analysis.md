@@ -47,6 +47,25 @@ Traduzione di dominio obbligatoria:
 Questa regola vale per import AI, anagrafica clienti, referenti, mapping DB,
 analisi storiche e correzione dati.
 
+## Regola di risoluzione runtime per l'import AI
+
+Nel runtime reale dell'import documenti, la risoluzione del `client` non deve
+promuovere automaticamente una persona a cliente se nel CRM quella persona e'
+gia un referente collegato a un'azienda.
+
+Ordine corretto dei segnali:
+
+1. progetto o cliente gia selezionati esplicitamente
+2. identificativi fiscali forti (`CF`, `P.IVA`)
+3. denominazione fiscale / ragione sociale
+4. referente gia presente in `contacts` con collegamento univoco a un cliente
+5. solo in ultima istanza il nome libero della controparte
+
+Per il caso Diego/Gustare questo significa che, anche se un documento nomina
+solo `Diego Caltabiano`, il resolver deve preferire il cliente fiscale
+`ASSOCIAZIONE CULTURALE GUSTARE SICILIA` quando il referente Diego e' gia noto
+nel CRM e collegato a quel cliente.
+
 ## Struttura del file
 
 2 fogli (sheets):

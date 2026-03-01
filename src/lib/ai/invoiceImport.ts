@@ -2,10 +2,12 @@ import type { Identifier } from "ra-core";
 
 import type {
   Client,
+  Contact,
   Expense,
   Payment,
   Project,
 } from "@/components/atomic-crm/types";
+import { getContactDisplayName } from "@/components/atomic-crm/contacts/contactRecord";
 
 export type InvoiceImportWorkspaceClient = Pick<
   Client,
@@ -18,6 +20,11 @@ export type InvoiceImportWorkspaceClient = Pick<
   | "billing_city"
 >;
 
+export type InvoiceImportWorkspaceContact = Pick<
+  Contact,
+  "id" | "client_id" | "first_name" | "last_name"
+>;
+
 export type InvoiceImportFileHandle = {
   path: string;
   name: string;
@@ -27,6 +34,7 @@ export type InvoiceImportFileHandle = {
 
 export type InvoiceImportWorkspace = {
   clients: InvoiceImportWorkspaceClient[];
+  contacts: InvoiceImportWorkspaceContact[];
   projects: Array<Pick<Project, "id" | "name" | "client_id">>;
 };
 
@@ -314,29 +322,84 @@ const resolveClientIdFromIdentifiers = (
   return null;
 };
 
-const resolveClientIdFromNames = (
+const resolveClientIdFromBillingName = (
   record: InvoiceImportRecordDraft,
   workspace: InvoiceImportWorkspace,
 ) => {
-  for (const candidateName of [record.billingName, record.counterpartyName]) {
-    const comparableCandidate = normalizeNameComparable(candidateName);
-    if (!comparableCandidate) {
-      continue;
-    }
+  const comparableCandidate = normalizeNameComparable(record.billingName);
+  if (!comparableCandidate) {
+    return null;
+  }
 
-    const matches = workspace.clients.filter((client) => {
-      const comparableName = normalizeNameComparable(client.name);
-      const comparableBillingName = normalizeNameComparable(client.billing_name);
+  const matches = workspace.clients.filter((client) => {
+    const comparableName = normalizeNameComparable(client.name);
+    const comparableBillingName = normalizeNameComparable(client.billing_name);
 
-      return (
-        comparableName === comparableCandidate ||
-        comparableBillingName === comparableCandidate
-      );
-    });
+    return (
+      comparableName === comparableCandidate ||
+      comparableBillingName === comparableCandidate
+    );
+  });
 
-    if (matches.length === 1) {
-      return matches[0]?.id ?? null;
-    }
+  if (matches.length === 1) {
+    return matches[0]?.id ?? null;
+  }
+
+  return null;
+};
+
+const resolveClientIdFromLinkedContact = (
+  record: InvoiceImportRecordDraft,
+  workspace: InvoiceImportWorkspace,
+) => {
+  const comparableCounterparty = normalizeNameComparable(record.counterpartyName);
+  if (!comparableCounterparty) {
+    return null;
+  }
+
+  const linkedClientIds = [
+    ...new Map(
+      workspace.contacts
+        .filter((contact) => contact.client_id != null)
+        .filter(
+          (contact) =>
+            normalizeNameComparable(getContactDisplayName(contact)) ===
+            comparableCounterparty,
+        )
+        .map((contact) => [String(contact.client_id), contact.client_id]),
+    ).values(),
+  ].filter((clientId) =>
+    workspace.clients.some((client) => String(client.id) === String(clientId)),
+  );
+
+  if (linkedClientIds.length === 1) {
+    return linkedClientIds[0] ?? null;
+  }
+
+  return null;
+};
+
+const resolveClientIdFromCounterpartyName = (
+  record: InvoiceImportRecordDraft,
+  workspace: InvoiceImportWorkspace,
+) => {
+  const comparableCandidate = normalizeNameComparable(record.counterpartyName);
+  if (!comparableCandidate) {
+    return null;
+  }
+
+  const matches = workspace.clients.filter((client) => {
+    const comparableName = normalizeNameComparable(client.name);
+    const comparableBillingName = normalizeNameComparable(client.billing_name);
+
+    return (
+      comparableName === comparableCandidate ||
+      comparableBillingName === comparableCandidate
+    );
+  });
+
+  if (matches.length === 1) {
+    return matches[0]?.id ?? null;
   }
 
   return null;
@@ -366,7 +429,9 @@ export const applyInvoiceImportWorkspaceHints = (
       (hasValidClient ? record.clientId : null) ??
       (matchedProject && !hasValidClient ? matchedProject.client_id : null) ??
       resolveClientIdFromIdentifiers(record, workspace) ??
-      resolveClientIdFromNames(record, workspace) ??
+      resolveClientIdFromBillingName(record, workspace) ??
+      resolveClientIdFromLinkedContact(record, workspace) ??
+      resolveClientIdFromCounterpartyName(record, workspace) ??
       (hasValidClient ? record.clientId : null);
 
     if (String(nextClientId ?? "") === String(record.clientId ?? "")) {
