@@ -23,9 +23,6 @@ start-app: ## start the app locally
 
 start: start-supabase start-app ## start the stack locally
 
-start-demo: ## start the app locally in demo mode
-	npm run dev:demo
-
 stop-supabase: ## stop local supabase
 	npx supabase stop
 
@@ -33,9 +30,6 @@ stop: stop-supabase ## stop the stack locally
 
 build: ## build the app
 	npm run build
-
-build-demo: ## build the app in demo mode
-	npm run build:demo
 
 prod-start: build supabase-deploy
 	open http://127.0.0.1:3000 && npx serve -l tcp://127.0.0.1:3000 dist

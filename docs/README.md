@@ -19,6 +19,8 @@ categorie:
 
 - una regola di business deve avere una sola casa canonica
 - i documenti storici non devono sembrare fonte di verita' attuale
+- il workflow supportato di sviluppo/validazione locale usa il runtime reale
+  Supabase, non la vecchia demo FakeRest
 - se il comportamento e' gia spedito:
   - il codice e le migration sono la verita' operativa
   - i documenti `canonical` vanno aggiornati nello stesso passaggio

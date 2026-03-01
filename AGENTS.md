@@ -71,7 +71,6 @@ The active product surface includes:
 make install          # Install dependencies (frontend, backend, local Supabase)
 make start            # Start full stack with real API (Supabase + Vite dev server)
 make stop             # Stop the stack
-make start-demo       # Start full-stack with FakeRest data provider
 ```
 
 ### Testing and Code Quality
@@ -139,7 +138,7 @@ src/
 │   │   ├── layout/         # App layout components
 │   │   ├── login/          # Authentication pages
 │   │   ├── payments/       # Payment tracking
-│   │   ├── providers/      # Data providers (Supabase + FakeRest)
+│   │   ├── providers/      # Data providers (Supabase active + FakeRest legacy scaffolding)
 │   │   ├── projects/       # Projects
 │   │   ├── quotes/         # Quotes and commercial flow
 │   │   ├── root/           # Root CRM component
@@ -223,15 +222,22 @@ Located in `supabase/functions/`:
 
 #### Data Providers
 
-Two data providers are available:
+The active development/runtime provider is:
 1. **Supabase** (default): Production backend using PostgreSQL
-2. **FakeRest**: In-browser fake API for development/demos, resets on page reload
 
-When using FakeRest, database views are emulated in the frontend. Test data generators are in `src/components/atomic-crm/providers/fakerest/dataGenerator/`.
+`FakeRest` remains in the repo only as legacy internal scaffolding for isolated
+tests or migration support. It is **not** a supported development/QA workflow
+for this product anymore.
+
+If FakeRest scaffolding is touched, database views are emulated in the
+frontend. Test data generators remain in
+`src/components/atomic-crm/providers/fakerest/dataGenerator/`.
 
 #### Filter Syntax
 
-List filters follow the `ra-data-postgrest` convention with operator concatenation: `field_name@operator` (e.g., `first_name@eq`). The FakeRest adapter maps these to FakeRest syntax at runtime.
+List filters follow the `ra-data-postgrest` convention with operator
+concatenation: `field_name@operator` (e.g., `first_name@eq`). The FakeRest
+adapter still maps these to FakeRest syntax if legacy scaffolding is used.
 
 ## Development Workflows
 
@@ -248,7 +254,8 @@ The project uses TypeScript path aliases configured in `tsconfig.json` and `comp
 When modifying active CRM data structures:
 1. Create a migration: `npx supabase migration new <name>`
 2. Update `src/components/atomic-crm/types.ts`
-3. Update Supabase and FakeRest providers if the resource is exposed
+3. Update Supabase provider and only the FakeRest scaffolding if that legacy
+   path is still touched by the same change
 4. Update affected views or Edge Functions
 5. Update affected UI surfaces: list/create/edit/show, filters, dialogs, linking helpers
 6. Update continuity docs in `docs/`
@@ -256,8 +263,8 @@ When modifying active CRM data structures:
 
 ### Running with Test Data
 
-Prefer the real Supabase-backed workflow or the existing FakeRest generators.
-The old upstream sample data/docs are not the source of truth for this repo.
+Use only the real Supabase-backed workflow for development and validation.
+FakeRest/demo is not a supported local workflow anymore.
 
 ### Git Hooks
 
@@ -277,5 +284,6 @@ The old upstream sample data/docs are not the source of truth for this repo.
 - Modify files in `src/components/admin` and `src/components/ui` directly - they are meant to be customized
 - Unit tests can be added in the `src/` directory (test files are named `*.test.ts` or `*.test.tsx`)
 - User deletion is not supported to avoid data loss; use account disabling instead
-- Filter operators must be supported by the `supabaseAdapter` when using FakeRest
+- Filter operators must still be supported by the `supabaseAdapter` if legacy
+  FakeRest scaffolding is touched
 - `progress.md` and `learnings.md` are legacy archives, not the primary entry point for new sessions

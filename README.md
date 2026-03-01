@@ -43,6 +43,12 @@ make typecheck
 make lint
 ```
 
+Nota operativa:
+
+- la modalita' demo/FakeRest non fa piu parte del workflow supportato
+- sviluppo, smoke test e validazione vanno eseguiti sul runtime reale avviato
+  con `make start`
+
 ## Deploy
 
 - frontend:
