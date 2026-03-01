@@ -10,6 +10,34 @@ incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 originario del progetto. Lo stato runtime attuale di route, risorse, settings e
 workflow va sempre verificato in `docs/architecture.md` e nel codice reale.
 
+**Delta minimo rispetto al runtime attuale (da leggere prima):**
+
+- il runtime attivo non coincide piu' con l'Atomic CRM upstream:
+  - `companies` e `deals` non sono risorse attive
+  - il dominio reale oggi usa `clients`, `contacts` come referenti,
+    `project_contacts`, `client_tasks`, `client_notes`, `tags`
+- la dashboard reale e' divisa in:
+  - `Annuale`
+  - `Storico`
+  - con AI guidata e contesti separati, non una dashboard generica unica
+- la chat AI utente del CRM e l'import documenti esistono gia' nel runtime
+  reale e vanno letti dai documenti `canonical`, non da questa specifica
+- l'anagrafica cliente reale usa anche profilo fiscale/fatturazione:
+  - `billing_name`
+  - `vat_number`
+  - `fiscal_code`
+  - indirizzo fatturazione
+  - `PEC`
+  - `SDI`
+  - `tax_id` e' solo legacy, non fonte attiva di verita'
+- `settings` nel runtime reale non e' piu' un semplice key/value:
+  - esiste un record `config` letto da `ConfigurationContext`
+- l'autenticazione reale ha route pubbliche tecniche di supporto:
+  - login
+  - bootstrap primo utente
+  - forgot/reset password
+  - consenso OAuth
+
 **Versione:** 1.0  
 **Data:** 25 Febbraio 2026  
 **Destinatario:** Rosario Davide Furnari  
@@ -75,6 +103,9 @@ Dopo aver analizzato le principali opzioni open source, la scelta migliore è **
 
 ### 2.3 Cosa Ha Già Atomic CRM (Pronto all'Uso)
 
+Questo elenco descrive il punto di partenza upstream, non la mappa finale del
+fork attuale.
+
 - Gestione contatti (aziende + persone)
 - Pipeline vendita con board Kanban drag-and-drop
 - Task e reminder
@@ -88,6 +119,10 @@ Dopo aver analizzato le principali opzioni open source, la scelta migliore è **
 ### 2.4 Cosa Va Aggiunto/Personalizzato
 
 Le funzionalità specifiche per l'attività di Rosario che **non** sono incluse in Atomic CRM e vanno sviluppate:
+
+Nota di continuita': questa era la gap-list iniziale. Nel runtime attuale molte
+di queste voci sono gia' implementate; usarla come visione originaria, non come
+backlog corrente.
 
 1. **Registro Lavori/Servizi** (come il file Numbers)
 2. **Tracking Compensi** (riprese, montaggio, separati)
@@ -109,12 +144,17 @@ Gestione anagrafica dei clienti, con distinzione per tipologia.
 
 | Campo | Tipo | Obbligatorio | Note |
 |---|---|---|---|
-| Nome/Ragione sociale | Testo | ✅ | Es: "Diego Caltabiano", "Rosemary's Pub" |
+| Nome/Ragione sociale | Testo | ✅ | Es: "ASSOCIAZIONE CULTURALE GUSTARE SICILIA", "Rosemary's Pub" |
 | Tipo cliente | Select | ✅ | Produzione TV / Azienda locale / Privato wedding / Privato evento / Web |
 | Telefono | Testo | | |
 | Email | Testo | | |
 | Indirizzo | Testo | | |
-| Partita IVA / CF | Testo | | |
+| Denominazione fiscale | Testo | | Solo se diversa dal nome principale usato nel CRM |
+| Partita IVA | Testo | | Identificativo fiscale strutturato |
+| Codice fiscale | Testo | | Identificativo fiscale strutturato |
+| Indirizzo fatturazione | Testo | | Per documenti e import fatture |
+| PEC | Testo | | Facoltativo |
+| Codice SDI | Testo | | Facoltativo |
 | Fonte acquisizione | Select | | Instagram / Facebook / Passaparola / Google / Altro |
 | Note generali | Testo lungo | | |
 | Data creazione | Data | Auto | |
@@ -253,6 +293,14 @@ Tracking delle spese operative.
 
 La dashboard è la prima schermata che vedi quando apri il gestionale.
 
+Nel runtime attuale la dashboard e' articolata in due viste distinte:
+
+- `Annuale`
+- `Storico`
+
+con semantiche diverse, AI guidata separata e simulazione fiscale nella vista
+annuale.
+
 **Sezione 1 — Cards riepilogative (in alto):**
 
 - **Fatturato del mese corrente** (somma compensi del mese) con variazione % vs mese precedente
@@ -279,6 +327,24 @@ La dashboard è la prima schermata che vedi quando apri il gestionale.
 ## 4. Modello Dati (Schema Database Supabase)
 
 ### 4.1 Tabelle Principali
+
+**Importante:** lo schema SQL sotto e' il bootstrap storico e non va eseguito
+oggi come fotografia del runtime reale.
+
+Differenze ad alto impatto gia' introdotte nel progetto:
+
+- esistono anche:
+  - `contacts`
+  - `project_contacts`
+  - `client_tasks`
+  - `client_notes`
+  - `tags`
+- `settings` nel runtime reale e' un record `config`, non il solo seed key/value
+- il profilo fiscale cliente reale e' piu' ricco di `tax_id`
+- `quotes` e `services` hanno evoluzioni successive su range date, itemizzazione
+  e semantica operativa
+- per lo schema aggiornato bisogna usare `docs/architecture.md` +
+  `supabase/migrations/**`
 
 ```sql
 -- CLIENTI
@@ -480,10 +546,21 @@ https://tuoprogetto.supabase.co/auth/v1/.well-known/jwks.json
 
 ### 5.2 Autenticazione
 
-- **Supabase Auth** con email/password
+- **Supabase Auth**
+- Accessi runtime supportati:
+  - email/password
+  - Google Workplace SSO se configurato
 - Un solo account creato manualmente: `rosariodavide.furnari@gmail.com`
-- **Disabilitare la registrazione pubblica** in Supabase Dashboard → Authentication → Settings → disabilitare il signup per nuovi utenti
-- Opzionale: aggiungere anche login con Google per comodità
+- Registrazione pubblica libera: non supportata
+- Bootstrap primo utente: disponibile solo quando l'app non e' ancora
+  inizializzata
+- Route pubbliche tecniche presenti nel runtime:
+  - `/login`
+  - `/sign-up`
+  - `/sign-up/confirm`
+  - `/forgot-password`
+  - `/set-password`
+  - `/oauth/consent`
 
 ### 5.3 Row Level Security (RLS)
 
@@ -519,7 +596,8 @@ CREATE POLICY "Solo proprietario" ON settings
 ### 5.4 Protezione Aggiuntiva
 
 - Frontend: redirect automatico a pagina login se non autenticato
-- Nessuna pagina pubblica — tutto dietro autenticazione
+- Nessuna pagina prodotto pubblica: restano pubbliche solo le route tecniche di
+  autenticazione e recovery
 - HTTPS automatico (fornito da Vercel)
 - La `sb_secret_...` key NON va mai esposta nel frontend — usarla solo lato server se necessario
 
@@ -554,14 +632,14 @@ Per i moduli custom (Registro Lavori, Preventivi, Pagamenti, ecc.), tutte le lab
 
 **Esempi di label personalizzate:**
 
-| Inglese (default Atomic CRM) | Italiano |
+| Upstream / concetto | Italiano runtime |
 |---|---|
-| Contacts | Clienti |
-| Companies | Aziende |
-| Deals | Preventivi |
-| Tasks | Attività |
+| Clients | Clienti |
+| Contacts | Referenti |
+| Quotes / pipeline | Preventivi |
+| Tasks | Promemoria / Attività |
 | Notes | Note |
-| Dashboard | Pannello di controllo |
+| Dashboard | Bacheca |
 | Pipeline | Pipeline vendita |
 | Settings | Impostazioni |
 
@@ -598,6 +676,10 @@ const i18nProvider = polyglotI18nProvider(() => customItalianMessages, 'it');
 ---
 
 ## 7. Guida all'Implementazione
+
+Questa roadmap e' il piano bootstrap iniziale, ormai storicizzato. Il repo
+attuale e' gia' oltre queste fasi; usarla solo per capire la sequenza logica di
+partenza, non come stato lavori corrente.
 
 ### 6.1 Fase 1 — Setup Base (1-2 giorni)
 
@@ -694,7 +776,17 @@ Funzionalità da considerare in futuro, non incluse nella prima versione:
 | **Totale** | **€0 - €10/anno** |
 
 **⚠️ ATTENZIONE — Limitazione critica del free tier Supabase:**
-I progetti sul piano gratuito vengono **automaticamente sospesi dopo 7 giorni di inattività** (nessuna richiesta API). Questo significa che se non usi il gestionale per una settimana, il database va offline e devi riavviarlo manualmente dalla dashboard Supabase. Inoltre, dopo **90 giorni** di sospensione, il progetto potrebbe essere **eliminato definitivamente** e non più recuperabile.
+
+Questa sezione e' temporalmente fragile e non va trattata come fonte canonica
+operativa.
+
+- Le policy del free tier Supabase possono cambiare e vanno ricontrollate sulle
+  docs ufficiali prima di usarle come vincolo progettuale.
+- Al 1 marzo 2026 e' confermato dalle docs Supabase che i progetti free possono
+  entrare in stato `paused` e restano ripristinabili per 90 giorni.
+- Nel runtime reale del repo il keep-alive e' gia' parte dell'operativita'
+  corrente; per capire come e' gestito davvero, usare `docs/architecture.md`
+  e il workflow presente nel repository.
 
 ### Soluzione: Keep-Alive Automatico (costo €0)
 
