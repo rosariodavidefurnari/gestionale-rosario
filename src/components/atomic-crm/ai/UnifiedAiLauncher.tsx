@@ -244,8 +244,10 @@ export const UnifiedAiLauncher = () => {
         <div className="flex-1 overflow-hidden">
           <div
             className={cn(
-              "h-full px-3 py-3",
-              activeView === "chat" ? "overflow-hidden" : "overflow-y-auto",
+              "h-full",
+              activeView === "chat"
+                ? "overflow-hidden"
+                : "overflow-y-auto px-3 py-3",
             )}
           >
             <div className={cn("h-full", activeView !== "chat" && "hidden")}>

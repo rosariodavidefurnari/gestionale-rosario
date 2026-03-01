@@ -1,15 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import {
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
   Database,
   FileUp,
   Loader2,
   Plus,
   SendHorizontal,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDataProvider, useNotify } from "ra-core";
 
 import { Badge } from "@/components/ui/badge";
@@ -43,85 +41,6 @@ const formatGeneratedAt = (value: string) => {
     dateStyle: "short",
     timeStyle: "short",
   });
-};
-
-const SuggestionChips = ({
-  suggestions,
-  disabled,
-  onSelect,
-}: {
-  suggestions: readonly string[];
-  disabled: boolean;
-  onSelect: (suggestion: string) => void;
-}) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const updateArrows = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 2);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
-  }, []);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    updateArrows();
-    el.addEventListener("scroll", updateArrows, { passive: true });
-    return () => el.removeEventListener("scroll", updateArrows);
-  }, [updateArrows]);
-
-  const scroll = (direction: "left" | "right") => {
-    scrollRef.current?.scrollBy({
-      left: direction === "left" ? -160 : 160,
-      behavior: "smooth",
-    });
-  };
-
-  return (
-    <div className="relative">
-      {canScrollLeft ? (
-        <button
-          type="button"
-          onClick={() => scroll("left")}
-          className="absolute top-1/2 left-0 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 shadow-sm ring-1 ring-border"
-          aria-label="Scorri suggerimenti a sinistra"
-        >
-          <ChevronLeft className="size-3.5" />
-        </button>
-      ) : null}
-      <div
-        ref={scrollRef}
-        className="flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {suggestions.map((suggestion) => (
-          <Button
-            key={suggestion}
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="shrink-0 whitespace-nowrap"
-            disabled={disabled}
-            onClick={() => onSelect(suggestion)}
-          >
-            {suggestion}
-          </Button>
-        ))}
-      </div>
-      {canScrollRight ? (
-        <button
-          type="button"
-          onClick={() => scroll("right")}
-          className="absolute top-1/2 right-0 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 shadow-sm ring-1 ring-border"
-          aria-label="Scorri suggerimenti a destra"
-        >
-          <ChevronRight className="size-3.5" />
-        </button>
-      ) : null}
-    </div>
-  );
 };
 
 type UnifiedCrmAnswerPanelProps = {
@@ -207,22 +126,28 @@ export const UnifiedCrmAnswerPanel = ({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border bg-background shadow-sm">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       {/* Content area — takes all available space */}
       <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3">
         {!hasConversation ? (
-          <>
-            <div className="flex flex-1 items-center justify-center py-8">
-              <p className="text-center text-sm text-muted-foreground">
-                Fai una domanda operativa o usa un suggerimento rapido.
-              </p>
+          <div className="flex h-full flex-col items-center justify-end gap-4 pb-2">
+            <p className="text-center text-sm text-muted-foreground">
+              Fai una domanda operativa o usa un suggerimento rapido.
+            </p>
+            <div className="grid w-full grid-cols-2 gap-2">
+              {unifiedCrmSuggestedQuestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  disabled={!context || isPending}
+                  onClick={() => submitQuestion(suggestion)}
+                  className="rounded-xl border bg-background p-3 text-left text-xs leading-snug text-muted-foreground transition-colors hover:bg-muted/50 disabled:opacity-50"
+                >
+                  {suggestion}
+                </button>
+              ))}
             </div>
-            <SuggestionChips
-              suggestions={unifiedCrmSuggestedQuestions}
-              disabled={!context || isPending}
-              onSelect={submitQuestion}
-            />
-          </>
+          </div>
         ) : null}
 
         {isPending ? (
