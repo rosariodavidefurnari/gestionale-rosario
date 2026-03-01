@@ -121,8 +121,7 @@ export const UnifiedCrmAnswerPanel = ({
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
         {!answer && !isPending && !error ? (
           <div className="rounded-xl border border-dashed bg-muted/20 px-4 py-4 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">Chatta con il CRM</p>
-            <p className="mt-1">
+            <p>
               Fai una domanda operativa o usa un suggerimento rapido. Da qui la
               chat legge il CRM, ma non scrive direttamente.
             </p>
