@@ -142,6 +142,7 @@ export const UnifiedCrmAnswerPanel = ({
   const [question, setQuestion] = useState("");
   const [paymentDraft, setPaymentDraft] =
     useState<UnifiedCrmPaymentDraft | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     data: answer,
@@ -172,10 +173,17 @@ export const UnifiedCrmAnswerPanel = ({
 
   const trimmedQuestion = question.trim();
   const suggestedActions = answer?.suggestedActions ?? [];
+  const hasConversation = !!answer || isPending || !!error;
 
   useEffect(() => {
     setPaymentDraft(answer?.paymentDraft ?? null);
   }, [answer?.paymentDraft]);
+
+  const resetTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  };
 
   const submitQuestion = (nextQuestion = question) => {
     const trimmed = nextQuestion.trim();
@@ -195,18 +203,26 @@ export const UnifiedCrmAnswerPanel = ({
 
     setQuestion(trimmed);
     askQuestion(trimmed);
+    resetTextareaHeight();
   };
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border bg-background shadow-sm">
+      {/* Content area — takes all available space */}
       <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3">
-        {!answer && !isPending && !error ? (
-          <div className="rounded-xl border border-dashed bg-muted/20 px-4 py-4 text-sm text-muted-foreground">
-            <p>
-              Fai una domanda operativa o usa un suggerimento rapido. Da qui la
-              chat legge il CRM, ma non scrive direttamente.
-            </p>
-          </div>
+        {!hasConversation ? (
+          <>
+            <div className="flex flex-1 items-center justify-center py-8">
+              <p className="text-center text-sm text-muted-foreground">
+                Fai una domanda operativa o usa un suggerimento rapido.
+              </p>
+            </div>
+            <SuggestionChips
+              suggestions={unifiedCrmSuggestedQuestions}
+              disabled={!context || isPending}
+              onSelect={submitQuestion}
+            />
+          </>
         ) : null}
 
         {isPending ? (
@@ -296,22 +312,42 @@ export const UnifiedCrmAnswerPanel = ({
         ) : null}
       </div>
 
+      {/* Composer — ChatGPT style: + button | pill [textarea + send] */}
       <div
         data-testid="unified-crm-composer"
-        className="border-t bg-background/95 px-3 py-3"
+        className="bg-background px-3 pb-3 pt-1"
       >
-        <SuggestionChips
-          suggestions={unifiedCrmSuggestedQuestions}
-          disabled={!context || isPending}
-          onSelect={submitQuestion}
-        />
+        <Label htmlFor="unified-crm-question" className="sr-only">
+          Fai una domanda sul CRM corrente
+        </Label>
+        <div className="flex items-end gap-2">
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="mb-0.5 size-9 shrink-0 rounded-full"
+                aria-label="Apri altre viste AI"
+              >
+                <Plus className="size-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="top">
+              <DropdownMenuItem onSelect={() => onOpenView?.("snapshot")}>
+                <Database className="size-4" />
+                Snapshot CRM
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => onOpenView?.("import")}>
+                <FileUp className="size-4" />
+                Importa fatture e ricevute
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        <div className="mt-2">
-          <Label htmlFor="unified-crm-question" className="sr-only">
-            Fai una domanda sul CRM corrente
-          </Label>
-          <div className="rounded-2xl border bg-muted/30 ring-ring/20 transition-shadow focus-within:ring-2">
+          <div className="flex min-w-0 flex-1 items-end rounded-2xl border bg-muted/30 ring-ring/20 transition-shadow focus-within:ring-2">
             <Textarea
+              ref={textareaRef}
               id="unified-crm-question"
               value={question}
               onChange={(event) => {
@@ -332,57 +368,24 @@ export const UnifiedCrmAnswerPanel = ({
               }}
               placeholder="Chiedi qualcosa sul CRM..."
               maxLength={300}
-              className="min-h-10 resize-none border-0 bg-transparent px-3 pt-2.5 pb-0 shadow-none focus-visible:ring-0"
+              rows={1}
+              className="min-h-0 flex-1 resize-none border-0 bg-transparent py-2.5 pr-0 pl-3 text-sm shadow-none focus-visible:ring-0"
               disabled={!context || isPending}
             />
-            <div className="flex items-center justify-between gap-1 px-1.5 py-1.5">
-              <div className="flex items-center gap-1">
-                <DropdownMenu modal={false}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 rounded-full"
-                      aria-label="Apri altre viste AI"
-                    >
-                      <Plus className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" side="top">
-                    <DropdownMenuItem
-                      onSelect={() => onOpenView?.("snapshot")}
-                    >
-                      <Database className="size-4" />
-                      Snapshot CRM
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => onOpenView?.("import")}
-                    >
-                      <FileUp className="size-4" />
-                      Importa fatture e ricevute
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <span className="text-[11px] text-muted-foreground">
-                  {trimmedQuestion.length}/300
-                </span>
-              </div>
-              <Button
-                type="button"
-                size="icon"
-                onClick={() => submitQuestion()}
-                disabled={!context || isPending || !trimmedQuestion}
-                className="size-8 rounded-full"
-                aria-label="Invia"
-              >
-                {isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <SendHorizontal className="size-4" />
-                )}
-              </Button>
-            </div>
+            <Button
+              type="button"
+              size="icon"
+              onClick={() => submitQuestion()}
+              disabled={!context || isPending || !trimmedQuestion}
+              className="m-1 size-8 shrink-0 rounded-full"
+              aria-label="Invia"
+            >
+              {isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <SendHorizontal className="size-4" />
+              )}
+            </Button>
           </div>
         </div>
       </div>
