@@ -169,10 +169,22 @@ The read-context step is now closed too:
   meanings inside the component
 - the snapshot now covers:
   - `clients`
+  - `contacts`
+  - `project_contacts`
   - `quotes`
   - `projects`
   - `payments`
   - `expenses`
+- the snapshot now exposes structured relations instead of leaving them in
+  notes:
+  - client -> referenti
+  - client -> progetti attivi
+  - referente -> progetti
+  - progetto -> referenti
+- this was intentionally **not** a new `Settings` feature:
+  - the change is structural/read-only, not a user-configurable rule
+  - continuity therefore had to be updated in docs rather than by adding a new
+    toggle in `Impostazioni`
 - no new AI page or page-level AI widget was added to deliver this step
 
 The general CRM answer step is now closed too:

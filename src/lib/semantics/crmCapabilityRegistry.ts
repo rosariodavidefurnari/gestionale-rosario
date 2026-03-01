@@ -286,18 +286,34 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "read_unified_crm_context",
       label: "Leggi snapshot CRM unificata",
       description:
-        "Carica nel launcher unificato un contesto read-only dei moduli core del CRM, includendo per i clienti recenti il profilo fiscale essenziale, i recapiti di fatturazione principali e nomi cliente coerenti con la fatturazione quando disponibili, sempre riusando registri semantici e capability senza cambiare pagina.",
+        "Carica nel launcher unificato un contesto read-only dei moduli core del CRM, includendo per i clienti recenti il profilo fiscale essenziale, per i referenti recenti recapiti e relazioni strutturate con clienti e progetti, e per i progetti attivi i referenti associati, sempre riusando registri semantici e capability senza cambiare pagina.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
-      actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
+      actsOn: [
+        "clients",
+        "contacts",
+        "project_contacts",
+        "quotes",
+        "projects",
+        "payments",
+        "expenses",
+      ],
       requiredFields: [],
     },
     {
       id: "ask_unified_crm_question",
       label: "Chiedi al CRM nella chat unificata",
       description:
-        "Invia una domanda sul CRM core usando la stessa snapshot mostrata nel launcher e restituisce una risposta grounded con possibili handoff verso route o azioni gia approvate e, in casi stretti, una bozza pagamento modificabile oppure corridoi deterministici verso `projects/:id/show` per puntate TV, `services/create` per servizi generici e `expenses/create` per spese collegate o trasferta km, senza scrivere direttamente nel CRM.",
+        "Invia una domanda sul CRM core usando la stessa snapshot mostrata nel launcher e restituisce una risposta grounded con possibili handoff verso route o azioni gia approvate e, in casi stretti, una bozza pagamento modificabile oppure corridoi deterministici verso `projects/:id/show` per puntate TV, `services/create` per servizi generici e `expenses/create` per spese collegate o trasferta km, senza scrivere direttamente nel CRM. Quando nel contesto esistono referenti e relazioni cliente/progetto, la risposta deve usarli come struttura primaria e non dedurli dalle note.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
-      actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
+      actsOn: [
+        "clients",
+        "contacts",
+        "project_contacts",
+        "quotes",
+        "projects",
+        "payments",
+        "expenses",
+      ],
       requiredFields: [
         "question",
         "context.meta.generatedAt",
@@ -328,7 +344,14 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       description:
         "Apre dal launcher una route o una superficie commerciale gia approvata del CRM suggerita dalla risposta AI, con una raccomandazione primaria deterministica quando il contesto lo permette e con i migliori prefills/search params gia supportati dalla superficie di arrivo, senza eseguire direttamente azioni di scrittura.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedCrmAnswerPanel.tsx",
-      actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
+      actsOn: [
+        "clients",
+        "contacts",
+        "quotes",
+        "projects",
+        "payments",
+        "expenses",
+      ],
       requiredFields: [
         "answer.suggestedActions[].href",
         "answer.suggestedActions[].capabilityActionId",

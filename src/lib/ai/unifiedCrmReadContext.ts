@@ -7,10 +7,17 @@ import {
   formatClientBillingAddress,
   getClientBillingDisplayName,
 } from "@/components/atomic-crm/clients/clientBilling";
+import {
+  getContactDisplayName,
+  getContactPrimaryEmail,
+  getContactPrimaryPhone,
+} from "@/components/atomic-crm/contacts/contactRecord";
 import type {
   Client,
+  Contact,
   Expense,
   Payment,
+  ProjectContact,
   Project,
   Quote,
   Service,
@@ -159,6 +166,29 @@ const getProjectName = (
 ) =>
   projectId ? projectById.get(String(projectId))?.name ?? "Progetto non trovato" : null;
 
+type SnapshotContactReference = {
+  contactId: string;
+  displayName: string;
+  title: string | null;
+  email: string | null;
+  phone: string | null;
+};
+
+type SnapshotProjectReference = {
+  projectId: string;
+  projectName: string;
+  status: string;
+  statusLabel: string;
+};
+
+const buildSnapshotContactReference = (contact: Contact): SnapshotContactReference => ({
+  contactId: String(contact.id),
+  displayName: getContactDisplayName(contact),
+  title: contact.title ?? null,
+  email: getContactPrimaryEmail(contact),
+  phone: getContactPrimaryPhone(contact),
+});
+
 export type UnifiedCrmReadContext = {
   meta: {
     generatedAt: string;
@@ -174,6 +204,7 @@ export type UnifiedCrmReadContext = {
   snapshot: {
     counts: {
       clients: number;
+      contacts: number;
       quotes: number;
       openQuotes: number;
       activeProjects: number;
@@ -197,7 +228,24 @@ export type UnifiedCrmReadContext = {
       billingCity: string | null;
       billingSdiCode: string | null;
       billingPec: string | null;
+      contacts: SnapshotContactReference[];
+      activeProjects: SnapshotProjectReference[];
       createdAt: string;
+    }>;
+    recentContacts: Array<{
+      contactId: string;
+      displayName: string;
+      title: string | null;
+      email: string | null;
+      phone: string | null;
+      clientId: string | null;
+      clientName: string | null;
+      linkedProjects: Array<
+        SnapshotProjectReference & {
+          isPrimary: boolean;
+        }
+      >;
+      updatedAt: string;
     }>;
     openQuotes: Array<{
       quoteId: string;
@@ -227,6 +275,11 @@ export type UnifiedCrmReadContext = {
       totalExpenses: number;
       totalPaid: number;
       balanceDue: number;
+      contacts: Array<
+        SnapshotContactReference & {
+          isPrimary: boolean;
+        }
+      >;
     }>;
     pendingPayments: Array<{
       paymentId: string;
@@ -258,8 +311,10 @@ export type UnifiedCrmReadContext = {
 
 export const buildUnifiedCrmReadContext = ({
   clients,
+  contacts,
   quotes,
   projects,
+  projectContacts,
   services,
   payments,
   expenses,
@@ -268,8 +323,10 @@ export const buildUnifiedCrmReadContext = ({
   generatedAt = new Date().toISOString(),
 }: {
   clients: Client[];
+  contacts: Contact[];
   quotes: Quote[];
   projects: Project[];
+  projectContacts: ProjectContact[];
   services: Service[];
   payments: Payment[];
   expenses: Expense[];
@@ -281,6 +338,9 @@ export const buildUnifiedCrmReadContext = ({
   const projectById = new Map(
     projects.map((project) => [String(project.id), project]),
   );
+  const contactById = new Map(
+    contacts.map((contact) => [String(contact.id), contact]),
+  );
   const projectFinancialsById = buildProjectFinancialSummaries({
     projects,
     services,
@@ -288,6 +348,10 @@ export const buildUnifiedCrmReadContext = ({
     expenses,
   });
   const paymentsByQuoteId = new Map<string, Payment[]>();
+  const contactsByClientId = new Map<string, Contact[]>();
+  const projectContactsByProjectId = new Map<string, ProjectContact[]>();
+  const projectContactsByContactId = new Map<string, ProjectContact[]>();
+  const activeProjectsByClientId = new Map<string, Project[]>();
 
   payments.forEach((payment) => {
     if (!payment.quote_id) {
@@ -300,12 +364,56 @@ export const buildUnifiedCrmReadContext = ({
     paymentsByQuoteId.set(quoteId, current);
   });
 
+  contacts.forEach((contact) => {
+    if (!contact.client_id) {
+      return;
+    }
+
+    const clientId = String(contact.client_id);
+    const current = contactsByClientId.get(clientId) ?? [];
+    current.push(contact);
+    contactsByClientId.set(clientId, current);
+  });
+
   const openQuotes = quotes
     .filter((quote) => !openQuoteClosedStatuses.has(quote.status))
     .sort((left, right) => toDateValue(right.created_at) - toDateValue(left.created_at));
   const activeProjects = projects
     .filter((project) => !inactiveProjectStatuses.has(project.status))
     .sort((left, right) => toDateValue(right.start_date) - toDateValue(left.start_date));
+
+  activeProjects.forEach((project) => {
+    if (!project.client_id) {
+      return;
+    }
+
+    const clientId = String(project.client_id);
+    const current = activeProjectsByClientId.get(clientId) ?? [];
+    current.push(project);
+    activeProjectsByClientId.set(clientId, current);
+  });
+
+  projectContacts.forEach((projectContact) => {
+    const projectId = projectContact.project_id
+      ? String(projectContact.project_id)
+      : null;
+    const contactId = projectContact.contact_id
+      ? String(projectContact.contact_id)
+      : null;
+
+    if (!projectId || !contactId || !projectById.has(projectId) || !contactById.has(contactId)) {
+      return;
+    }
+
+    const currentProjectRows = projectContactsByProjectId.get(projectId) ?? [];
+    currentProjectRows.push(projectContact);
+    projectContactsByProjectId.set(projectId, currentProjectRows);
+
+    const currentContactRows = projectContactsByContactId.get(contactId) ?? [];
+    currentContactRows.push(projectContact);
+    projectContactsByContactId.set(contactId, currentContactRows);
+  });
+
   const pendingPayments = payments
     .filter(
       (payment) =>
@@ -322,6 +430,11 @@ export const buildUnifiedCrmReadContext = ({
   const recentClients = [...clients].sort(
     (left, right) => toDateValue(right.created_at) - toDateValue(left.created_at),
   );
+  const recentContacts = [...contacts].sort(
+    (left, right) =>
+      toDateValue(right.updated_at ?? right.created_at) -
+      toDateValue(left.updated_at ?? left.created_at),
+  );
 
   const openQuotesAmount = openQuotes.reduce(
     (sum, quote) => sum + Number(quote.amount ?? 0),
@@ -335,6 +448,87 @@ export const buildUnifiedCrmReadContext = ({
     (sum, expense) => sum + Number(expense.amount ?? 0),
     0,
   );
+
+  const getClientContacts = (clientId: string) =>
+    [...(contactsByClientId.get(clientId) ?? [])]
+      .sort(
+        (left, right) =>
+          toDateValue(right.updated_at ?? right.created_at) -
+          toDateValue(left.updated_at ?? left.created_at),
+      )
+      .map((contact) => buildSnapshotContactReference(contact))
+      .slice(0, 3);
+
+  const getClientActiveProjects = (clientId: string) =>
+    [...(activeProjectsByClientId.get(clientId) ?? [])]
+      .sort(
+        (left, right) =>
+          toDateValue(right.start_date ?? right.created_at) -
+          toDateValue(left.start_date ?? left.created_at),
+      )
+      .map((project) => ({
+        projectId: String(project.id),
+        projectName: project.name,
+        status: project.status,
+        statusLabel: projectStatusLabels[project.status] ?? project.status,
+      }))
+      .slice(0, 3);
+
+  const getProjectContacts = (projectId: string) =>
+    [...(projectContactsByProjectId.get(projectId) ?? [])]
+      .sort((left, right) => {
+        if (left.is_primary === right.is_primary) {
+          return 0;
+        }
+
+        return left.is_primary ? -1 : 1;
+      })
+      .flatMap((projectContact) => {
+        const contact = contactById.get(String(projectContact.contact_id));
+        if (!contact) {
+          return [];
+        }
+
+        return [
+          {
+            ...buildSnapshotContactReference(contact),
+            isPrimary: projectContact.is_primary === true,
+          },
+        ];
+      })
+      .slice(0, 4);
+
+  const getContactLinkedProjects = (contactId: string) =>
+    [...(projectContactsByContactId.get(contactId) ?? [])]
+      .sort((left, right) => {
+        if (left.is_primary !== right.is_primary) {
+          return left.is_primary ? -1 : 1;
+        }
+
+        const leftProject = projectById.get(String(left.project_id));
+        const rightProject = projectById.get(String(right.project_id));
+        return (
+          toDateValue(rightProject?.start_date ?? rightProject?.created_at) -
+          toDateValue(leftProject?.start_date ?? leftProject?.created_at)
+        );
+      })
+      .flatMap((projectContact) => {
+        const project = projectById.get(String(projectContact.project_id));
+        if (!project) {
+          return [];
+        }
+
+        return [
+          {
+            projectId: String(project.id),
+            projectName: project.name,
+            status: project.status,
+            statusLabel: projectStatusLabels[project.status] ?? project.status,
+            isPrimary: projectContact.is_primary === true,
+          },
+        ];
+      })
+      .slice(0, 4);
 
   return {
     meta: {
@@ -351,6 +545,7 @@ export const buildUnifiedCrmReadContext = ({
     snapshot: {
       counts: {
         clients: clients.length,
+        contacts: contacts.length,
         quotes: quotes.length,
         openQuotes: openQuotes.length,
         activeProjects: activeProjects.length,
@@ -374,7 +569,16 @@ export const buildUnifiedCrmReadContext = ({
         billingCity: client.billing_city ?? null,
         billingSdiCode: client.billing_sdi_code ?? null,
         billingPec: client.billing_pec ?? null,
+        contacts: getClientContacts(String(client.id)),
+        activeProjects: getClientActiveProjects(String(client.id)),
         createdAt: client.created_at,
+      })),
+      recentContacts: recentContacts.slice(0, 5).map((contact) => ({
+        ...buildSnapshotContactReference(contact),
+        clientId: contact.client_id ? String(contact.client_id) : null,
+        clientName: getClientName(clientById, contact.client_id ?? null),
+        linkedProjects: getContactLinkedProjects(String(contact.id)),
+        updatedAt: contact.updated_at ?? contact.created_at,
       })),
       openQuotes: openQuotes.slice(0, 5).map((quote) => {
         const paymentSummary = buildQuotePaymentsSummary({
@@ -422,6 +626,7 @@ export const buildUnifiedCrmReadContext = ({
           totalExpenses: projectFinancials.totalExpenses,
           totalPaid: projectFinancials.totalPaid,
           balanceDue: projectFinancials.balanceDue,
+          contacts: getProjectContacts(String(project.id)),
         };
       }),
       pendingPayments: pendingPayments.slice(0, 5).map((payment) => ({
@@ -453,7 +658,7 @@ export const buildUnifiedCrmReadContext = ({
     caveats: [
       "Questo snapshot e' read-only: nessuna scrittura nel CRM parte da questo contesto o dalle risposte AI che lo usano senza una conferma esplicita in un workflow dedicato.",
       "I significati di stati, tipi, formule e route vanno letti dai registri semantico e capability inclusi nel contesto.",
-      "Le liste recenti sono intenzionalmente limitate ai record piu utili per lettura rapida nel launcher unificato.",
+      "Le liste recenti sono intenzionalmente limitate ai record piu utili per lettura rapida nel launcher unificato, ma ora espongono anche relazioni strutturate cliente-progetto-referente gia presenti nel CRM.",
     ],
   };
 };

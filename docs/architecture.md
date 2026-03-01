@@ -5,6 +5,25 @@
 Fork di Atomic CRM personalizzato per gestire l'attività professionale
 di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
+## Continuita'
+
+Per riprendere correttamente il progetto in una nuova chat o sessione, i file
+di riferimento minimi non sono solo questa architettura generale.
+
+Leggere sempre anche:
+
+- `docs/historical-analytics-handoff.md`
+- `docs/development-continuity-map.md`
+- `docs/historical-analytics-backlog.md`
+- `docs/contacts-client-project-architecture.md`
+
+Regola pratica:
+
+- se una modifica introduce una nuova regola configurabile o cambia un default
+  condiviso, va aggiornata anche `Impostazioni`
+- se una modifica e' solo strutturale/read-only, `Impostazioni` non va toccata
+  ma la motivazione va lasciata nei docs di continuita'
+
 ## Stato Infrastruttura (verificato sessione 17, aggiornato)
 
 ### Certezze — Audit superato

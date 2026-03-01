@@ -40,7 +40,13 @@ export type CrmSemanticRegistry = {
   };
   fields: {
     descriptions: Array<{
-      resource: "clients" | "quotes" | "payments" | "services" | "expenses";
+      resource:
+        | "clients"
+        | "contacts"
+        | "quotes"
+        | "payments"
+        | "services"
+        | "expenses";
       field: string;
       label: string;
       meaning: string;
@@ -227,6 +233,20 @@ export const buildCrmSemanticRegistry = (
           meaning: "Riepilogo breve di ciò che stai proponendo al cliente.",
         },
         {
+          resource: "contacts",
+          field: "title",
+          label: "Ruolo referente",
+          meaning:
+            "Ruolo o qualifica della persona di contatto, utile per capire la relazione operativa con il cliente.",
+        },
+        {
+          resource: "contacts",
+          field: "background",
+          label: "Note referente",
+          meaning:
+            "Contesto libero sulla persona, da usare solo come supporto dopo aver letto le relazioni strutturate con cliente e progetti.",
+        },
+        {
           resource: "payments",
           field: "notes",
           label: "Note pagamento",
@@ -318,10 +338,11 @@ export const buildCrmSemanticRegistry = (
           "L'import fatture nella chat AI unificata deve proporre record strutturati, trasportare anche l'anagrafica fiscale letta dal documento e poi mappare le fatture cliente su payments e le fatture/costi fornitore su expenses solo dopo conferma utente. La conferma reale deve passare da validazioni server-side, coerenza cliente/progetto, controllo duplicati stretti per invoice_ref quando disponibile e rollback completo del batch se un record non e' confermabile. Se manca il cliente, il passo corretto e' aprire il form cliente gia precompilato con quei campi, non creare automaticamente il record.",
       },
       unifiedAiReadContext: {
-        scope: "clients + quotes + projects + payments + expenses",
+        scope:
+          "clients + contacts + project_contacts + quotes + projects + payments + expenses",
         freshnessField: "generatedAt",
         meaning:
-          "Il contesto CRM-wide del launcher unificato e' una snapshot read-only dei moduli core; sia la snapshot sia le risposte AI che la usano restano di sola lettura, gli handoff successivi possono solo puntare a route o azioni gia approvate, una recommendation primaria puo comparire solo se costruita deterministicamente dal sistema, e gli href di handoff possono trasportare solo prefills/search params gia supportati dalle superfici esistenti. Dentro quella snapshot i clienti recenti devono esporre anche il profilo fiscale essenziale e i recapiti di fatturazione principali gia presenti nel CRM, mentre i riferimenti collegati a quote/progetti/pagamenti devono usare il nome piu coerente con la fatturazione quando disponibile. Le superfici di arrivo possono poi calcolare o ricevere solo suggerimenti deterministici locali, come il residuo ancora non collegato di un preventivo, i financials aggregati di un progetto attivo derivati da servizi, spese e pagamenti ricevuti, oppure una stima tratta km ottenuta da un servizio routing esterno ma sempre correggibile prima della scrittura. Ogni futura scrittura deve passare da un workflow dedicato con conferma esplicita.",
+          "Il contesto CRM-wide del launcher unificato e' una snapshot read-only dei moduli core; sia la snapshot sia le risposte AI che la usano restano di sola lettura, gli handoff successivi possono solo puntare a route o azioni gia approvate, una recommendation primaria puo comparire solo se costruita deterministicamente dal sistema, e gli href di handoff possono trasportare solo prefills/search params gia supportati dalle superfici esistenti. Dentro quella snapshot i clienti recenti devono esporre anche il profilo fiscale essenziale e i recapiti di fatturazione principali gia presenti nel CRM, i referenti recenti devono esporre recapiti e cliente/progetti collegati, e i progetti attivi devono riportare i referenti associati con priorita' ai contatti primari. Quando esistono relazioni strutturate cliente-progetto-referente, quelle relazioni devono avere priorita' interpretativa rispetto a note libere o inferenze sul testo. Le superfici di arrivo possono poi calcolare o ricevere solo suggerimenti deterministici locali, come il residuo ancora non collegato di un preventivo, i financials aggregati di un progetto attivo derivati da servizi, spese e pagamenti ricevuti, oppure una stima tratta km ottenuta da un servizio routing esterno ma sempre correggibile prima della scrittura. Ogni futura scrittura deve passare da un workflow dedicato con conferma esplicita.",
       },
       unifiedAiWriteDraft: {
         approvedResource: "payments",

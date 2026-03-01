@@ -114,6 +114,10 @@ Gestione anagrafica dei clienti, con distinzione per tipologia.
 - Scheda cliente con storico completo di tutti i lavori, preventivi e pagamenti
 - Possibilità di associare più contatti/referenti a un cliente (es: Diego Caltabiano → programma GS, programma BTF)
 
+**Regola di dominio:** il referente è una persona, non il cliente fiscale.
+Quindi cliente e referente vanno modellati come entità distinte, con possibilità
+di collegare lo stesso referente a più progetti dello stesso cliente.
+
 ### 3.2 Modulo: Progetti / Programmi
 
 Raggruppa i lavori sotto "contenitori" logici.

@@ -42,6 +42,33 @@ La scelta adottata mantiene:
   progetto
 - dialog per collegare un referente cliente gia esistente a un progetto
 - normalizzazione dati lato provider per `contacts` e `project_contacts`
+- estensione del read-context AI del launcher unificato con:
+  - referenti recenti
+  - relazioni strutturate cliente -> referenti
+  - relazioni strutturate progetto -> referenti
+  - relazioni strutturate referente -> progetti
+
+## Mappa impatto continuita'
+
+Quando cambia questo dominio, non basta aggiornare solo i componenti UI
+`contacts/`.
+
+Le superfici da considerare correlate sono almeno:
+
+- schema e migration Supabase
+- `src/components/atomic-crm/types.ts`
+- provider Supabase e FakeRest
+- `src/components/atomic-crm/root/CRM.tsx`
+- `src/components/atomic-crm/root/i18nProvider.tsx`
+- `ClientShow` e `ProjectShow`
+- `src/lib/ai/unifiedCrmReadContext.ts`
+- `src/components/atomic-crm/ai/UnifiedCrmReadSnapshot.tsx`
+- `supabase/functions/_shared/unifiedCrmAnswer.ts`
+- docs di continuita'
+
+`Settings` non va aggiornata automaticamente per questo dominio.
+Va toccata solo se i referenti introducono una regola realmente configurabile
+dall'utente; non per semplici relazioni strutturali o perimetri read-only.
 
 ## Confini intenzionali di questa fase
 
@@ -68,7 +95,7 @@ Quindi il referente non sostituisce mai il cliente fiscale.
 
 ## Passi successivi raccomandati
 
-1. Estendere il read-context AI per includere i referenti nel launcher unificato.
+1. Introdurre nel read-context AI anche surface/action deterministiche dedicate ai referenti quando emergera' un bisogno operativo specifico oltre all'analisi read-only.
 2. Introdurre un dominio generale `party/suppliers` se l'area fornitori verra'
    modellata come controparte autonoma e non solo come estensione dei clienti.
 3. Valutare se riusare una parte del merge legacy di `contacts` solo quando ci

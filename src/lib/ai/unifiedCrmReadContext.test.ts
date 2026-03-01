@@ -29,6 +29,20 @@ describe("unifiedCrmReadContext", () => {
           updated_at: "2026-02-10T10:00:00.000Z",
         },
       ],
+      contacts: [
+        {
+          id: 101,
+          first_name: "Diego",
+          last_name: "Caltabiano",
+          title: "Referente operativo",
+          client_id: "client-1",
+          email_jsonb: [{ email: "diego@gustare.it", type: "Work" }],
+          phone_jsonb: [{ number: "+39 333 1234567", type: "Work" }],
+          tags: [],
+          created_at: "2026-02-12T10:00:00.000Z",
+          updated_at: "2026-02-21T09:30:00.000Z",
+        },
+      ],
       quotes: [
         {
           id: "quote-1",
@@ -62,6 +76,16 @@ describe("unifiedCrmReadContext", () => {
           all_day: true,
           created_at: "2026-02-01T10:00:00.000Z",
           updated_at: "2026-02-01T10:00:00.000Z",
+        },
+      ],
+      projectContacts: [
+        {
+          id: "project-contact-1",
+          project_id: "project-1",
+          contact_id: 101,
+          is_primary: true,
+          created_at: "2026-02-12T10:00:00.000Z",
+          updated_at: "2026-02-12T10:00:00.000Z",
         },
       ],
       services: [
@@ -121,6 +145,7 @@ describe("unifiedCrmReadContext", () => {
     });
 
     expect(context.meta.scope).toBe("crm_read_snapshot");
+    expect(context.snapshot.counts.contacts).toBe(1);
     expect(context.snapshot.counts.openQuotes).toBe(1);
     expect(context.snapshot.totals.pendingPaymentsAmount).toBe(1200);
     expect(context.snapshot.totals.expensesAmount).toBe(300);
@@ -139,6 +164,21 @@ describe("unifiedCrmReadContext", () => {
     expect(context.snapshot.recentClients[0]?.billingAddress).toBe(
       "Via Etnea, 10 · 95100 Catania CT · IT",
     );
+    expect(context.snapshot.recentClients[0]?.contacts[0]?.displayName).toBe(
+      "Diego Caltabiano",
+    );
+    expect(context.snapshot.recentClients[0]?.activeProjects[0]?.projectName).toBe(
+      "Wedding Mario",
+    );
+    expect(context.snapshot.recentContacts[0]?.clientName).toBe(
+      "MARIO ROSSI STUDIO",
+    );
+    expect(context.snapshot.recentContacts[0]?.linkedProjects[0]?.projectName).toBe(
+      "Wedding Mario",
+    );
+    expect(context.snapshot.recentContacts[0]?.linkedProjects[0]?.isPrimary).toBe(
+      true,
+    );
     expect(context.snapshot.recentClients[0]?.billingSdiCode).toBe("M5UXCR1");
     expect(context.snapshot.recentClients[0]?.billingPec).toBe(
       "mario@examplepec.it",
@@ -151,6 +191,13 @@ describe("unifiedCrmReadContext", () => {
     expect(context.snapshot.activeProjects[0]?.balanceDue).toBe(2500);
     expect(context.snapshot.activeProjects[0]?.projectCategory).toBe("wedding");
     expect(context.snapshot.activeProjects[0]?.projectTvShow).toBeNull();
+    expect(context.snapshot.activeProjects[0]?.contacts[0]).toEqual(
+      expect.objectContaining({
+        displayName: "Diego Caltabiano",
+        email: "diego@gustare.it",
+        isPrimary: true,
+      }),
+    );
     expect(context.registries.capability.routing.mode).toBe("hash");
     expect(context.registries.semantic.rules.invoiceImport.customerInvoiceResource).toBe(
       "payments",

@@ -172,6 +172,57 @@ describe("unifiedCrmAnswer", () => {
     ).toContain("launcher_source=unified_ai_launcher");
   });
 
+  it("suggests contact-first handoffs for referent questions", () => {
+    const actions = buildUnifiedCrmSuggestedActions({
+      question: "Chi e il referente da contattare per questo cliente?",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          routePrefix: "/#/",
+        },
+        snapshot: {
+          recentClients: [],
+          recentContacts: [
+            {
+              contactId: "101",
+              clientId: "client-1",
+              linkedProjects: [{ projectId: "project-1", isPrimary: true }],
+            },
+          ],
+          openQuotes: [],
+          activeProjects: [],
+          pendingPayments: [],
+          recentExpenses: [],
+        },
+        registries: {
+          semantic: {},
+          capability: {},
+        },
+      },
+    });
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        resource: "contacts",
+        kind: "show",
+        href: "/#/contacts/101/show",
+        recommended: true,
+      }),
+    );
+    expect(actions[1]).toEqual(
+      expect.objectContaining({
+        resource: "clients",
+        href: "/#/clients/client-1/show",
+      }),
+    );
+    expect(actions[2]).toEqual(
+      expect.objectContaining({
+        resource: "projects",
+        href: "/#/projects/project-1/show",
+      }),
+    );
+  });
+
   it("prioritizes the approved payment action when the question already asks to register it", () => {
     const actions = buildUnifiedCrmSuggestedActions({
       question: "Da dove posso registrare un pagamento sul preventivo aperto?",

@@ -67,9 +67,7 @@ import type {
   InvoiceImportFileHandle,
   InvoiceImportWorkspace,
 } from "@/lib/ai/invoiceImport";
-import {
-  buildInvoiceImportWorkspace,
-} from "@/lib/ai/invoiceImportProvider";
+import { buildInvoiceImportWorkspace } from "@/lib/ai/invoiceImportProvider";
 import {
   buildUnifiedCrmReadContext,
   type UnifiedCrmReadContext,
@@ -263,8 +261,10 @@ const getUnifiedCrmReadContextFromResources =
     const [
       configuration,
       clientsResponse,
+      contactsResponse,
       quotesResponse,
       projectsResponse,
+      projectContactsResponse,
       servicesResponse,
       paymentsResponse,
       expensesResponse,
@@ -275,6 +275,11 @@ const getUnifiedCrmReadContextFromResources =
         sort: { field: "created_at", order: "DESC" },
         filter: {},
       }),
+      baseDataProvider.getList<Contact>("contacts", {
+        pagination: LARGE_PAGE,
+        sort: { field: "updated_at", order: "DESC" },
+        filter: {},
+      }),
       baseDataProvider.getList<Quote>("quotes", {
         pagination: LARGE_PAGE,
         sort: { field: "created_at", order: "DESC" },
@@ -283,6 +288,11 @@ const getUnifiedCrmReadContextFromResources =
       baseDataProvider.getList<Project>("projects", {
         pagination: LARGE_PAGE,
         sort: { field: "created_at", order: "DESC" },
+        filter: {},
+      }),
+      baseDataProvider.getList<ProjectContact>("project_contacts", {
+        pagination: LARGE_PAGE,
+        sort: { field: "updated_at", order: "DESC" },
         filter: {},
       }),
       baseDataProvider.getList<Service>("services", {
@@ -308,8 +318,10 @@ const getUnifiedCrmReadContextFromResources =
 
     return buildUnifiedCrmReadContext({
       clients: clientsResponse.data,
+      contacts: contactsResponse.data,
       quotes: quotesResponse.data,
       projects: projectsResponse.data,
+      projectContacts: projectContactsResponse.data,
       services: servicesResponse.data,
       payments: paymentsResponse.data,
       expenses: expensesResponse.data,

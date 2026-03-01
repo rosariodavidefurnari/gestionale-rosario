@@ -68,21 +68,24 @@ requires explicit confirmation before creating `payments` or `expenses`.
 Use a prompt like this:
 
 ```text
-Leggi docs/historical-analytics-handoff.md, docs/historical-analytics-backlog.md, doc/src/content/docs/developers/historical-analytics-ai-ready.mdx, progress.md e learnings.md.
+Leggi docs/historical-analytics-handoff.md, docs/development-continuity-map.md, docs/historical-analytics-backlog.md, docs/contacts-client-project-architecture.md, doc/src/content/docs/developers/historical-analytics-ai-ready.mdx, progress.md e learnings.md.
 Considera come obiettivo finale una chat AI unificata su tutto il CRM, ma senza aggiungere nuove AI sparse: prima vanno mantenute solide semantica, workflow e dati.
 Non ridefinire l'architettura già approvata.
 Continua dal primo punto aperto del backlog.
-Se aggiungi o cambi una feature, aggiorna sempre semantic registry, capability registry, eventuale communication layer, test e docs di continuità.
+Se aggiungi o cambi una feature, aggiorna sempre semantic registry, capability registry, eventuale communication layer, settings se la modifica e' config-driven, test e docs di continuità.
+Non chiudere mai una modifica senza sweep completo delle superfici impattate: pagine, create/edit/show/list/filter, dialog/sheet/modal, helper di linking o persistence, provider e funzioni server collegate.
 Ricorda i vincoli di prodotto: Gmail per mail cliente, CallMeBot per alert interni urgenti, nessuna mail automatica se ci sono servizi con is_taxable = false.
 ```
 
 Minimal reading order for a new session:
 
 1. `docs/historical-analytics-handoff.md`
-2. `docs/historical-analytics-backlog.md`
-3. `doc/src/content/docs/developers/historical-analytics-ai-ready.mdx`
-4. `progress.md`
-5. `learnings.md`
+2. `docs/development-continuity-map.md`
+3. `docs/historical-analytics-backlog.md`
+4. `docs/contacts-client-project-architecture.md`
+5. `doc/src/content/docs/developers/historical-analytics-ai-ready.mdx`
+6. `progress.md`
+7. `learnings.md`
 
 ## Mandatory Integration Checklist For New Features
 
@@ -98,8 +101,12 @@ until the relevant items below are updated too:
    notifications
 5. provider entry points if the frontend or future AI needs one stable access
    method
-6. tests for the new invariant or user-visible behavior
-7. continuity docs:
+6. `defaultConfiguration`, `ConfigurationContext`, `SettingsPage` and the
+   relevant settings section if the new rule is user-configurable or changes
+   a shared default
+7. tests for the new invariant or user-visible behavior
+8. continuity docs:
+   - `docs/development-continuity-map.md`
    - `docs/historical-analytics-handoff.md`
    - `docs/historical-analytics-backlog.md`
    - `progress.md`
@@ -107,6 +114,24 @@ until the relevant items below are updated too:
 
 This checklist exists because the future unified AI must know every important
 surface and rule of the CRM, not guess them from scattered components.
+
+There is now one additional non-negotiable continuity rule:
+
+- if a change touches one of the operational modules
+  - `projects`
+  - `services`
+  - `quotes`
+  - `payments`
+  - `expenses`
+  - `tasks`
+  - document import
+  - annual dashboard
+  - historical dashboard
+  - unified AI launcher
+- you must also review connected pages, dialogs/sheets/modals, provider entry
+  points, helpers/linking/persistence files, and any related Edge Functions
+- the detailed sweep map now lives in:
+  - `docs/development-continuity-map.md`
 
 ## Immediate Pareto Next Step
 

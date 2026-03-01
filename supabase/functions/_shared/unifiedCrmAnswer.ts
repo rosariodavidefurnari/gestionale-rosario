@@ -8,6 +8,7 @@ export type UnifiedCrmSuggestedAction = {
   resource:
     | "dashboard"
     | "clients"
+    | "contacts"
     | "quotes"
     | "projects"
     | "services"
@@ -336,8 +337,9 @@ const buildImplicitTravelRouteCandidates = (value: string) => {
     return [];
   }
 
-  const splitIndices = Array.from({ length: tokens.length - 1 }, (_, index) =>
-    index + 1,
+  const splitIndices = Array.from(
+    { length: tokens.length - 1 },
+    (_, index) => index + 1,
   ).sort((left, right) => {
     const midpoint = tokens.length / 2;
     const leftDistance = Math.abs(midpoint - left);
@@ -974,7 +976,10 @@ export const parseUnifiedCrmExpenseCreateQuestion = ({
       getBusinessTimezone(context),
     ),
     expenseType: inferExpenseTypeFromQuestion(normalizedQuestion),
-    description: inferExpenseDescriptionFromQuestion(question, normalizedQuestion),
+    description: inferExpenseDescriptionFromQuestion(
+      question,
+      normalizedQuestion,
+    ),
     amount: inferAmountFromQuestion(question),
     markupPercent: 0,
   };
@@ -1543,7 +1548,11 @@ export const buildUnifiedCrmServiceCreateSuggestedActions = ({
     parsedQuestion,
     estimate,
   });
-  const projectHref = buildShowHref(routePrefix, "projects", parsedQuestion.projectId);
+  const projectHref = buildShowHref(
+    routePrefix,
+    "projects",
+    parsedQuestion.projectId,
+  );
   const linkedExpenseHref = linkedExpenseDraft
     ? buildExpenseCreateHref({
         context,
@@ -1625,10 +1634,14 @@ export const buildUnifiedCrmExpenseCreateAnswerMarkdown = ({
           "- Ho collegato la spesa direttamente al cliente, senza forzare un progetto che non emerge con certezza dalla snapshot.",
         ]),
     ...(parsedQuestion.description
-      ? [`- Dalla richiesta ho estratto la descrizione operativa "${parsedQuestion.description}".`]
+      ? [
+          `- Dalla richiesta ho estratto la descrizione operativa "${parsedQuestion.description}".`,
+        ]
       : []),
     ...(parsedQuestion.amount != null
-      ? [`- Importo letto dalla richiesta: ${formatNumber(parsedQuestion.amount)} EUR.`]
+      ? [
+          `- Importo letto dalla richiesta: ${formatNumber(parsedQuestion.amount)} EUR.`,
+        ]
       : []),
     "",
     "## Limiti o prossima azione",
@@ -1649,8 +1662,16 @@ export const buildUnifiedCrmExpenseCreateSuggestedActions = ({
     context,
     parsedQuestion,
   });
-  const projectHref = buildShowHref(routePrefix, "projects", parsedQuestion.projectId);
-  const clientHref = buildShowHref(routePrefix, "clients", parsedQuestion.clientId);
+  const projectHref = buildShowHref(
+    routePrefix,
+    "projects",
+    parsedQuestion.projectId,
+  );
+  const clientHref = buildShowHref(
+    routePrefix,
+    "clients",
+    parsedQuestion.clientId,
+  );
 
   return [
     {
@@ -1945,6 +1966,7 @@ export const buildUnifiedCrmSuggestedActions = ({
   const snapshot = isObject(context.snapshot) ? context.snapshot : {};
 
   const recentClients = getObjectArray(snapshot.recentClients);
+  const recentContacts = getObjectArray(snapshot.recentContacts);
   const openQuotes = getObjectArray(snapshot.openQuotes);
   const activeProjects = getObjectArray(snapshot.activeProjects);
   const pendingPayments = getObjectArray(snapshot.pendingPayments);
@@ -1963,6 +1985,7 @@ export const buildUnifiedCrmSuggestedActions = ({
   };
 
   const firstClient = recentClients[0];
+  const firstContact = recentContacts[0];
   const firstQuote = openQuotes[0];
   const firstProject = activeProjects[0];
   const firstPayment = pendingPayments[0];
@@ -1999,10 +2022,22 @@ export const buildUnifiedCrmSuggestedActions = ({
     "nolegg",
   ]);
   const expenseCreationIntent = hasExpenseCreationIntent(normalizedQuestion);
+  const focusContacts = includesAny(normalizedQuestion, [
+    "referent",
+    "contatt",
+    "persona",
+    "telefono",
+    "cellulare",
+    "mail",
+    "email",
+    "linkedin",
+  ]);
   const focusClients = includesAny(normalizedQuestion, [
     "client",
     "anagraf",
-    "contatt",
+    "azienda",
+    "ragione sociale",
+    "fatturaz",
   ]);
   const preferPaymentAction =
     (focusPayments || focusQuotes || focusProjects || focusClients) &&
@@ -2038,6 +2073,7 @@ export const buildUnifiedCrmSuggestedActions = ({
       !focusQuotes &&
       !focusProjects &&
       !focusExpenses &&
+      !focusContacts &&
       !focusClients);
   const inferredPaymentType = inferPreferredPaymentType(normalizedQuestion);
   const launcherCreatePaymentContext = {
@@ -2133,6 +2169,11 @@ export const buildUnifiedCrmSuggestedActions = ({
     routePrefix,
     "clients",
     getString(firstClient?.clientId),
+  );
+  const contactHref = buildShowHref(
+    routePrefix,
+    "contacts",
+    getString(firstContact?.contactId),
   );
   const clientCreatePaymentHref = getString(firstClient?.clientId)
     ? buildCreateHref(routePrefix, "payments", {
@@ -2491,6 +2532,72 @@ export const buildUnifiedCrmSuggestedActions = ({
             href: buildListHref(routePrefix, "projects"),
           },
     );
+  } else if (focusContacts) {
+    pushSuggestion(
+      contactHref
+        ? {
+            id: "open-first-recent-contact",
+            kind: "show",
+            resource: "contacts",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri il referente piu recente",
+            description:
+              "Vai alla scheda del referente piu recente presente nello snapshot corrente.",
+            href: contactHref,
+          }
+        : {
+            id: "open-contacts-list",
+            kind: "list",
+            resource: "contacts",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri tutti i referenti",
+            description:
+              "Controlla l'anagrafica referenti per vedere persone, recapiti e relazioni con clienti e progetti.",
+            href: buildListHref(routePrefix, "contacts"),
+          },
+    );
+    pushSuggestion(
+      buildShowHref(routePrefix, "clients", getString(firstContact?.clientId))
+        ? {
+            id: "open-linked-client-from-contact",
+            kind: "show",
+            resource: "clients",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri il cliente collegato",
+            description:
+              "Vai alla scheda cliente collegata al referente principale dello snapshot.",
+            href: buildShowHref(
+              routePrefix,
+              "clients",
+              getString(firstContact?.clientId),
+            ),
+          }
+        : null,
+    );
+    pushSuggestion(
+      buildShowHref(
+        routePrefix,
+        "projects",
+        getString(getObjectArray(firstContact?.linkedProjects)[0]?.projectId),
+      )
+        ? {
+            id: "open-linked-project-from-contact",
+            kind: "show",
+            resource: "projects",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri il progetto collegato",
+            description:
+              "Vai al primo progetto collegato al referente principale dello snapshot.",
+            href: buildShowHref(
+              routePrefix,
+              "projects",
+              getString(
+                getObjectArray(firstContact?.linkedProjects)[0]?.projectId,
+              ),
+            ),
+          }
+        : null,
+    );
   } else if (focusClients) {
     const clientShowSuggestion = clientHref
       ? {
@@ -2566,7 +2673,7 @@ export const buildUnifiedCrmSuggestedActions = ({
     focusPayments,
     focusQuotes,
     focusProjects,
-    focusClients,
+    focusClients: focusClients || focusContacts,
     quoteStatus: getString(firstQuote?.status),
   });
 };

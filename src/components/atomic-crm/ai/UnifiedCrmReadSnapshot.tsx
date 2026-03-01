@@ -2,6 +2,7 @@ import {
   Database,
   FolderKanban,
   ReceiptText,
+  UserRound,
   Users2,
   Wallet,
 } from "lucide-react";
@@ -31,6 +32,9 @@ const formatDate = (value?: string | null) => {
     dateStyle: "short",
   });
 };
+
+const formatInlineList = (values: string[], fallback: string) =>
+  values.length > 0 ? values.join(" · ") : fallback;
 
 const StatCard = ({
   icon: Icon,
@@ -92,7 +96,7 @@ export const UnifiedCrmReadSnapshot = ({
           <Badge variant="outline">{context.meta.generatedAtLabel}</Badge>
         </div>
         <p className="mt-3 text-sm text-muted-foreground">
-          Il launcher legge gia clienti, preventivi, progetti, pagamenti e spese
+          Il launcher legge gia clienti, referenti, progetti, pagamenti e spese
           in un contesto unico coerente con i registry del CRM.
         </p>
       </div>
@@ -102,7 +106,13 @@ export const UnifiedCrmReadSnapshot = ({
           icon={Users2}
           label="Clienti"
           value={String(snapshot.counts.clients)}
-          subtitle={`${snapshot.recentClients.length} recenti nel contesto`}
+          subtitle={`${snapshot.recentClients?.length ?? 0} recenti nel contesto`}
+        />
+        <StatCard
+          icon={UserRound}
+          label="Referenti"
+          value={String(snapshot.counts.contacts ?? 0)}
+          subtitle={`${snapshot.recentContacts?.length ?? 0} recenti nel contesto`}
         />
         <StatCard
           icon={ReceiptText}
@@ -134,7 +144,7 @@ export const UnifiedCrmReadSnapshot = ({
         <SnapshotList
           title="Clienti recenti"
           emptyLabel="Nessun cliente recente nel contesto corrente."
-          items={snapshot.recentClients.map((client) => (
+          items={(snapshot.recentClients ?? []).map((client) => (
             <div
               key={client.clientId}
               className="rounded-xl border bg-muted/10 px-3 py-3"
@@ -171,6 +181,62 @@ export const UnifiedCrmReadSnapshot = ({
                 Creato il {formatDate(client.createdAt)}
                 {client.email ? ` · ${client.email}` : ""}
               </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Referenti:{" "}
+                {formatInlineList(
+                  (client.contacts ?? []).map((contact) => contact.displayName),
+                  "Nessun referente associato",
+                )}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Progetti attivi:{" "}
+                {formatInlineList(
+                  (client.activeProjects ?? []).map(
+                    (project) => project.projectName,
+                  ),
+                  "Nessun progetto attivo collegato",
+                )}
+              </p>
+            </div>
+          ))}
+        />
+
+        <SnapshotList
+          title="Referenti recenti"
+          emptyLabel="Nessun referente recente nel contesto corrente."
+          items={(snapshot.recentContacts ?? []).map((contact) => (
+            <div
+              key={contact.contactId}
+              className="rounded-xl border bg-muted/10 px-3 py-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-medium">{contact.displayName}</p>
+                <Badge variant="outline">Referente</Badge>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {[
+                  contact.title,
+                  contact.clientName ?? "Cliente non associato",
+                  contact.email,
+                  contact.phone,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || "Profilo contatto non completo"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Progetti:{" "}
+                {formatInlineList(
+                  (contact.linkedProjects ?? []).map((project) =>
+                    project.isPrimary
+                      ? `${project.projectName} (primario)`
+                      : project.projectName,
+                  ),
+                  "Nessun progetto collegato",
+                )}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Aggiornato il {formatDate(contact.updatedAt)}
+              </p>
             </div>
           ))}
         />
@@ -178,7 +244,7 @@ export const UnifiedCrmReadSnapshot = ({
         <SnapshotList
           title="Preventivi aperti"
           emptyLabel="Nessun preventivo aperto nel contesto corrente."
-          items={snapshot.openQuotes.map((quote) => (
+          items={(snapshot.openQuotes ?? []).map((quote) => (
             <div
               key={quote.quoteId}
               className="rounded-xl border bg-muted/10 px-3 py-3"
@@ -201,7 +267,7 @@ export const UnifiedCrmReadSnapshot = ({
         <SnapshotList
           title="Pagamenti da seguire"
           emptyLabel="Nessun pagamento in attesa nel contesto corrente."
-          items={snapshot.pendingPayments.map((payment) => (
+          items={(snapshot.pendingPayments ?? []).map((payment) => (
             <div
               key={payment.paymentId}
               className="rounded-xl border bg-muted/10 px-3 py-3"
@@ -226,7 +292,7 @@ export const UnifiedCrmReadSnapshot = ({
         <SnapshotList
           title="Progetti attivi"
           emptyLabel="Nessun progetto attivo nel contesto corrente."
-          items={snapshot.activeProjects.map((project) => (
+          items={(snapshot.activeProjects ?? []).map((project) => (
             <div
               key={project.projectId}
               className="rounded-xl border bg-muted/10 px-3 py-3"
@@ -241,6 +307,17 @@ export const UnifiedCrmReadSnapshot = ({
               <p className="mt-1 text-xs text-muted-foreground">
                 Inizio: {formatDate(project.startDate)}
               </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Referenti:{" "}
+                {formatInlineList(
+                  (project.contacts ?? []).map((contact) =>
+                    contact.isPrimary
+                      ? `${contact.displayName} (primario)`
+                      : contact.displayName,
+                  ),
+                  "Nessun referente collegato",
+                )}
+              </p>
             </div>
           ))}
         />
@@ -248,7 +325,7 @@ export const UnifiedCrmReadSnapshot = ({
         <SnapshotList
           title="Spese recenti"
           emptyLabel="Nessuna spesa recente nel contesto corrente."
-          items={snapshot.recentExpenses.map((expense) => (
+          items={(snapshot.recentExpenses ?? []).map((expense) => (
             <div
               key={expense.expenseId}
               className="rounded-xl border bg-muted/10 px-3 py-3"

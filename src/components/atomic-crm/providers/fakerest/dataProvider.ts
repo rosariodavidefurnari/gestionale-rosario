@@ -189,8 +189,10 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
     const [
       config,
       clientsResponse,
+      contactsResponse,
       quotesResponse,
       projectsResponse,
+      projectContactsResponse,
       servicesResponse,
       paymentsResponse,
       expensesResponse,
@@ -201,6 +203,11 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
         pagination: { page: 1, perPage: 1000 },
         sort: { field: "created_at", order: "DESC" },
       }),
+      baseDataProvider.getList<Contact>("contacts", {
+        filter: {},
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: "updated_at", order: "DESC" },
+      }),
       baseDataProvider.getList<Quote>("quotes", {
         filter: {},
         pagination: { page: 1, perPage: 1000 },
@@ -210,6 +217,11 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
         filter: {},
         pagination: { page: 1, perPage: 1000 },
         sort: { field: "created_at", order: "DESC" },
+      }),
+      baseDataProvider.getList<ProjectContact>("project_contacts", {
+        filter: {},
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: "updated_at", order: "DESC" },
       }),
       baseDataProvider.getList<Service>("services", {
         filter: {},
@@ -230,8 +242,10 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
 
     return buildUnifiedCrmReadContext({
       clients: clientsResponse.data,
+      contacts: contactsResponse.data,
       quotes: quotesResponse.data,
       projects: projectsResponse.data,
+      projectContacts: projectContactsResponse.data,
       services: servicesResponse.data,
       payments: paymentsResponse.data,
       expenses: expensesResponse.data,

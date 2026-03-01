@@ -133,7 +133,8 @@ describe("UnifiedAiLauncher", () => {
               meaning: "",
             },
             unifiedAiReadContext: {
-              scope: "clients + quotes + projects + payments + expenses",
+              scope:
+                "clients + contacts + project_contacts + quotes + projects + payments + expenses",
               freshnessField: "generatedAt",
               meaning: "",
             },
@@ -172,6 +173,7 @@ describe("UnifiedAiLauncher", () => {
       snapshot: {
         counts: {
           clients: 1,
+          contacts: 1,
           quotes: 1,
           openQuotes: 1,
           activeProjects: 1,
@@ -196,7 +198,45 @@ describe("UnifiedAiLauncher", () => {
             billingCity: "Catania",
             billingSdiCode: "M5UXCR1",
             billingPec: "mario@examplepec.it",
+            contacts: [
+              {
+                contactId: "101",
+                displayName: "Diego Caltabiano",
+                title: "Referente operativo",
+                email: "diego@gustare.it",
+                phone: "+39 333 1234567",
+              },
+            ],
+            activeProjects: [
+              {
+                projectId: "project-1",
+                projectName: "Wedding Mario",
+                status: "in_corso",
+                statusLabel: "In corso",
+              },
+            ],
             createdAt: "2026-02-20T10:00:00.000Z",
+          },
+        ],
+        recentContacts: [
+          {
+            contactId: "101",
+            displayName: "Diego Caltabiano",
+            title: "Referente operativo",
+            email: "diego@gustare.it",
+            phone: "+39 333 1234567",
+            clientId: "client-1",
+            clientName: "MARIO ROSSI STUDIO",
+            linkedProjects: [
+              {
+                projectId: "project-1",
+                projectName: "Wedding Mario",
+                status: "in_corso",
+                statusLabel: "In corso",
+                isPrimary: true,
+              },
+            ],
+            updatedAt: "2026-02-21T09:30:00.000Z",
           },
         ],
         openQuotes: [
@@ -228,6 +268,16 @@ describe("UnifiedAiLauncher", () => {
             totalExpenses: 0,
             totalPaid: 0,
             balanceDue: 0,
+            contacts: [
+              {
+                contactId: "101",
+                displayName: "Diego Caltabiano",
+                title: "Referente operativo",
+                email: "diego@gustare.it",
+                phone: "+39 333 1234567",
+                isPrimary: true,
+              },
+            ],
           },
         ],
         pendingPayments: [
@@ -318,9 +368,11 @@ describe("UnifiedAiLauncher", () => {
 
     expect(await screen.findByText("Pagamenti da seguire")).toBeInTheDocument();
     expect(await screen.findByText("Clienti recenti")).toBeInTheDocument();
+    expect(await screen.findByText("Referenti recenti")).toBeInTheDocument();
     expect(
       (await screen.findAllByText("MARIO ROSSI STUDIO")).length,
     ).toBeGreaterThan(0);
+    expect(await screen.findByText("Diego Caltabiano")).toBeInTheDocument();
     expect(await screen.findByText(/P\.IVA IT12345678901/)).toBeInTheDocument();
     expect(
       await screen.findByText(/PEC mario@examplepec.it/),
