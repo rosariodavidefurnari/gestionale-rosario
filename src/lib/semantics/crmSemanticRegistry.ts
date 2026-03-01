@@ -295,7 +295,7 @@ export const buildCrmSemanticRegistry = (
         formula: "km_distance * km_rate",
         defaultKmRate: getDefaultKmRate(mergedConfig),
         meaning:
-          "Il rimborso spostamento deriva sempre da km percorsi per tariffa km, con una tariffa predefinita condivisa.",
+          "Il rimborso spostamento deriva sempre da km percorsi per tariffa km, con una tariffa predefinita condivisa. Se la chat AI unificata propone una trasferta km calcolata tramite routing, quei km restano sempre un suggerimento modificabile prima del salvataggio su `expenses/create`.",
       },
       dateRanges: {
         allDayField: "all_day",
@@ -321,7 +321,7 @@ export const buildCrmSemanticRegistry = (
         scope: "clients + quotes + projects + payments + expenses",
         freshnessField: "generatedAt",
         meaning:
-          "Il contesto CRM-wide del launcher unificato e' una snapshot read-only dei moduli core; sia la snapshot sia le risposte AI che la usano restano di sola lettura, gli handoff successivi possono solo puntare a route o azioni gia approvate, una recommendation primaria puo comparire solo se costruita deterministicamente dal sistema, e gli href di handoff possono trasportare solo prefills/search params gia supportati dalle superfici esistenti. Dentro quella snapshot i clienti recenti devono esporre anche il profilo fiscale essenziale e i recapiti di fatturazione principali gia presenti nel CRM, mentre i riferimenti collegati a quote/progetti/pagamenti devono usare il nome piu coerente con la fatturazione quando disponibile. Le superfici di arrivo possono poi calcolare o ricevere solo suggerimenti deterministici locali, come il residuo ancora non collegato di un preventivo oppure i financials aggregati di un progetto attivo derivati da servizi, spese e pagamenti ricevuti. Ogni futura scrittura deve passare da un workflow dedicato con conferma esplicita.",
+          "Il contesto CRM-wide del launcher unificato e' una snapshot read-only dei moduli core; sia la snapshot sia le risposte AI che la usano restano di sola lettura, gli handoff successivi possono solo puntare a route o azioni gia approvate, una recommendation primaria puo comparire solo se costruita deterministicamente dal sistema, e gli href di handoff possono trasportare solo prefills/search params gia supportati dalle superfici esistenti. Dentro quella snapshot i clienti recenti devono esporre anche il profilo fiscale essenziale e i recapiti di fatturazione principali gia presenti nel CRM, mentre i riferimenti collegati a quote/progetti/pagamenti devono usare il nome piu coerente con la fatturazione quando disponibile. Le superfici di arrivo possono poi calcolare o ricevere solo suggerimenti deterministici locali, come il residuo ancora non collegato di un preventivo, i financials aggregati di un progetto attivo derivati da servizi, spese e pagamenti ricevuti, oppure una stima tratta km ottenuta da un servizio routing esterno ma sempre correggibile prima della scrittura. Ogni futura scrittura deve passare da un workflow dedicato con conferma esplicita.",
       },
       unifiedAiWriteDraft: {
         approvedResource: "payments",

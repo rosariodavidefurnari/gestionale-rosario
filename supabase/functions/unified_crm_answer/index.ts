@@ -5,8 +5,16 @@ import { AuthMiddleware, UserMiddleware } from "../_shared/authentication.ts";
 import { corsHeaders, OptionsMiddleware } from "../_shared/cors.ts";
 import { getUserSale } from "../_shared/getUserSale.ts";
 import {
+  geocodeOpenRouteLocation,
+  getOpenRouteDrivingSummary,
+} from "../_shared/openRouteService.ts";
+import {
   buildUnifiedCrmPaymentDraftFromContext,
+  buildUnifiedCrmTravelExpenseAnswerMarkdown,
+  buildUnifiedCrmTravelExpenseEstimate,
+  buildUnifiedCrmTravelExpenseSuggestedActions,
   buildUnifiedCrmSuggestedActions,
+  parseUnifiedCrmTravelExpenseQuestion,
   validateUnifiedCrmAnswerPayload,
 } from "../_shared/unifiedCrmAnswer.ts";
 import { createErrorResponse } from "../_shared/utils.ts";
@@ -15,6 +23,9 @@ const defaultAnalysisModel = "gpt-5.2";
 const allowedModels = new Set(["gpt-5.2", "gpt-5-mini", "gpt-5-nano"]);
 
 const openaiApiKey = Deno.env.get("OPENAI_API_KEY") ?? "";
+const openRouteServiceApiKey = Deno.env.get("OPENROUTESERVICE_API_KEY") ?? "";
+const openRouteServiceBaseUrl =
+  Deno.env.get("OPENROUTESERVICE_BASE_URL") ?? "https://api.openrouteservice.org";
 
 const openai = new OpenAI({
   apiKey: openaiApiKey,
@@ -51,13 +62,6 @@ Massimo 3 frasi molto chiare.
 `.trim();
 
 async function answerUnifiedCrmQuestion(req: Request, currentUserSale: unknown) {
-  if (!openaiApiKey) {
-    return createErrorResponse(
-      500,
-      "OPENAI_API_KEY non configurata nelle Edge Functions",
-    );
-  }
-
   if (!currentUserSale) {
     return createErrorResponse(401, "Unauthorized");
   }
@@ -75,6 +79,76 @@ async function answerUnifiedCrmQuestion(req: Request, currentUserSale: unknown) 
       : defaultAnalysisModel;
 
   try {
+    const travelExpenseQuestion = parseUnifiedCrmTravelExpenseQuestion({
+      question,
+      context,
+    });
+
+    if (travelExpenseQuestion) {
+      if (!openRouteServiceApiKey) {
+        return createErrorResponse(
+          500,
+          "OPENROUTESERVICE_API_KEY non configurata nelle Edge Functions",
+        );
+      }
+
+      const [origin, destination] = await Promise.all([
+        geocodeOpenRouteLocation({
+          apiKey: openRouteServiceApiKey,
+          baseUrl: openRouteServiceBaseUrl,
+          text: travelExpenseQuestion.origin,
+        }),
+        geocodeOpenRouteLocation({
+          apiKey: openRouteServiceApiKey,
+          baseUrl: openRouteServiceBaseUrl,
+          text: travelExpenseQuestion.destination,
+        }),
+      ]);
+      const route = await getOpenRouteDrivingSummary({
+        apiKey: openRouteServiceApiKey,
+        baseUrl: openRouteServiceBaseUrl,
+        coordinates: [
+          [origin.longitude, origin.latitude],
+          [destination.longitude, destination.latitude],
+        ],
+      });
+      const estimate = buildUnifiedCrmTravelExpenseEstimate({
+        context,
+        parsedQuestion: travelExpenseQuestion,
+        originLabel: origin.label,
+        destinationLabel: destination.label,
+        oneWayDistanceMeters: route.distanceMeters,
+      });
+
+      return new Response(
+        JSON.stringify({
+          data: {
+            question,
+            model: "openrouteservice",
+            generatedAt: new Date().toISOString(),
+            answerMarkdown: buildUnifiedCrmTravelExpenseAnswerMarkdown({
+              estimate,
+            }),
+            suggestedActions: buildUnifiedCrmTravelExpenseSuggestedActions({
+              context,
+              estimate,
+            }),
+            paymentDraft: null,
+          },
+        }),
+        {
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
+      );
+    }
+
+    if (!openaiApiKey) {
+      return createErrorResponse(
+        500,
+        "OPENAI_API_KEY non configurata nelle Edge Functions",
+      );
+    }
+
     const suggestedActions = buildUnifiedCrmSuggestedActions({
       question,
       context,

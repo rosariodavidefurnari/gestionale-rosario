@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Quando una domanda chat chiede chilometri o tratte, i km non
+  vanno stimati dal modello ma da un servizio routing e poi portati sulla
+  superficie spese approvata** — Nel launcher unificato il caso
+  `spostamento_km` ha senso solo se resta deterministico: parsing minimo della
+  tratta, geocoding + directions esterni, e poi handoff verso `expenses/create`
+  con prefills correggibili. Cosi' la chat resta utile senza aprire una write
+  autonoma o affidarsi a numeri inventati dal modello.
+
 - [2026-03-01] **Mobile UX: card view + Sheet filter e' il pattern base per
   ogni lista CRUD** — Su mobile le tabelle sono illeggibili. Il pattern
   consolidato e': `useIsMobile()` branch nel ListContent (card `divide-y`),

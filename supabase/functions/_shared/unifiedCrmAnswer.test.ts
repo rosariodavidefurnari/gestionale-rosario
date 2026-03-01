@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildTravelExpenseCreateHref,
   buildUnifiedCrmPaymentDraftFromContext,
+  buildUnifiedCrmTravelExpenseAnswerMarkdown,
+  buildUnifiedCrmTravelExpenseEstimate,
+  buildUnifiedCrmTravelExpenseSuggestedActions,
   buildUnifiedCrmSuggestedActions,
+  parseUnifiedCrmTravelExpenseQuestion,
   validateUnifiedCrmAnswerPayload,
 } from "./unifiedCrmAnswer.ts";
 
@@ -276,5 +281,99 @@ describe("unifiedCrmAnswer", () => {
         href: "/#/projects/project-1/show?project_id=project-1&client_id=client-1&launcher_source=unified_ai_launcher&launcher_action=project_quick_payment&open_dialog=quick_payment&payment_type=saldo&amount=950&status=in_attesa&draft_kind=project_quick_payment",
       }),
     );
+  });
+
+  it("parses a travel-expense question with route and round trip", () => {
+    const parsed = parseUnifiedCrmTravelExpenseQuestion({
+      question:
+        "Devo registrare una spesa oggi: ho percorso la tratta Valguarnera Caropepe (EN) - Catania / andata e ritorno. Calcola i km.",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          businessTimezone: "Europe/Rome",
+        },
+      },
+    });
+
+    expect(parsed).toEqual(
+      expect.objectContaining({
+        origin: "Valguarnera Caropepe (EN)",
+        destination: "Catania",
+        isRoundTrip: true,
+      }),
+    );
+    expect(parsed?.expenseDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("builds a travel-expense handoff and answer grounded on routing data", () => {
+    const estimate = buildUnifiedCrmTravelExpenseEstimate({
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          routePrefix: "/#/",
+        },
+        registries: {
+          semantic: {
+            rules: {
+              travelReimbursement: {
+                defaultKmRate: 0.19,
+              },
+            },
+          },
+        },
+      },
+      parsedQuestion: {
+        origin: "Valguarnera Caropepe (EN)",
+        destination: "Catania",
+        isRoundTrip: true,
+        expenseDate: "2026-03-01",
+      },
+      originLabel: "Valguarnera Caropepe, EN, Italy",
+      destinationLabel: "Catania, CT, Italy",
+      oneWayDistanceMeters: 80488.4,
+    });
+
+    expect(estimate).toEqual(
+      expect.objectContaining({
+        oneWayDistanceKm: 80.49,
+        totalDistanceKm: 160.98,
+        kmRate: 0.19,
+        reimbursementAmount: 30.59,
+      }),
+    );
+
+    expect(
+      buildTravelExpenseCreateHref({
+        routePrefix: "/#/",
+        estimate,
+      }),
+    ).toContain("/#/expenses/create?");
+
+    const actions = buildUnifiedCrmTravelExpenseSuggestedActions({
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          routePrefix: "/#/",
+        },
+      },
+      estimate,
+    });
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        capabilityActionId: "expense_create_km",
+        resource: "expenses",
+        recommended: true,
+      }),
+    );
+    expect(actions[0]?.href).toContain("expense_type=spostamento_km");
+    expect(actions[0]?.href).toContain("km_distance=160.98");
+    expect(actions[0]?.href).toContain("launcher_action=expense_create_km");
+
+    expect(
+      buildUnifiedCrmTravelExpenseAnswerMarkdown({
+        estimate,
+      }),
+    ).toContain("160,98 km");
   });
 });

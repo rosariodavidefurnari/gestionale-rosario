@@ -21,6 +21,7 @@ export type UnifiedCrmSuggestedAction = {
     | "quote_create_payment"
     | "client_create_payment"
     | "project_quick_payment"
+    | "expense_create_km"
     | "follow_unified_crm_handoff";
 };
 
@@ -46,6 +47,26 @@ export type UnifiedCrmAnswerPayload = {
   model: string;
 };
 
+export type ParsedUnifiedCrmTravelExpenseQuestion = {
+  origin: string;
+  destination: string;
+  isRoundTrip: boolean;
+  expenseDate: string | null;
+};
+
+export type UnifiedCrmTravelExpenseEstimate = {
+  originQuery: string;
+  destinationQuery: string;
+  originLabel: string;
+  destinationLabel: string;
+  isRoundTrip: boolean;
+  oneWayDistanceKm: number;
+  totalDistanceKm: number;
+  expenseDate: string | null;
+  kmRate: number | null;
+  reimbursementAmount: number | null;
+};
+
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
@@ -60,9 +81,158 @@ const getString = (value: unknown) =>
 const getNumber = (value: unknown) =>
   typeof value === "number" && Number.isFinite(value) ? value : null;
 
+const formatNumber = (value: number) =>
+  value.toLocaleString("it-IT", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
 const getRoutePrefix = (context: Record<string, unknown>) => {
   const meta = isObject(context.meta) ? context.meta : null;
   return getString(meta?.routePrefix) ?? "/#/";
+};
+
+const getBusinessTimezone = (context: Record<string, unknown>) => {
+  const meta = isObject(context.meta) ? context.meta : null;
+  return getString(meta?.businessTimezone) ?? "Europe/Rome";
+};
+
+const getDefaultKmRate = (context: Record<string, unknown>) => {
+  const registries = isObject(context.registries) ? context.registries : null;
+  const semantic = isObject(registries?.semantic) ? registries.semantic : null;
+  const rules = isObject(semantic?.rules) ? semantic.rules : null;
+  const travelReimbursement = isObject(rules?.travelReimbursement)
+    ? rules.travelReimbursement
+    : null;
+  return getNumber(travelReimbursement?.defaultKmRate);
+};
+
+const formatDateInTimezone = (date: Date, timeZone: string) => {
+  const parts = new Intl.DateTimeFormat("en", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  return year && month && day ? `${year}-${month}-${day}` : null;
+};
+
+const stripTrailingTravelContext = (value: string) =>
+  value
+    .replace(
+      /\s*(?:\/\s*)?(?:andata e ritorno|andata ritorno|a\/r|a-r|ritorno)\b.*$/i,
+      "",
+    )
+    .replace(
+      /\s*(?:[,.!?;:]\s*)?(?:calcola|quanti|quanto|dimmi|come|devo|vorrei|posso|registr|caric|inser|preparami)\b.*$/i,
+      "",
+    )
+    .replace(/^[\s\-–—/]+|[\s\-–—/.,;:]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const splitTravelRoute = (value: string) => {
+  const dashMatch = value.match(/^(.+?)\s[-–—]\s(.+)$/);
+  if (dashMatch) {
+    return {
+      origin: stripTrailingTravelContext(dashMatch[1] ?? ""),
+      destination: stripTrailingTravelContext(dashMatch[2] ?? ""),
+    };
+  }
+
+  const fromToMatch = value.match(/\bda\s+(.+?)\s+a\s+(.+)$/i);
+  if (fromToMatch) {
+    return {
+      origin: stripTrailingTravelContext(fromToMatch[1] ?? ""),
+      destination: stripTrailingTravelContext(fromToMatch[2] ?? ""),
+    };
+  }
+
+  return null;
+};
+
+const inferExpenseDateFromQuestion = (
+  normalizedQuestion: string,
+  timeZone: string,
+) => {
+  const now = new Date();
+
+  if (includesAny(normalizedQuestion, ["oggi", "stasera", "stamattina"])) {
+    return formatDateInTimezone(now, timeZone);
+  }
+
+  if (includesAny(normalizedQuestion, ["ieri"])) {
+    return formatDateInTimezone(
+      new Date(now.getTime() - 24 * 60 * 60 * 1000),
+      timeZone,
+    );
+  }
+
+  return null;
+};
+
+export const parseUnifiedCrmTravelExpenseQuestion = ({
+  question,
+  context,
+}: {
+  question: string;
+  context: Record<string, unknown>;
+}): ParsedUnifiedCrmTravelExpenseQuestion | null => {
+  const normalizedQuestion = normalizeText(question);
+  const travelIntent = includesAny(normalizedQuestion, [
+    "tratta",
+    "tragitt",
+    "percor",
+    "chilometr",
+    "km",
+    "spostament",
+    "trasfert",
+    "andata e ritorno",
+    "a/r",
+    "distanz",
+  ]);
+  const expenseIntent = includesAny(normalizedQuestion, [
+    "spes",
+    "rimbor",
+    "registr",
+    "caric",
+    "inser",
+    "crm",
+  ]);
+
+  if (!travelIntent || !expenseIntent) {
+    return null;
+  }
+
+  const compactQuestion = question.replace(/\s+/g, " ").trim();
+  const routeSource =
+    compactQuestion.match(/\btratta\s+(.+)$/i)?.[1] ??
+    compactQuestion.match(/\bpercor(?:so|sa)?\s+(.+)$/i)?.[1] ??
+    compactQuestion;
+  const route = splitTravelRoute(routeSource);
+
+  if (!route || !route.origin || !route.destination) {
+    return null;
+  }
+
+  return {
+    origin: route.origin,
+    destination: route.destination,
+    isRoundTrip: includesAny(normalizedQuestion, [
+      "andata e ritorno",
+      "andata ritorno",
+      "a/r",
+      "a-r",
+    ]),
+    expenseDate: inferExpenseDateFromQuestion(
+      normalizedQuestion,
+      getBusinessTimezone(context),
+    ),
+  };
 };
 
 const quoteStatusesEligibleForPaymentCreation = new Set([
@@ -124,6 +294,23 @@ const buildShowHref = (
   recordId: string | null,
 ) => (recordId ? `${routePrefix}${resource}/${recordId}/show` : null);
 
+export const buildTravelExpenseCreateHref = ({
+  routePrefix,
+  estimate,
+}: {
+  routePrefix: string;
+  estimate: UnifiedCrmTravelExpenseEstimate;
+}) =>
+  buildCreateHref(routePrefix, "expenses", {
+    expense_type: "spostamento_km",
+    expense_date: estimate.expenseDate,
+    km_distance: String(estimate.totalDistanceKm),
+    km_rate: estimate.kmRate != null ? String(estimate.kmRate) : null,
+    description: `Trasferta ${estimate.originQuery} - ${estimate.destinationQuery}${estimate.isRoundTrip ? " A/R" : ""}`,
+    launcher_source: "unified_ai_launcher",
+    launcher_action: "expense_create_km",
+  });
+
 const getObjectArray = (value: unknown): Array<Record<string, unknown>> =>
   Array.isArray(value) ? value.filter(isObject) : [];
 
@@ -181,6 +368,113 @@ const inferProjectDraftPaymentType = (normalizedQuestion: string) => {
   return "saldo";
 };
 
+export const buildUnifiedCrmTravelExpenseEstimate = ({
+  context,
+  parsedQuestion,
+  originLabel,
+  destinationLabel,
+  oneWayDistanceMeters,
+}: {
+  context: Record<string, unknown>;
+  parsedQuestion: ParsedUnifiedCrmTravelExpenseQuestion;
+  originLabel: string;
+  destinationLabel: string;
+  oneWayDistanceMeters: number;
+}): UnifiedCrmTravelExpenseEstimate => {
+  const oneWayDistanceKm = Number((oneWayDistanceMeters / 1000).toFixed(2));
+  const totalDistanceKm = Number(
+    (oneWayDistanceKm * (parsedQuestion.isRoundTrip ? 2 : 1)).toFixed(2),
+  );
+  const kmRate = getDefaultKmRate(context);
+  const reimbursementAmount =
+    kmRate != null ? Number((totalDistanceKm * kmRate).toFixed(2)) : null;
+
+  return {
+    originQuery: parsedQuestion.origin,
+    destinationQuery: parsedQuestion.destination,
+    originLabel,
+    destinationLabel,
+    isRoundTrip: parsedQuestion.isRoundTrip,
+    oneWayDistanceKm,
+    totalDistanceKm,
+    expenseDate: parsedQuestion.expenseDate,
+    kmRate,
+    reimbursementAmount,
+  };
+};
+
+export const buildUnifiedCrmTravelExpenseAnswerMarkdown = ({
+  estimate,
+}: {
+  estimate: UnifiedCrmTravelExpenseEstimate;
+}) => {
+  const routeLabel = `${estimate.originQuery} - ${estimate.destinationQuery}${
+    estimate.isRoundTrip ? " A/R" : ""
+  }`;
+  const dateLabel = estimate.expenseDate
+    ? ` con data proposta ${estimate.expenseDate}`
+    : "";
+  const reimbursementLine =
+    estimate.kmRate != null && estimate.reimbursementAmount != null
+      ? `- Con tariffa predefinita ${formatNumber(estimate.kmRate)} EUR/km il rimborso stimato e' ${formatNumber(estimate.reimbursementAmount)} EUR.`
+      : null;
+
+  return [
+    "## Risposta breve",
+    `Per la tratta ${routeLabel} ho stimato ${formatNumber(estimate.totalDistanceKm)} km${estimate.isRoundTrip ? " complessivi" : ""}${dateLabel}.`,
+    "",
+    "## Dati usati",
+    `- Origine risolta tramite routing come ${estimate.originLabel}.`,
+    `- Destinazione risolta tramite routing come ${estimate.destinationLabel}.`,
+    `- Distanza stimata: ${formatNumber(estimate.oneWayDistanceKm)} km a tratta${estimate.isRoundTrip ? `, quindi ${formatNumber(estimate.totalDistanceKm)} km totali` : ""}.`,
+    ...(reimbursementLine ? [reimbursementLine] : []),
+    "",
+    "## Limiti o prossima azione",
+    "- Se il punto preciso di partenza/arrivo o il percorso reale erano diversi, correggi i km nel form prima di salvare.",
+    "- La scrittura non parte dalla chat: usa l'azione suggerita per aprire Spese gia precompilata.",
+  ].join("\n");
+};
+
+export const buildUnifiedCrmTravelExpenseSuggestedActions = ({
+  context,
+  estimate,
+}: {
+  context: Record<string, unknown>;
+  estimate: UnifiedCrmTravelExpenseEstimate;
+}): UnifiedCrmSuggestedAction[] => {
+  const routePrefix = getRoutePrefix(context);
+  const expenseCreateHref = buildTravelExpenseCreateHref({
+    routePrefix,
+    estimate,
+  });
+
+  return [
+    {
+      id: "expense-create-km-handoff",
+      kind: "approved_action",
+      resource: "expenses",
+      capabilityActionId: "expense_create_km",
+      label: "Registra questa spesa km",
+      description:
+        "Apre il form spese gia precompilato con tipo spostamento km, data, chilometri, tariffa e descrizione della tratta.",
+      href: expenseCreateHref,
+      recommended: true,
+      recommendationReason:
+        "Consigliata perche la tratta e' gia stata risolta e i km possono essere corretti direttamente sulla superficie spese approvata prima del salvataggio.",
+    },
+    {
+      id: "open-expenses-list",
+      kind: "list",
+      resource: "expenses",
+      capabilityActionId: "follow_unified_crm_handoff",
+      label: "Apri tutte le spese",
+      description:
+        "Controlla le spese gia registrate prima di salvare una nuova trasferta km.",
+      href: buildListHref(routePrefix, "expenses"),
+    },
+  ];
+};
+
 const buildRecommendedReason = ({
   suggestion,
   focusPayments,
@@ -210,6 +504,10 @@ const buildRecommendedReason = ({
 
   if (suggestion.capabilityActionId === "project_quick_payment") {
     return "Consigliata perche il progetto collegato e' gia la superficie approvata per proseguire il flusso commerciale.";
+  }
+
+  if (suggestion.capabilityActionId === "expense_create_km") {
+    return "Consigliata perche apre il form spese gia precompilato con la tratta km calcolata e lascia comunque l'ultima correzione all'utente.";
   }
 
   if (focusPayments && suggestion.resource === "quotes") {

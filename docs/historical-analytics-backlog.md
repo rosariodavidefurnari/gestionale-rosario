@@ -586,6 +586,29 @@ The expenses list regression is now closed too:
 - `ExpenseListActions` now receives the same exporter passed to `List`
 - the `/#/expenses` screen no longer crashes with `exporter is not defined`
 
+The launcher km-expense slice is now closed too:
+
+- the unified launcher can now help on a real `spostamento_km` workflow
+  without adding a second AI surface
+- when the question clearly describes a route expense to register, the launcher
+  now uses a deterministic `openrouteservice` branch to:
+  - resolve origin and destination
+  - compute the route distance
+  - derive the reimbursement estimate from the shared default `km_rate`
+  - open `/#/expenses/create` with the route already prefilled
+- the approved landing on `expenses/create` now supports:
+  - `expense_type`
+  - `expense_date`
+  - `km_distance`
+  - `km_rate`
+  - `description`
+  - launcher banner copy
+- known residual risk:
+  - if the route uses only a city/locality name, ORS may resolve a generic
+    point instead of the exact address, so km stay user-correctable before save
+- validation closed with typecheck, targeted Vitest, and live local ORS calls
+  on the first real route used as product benchmark
+
 Why this comes next:
 
 - the launcher now has the base layers it needed:

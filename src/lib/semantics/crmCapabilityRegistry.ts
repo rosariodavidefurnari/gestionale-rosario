@@ -284,7 +284,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "ask_unified_crm_question",
       label: "Chiedi al CRM nella chat unificata",
       description:
-        "Invia una domanda sul CRM core usando la stessa snapshot mostrata nel launcher e restituisce una risposta grounded con possibili handoff verso route o azioni gia approvate e, in casi stretti, una bozza pagamento modificabile che comunque non scrive nel CRM.",
+        "Invia una domanda sul CRM core usando la stessa snapshot mostrata nel launcher e restituisce una risposta grounded con possibili handoff verso route o azioni gia approvate e, in casi stretti, una bozza pagamento modificabile o un calcolo deterministico di trasferta km con handoff precompilato verso `expenses/create`, senza scrivere direttamente nel CRM.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
       actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
       requiredFields: [
@@ -324,6 +324,22 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
         "answer.suggestedActions[].recommended",
         "answer.suggestedActions[].recommendationReason",
       ],
+    },
+    {
+      id: "expense_create_km",
+      label: "Registra spesa km dalla chat unificata",
+      description:
+        "Dalla chat AI unificata apre `expenses/create` gia precompilato con tipo `spostamento_km`, data, chilometri, tariffa km e descrizione tratta derivati da un calcolo routing deterministico, lasciando comunque la correzione finale all'utente prima del salvataggio.",
+      sourceFile: "src/components/atomic-crm/expenses/ExpenseCreate.tsx",
+      actsOn: ["expenses"],
+      requiredFields: [
+        "expense_type",
+        "expense_date",
+        "km_distance",
+        "km_rate",
+        "description",
+      ],
+      sideEffects: ["precompila il form spese via search params supportati"],
     },
     {
       id: "invoice_import_extract",

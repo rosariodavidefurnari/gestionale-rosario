@@ -28,6 +28,7 @@ export type UnifiedCrmSuggestedAction = {
     | "quote_create_payment"
     | "client_create_payment"
     | "project_quick_payment"
+    | "expense_create_km"
     | "follow_unified_crm_handoff";
 };
 

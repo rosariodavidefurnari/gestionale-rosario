@@ -1786,6 +1786,37 @@ The expenses-list continuity fix is now documented too:
 - local browser verification is now closed too:
   - `/#/expenses` no longer crashes with `exporter is not defined`
 
+The next launcher km-expense slice is now closed too:
+
+- the same unified launcher can now handle a strict `spostamento_km` use case
+  without opening a new AI surface
+- when the question clearly describes a route expense to register, the flow now
+  switches to a deterministic branch instead of asking the text model to guess
+  kilometers
+- the system now:
+  - parses origin/destination and round-trip intent from the question
+  - resolves both places via `openrouteservice`
+  - computes the route distance via `openrouteservice`
+  - derives the shared CRM reimbursement estimate from the semantic default
+    `km_rate`
+  - returns a grounded answer plus one approved handoff to `/#/expenses/create`
+    with prefilled `expense_type`, `expense_date`, `km_distance`, `km_rate`,
+    and route description
+- `ExpenseCreate` now consumes those search params and shows a launcher banner
+  before save, keeping the last correction on the approved expense form
+- this slice stayed local:
+  - no migration
+  - no remote deploy yet
+  - validation closed with `npm run typecheck`, targeted Vitest, and live local
+    ORS calls on the real `Valguarnera Caropepe -> Catania` route
+- explicit residual risks:
+  - geocoding on a city/locality name can resolve the city center or a generic
+    point instead of the exact street address
+  - the final kilometer value therefore stays a prefill suggestion to verify on
+    the expense form before saving
+  - remote/edge runtime still needs the ORS secret aligned outside local env if
+    this flow is used beyond the local workspace
+
 ## Environment Blockers
 
 ### Supabase migration state

@@ -1,0 +1,119 @@
+export type OpenRouteResolvedLocation = {
+  query: string;
+  label: string;
+  longitude: number;
+  latitude: number;
+};
+
+export type OpenRouteRouteSummary = {
+  distanceMeters: number;
+  durationSeconds: number;
+};
+
+const buildUrl = (baseUrl: string, path: string) =>
+  new URL(path.replace(/^\//, ""), `${baseUrl.replace(/\/+$/, "")}/`);
+
+const getErrorMessage = async (response: Response) => {
+  try {
+    const payload = await response.json();
+    return (
+      payload?.error?.message ??
+      payload?.error ??
+      payload?.message ??
+      response.statusText
+    );
+  } catch {
+    return response.statusText;
+  }
+};
+
+export const geocodeOpenRouteLocation = async ({
+  apiKey,
+  baseUrl,
+  text,
+}: {
+  apiKey: string;
+  baseUrl: string;
+  text: string;
+}): Promise<OpenRouteResolvedLocation> => {
+  const url = buildUrl(baseUrl, "geocode/search");
+  url.searchParams.set("api_key", apiKey);
+  url.searchParams.set("text", text);
+  url.searchParams.set("size", "1");
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(
+      `openrouteservice geocoding non disponibile: ${await getErrorMessage(response)}`,
+    );
+  }
+
+  const payload = await response.json();
+  const firstFeature = Array.isArray(payload?.features) ? payload.features[0] : null;
+  const coordinates = Array.isArray(firstFeature?.geometry?.coordinates)
+    ? firstFeature.geometry.coordinates
+    : null;
+
+  if (
+    !firstFeature ||
+    !coordinates ||
+    typeof coordinates[0] !== "number" ||
+    typeof coordinates[1] !== "number"
+  ) {
+    throw new Error(`Nessun risultato di geocoding per "${text}".`);
+  }
+
+  return {
+    query: text,
+    label:
+      typeof firstFeature?.properties?.label === "string"
+        ? firstFeature.properties.label
+        : text,
+    longitude: coordinates[0],
+    latitude: coordinates[1],
+  };
+};
+
+export const getOpenRouteDrivingSummary = async ({
+  apiKey,
+  baseUrl,
+  coordinates,
+}: {
+  apiKey: string;
+  baseUrl: string;
+  coordinates: [[number, number], [number, number]];
+}): Promise<OpenRouteRouteSummary> => {
+  const response = await fetch(buildUrl(baseUrl, "v2/directions/driving-car"), {
+    method: "POST",
+    headers: {
+      Authorization: apiKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      coordinates,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `openrouteservice routing non disponibile: ${await getErrorMessage(response)}`,
+    );
+  }
+
+  const payload = await response.json();
+  const summary = payload?.routes?.[0]?.summary;
+
+  if (
+    !summary ||
+    typeof summary.distance !== "number" ||
+    typeof summary.duration !== "number"
+  ) {
+    throw new Error("openrouteservice non ha restituito una tratta valida.");
+  }
+
+  return {
+    distanceMeters: summary.distance,
+    durationSeconds: summary.duration,
+  };
+};

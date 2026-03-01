@@ -125,6 +125,47 @@ invece separato e ancora aperto.
 
 ## Last Session
 
+### Sessione 78 (2026-03-01, spostamento km nel launcher unificato)
+
+- Completed:
+  - **La chat unificata ora copre un use case reale di trasferta km**:
+    - nessuna nuova AI sparsa
+    - stesso launcher unificato
+    - se la domanda descrive chiaramente una tratta da registrare come spesa,
+      il flow passa su un ramo deterministico invece di far stimare i km al
+      modello testuale
+  - **Integrato `openrouteservice` nel corridoio launcher -> spesa km**:
+    - parsing origine/destinazione e round-trip dalla domanda
+    - geocoding ORS
+    - routing ORS
+    - derivazione km e rimborso stimato con `km_rate` condiviso del CRM
+  - **Chiusa la superficie approvata di atterraggio**:
+    - `expenses/create` legge ora prefills da query string
+    - il form puo aprirsi gia con `spostamento_km`, data, km, tariffa e
+      descrizione tratta
+    - compare un banner launcher coerente prima del salvataggio
+  - **Allineati registry, test e continuita'**:
+    - semantic registry
+    - capability registry
+    - test backend helper
+    - test expense linking
+    - docs di continuita'
+
+- Risks / notes:
+  - se la tratta usa solo nomi citta'/localita', il geocoding puo risolvere un
+    punto generico e non l'indirizzo preciso
+  - per questo i km restano sempre correggibili sul form `Spese`
+  - il secret ORS va ancora allineato anche nel runtime edge remoto quando
+    porteremo questo flow fuori dal solo ambiente locale
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run supabase/functions/_shared/unifiedCrmAnswer.test.ts src/components/atomic-crm/expenses/expenseLinking.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`
+  - chiamate ORS reali locali su:
+    - geocoding `Valguarnera Caropepe, Enna, Italy`
+    - geocoding `Catania, Italy`
+    - routing `Valguarnera Caropepe -> Catania`
+
 ### Sessione 77 (2026-03-01, mobile UX overhaul + login/signup fix)
 
 - Completed:
