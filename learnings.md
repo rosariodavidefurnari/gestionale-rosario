@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se un suggerimento automatico condivide il campo con un edit
+  manuale, dopo il primo tocco l'automatismo deve farsi da parte** — Nel
+  percorso `payments/create` non basta evitare l'override di un valore gia
+  positivo: anche gli stati intermedi mentre l'utente svuota e ridigita il
+  campo fanno parte dell'edit manuale. Il pattern corretto e' bloccare il
+  ricalcolo automatico appena il campo diventa `dirty` e lasciare il
+  suggerimento solo come CTA esplicita.
+
 - [2026-03-01] **Quando il contesto di un draft AI decade, la UI deve
   esplicitarlo e non solo cambiare comportamento sotto il cofano** — Nel
   percorso `launcher -> payments/create` non basta smettere di applicare la

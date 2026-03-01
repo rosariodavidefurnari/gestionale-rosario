@@ -392,6 +392,20 @@ The next open priority is now closed too:
   - no new write capability
   - validation closed with `npm run typecheck` plus targeted Vitest
 
+The next open priority is now closed too:
+
+- the payment draft hardening pass now also protects manual amount editing on
+  the approved destination form
+- once the user starts editing `amount` on `payments/create`:
+  - the automatic residual suggestion no longer reclaims the field
+  - the suggestion remains available only as an explicit CTA
+  - transient empty states while typing no longer trigger an unwanted refill
+- this removes another instability from the already approved corridor without
+  widening the AI perimeter:
+  - no edge-function change
+  - no new write capability
+  - validation closed with `npm run typecheck` plus targeted Vitest
+
 The next open priority is:
 
 - keep future work selective:

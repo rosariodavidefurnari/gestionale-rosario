@@ -290,7 +290,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "prepare_payment_write_draft",
       label: "Prepara bozza pagamento nel launcher",
       description:
-        "Propone nel launcher una bozza pagamento stretta, modificabile dall'utente e trasportabile verso payments/create senza scrivere direttamente nel CRM; la superficie di arrivo deve preservare gli edit espliciti gia fatti nel launcher finche l'utente non sceglie un valore diverso e finche resta sullo stesso preventivo della bozza, segnalando esplicitamente quando quel contesto non vale piu.",
+        "Propone nel launcher una bozza pagamento stretta, modificabile dall'utente e trasportabile verso payments/create senza scrivere direttamente nel CRM; la superficie di arrivo deve preservare gli edit espliciti gia fatti nel launcher finche l'utente non sceglie un valore diverso e finche resta sullo stesso preventivo della bozza, segnalando esplicitamente quando quel contesto non vale piu. Dopo il primo edit manuale dell'importo, il form non deve ricalcolarlo automaticamente.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedCrmAnswerPanel.tsx",
       actsOn: ["quotes", "payments"],
       requiredFields: [

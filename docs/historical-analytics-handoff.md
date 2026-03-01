@@ -427,6 +427,22 @@ The next high-value step is now closed too:
   - no function redeploy
   - local validation closed with `npm run typecheck` and targeted Vitest
 
+The next high-value step is now closed too:
+
+- the approved `payments/create` surface no longer fights the user on the
+  amount field after the first manual edit
+- if the user enters the amount field and starts changing it:
+  - the automatic residual suggestion stops taking control of the field
+  - the user can still explicitly re-apply the local suggestion through the CTA
+  - clearing the field temporarily while typing no longer causes an automatic
+    re-fill race
+- this closes another real stability gap on the same approved corridor:
+  - local deterministic suggestions stay available
+  - but they stop overriding manual intent once the user takes control
+- this slice stayed local:
+  - no function redeploy
+  - local validation closed with `npm run typecheck` and targeted Vitest
+
 The next high-value step is now:
 
 - decide whether one more short hardening pass is still higher value than

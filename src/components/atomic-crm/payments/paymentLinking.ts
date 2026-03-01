@@ -292,7 +292,7 @@ export const shouldAutoApplySuggestedPaymentAmount = ({
     return false;
   }
 
-  if (isAmountDirty && Number.isFinite(numericAmount) && numericAmount > 0) {
+  if (isAmountDirty) {
     return false;
   }
 

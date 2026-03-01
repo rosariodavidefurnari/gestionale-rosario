@@ -82,12 +82,43 @@ preventivo cambia, il vecchio importo draft non continua a interferire con il
 nuovo suggerimento locale. Anche il passo subito dopo e' ora chiuso: il form
 non si limita piu a comportarsi correttamente, ma segnala esplicitamente quando
 la bozza AI iniziale non vale piu perche' il preventivo corrente e' cambiato.
-Nota differita gia registrata da test reale utente:
+Anche il passo subito dopo e' ora chiuso: dopo il primo edit manuale
+dell'importo, il form non ricalcola piu il valore in automatico e lascia il
+suggerimento residuo come scelta esplicita. Nota differita gia registrata da
+test reale utente:
 l'import fatture incontra anche clienti storici assenti dal CRM e in quel
 caso mancano ancora creazione assistita cliente e alcuni campi anagrafici da
 fatturazione; non e' il focus adesso, ma il backlog lo conserva.
 
 ## Last Session
+
+### Sessione 68 (2026-03-01, stop auto-refill after first manual amount edit)
+
+- Completed:
+  - **Il form `payments/create` smette di riprendersi il controllo
+    dell'importo dopo il primo edit manuale**:
+    - una volta che l'utente tocca `amount`:
+      - il suggerimento automatico non rientra piu da solo
+      - svuotare temporaneamente il campo per digitare un nuovo importo non
+        causa piu il refill automatico del residuo
+  - **Il suggerimento locale resta disponibile ma solo come scelta esplicita**:
+    - il CTA `Usa <importo suggerito>` resta disponibile
+    - l'automatismo pero' si ferma quando l'utente prende il controllo del
+      campo
+  - **Semantica e capability registrano anche questa ownership del campo
+    importo**:
+    - dopo il primo edit manuale il form non deve piu ricalcolare il valore in
+      automatico
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/payments/paymentLinking.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`
+
+- Decisions:
+  - in un workflow assistito, i suggerimenti automatici devono cedere il passo
+    al primo segnale di edit manuale reale
+  - il controllo del campo importo deve passare in modo stabile all'utente fino
+    a una scelta esplicita di riapplicare il suggerimento
 
 ### Sessione 67 (2026-03-01, segnalazione esplicita quando la bozza non vale piu)
 

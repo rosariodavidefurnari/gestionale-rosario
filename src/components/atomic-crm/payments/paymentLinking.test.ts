@@ -317,13 +317,22 @@ describe("paymentLinking", () => {
         isAmountDirty: true,
         draftAmount: 320,
       }),
-    ).toBe(true);
+    ).toBe(false);
 
     expect(
       shouldAutoApplySuggestedPaymentAmount({
         currentAmount: 450,
         suggestedAmount: 450,
         isAmountDirty: false,
+        draftAmount: null,
+      }),
+    ).toBe(false);
+
+    expect(
+      shouldAutoApplySuggestedPaymentAmount({
+        currentAmount: "",
+        suggestedAmount: 450,
+        isAmountDirty: true,
         draftAmount: null,
       }),
     ).toBe(false);

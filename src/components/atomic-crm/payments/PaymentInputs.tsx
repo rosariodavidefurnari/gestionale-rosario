@@ -387,13 +387,19 @@ const QuotePaymentSuggestionCard = () => {
 
       {suggestedAmount != null ? (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            Suggerimento per{" "}
-            {paymentType
-              ? (paymentTypeLabels[paymentType] ?? paymentType)
-              : "questo pagamento"}
-            : usa il residuo non ancora collegato al preventivo.
-          </p>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">
+              Suggerimento per{" "}
+              {paymentType
+                ? (paymentTypeLabels[paymentType] ?? paymentType)
+                : "questo pagamento"}
+              : usa il residuo non ancora collegato al preventivo.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Dopo il primo edit manuale dell'importo, il form non lo ricalcola
+              piu da solo.
+            </p>
+          </div>
           <Button
             type="button"
             variant="outline"
