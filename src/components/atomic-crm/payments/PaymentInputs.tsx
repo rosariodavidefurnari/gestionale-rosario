@@ -23,6 +23,7 @@ import {
 import {
   buildQuoteSearchFilter,
   getPaymentCreateDraftContextFromSearch,
+  isPaymentDraftContextStillApplicable,
   buildPaymentPatchFromQuote,
   getSuggestedPaymentAmountFromQuote,
   shouldAutoApplySuggestedPaymentAmount,
@@ -258,6 +259,16 @@ const QuotePaymentSuggestionCard = () => {
     () => getPaymentCreateDraftContextFromSearch(location.search),
     [location.search],
   );
+  const activeDraftContext = useMemo(
+    () =>
+      isPaymentDraftContextStillApplicable({
+        draftContext,
+        quoteId,
+      })
+        ? draftContext
+        : null,
+    [draftContext, quoteId],
+  );
 
   const { data: quote } = useGetOne<Quote>(
     "quotes",
@@ -298,10 +309,10 @@ const QuotePaymentSuggestionCard = () => {
   const numericAmount =
     typeof amount === "number" ? amount : Number(amount ?? 0);
   const isDraftAmountPreserved =
-    draftContext?.amount != null &&
+    activeDraftContext?.amount != null &&
     !dirtyFields.amount &&
     Number.isFinite(numericAmount) &&
-    numericAmount === draftContext.amount;
+    numericAmount === activeDraftContext.amount;
 
   useEffect(() => {
     if (
@@ -310,7 +321,7 @@ const QuotePaymentSuggestionCard = () => {
         currentAmount: amount,
         suggestedAmount,
         isAmountDirty: Boolean(dirtyFields.amount),
-        draftAmount: draftContext?.amount ?? null,
+        draftAmount: activeDraftContext?.amount ?? null,
       })
     ) {
       return;
@@ -322,9 +333,9 @@ const QuotePaymentSuggestionCard = () => {
       shouldValidate: true,
     });
   }, [
+    activeDraftContext?.amount,
     amount,
     dirtyFields.amount,
-    draftContext?.amount,
     quoteId,
     setValue,
     suggestedAmount,
@@ -351,11 +362,11 @@ const QuotePaymentSuggestionCard = () => {
           {formatCurrency(summary.linkedTotal)} · residuo{" "}
           {formatCurrency(summary.remainingAmount)}
         </p>
-        {draftContext?.amount != null ? (
+        {activeDraftContext?.amount != null ? (
           <p className="text-xs text-muted-foreground">
             Importo arrivato dalla bozza AI{" "}
-            {formatCurrency(draftContext.amount)}
-            {draftContext.amount !== summary.remainingAmount
+            {formatCurrency(activeDraftContext.amount)}
+            {activeDraftContext.amount !== summary.remainingAmount
               ? ` · residuo locale ${formatCurrency(summary.remainingAmount)}`
               : ""}
             {isDraftAmountPreserved

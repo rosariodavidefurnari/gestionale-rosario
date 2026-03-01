@@ -11,6 +11,7 @@ import {
   buildQuoteSearchFilter,
   buildPaymentPatchFromQuote,
   getPaymentCreateDefaultsFromSearch,
+  isPaymentDraftContextStillApplicable,
   shouldAutoApplySuggestedPaymentAmount,
   getSuggestedPaymentAmountFromQuote,
   getUnifiedAiHandoffContextFromSearch,
@@ -198,6 +199,33 @@ describe("paymentLinking", () => {
         "?launcher_source=unified_ai_launcher&launcher_action=quote_create_payment",
       ),
     ).toBeNull();
+  });
+
+  it("keeps the launcher draft active only while the same quote stays selected", () => {
+    const draftContext = getPaymentCreateDraftContextFromSearch(
+      "?quote_id=quote-7&client_id=client-2&project_id=project-9&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
+    );
+
+    expect(
+      isPaymentDraftContextStillApplicable({
+        draftContext,
+        quoteId: "quote-7",
+      }),
+    ).toBe(true);
+
+    expect(
+      isPaymentDraftContextStillApplicable({
+        draftContext,
+        quoteId: "quote-8",
+      }),
+    ).toBe(false);
+
+    expect(
+      isPaymentDraftContextStillApplicable({
+        draftContext,
+        quoteId: null,
+      }),
+    ).toBe(false);
   });
 
   it("builds a payment-create path from an editable launcher draft", () => {

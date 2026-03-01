@@ -10,6 +10,13 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se il form finale cambia record chiave, il draft importato dal
+  launcher smette di essere semanticamente valido** — Nel caso `payments/create`
+  il draft amount portato dalla chat ha senso solo sullo stesso `quote_id` che
+  l'ha generato. Se l'utente cambia preventivo sulla superficie finale, quel
+  valore non va piu preservato come se fosse ancora il draft attivo: bisogna
+  tornare subito al comportamento locale del nuovo record.
+
 - [2026-03-01] **Se un write-draft attraversa launcher e form finale, la
   superficie di arrivo deve preservare gli edit espliciti fatti dall'utente nel
   launcher** — Nel caso della bozza pagamento non basta portare `amount` nei

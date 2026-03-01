@@ -75,13 +75,45 @@ valore e lo distingue dal residuo locale del preventivo invece di
 sovrascriverlo al primo render. Il prossimo lavoro ad alto valore non e' una
 nuova AI sparsa o una write autonoma, ma restare selettivi: aprire un altro
 draft solo se e' altrettanto deterministico oppure fare un passaggio mirato di
-stability hardening sul launcher/payment path gia approvato. Nota differita gia
-registrata da test reale utente:
+stability hardening sul launcher/payment path gia approvato. Anche questo passo
+successivo e' ora chiuso: il draft importato dal launcher resta valido solo
+finche il form `payments/create` rimane sullo stesso preventivo; se il
+preventivo cambia, il vecchio importo draft non continua a interferire con il
+nuovo suggerimento locale. Nota differita gia registrata da test reale utente:
 l'import fatture incontra anche clienti storici assenti dal CRM e in quel
 caso mancano ancora creazione assistita cliente e alcuni campi anagrafici da
 fatturazione; non e' il focus adesso, ma il backlog lo conserva.
 
 ## Last Session
+
+### Sessione 66 (2026-03-01, scope del draft solo sullo stesso preventivo)
+
+- Completed:
+  - **Il draft importato dal launcher non resta piu attivo se il form cambia
+    preventivo**:
+    - la preservazione dell'importo draft vale solo finche `payments/create`
+      resta sullo stesso `quote_id` della bozza
+    - se l'utente cambia preventivo:
+      - il vecchio importo draft smette di essere privilegiato
+      - il suggerimento locale del nuovo preventivo puo riprendere
+  - **La UI evita un contesto fuorviante sulla superficie approvata**:
+    - il riepilogo "Importo arrivato dalla bozza AI" compare solo quando il
+      preventivo corrente coincide con quello della bozza
+    - non viene piu mostrato come se appartenesse a un altro preventivo scelto
+      dopo
+  - **Semantica e capability registrano anche questo vincolo di contesto**:
+    - la preservazione degli edit del launcher vale solo sullo stesso
+      preventivo della bozza
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/payments/paymentLinking.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`
+
+- Decisions:
+  - un draft write-assisted resta valido solo finche il contesto business che
+    lo ha generato non cambia
+  - quando il contesto cambia, e' meglio tornare subito alla semantica locale
+    della superficie approvata invece di trascinare metadati del launcher
 
 ### Sessione 65 (2026-03-01, preserve draft amount on payments/create)
 

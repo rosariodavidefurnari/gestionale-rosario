@@ -391,13 +391,32 @@ The next high-value step is now closed too:
   - no function redeploy was required
   - validation closed locally with `npm run typecheck` and targeted Vitest
 
+The next high-value step is now closed too:
+
+- the approved `payments/create` surface now keeps the imported payment draft
+  scoped to the same quote that originated it
+- if the user changes quote after landing on the form:
+  - the imported draft amount is no longer treated as the active draft value
+  - the local residual suggestion for the newly selected quote can resume its
+    normal deterministic behavior
+  - the UI no longer presents the old draft amount as if it still belonged to
+    the new quote
+- this closes a real continuity gap in the strict `launcher -> approved form`
+  path:
+  - preserve explicit draft edits while the business context is the same
+  - stop preserving them when the user changes the linked quote context
+- this slice stayed local:
+  - no function redeploy
+  - local validation closed with `npm run typecheck` and targeted Vitest
+
 The next high-value step is now:
 
-- resist broadening the general CRM chat write perimeter
-- only ship another commercial write-draft if its business meaning is as
-  deterministic as the quote-driven payment case
-- otherwise start a focused stability hardening pass on the already approved
-  launcher/payment path before adding more write-assisted cases
+- keep resisting breadth for breadth's sake
+- before adding another write-assisted slice, decide whether the next best gain
+  is:
+  - another equally deterministic commercial draft
+  - or a short stability pass that adds more explicit UI/test coverage around
+    the launcher/payment corridor already approved
 - still no general write execution from the CRM Q&A shell
 
 Deferred note from real user trial:

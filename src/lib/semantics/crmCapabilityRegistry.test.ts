@@ -78,6 +78,11 @@ describe("crmCapabilityRegistry", () => {
       )?.description,
     ).toContain("preservare");
     expect(
+      registry.actions.find(
+        (action) => action.id === "prepare_payment_write_draft",
+      )?.description,
+    ).toContain("stesso preventivo");
+    expect(
       registry.actions.some((action) => action.id === "invoice_import_extract"),
     ).toBe(true);
     expect(

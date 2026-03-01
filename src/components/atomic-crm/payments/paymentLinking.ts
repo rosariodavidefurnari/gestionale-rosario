@@ -226,6 +226,19 @@ export const getPaymentCreateDraftContextFromSearch = (
   };
 };
 
+export const isPaymentDraftContextStillApplicable = ({
+  draftContext,
+  quoteId,
+}: {
+  draftContext?: Pick<PaymentCreateDraftContext, "quoteId"> | null;
+  quoteId?: Identifier | null;
+}) =>
+  Boolean(
+    draftContext?.quoteId &&
+      quoteId &&
+      String(draftContext.quoteId) === String(quoteId),
+  );
+
 export const buildPaymentCreatePathFromDraft = ({
   draft,
 }: {

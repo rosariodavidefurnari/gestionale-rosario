@@ -364,12 +364,26 @@ The next open priority is now closed too:
   - no chat-side write added
   - validation closed with `npm run typecheck` plus targeted Vitest
 
+The next open priority is now closed too:
+
+- the first payment draft hardening pass now also scopes draft preservation to
+  the same quote context that originated the draft
+- when the destination form changes quote, the old launcher draft amount is no
+  longer privileged over the deterministic local suggestion of the new quote
+- this avoids a misleading continuity bug on the approved form:
+  - preserve imported edits only while the business context is still the same
+  - stop treating them as active when the quote changes
+- this slice stayed local and deterministic:
+  - no edge-function change
+  - no new write capability
+  - validation closed with `npm run typecheck` plus targeted Vitest
+
 The next open priority is:
 
-- stay selective on future write-assisted slices:
+- keep future write-assisted work selective:
   - either identify another equally deterministic commercial draft
-  - or prefer a stability hardening pass over the existing launcher/payment
-    path before widening write-assisted coverage
+  - or spend one more short hardening pass on the existing launcher/payment
+    corridor before widening coverage
 - still do not give the general CRM chat direct write execution
 
 Deferred note from real usage, not current priority:

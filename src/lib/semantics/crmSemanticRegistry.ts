@@ -279,7 +279,7 @@ export const buildCrmSemanticRegistry = (
         confirmationRule:
           "nessuna scrittura dal launcher; la conferma resta sul form pagamenti gia approvato",
         meaning:
-          "Il primo write-draft del launcher puo solo proporre una bozza pagamento strutturata, modificabile in chat e trasportabile verso payments/create; la scrittura reale parte solo dal form di destinazione con conferma esplicita dell'utente. Se l'utente ha gia corretto esplicitamente l'importo nel launcher, la superficie di arrivo deve preservare quel valore e offrire solo in alternativa il suggerimento locale deterministico del residuo.",
+          "Il primo write-draft del launcher puo solo proporre una bozza pagamento strutturata, modificabile in chat e trasportabile verso payments/create; la scrittura reale parte solo dal form di destinazione con conferma esplicita dell'utente. Se l'utente ha gia corretto esplicitamente l'importo nel launcher, la superficie di arrivo deve preservare quel valore e offrire solo in alternativa il suggerimento locale deterministico del residuo, ma solo finche il form resta sullo stesso preventivo della bozza.",
       },
     },
   };
