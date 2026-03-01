@@ -72,6 +72,14 @@ Aggiornare `progress.md` e `learnings.md` solo se c'e' valore storico reale:
   - pattern nuovo non banale
   - errore reale che vale la pena non ripetere
 
+Quando li aggiorni:
+
+- mantenere in alto un indice/uso rapido breve
+- non far crescere un mega-riassunto cumulativo nello stesso blocco
+- se una regola e' viva, promuoverla fuori dagli archivi
+- se il rumore supera il valore, preferire una futura rotazione per periodo
+  invece di continuare ad accumulare tutto nel file principale
+
 ## PROMOTION RULE
 
 Se una regola ricorre 2+ volte, non lasciarla solo in `learnings.md`.

@@ -21,128 +21,62 @@ prodotto e non come reading order iniziale di una nuova chat.
 - se emerge una regola ancora viva, promuoverla nei documenti `canonical` o in
   `.claude/rules/`, non duplicarla qui come fonte primaria
 
+## Quick Access
+
+- temi recenti ad alto valore da cercare:
+  - `launcher`
+  - `contacts`
+  - `billing`
+  - `invoice`
+  - `continuity`
+  - `mobile`
+- sessioni recenti piu' utili:
+  - `Sessione 88` -> handoff launcher per servizi/spese non TV
+  - `Sessione 87` -> handoff launcher verso `quick episode`
+  - `Sessione 81-84` -> continuity chat, questioni lunghe, history, UX
+  - `Sessione 77` -> mobile UX trasversale
+  - `Sessione 54-57` -> nascita launcher, import fatture, read-context, answer
+- ricerca consigliata:
+  - `rg -n "launcher|invoice|contacts|billing|continuity|mobile" progress.md`
+
+## Archive Rule
+
+- tenere qui solo:
+  - cronologia
+  - milestone
+  - verifiche runtime/manuali
+  - decisioni che serve ricostruire nel tempo
+- non trasformare `Current Phase` in un mega-riassunto cumulativo
+- se una regola diventa stabile:
+  - promuoverla nei docs `canonical` o in `.claude/rules/`
+- se il file continua a crescere senza migliorare la ricerca:
+  - preferire un futuro split per periodo o macro-fase, lasciando qui un indice
+    breve
+
 ## Current Phase
 
-🟢 Dashboard storico AI-ready stabile, AI operativa su `Annuale` chiusa sul
-solo contesto `annual_operations`, e ponte storico lato pagamenti ora chiuso
-anche come consumer utente reale: gli `incassi` hanno una resource semantica
-dedicata, una card AI separata e adesso anche una piccola card non-AI in
-`Storico`. Anche il backbone commerciale minimo
-`Preventivo -> Progetto -> Pagamento` resta chiuso sul runtime reale, con
-quick payment senza progetto, foundation `quote_items` già validati e ora
-anche un riepilogo pagamenti direttamente nel dettaglio preventivo e un accesso
-diretto `cliente -> pagamento` per i casi semplici senza progetto. Questa fase
-ora ha una linea d’arrivo esplicita: tenere stabile ciò che c’è, e solo se
-resta un buco vero chiudere al massimo un ultimo slice commerciale minimo.
-Dopo quello, nuove idee vanno trattate come `v2`, non come espansione infinita
-della stessa fase. Obiettivo strategico già fissato per il seguito: smettere
-di avere AI sparse nelle pagine e unificarle in una UX unica, mantenendo le
-funzioni utili già chiuse e senza regressioni. Nel frattempo la base semantica
-operativa è stata rafforzata: ora esiste un registry condiviso per tipi,
-stati, categorie, fonti, date, descrizioni, metodo pagamento, logica km e
-tassabilità dei servizi. In più è partita una seconda foundation necessaria
-per la chat AI unificata futura: un catalogo esplicito delle capacità del CRM
-e una base condivisa per le mail cliente sui cambi di stato preventivo, con
-target outbound `Gmail`. Il vecchio ramo inbound `Postmark` è stato rimosso e
-le notifiche interne ad alta priorità puntano ora a `CallMeBot`. Anche il
-ponte reale verso le mail cliente è ora chiuso: il dettaglio preventivo espone
-un dialog unico di preview/send manuale via `Gmail SMTP`, costruito sopra
-`quoteStatusEmailTemplates`, con entry point provider espliciti e nessun
-automatismo introdotto. Questa parte adesso è chiusa anche sul runtime remoto:
-deploy function, secret `SMTP_*` e invoke autenticato hanno restituito un
-`accepted` reale con risposta SMTP `250 OK`. Da lì in poi il primo ponte
-corretto verso la chat unificata è adesso chiuso come launcher globale
-flottante, disponibile da tutto il CRM senza route dedicata. Il prossimo passo
-Pareto dentro la stessa shell è adesso chiuso davvero anche sul workflow
-fatture: la configurazione Gemini separata resta su default
-`gemini-2.5-pro`, il launcher accetta `PDF` + scansioni/foto, restituisce una
-bozza strutturata correggibile in chat e conferma solo su esplicita azione
-utente verso `payments` / `expenses`. Anche questa parte è ora verificata sul
-runtime remoto con `invoice_import_extract` deployata, smoke autenticato su
-file misti e cleanup finale. Il prossimo lavoro ad alto valore non è un’altra
-AI sparsa, ma rendere la stessa shell capace di leggere in modo coerente il
-CRM core attraverso il backbone semantico già approvato. Anche questo step è
-ora chiuso: il launcher carica una snapshot read-only di `clients`, `quotes`,
-`projects`, `payments` ed `expenses` riusando semantic registry, capability
-registry e un unico provider entry point. Il prossimo passo Pareto resta
-dentro la stessa superficie e ora e' chiuso anche lui: il launcher usa quel
-contesto CRM-wide per il primo vero answer flow AI di lettura generale, sempre
-read-only. La policy prodotto e' adesso esplicita anche nei documenti e nei
-registry: prima lettura generale del CRM, poi eventualmente write assistito
-solo con conferma esplicita, mai scrittura autonoma libera. Il prossimo passo
-Pareto dentro la stessa shell e' ora chiuso anche lui: le risposte del
-launcher propongono handoff strutturati verso route gia approvate del CRM.
-Anche lo step successivo e' ora chiuso: quel handoff e' stato alzato al primo
-handoff commerciale orientato ad azioni gia approvate, sempre senza
-esecuzione diretta dalla chat generale. Anche quel passo piu guidato e' ora
-chiuso: il launcher sa marcare una recommendation primaria deterministica
-sulle azioni gia approvate quando la domanda e il contesto commerciale lo
-consentono. Anche il passo successivo e' ora chiuso: i handoff approvati
-portano ora dentro le superfici CRM esistenti il contesto launcher e i
-prefill gia supportati, con `PaymentCreate` e `QuickPaymentDialog` che
-consumano quei search params senza aggiungere scritture automatiche. Il
-prossimo lavoro ad alto valore non e' un'altra AI sparsa, ma chiudere gli
-ultimi gap di contesto manuale che restano dopo l'atterraggio su quelle
-superfici approvate. Anche il pezzo piu forte di quel gap e' ora chiuso sul
-ramo `quote_create_payment`: il form `payments/create` mostra il contesto del
-preventivo collegato e puo suggerire in modo deterministico il residuo ancora
-non collegato, sempre modificabile dall'utente. Anche il primo write-draft
-stretto e' ora chiuso: il launcher puo proporre una bozza pagamento
-quote-driven modificabile, ma non scrive nulla e porta la conferma dentro la
-superficie approvata `payments/create`. Anche il primo irrobustimento del tratto
-`write-draft -> form approvato -> conferma esplicita` e' ora chiuso: se
-l'utente modifica l'importo nel launcher, `payments/create` preserva quel
-valore e lo distingue dal residuo locale del preventivo invece di
-sovrascriverlo al primo render. Il prossimo lavoro ad alto valore non e' una
-nuova AI sparsa o una write autonoma, ma restare selettivi: aprire un altro
-draft solo se e' altrettanto deterministico oppure fare un passaggio mirato di
-stability hardening sul launcher/payment path gia approvato. Anche questo passo
-successivo e' ora chiuso: il draft importato dal launcher resta valido solo
-finche il form `payments/create` rimane sullo stesso preventivo; se il
-preventivo cambia, il vecchio importo draft non continua a interferire con il
-nuovo suggerimento locale. Anche il passo subito dopo e' ora chiuso: il form
-non si limita piu a comportarsi correttamente, ma segnala esplicitamente quando
-la bozza AI iniziale non vale piu perche' il preventivo corrente e' cambiato.
-Anche il passo subito dopo e' ora chiuso: dopo il primo edit manuale
-dell'importo, il form non ricalcola piu il valore in automatico e lascia il
-suggerimento residuo come scelta esplicita. Nota differita gia registrata da
-test reale utente:
-l'import fatture incontra anche clienti storici assenti dal CRM e in quel
-caso mancano ancora creazione assistita cliente e alcuni campi anagrafici da
-fatturazione; non e' il focus adesso, ma il backlog lo conserva.
-Fuori sequenza ma chiuso subito per sbloccare l'uso quotidiano: il launcher AI
-non impila piu tutto in un unico scroll. Ora apre su `Chat AI`, mentre
-`Snapshot CRM` e `Importa fatture e ricevute` stanno dietro un menu `+`; lo stato della
-chat resta preservato mentre si cambia vista nella stessa sessione. La chat
-ora segue anche un layout standard: risposta sopra, composer in basso, `+` a
-sinistra del campo di scrittura e lontano dalla `X` di chiusura. Il prossimo
-passo commerciale legittimo dentro questa stessa fase e' ora chiuso anche lui:
-la chat puo preparare una seconda bozza pagamento stretta sul ramo
-`project -> quick payment`, usando financials di progetto aggregati in modo
-deterministico nel contesto read-only e portando `tipo/importo/stato` dentro
-il dialog approvato senza scrivere dal launcher.
-La prossima fase esplicita e' ora definita meglio: prima di aprire creazione
-assistita cliente da import storico, serve introdurre una vera anagrafica
-cliente da fatturazione. L'analisi sui file reali in `Fatture/2023-2025`
-conferma che il modello attuale `name/address/tax_id` e' troppo povero; il gap
-fornitori esiste davvero, ma resta un task separato perche' oggi le spese
-puntano ancora a `client_id` e non va mischiato con questa prima migration.
-Anche quel slice adesso e' chiuso davvero: la migration remota ha aggiunto un
-profilo fiscale cliente strutturato, il CRM lo espone nei form/show/export/PDF
-e l'import fatture trasporta gli stessi campi fino al draft editor. Se il
-cliente storico manca ancora dal CRM, il launcher non si blocca piu: puo
-aprire `clients/create` gia precompilato, sempre con conferma esplicita sul
-form. Anche il follow-up immediato di continuita' e' ora chiuso: la snapshot
-read-only del launcher vede anche denominazione fatturazione, `P.IVA`, `CF`,
-`Codice Destinatario`, `PEC` e indirizzo fiscale riassunto dei clienti
-recenti, mentre lista e filtri clienti permettono finalmente di trovare lo
-stesso profilo tramite denominazione, identificativi fiscali e comune di
-fatturazione. Anche il follow-up UX del launcher e' ora chiuso: su cellulare
-la chat usa tutto lo schermo in altezza e la conversazione read-only piu
-recente non si perde piu quando chiudi e riapri il drawer. Resta intenzionale
-solo il reset del workflow import fatture, per non trascinare file temporanei
-e draft documentali tra una sessione drawer e l'altra. Il tema fornitori resta
-invece separato e ancora aperto.
+- baseline stabile:
+  - dashboard `Annuale` e `Storico` operative
+  - AI guidata storica e annuale gia' chiusa sui contesti approvati
+  - backbone commerciale minimo `quote -> project -> payment` stabile
+- shell AI unificata:
+  - launcher globale presente
+  - snapshot CRM read-only presente
+  - answer flow read-only presente
+  - handoff verso superfici approvate presente
+  - import fatture/ricevute presente con conferma esplicita
+- foundation condivise chiuse:
+  - `crmSemanticRegistry`
+  - `crmCapabilityRegistry`
+  - communication layer `Gmail` outbound + `CallMeBot` interno prioritario
+- anagrafica clienti:
+  - profilo fiscale/fatturazione introdotto
+  - referenti `contacts` riattivati e collegati a clienti/progetti
+- linea di fase:
+  - tenere stabile il perimetro chiuso
+  - non aggiungere AI sparse
+  - trattare i fornitori come slice separato e non come patch implicita del
+    modello clienti
 
 ## Last Session
 

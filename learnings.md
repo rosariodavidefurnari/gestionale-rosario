@@ -30,6 +30,38 @@ Questo file resta quindi un archivio, non la fonte canonica.
 - se una regola e' ormai stabile, spostarla nei documenti `canonical` o in
   `.claude/rules/`
 
+## Quick Access
+
+- keyword ad alta resa:
+  - `launcher`
+  - `invoice`
+  - `billing`
+  - `contacts`
+  - `mobile`
+  - `continuity`
+  - `deploy`
+  - `supabase`
+- ricerca consigliata:
+  - `rg -n "launcher|invoice|billing|contacts|mobile|continuity|deploy|supabase" learnings.md`
+- usare questo file soprattutto per:
+  - errori gia' successi davvero
+  - pattern di integrazione non ancora promossi altrove
+  - motivazioni storiche dietro una regola oggi gia' fissata
+
+## Archive Rule
+
+- non duplicare qui regole gia' migrate in:
+  - `docs/development-continuity-map.md`
+  - `docs/architecture.md`
+  - `.claude/rules/`
+- nuove voci solo se aggiungono:
+  - un pattern davvero nuovo
+  - un fallimento reale da non ripetere
+  - una motivazione storica che non sarebbe ovvia dal codice
+- se una famiglia di voci cresce troppo:
+  - promuovere la regola stabile fuori da qui
+  - evitare di trasformare `learnings.md` in un secondo handoff
+
 ## Format per ogni voce
 
 - [DATA] **Nome pattern** — Descrizione. Contesto: cosa stava succedendo.
