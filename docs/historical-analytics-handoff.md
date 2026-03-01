@@ -462,7 +462,8 @@ Tactical UX slice closed out of sequence:
 - the launcher chat now follows a standard chat layout:
   - conversation and results stay above
   - the composer stays anchored at the bottom of the panel
-  - the `+` action moved below the title, away from the drawer close control
+  - the `+` action now lives to the left of the composer input, away from the
+    drawer close control
 - the CRM chat stays mounted while switching views, so question/answer state is
   preserved during navigation inside the same launcher session
 - invoice import and payment-draft logic were only extracted/reframed, not

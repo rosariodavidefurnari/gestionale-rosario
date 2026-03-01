@@ -2,7 +2,13 @@
 
 import "@/setupTests";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const useIsMobile = vi.fn();
@@ -268,18 +274,26 @@ describe("UnifiedAiLauncher", () => {
     fireEvent.click(launcherButton);
 
     expect(await screen.findByText("Chat AI")).toBeInTheDocument();
-    expect(screen.getByText("Altre viste")).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
         name: "Dammi un riepilogo operativo rapido del CRM.",
       }),
     ).toBeInTheDocument();
+    const composer = screen.getByTestId("unified-crm-composer");
+    const composerMenuButton = within(composer).getByRole("button", {
+      name: "Apri altre viste AI",
+    });
+    const composerTextarea = within(composer).getByLabelText(
+      "Fai una domanda sul CRM corrente",
+    );
+    expect(
+      composerMenuButton.compareDocumentPosition(composerTextarea) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(screen.queryByText("Snapshot CRM")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Documenti")).not.toBeInTheDocument();
 
-    fireEvent.pointerDown(
-      screen.getByRole("button", { name: "Apri altre viste AI" }),
-    );
+    fireEvent.pointerDown(composerMenuButton);
 
     expect(
       await screen.findByRole("menuitem", { name: "Snapshot CRM" }),

@@ -7,12 +7,14 @@ export const AiChatView = ({
   isReadContextPending,
   readContextError,
   onNavigate,
+  onOpenView,
 }: {
   context: UnifiedCrmReadContext | null;
   selectedModel: string;
   isReadContextPending: boolean;
   readContextError: unknown;
   onNavigate?: () => void;
+  onOpenView?: (view: "snapshot" | "import") => void;
 }) => (
   <div className="flex h-full min-h-0 flex-col gap-4">
     {readContextError ? (
@@ -32,6 +34,7 @@ export const AiChatView = ({
         context={context}
         selectedModel={selectedModel}
         onNavigate={onNavigate}
+        onOpenView={onOpenView}
       />
     </div>
   </div>

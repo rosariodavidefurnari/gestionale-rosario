@@ -1,10 +1,23 @@
 import { useMutation } from "@tanstack/react-query";
-import { ArrowRight, Loader2, SendHorizontal } from "lucide-react";
+import {
+  ArrowRight,
+  Database,
+  FileUp,
+  Loader2,
+  Plus,
+  SendHorizontal,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDataProvider, useNotify } from "ra-core";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -34,12 +47,14 @@ type UnifiedCrmAnswerPanelProps = {
   context: UnifiedCrmReadContext | null;
   selectedModel: string;
   onNavigate?: () => void;
+  onOpenView?: (view: "snapshot" | "import") => void;
 };
 
 export const UnifiedCrmAnswerPanel = ({
   context,
   selectedModel: _selectedModel,
   onNavigate,
+  onOpenView,
 }: UnifiedCrmAnswerPanelProps) => {
   const dataProvider = useDataProvider<CrmDataProvider>();
   const notify = useNotify();
@@ -225,6 +240,30 @@ export const UnifiedCrmAnswerPanel = ({
             Fai una domanda sul CRM corrente
           </Label>
           <div className="flex items-end gap-2">
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="mb-5 shrink-0"
+                  aria-label="Apri altre viste AI"
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="top">
+                <DropdownMenuItem onSelect={() => onOpenView?.("snapshot")}>
+                  <Database className="size-4" />
+                  Snapshot CRM
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => onOpenView?.("import")}>
+                  <FileUp className="size-4" />
+                  Importa fatture e ricevute
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <div className="min-w-0 flex-1 space-y-2">
               <Textarea
                 id="unified-crm-question"

@@ -1,12 +1,6 @@
-import { ArrowLeft, Bot, Database, FileUp, Plus } from "lucide-react";
+import { ArrowLeft, Bot } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   SheetDescription,
   SheetHeader,
@@ -30,39 +24,10 @@ export const AiLauncherHeader = ({
 }) => (
   <SheetHeader className="border-b bg-background/95 pb-3 pr-14">
     {activeView === "chat" ? (
-      <>
-        <div className="flex items-center gap-2 text-left">
-          <Bot className="size-4" />
-          <SheetTitle>{viewTitles.chat}</SheetTitle>
-        </div>
-
-        <div className="pt-3">
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                aria-label="Apri altre viste AI"
-              >
-                <Plus className="size-4" />
-                Altre viste
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuItem onSelect={() => onViewChange("snapshot")}>
-                <Database className="size-4" />
-                Snapshot CRM
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => onViewChange("import")}>
-                <FileUp className="size-4" />
-                Importa fatture e ricevute
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </>
+      <div className="flex items-center gap-2 text-left">
+        <Bot className="size-4" />
+        <SheetTitle>{viewTitles.chat}</SheetTitle>
+      </div>
     ) : (
       <div className="flex items-center gap-2 text-left">
         <Button

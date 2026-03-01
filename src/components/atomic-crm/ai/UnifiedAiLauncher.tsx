@@ -255,6 +255,7 @@ export const UnifiedAiLauncher = () => {
                 isReadContextPending={isReadContextPending && open}
                 readContextError={readContextError}
                 onNavigate={() => setOpen(false)}
+                onOpenView={setActiveView}
               />
             </div>
 

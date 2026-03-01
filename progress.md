@@ -93,8 +93,8 @@ Fuori sequenza ma chiuso subito per sbloccare l'uso quotidiano: il launcher AI
 non impila piu tutto in un unico scroll. Ora apre su `Chat AI`, mentre
 `Snapshot CRM` e `Importa fatture e ricevute` stanno dietro un menu `+`; lo stato della
 chat resta preservato mentre si cambia vista nella stessa sessione. La chat
-ora segue anche un layout standard: risposta sopra, composer in basso, `+`
-lontano dalla `X` di chiusura.
+ora segue anche un layout standard: risposta sopra, composer in basso, `+` a
+sinistra del campo di scrittura e lontano dalla `X` di chiusura.
 
 ## Last Session
 
@@ -106,7 +106,7 @@ lontano dalla `X` di chiusura.
     - `Snapshot CRM` e `Importa fatture e ricevute` non stanno piu nello stesso scroll
       infinito
     - le viste secondarie si aprono dal bottone `+`
-    - il bottone `+` non e' piu accanto alla `X` di chiusura del drawer
+    - il bottone `+` vive nel composer, a sinistra del campo di scrittura
   - **La shell e' stata separata in viste chiare senza rompere la logica
     esistente**:
     - nuovo header a viste
@@ -117,6 +117,8 @@ lontano dalla `X` di chiusura.
     - messaggi, draft e handoff stanno sopra
     - il composer resta in basso nel pannello
     - i suggerimenti rapidi vivono insieme al composer, non sopra tutta la chat
+    - il menu delle viste secondarie vive dentro il composer invece che
+      nell'header del drawer
   - **La chat conserva il proprio stato mentre navighi nelle altre viste del
     launcher**:
     - il pannello chat resta montato
