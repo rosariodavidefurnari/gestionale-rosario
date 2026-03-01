@@ -41,6 +41,11 @@ describe("crmCapabilityRegistry", () => {
       registry.actions.some((action) => action.id === "ask_unified_crm_question"),
     ).toBe(true);
     expect(
+      registry.actions.some(
+        (action) => action.id === "prepare_payment_write_draft",
+      ),
+    ).toBe(true);
+    expect(
       registry.actions.some((action) => action.id === "follow_unified_crm_handoff"),
     ).toBe(true);
     expect(
@@ -62,6 +67,11 @@ describe("crmCapabilityRegistry", () => {
       registry.actions.find((action) => action.id === "quote_create_payment")
         ?.description,
     ).toContain("residuo");
+    expect(
+      registry.actions.find(
+        (action) => action.id === "prepare_payment_write_draft",
+      )?.requiredFields,
+    ).toContain("answer.paymentDraft.amount");
     expect(
       registry.actions.some((action) => action.id === "invoice_import_extract"),
     ).toBe(true);

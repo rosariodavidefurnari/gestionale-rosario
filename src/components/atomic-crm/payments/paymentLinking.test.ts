@@ -5,6 +5,7 @@ import {
   buildPaymentCreatePathFromClient,
   buildPaymentCreateDefaultsFromQuote,
   buildPaymentCreatePathFromQuote,
+  buildPaymentCreatePathFromDraft,
   canCreatePaymentFromQuote,
   buildQuoteSearchFilter,
   buildPaymentPatchFromQuote,
@@ -142,13 +143,15 @@ describe("paymentLinking", () => {
 
     expect(
       getPaymentCreateDefaultsFromSearch(
-        "?quote_id=quote-7&client_id=client-2&project_id=project-9&payment_type=saldo&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment",
+        "?quote_id=quote-7&client_id=client-2&project_id=project-9&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
       ),
     ).toEqual({
       quote_id: "quote-7",
       client_id: "client-2",
       project_id: "project-9",
       payment_type: "saldo",
+      amount: 450,
+      status: "in_attesa",
     });
   });
 
@@ -162,9 +165,29 @@ describe("paymentLinking", () => {
       action: "project_quick_payment",
       openDialog: "quick_payment",
       paymentType: "saldo",
+      draftKind: null,
     });
 
     expect(getUnifiedAiHandoffContextFromSearch("?client_id=client-2")).toBeNull();
+  });
+
+  it("builds a payment-create path from an editable launcher draft", () => {
+    expect(
+      buildPaymentCreatePathFromDraft({
+        draft: {
+          quote_id: "quote-7",
+          client_id: "client-2",
+          project_id: "project-9",
+          payment_type: "saldo",
+          amount: 450,
+          status: "in_attesa",
+          launcherAction: "quote_create_payment",
+          draftKind: "payment_create",
+        },
+      }),
+    ).toBe(
+      "/payments/create?quote_id=quote-7&client_id=client-2&project_id=project-9&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
+    );
   });
 
   it("only shows quick payment for operational quote statuses that can still receive payments", () => {

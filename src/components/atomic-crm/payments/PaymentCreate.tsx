@@ -17,6 +17,10 @@ const getUnifiedAiBannerCopy = (search: string) => {
     return null;
   }
 
+  if (handoff.draftKind === "payment_create") {
+    return "Aperto dalla chat AI unificata con una bozza pagamento modificabile. Controlla importo, tipo e stato prima di salvare.";
+  }
+
   if (handoff.action === "quote_create_payment") {
     return "Aperto dalla chat AI unificata: preventivo, cliente e progetto sono gia precompilati. Controlla i dati prima di salvare.";
   }

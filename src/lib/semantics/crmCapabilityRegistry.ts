@@ -276,7 +276,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "ask_unified_crm_question",
       label: "Chiedi al CRM nella chat unificata",
       description:
-        "Invia una domanda read-only sul CRM core usando la stessa snapshot mostrata nel launcher e restituisce una risposta grounded con possibili handoff verso route o azioni gia approvate, senza scrivere nel CRM.",
+        "Invia una domanda sul CRM core usando la stessa snapshot mostrata nel launcher e restituisce una risposta grounded con possibili handoff verso route o azioni gia approvate e, in casi stretti, una bozza pagamento modificabile che comunque non scrive nel CRM.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
       actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
       requiredFields: [
@@ -285,6 +285,21 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
         "aiConfig.historicalAnalysisModel",
       ],
       sideEffects: ["invoke modello testuale read-only"],
+    },
+    {
+      id: "prepare_payment_write_draft",
+      label: "Prepara bozza pagamento nel launcher",
+      description:
+        "Propone nel launcher una bozza pagamento stretta, modificabile dall'utente e trasportabile verso payments/create senza scrivere direttamente nel CRM.",
+      sourceFile: "src/components/atomic-crm/ai/UnifiedCrmAnswerPanel.tsx",
+      actsOn: ["quotes", "payments"],
+      requiredFields: [
+        "answer.paymentDraft.quoteId",
+        "answer.paymentDraft.clientId",
+        "answer.paymentDraft.paymentType",
+        "answer.paymentDraft.amount",
+        "answer.paymentDraft.status",
+      ],
     },
     {
       id: "follow_unified_crm_handoff",

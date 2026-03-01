@@ -5,6 +5,7 @@ import { AuthMiddleware, UserMiddleware } from "../_shared/authentication.ts";
 import { corsHeaders, OptionsMiddleware } from "../_shared/cors.ts";
 import { getUserSale } from "../_shared/getUserSale.ts";
 import {
+  buildUnifiedCrmPaymentDraftFromContext,
   buildUnifiedCrmSuggestedActions,
   validateUnifiedCrmAnswerPayload,
 } from "../_shared/unifiedCrmAnswer.ts";
@@ -34,6 +35,7 @@ Non inventare dati mancanti.
 Non fingere di aver letto tabelle o moduli che non sono nel contesto.
 Se la domanda richiede dati fuori dalla snapshot, dillo chiaramente.
 Se la domanda chiede di creare, modificare, inviare o cancellare qualcosa, spiega chiaramente che questo flow e solo read-only e che le scritture devono passare da workflow dedicati con conferma esplicita.
+Se la domanda chiede di preparare o registrare un pagamento, non proporre bozze testuali tipo email o messaggio e non serializzare JSON o campi strutturati nel markdown: limita il markdown a descrivere il perimetro read-only e il fatto che sotto puo apparire una bozza pagamento strutturata preparata dal sistema.
 Non scrivere URL, route o istruzioni di navigazione tecniche dentro il markdown: gli handoff verso il CRM vengono aggiunti separatamente dal sistema.
 Scrivi in italiano semplice, senza gergo tecnico inutile.
 Rispondi in markdown semplice, con queste sezioni:
@@ -77,6 +79,10 @@ async function answerUnifiedCrmQuestion(req: Request, currentUserSale: unknown) 
       question,
       context,
     });
+    const paymentDraft = buildUnifiedCrmPaymentDraftFromContext({
+      question,
+      context,
+    });
 
     const response = await openai.responses.create({
       model: selectedModel,
@@ -104,6 +110,7 @@ async function answerUnifiedCrmQuestion(req: Request, currentUserSale: unknown) 
           generatedAt: new Date().toISOString(),
           answerMarkdown,
           suggestedActions,
+          paymentDraft,
         },
       }),
       {

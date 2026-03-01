@@ -65,15 +65,63 @@ ultimi gap di contesto manuale che restano dopo l'atterraggio su quelle
 superfici approvate. Anche il pezzo piu forte di quel gap e' ora chiuso sul
 ramo `quote_create_payment`: il form `payments/create` mostra il contesto del
 preventivo collegato e puo suggerire in modo deterministico il residuo ancora
-non collegato, sempre modificabile dall'utente. Il prossimo lavoro ad alto
-valore non e' un'altra AI sparsa, ma chiudere gli ultimi gap piu leggeri sulle
-altre superfici approvate e solo dopo valutare il primo write-draft stretto
-con conferma esplicita. Nota differita gia registrata da test reale utente:
+non collegato, sempre modificabile dall'utente. Anche il primo write-draft
+stretto e' ora chiuso: il launcher puo proporre una bozza pagamento
+quote-driven modificabile, ma non scrive nulla e porta la conferma dentro la
+superficie approvata `payments/create`. Il prossimo lavoro ad alto valore non
+e' una nuova AI sparsa o una write autonoma, ma estendere questo pattern solo
+se resta altrettanto deterministico oppure irrobustire il tratto
+`write-draft -> form approvato -> conferma esplicita`. Nota differita gia
+registrata da test reale utente:
 l'import fatture incontra anche clienti storici assenti dal CRM e in quel
 caso mancano ancora creazione assistita cliente e alcuni campi anagrafici da
 fatturazione; non e' il focus adesso, ma il backlog lo conserva.
 
 ## Last Session
+
+### Sessione 64 (2026-03-01, first narrow payment write-draft nel launcher)
+
+- Completed:
+  - **Il launcher puo ora proporre una bozza pagamento stretta, modificabile e
+    separata dal markdown della risposta**:
+    - il payload `paymentDraft` compare solo quando:
+      - la domanda chiede davvero di preparare/registrare/creare un pagamento
+      - esiste un preventivo aperto con stato compatibile
+      - esiste ancora un residuo positivo deterministicamente calcolabile
+    - la bozza contiene:
+      - `paymentType`
+      - `amount`
+      - `status`
+      - riferimenti `quote/client/project`
+  - **La bozza non scrive dal launcher e usa solo la superficie gia approvata**:
+    - il pannello chat lascia modificare:
+      - tipo pagamento
+      - importo
+      - stato
+    - il CTA finale apre `/#/payments/create?...&draft_kind=payment_create`
+    - la scrittura reale parte solo dal form pagamenti con conferma esplicita
+  - **La base semantica e' stata aggiornata nello stesso passaggio**:
+    - capability registry:
+      - nuova action `prepare_payment_write_draft`
+    - semantic registry:
+      - nuova regola `unifiedAiWriteDraft`
+    - read context:
+      - gli open quote espongono anche linked total e residual amount
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/ai/unifiedCrmReadContext.test.ts src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts supabase/functions/_shared/unifiedCrmAnswer.test.ts`
+  - `npx supabase functions deploy unified_crm_answer --project-ref qvdmzhyzpyaveniirsmo --no-verify-jwt`
+  - smoke remoto autenticato con domanda:
+    - `Preparami una bozza saldo dal preventivo aperto.`
+
+- Decisions:
+  - il primo write-draft della chat generale deve restare strettissimo,
+    deterministico e separato dal testo markdown della risposta
+  - la chat puo preparare il draft, ma la conferma resta sulla superficie CRM
+    approvata di destinazione
+  - l'estensione di questo pattern ad altri casi va fatta solo se la semantica
+    resta altrettanto forte
 
 ### Sessione 63 (2026-03-01, suggerimento importo sul landing quote -> payment)
 

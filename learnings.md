@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se il launcher apre il primo write-draft generale, il draft va
+  restituito come payload strutturato separato dal markdown** — Per la prima
+  bozza pagamento della chat unificata il pattern corretto non e' chiedere al
+  modello di serializzare JSON o campi nel testo libero, ma far produrre alla
+  function un `paymentDraft` tipizzato che la UI puo rendere, modificare e
+  trasportare verso `payments/create`. Cosi' il testo resta leggibile, il draft
+  resta auditabile e non si apre per sbaglio una write autonoma dal launcher.
+
 - [2026-03-01] **Se una superficie commerciale di arrivo ha gia i dati giusti,
   il suggerimento importo va calcolato li e non passato dall'AI** — Sul ramo
   `quote_create_payment` il pattern corretto non e' mettere l'importo stimato

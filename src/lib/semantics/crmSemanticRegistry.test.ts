@@ -80,6 +80,10 @@ describe("crmSemanticRegistry", () => {
     expect(registry.rules.unifiedAiReadContext.meaning).toContain(
       "residuo ancora non collegato",
     );
+    expect(registry.rules.unifiedAiWriteDraft.approvedResource).toBe("payments");
+    expect(registry.rules.unifiedAiWriteDraft.confirmationRule).toContain(
+      "form pagamenti",
+    );
   });
 
   it("uses km and taxable helpers consistently", () => {

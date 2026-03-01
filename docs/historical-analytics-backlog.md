@@ -322,13 +322,39 @@ That landing-gap step is now closed too for the quote-driven payment path:
   - local validation closed with `npm run typecheck`
   - targeted Vitest passed on payment linking + registries
 
+The next open priority is now closed too:
+
+- the launcher can now prepare a first narrow `payment` write-draft on top of
+  the quote-driven commercial path
+- the draft is deliberately constrained:
+  - it only appears when the question clearly asks to prepare/register/create a
+    payment
+  - it only targets open quotes with eligible status and positive residual
+  - it only proposes `acconto` / `saldo` / `parziale`
+- the response contract now includes a structured `paymentDraft` payload that:
+  - stays editable in the launcher
+  - never writes from chat
+  - deep-links into the already approved `payments/create` route with supported
+    query params
+- runtime verification is now closed too on `qvdmzhyzpyaveniirsmo`:
+  - `unified_crm_answer` redeployed
+  - authenticated smoke question
+    `Preparami una bozza saldo dal preventivo aperto.`
+  - response returned:
+    - `paymentDraft.paymentType = saldo`
+    - `paymentDraft.amount = 450`
+    - `paymentDraft.status = in_attesa`
+    - approved `/#/payments/create?...&draft_kind=payment_create` href
+  - smoke user cleaned after verification
+
 The next open priority is:
 
-- close the last light landing gaps that still remain on other approved
-  commercial surfaces where deterministic help is weaker than quote/project
-- only after that, if no equally strong deterministic landing upgrade remains,
-  discuss the first narrow write-draft with explicit confirmation on an
-  approved surface
+- keep the launcher on the same strict path:
+  - either extend the `write-draft -> approved surface -> explicit
+    confirmation` pattern only where the business meaning stays equally
+    deterministic
+  - or deepen the confirmation-on-surface workflow around the payment draft
+    already approved
 - still do not give the general CRM chat direct write execution
 
 Deferred note from real usage, not current priority:

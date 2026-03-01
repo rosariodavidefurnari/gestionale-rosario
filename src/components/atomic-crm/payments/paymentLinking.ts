@@ -11,7 +11,10 @@ export const quoteStatusesEligibleForPaymentCreation = new Set([
 ]);
 
 type PaymentCreateDefaults = Partial<
-  Pick<Payment, "quote_id" | "client_id" | "project_id" | "payment_type">
+  Pick<
+    Payment,
+    "quote_id" | "client_id" | "project_id" | "payment_type" | "amount" | "status"
+  >
 >;
 
 export type UnifiedAiHandoffAction =
@@ -27,6 +30,7 @@ export type UnifiedAiHandoffContext = {
   action: UnifiedAiHandoffAction | null;
   openDialog: "quick_payment" | null;
   paymentType: Payment["payment_type"] | null;
+  draftKind: "payment_create" | null;
 };
 
 const toOptionalIdentifier = (value?: string | null) =>
@@ -52,6 +56,26 @@ const getOptionalPaymentType = (value?: string | null) =>
     ? (value as Payment["payment_type"])
     : null;
 
+const paymentStatuses = new Set<Payment["status"]>([
+  "ricevuto",
+  "in_attesa",
+  "scaduto",
+]);
+
+const getOptionalPaymentStatus = (value?: string | null) =>
+  value && paymentStatuses.has(value as Payment["status"])
+    ? (value as Payment["status"])
+    : null;
+
+const getOptionalAmount = (value?: string | null) => {
+  if (!value) {
+    return null;
+  }
+
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
+};
+
 export const canCreatePaymentFromQuote = (
   quote: Pick<Quote, "status" | "client_id">,
 ) =>
@@ -76,7 +100,9 @@ export const buildPaymentCreateDefaultsFromClient = ({
   client_id: client.client_id,
 });
 
-const buildPaymentCreatePath = (defaults: PaymentCreateDefaults) => {
+const buildPaymentCreatePath = (
+  defaults: Record<string, string | number | null | undefined>,
+) => {
   const searchParams = new URLSearchParams();
 
   Object.entries(defaults).forEach(([key, value]) => {
@@ -127,6 +153,16 @@ export const getPaymentCreateDefaultsFromSearch = (
     defaults.payment_type = paymentType;
   }
 
+  const amount = getOptionalAmount(searchParams.get("amount"));
+  if (amount != null) {
+    defaults.amount = amount;
+  }
+
+  const status = getOptionalPaymentStatus(searchParams.get("status"));
+  if (status) {
+    defaults.status = status;
+  }
+
   return defaults;
 };
 
@@ -151,8 +187,36 @@ export const getUnifiedAiHandoffContextFromSearch = (
         : null,
     openDialog: openDialog === "quick_payment" ? "quick_payment" : null,
     paymentType: getOptionalPaymentType(searchParams.get("payment_type")),
+    draftKind:
+      searchParams.get("draft_kind") === "payment_create"
+        ? "payment_create"
+        : null,
   };
 };
+
+export const buildPaymentCreatePathFromDraft = ({
+  draft,
+}: {
+  draft: PaymentCreateDefaults & {
+    launcherAction?: UnifiedAiHandoffAction | null;
+    draftKind?: "payment_create" | null;
+  };
+}) =>
+  buildPaymentCreatePath({
+    quote_id: draft.quote_id,
+    client_id: draft.client_id,
+    project_id: draft.project_id,
+    payment_type: draft.payment_type,
+    amount: draft.amount,
+    status: draft.status,
+    ...(draft.launcherAction
+      ? {
+          launcher_source: "unified_ai_launcher",
+          launcher_action: draft.launcherAction,
+        }
+      : {}),
+    ...(draft.draftKind ? { draft_kind: draft.draftKind } : {}),
+  });
 
 export const getSuggestedPaymentAmountFromQuote = ({
   quoteAmount,

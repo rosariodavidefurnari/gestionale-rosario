@@ -284,6 +284,21 @@ describe("UnifiedAiLauncher", () => {
       generatedAt: "2026-02-28T22:05:00.000Z",
       answerMarkdown:
         "## Risposta breve\nTutto sotto controllo.\n\n## Dati usati\n- 1 preventivo aperto.\n- 1 pagamento pendente.",
+      paymentDraft: {
+        id: "payment-draft-from-open-quote",
+        resource: "payments",
+        originActionId: "quote_create_payment",
+        label: "Bozza pagamento dal preventivo aperto",
+        explanation:
+          "Questa bozza usa il residuo ancora non collegato del preventivo aperto principale. Puoi correggerla qui e poi aprire il form pagamenti per confermare davvero.",
+        quoteId: "quote-1",
+        clientId: "client-1",
+        projectId: "project-1",
+        paymentType: "saldo",
+        amount: 450,
+        status: "in_attesa",
+        href: "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
+      },
       suggestedActions: [
         {
           id: "quote-create-payment-handoff",
@@ -335,6 +350,7 @@ describe("UnifiedAiLauncher", () => {
     );
 
     expect(await screen.findByText("Tutto sotto controllo.")).toBeInTheDocument();
+    expect(await screen.findByText("Bozza pagamento proposta")).toBeInTheDocument();
     expect(await screen.findByText("Azioni suggerite")).toBeInTheDocument();
     expect(screen.getByText("Registra pagamento dal preventivo")).toBeInTheDocument();
     expect(screen.getByText("Consigliata ora")).toBeInTheDocument();
@@ -345,12 +361,26 @@ describe("UnifiedAiLauncher", () => {
       ),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("link", {
+        name: "Apri form pagamenti con questa bozza",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByDisplayValue("450")).toBeInTheDocument();
+    expect(
       screen
         .getByText("Registra pagamento dal preventivo")
         .closest("a"),
     ).toHaveAttribute(
       "href",
       "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&launcher_action=quote_create_payment&launcher_source=unified_ai_launcher",
+    );
+    expect(
+      screen
+        .getByText("Apri form pagamenti con questa bozza")
+        .closest("a"),
+    ).toHaveAttribute(
+      "href",
+      "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
     );
   });
 

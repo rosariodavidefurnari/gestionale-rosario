@@ -1,6 +1,7 @@
 import { expenseTypeLabels } from "@/components/atomic-crm/expenses/expenseTypes";
 import { paymentStatusLabels } from "@/components/atomic-crm/payments/paymentTypes";
 import { projectStatusLabels } from "@/components/atomic-crm/projects/projectTypes";
+import { buildQuotePaymentsSummary } from "@/components/atomic-crm/quotes/quotePaymentsSummary";
 import { quoteStatusLabels } from "@/components/atomic-crm/quotes/quotesTypes";
 import type {
   Client,
@@ -91,6 +92,8 @@ export type UnifiedCrmReadContext = {
       clientName: string;
       projectName: string | null;
       amount: number;
+      linkedPaymentsTotal: number;
+      remainingAmount: number;
       status: string;
       statusLabel: string;
       createdAt: string;
@@ -155,6 +158,18 @@ export const buildUnifiedCrmReadContext = ({
   const projectById = new Map(
     projects.map((project) => [String(project.id), project]),
   );
+  const paymentsByQuoteId = new Map<string, Payment[]>();
+
+  payments.forEach((payment) => {
+    if (!payment.quote_id) {
+      return;
+    }
+
+    const quoteId = String(payment.quote_id);
+    const current = paymentsByQuoteId.get(quoteId) ?? [];
+    current.push(payment);
+    paymentsByQuoteId.set(quoteId, current);
+  });
 
   const openQuotes = quotes
     .filter((quote) => !openQuoteClosedStatuses.has(quote.status))
@@ -224,17 +239,27 @@ export const buildUnifiedCrmReadContext = ({
         email: client.email ?? null,
         createdAt: client.created_at,
       })),
-      openQuotes: openQuotes.slice(0, 5).map((quote) => ({
-        quoteId: String(quote.id),
-        clientId: quote.client_id ? String(quote.client_id) : null,
-        projectId: quote.project_id ? String(quote.project_id) : null,
-        clientName: getClientName(clientById, quote.client_id) ?? "Cliente non trovato",
-        projectName: getProjectName(projectById, quote.project_id ?? null),
-        amount: Number(quote.amount ?? 0),
-        status: quote.status,
-        statusLabel: quoteStatusLabels[quote.status] ?? quote.status,
-        createdAt: quote.created_at,
-      })),
+      openQuotes: openQuotes.slice(0, 5).map((quote) => {
+        const paymentSummary = buildQuotePaymentsSummary({
+          quoteAmount: Number(quote.amount ?? 0),
+          payments: paymentsByQuoteId.get(String(quote.id)) ?? [],
+        });
+
+        return {
+          quoteId: String(quote.id),
+          clientId: quote.client_id ? String(quote.client_id) : null,
+          projectId: quote.project_id ? String(quote.project_id) : null,
+          clientName:
+            getClientName(clientById, quote.client_id) ?? "Cliente non trovato",
+          projectName: getProjectName(projectById, quote.project_id ?? null),
+          amount: Number(quote.amount ?? 0),
+          linkedPaymentsTotal: paymentSummary.linkedTotal,
+          remainingAmount: paymentSummary.remainingAmount,
+          status: quote.status,
+          statusLabel: quoteStatusLabels[quote.status] ?? quote.status,
+          createdAt: quote.created_at,
+        };
+      }),
       activeProjects: activeProjects.slice(0, 5).map((project) => ({
         projectId: String(project.id),
         clientId: project.client_id ? String(project.client_id) : null,

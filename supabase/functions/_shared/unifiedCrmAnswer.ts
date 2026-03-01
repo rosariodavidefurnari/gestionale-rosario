@@ -24,6 +24,21 @@ export type UnifiedCrmSuggestedAction = {
     | "follow_unified_crm_handoff";
 };
 
+export type UnifiedCrmPaymentDraft = {
+  id: string;
+  resource: "payments";
+  originActionId: "quote_create_payment";
+  label: string;
+  explanation: string;
+  quoteId: string;
+  clientId: string;
+  projectId: string | null;
+  paymentType: "acconto" | "saldo" | "parziale";
+  amount: number;
+  status: "in_attesa" | "ricevuto";
+  href: string;
+};
+
 export type UnifiedCrmAnswerPayload = {
   context: Record<string, unknown>;
   question: string;
@@ -40,6 +55,8 @@ const normalizeText = (value: string) =>
     .replace(/[\u0300-\u036f]/g, "");
 
 const getString = (value: unknown) => (typeof value === "string" ? value : null);
+const getNumber = (value: unknown) =>
+  typeof value === "number" && Number.isFinite(value) ? value : null;
 
 const getRoutePrefix = (context: Record<string, unknown>) => {
   const meta = isObject(context.meta) ? context.meta : null;
@@ -136,6 +153,20 @@ const inferPreferredPaymentType = (normalizedQuestion: string) => {
   return null;
 };
 
+const inferDraftPaymentType = (normalizedQuestion: string) => {
+  const inferred = inferPreferredPaymentType(normalizedQuestion);
+
+  if (
+    inferred === "acconto" ||
+    inferred === "saldo" ||
+    inferred === "parziale"
+  ) {
+    return inferred;
+  }
+
+  return "parziale";
+};
+
 const buildRecommendedReason = ({
   suggestion,
   focusPayments,
@@ -218,6 +249,70 @@ const markRecommendedSuggestion = ({
       : suggestion,
   );
 
+export const buildUnifiedCrmPaymentDraft = ({
+  normalizedQuestion,
+  routePrefix,
+  firstQuote,
+  preferPaymentAction,
+}: {
+  normalizedQuestion: string;
+  routePrefix: string;
+  firstQuote: Record<string, unknown> | undefined;
+  preferPaymentAction: boolean;
+}): UnifiedCrmPaymentDraft | null => {
+  if (
+    !preferPaymentAction ||
+    !includesAny(normalizedQuestion, ["prepar", "bozza", "registr", "aggiung", "crea"])
+  ) {
+    return null;
+  }
+
+  const quoteId = getString(firstQuote?.quoteId);
+  const clientId = getString(firstQuote?.clientId);
+  const projectId = getString(firstQuote?.projectId);
+  const remainingAmount = getNumber(firstQuote?.remainingAmount);
+  const status = getString(firstQuote?.status);
+
+  if (
+    !quoteId ||
+    !clientId ||
+    !canCreatePaymentFromQuoteStatus(status) ||
+    remainingAmount == null ||
+    remainingAmount <= 0
+  ) {
+    return null;
+  }
+
+  const paymentType = inferDraftPaymentType(normalizedQuestion);
+  const href = buildCreateHref(routePrefix, "payments", {
+    quote_id: quoteId,
+    client_id: clientId,
+    project_id: projectId,
+    payment_type: paymentType,
+    amount: String(remainingAmount),
+    status: "in_attesa",
+    launcher_source: "unified_ai_launcher",
+    launcher_action: "quote_create_payment",
+    draft_kind: "payment_create",
+  });
+
+  return {
+    id: "payment-draft-from-open-quote",
+    resource: "payments",
+    originActionId: "quote_create_payment",
+    label: "Bozza pagamento dal preventivo aperto",
+    explanation:
+      "Questa bozza usa il residuo ancora non collegato del preventivo aperto principale. Puoi correggerla qui e poi aprire il form pagamenti per confermare davvero.",
+    quoteId,
+    clientId,
+    projectId,
+    paymentType,
+    amount: remainingAmount,
+    status: "in_attesa",
+    href,
+  };
+};
+
 export const buildUnifiedCrmSuggestedActions = ({
   question,
   context,
@@ -298,6 +393,8 @@ export const buildUnifiedCrmSuggestedActions = ({
       "segn",
       "incass",
       "precompilat",
+      "prepar",
+      "bozza",
     ]);
   const preferProjectQuickPaymentLanding =
     focusProjects && preferPaymentAction && Boolean(firstProject) && !firstPayment;
@@ -857,6 +954,66 @@ export const buildUnifiedCrmSuggestedActions = ({
     focusProjects,
     focusClients,
     quoteStatus: getString(firstQuote?.status),
+  });
+};
+
+export const buildUnifiedCrmPaymentDraftFromContext = ({
+  question,
+  context,
+}: {
+  question: string;
+  context: Record<string, unknown>;
+}) => {
+  const normalizedQuestion = normalizeText(question);
+  const snapshot = isObject(context.snapshot) ? context.snapshot : {};
+  const routePrefix = getRoutePrefix(context);
+  const firstQuote = getObjectArray(snapshot.openQuotes)[0];
+  const focusPayments = includesAny(normalizedQuestion, [
+    "pagament",
+    "incass",
+    "saldo",
+    "acconto",
+    "scadut",
+    "sollecit",
+    "deve ancora pag",
+    "in attesa",
+  ]);
+  const focusQuotes = includesAny(normalizedQuestion, [
+    "preventiv",
+    "offert",
+    "trattativa",
+    "apert",
+    "accettat",
+  ]);
+  const focusProjects = includesAny(normalizedQuestion, [
+    "progett",
+    "lavor",
+    "attiv",
+  ]);
+  const focusClients = includesAny(normalizedQuestion, [
+    "client",
+    "anagraf",
+    "contatt",
+  ]);
+  const preferPaymentAction =
+    (focusPayments || focusQuotes || focusProjects || focusClients) &&
+    includesAny(normalizedQuestion, [
+      "registr",
+      "aggiung",
+      "inser",
+      "crea",
+      "segn",
+      "incass",
+      "precompilat",
+      "prepar",
+      "bozza",
+    ]);
+
+  return buildUnifiedCrmPaymentDraft({
+    normalizedQuestion,
+    routePrefix,
+    firstQuote,
+    preferPaymentAction,
   });
 };
 

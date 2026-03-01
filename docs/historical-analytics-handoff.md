@@ -340,13 +340,45 @@ That next high-value step is now closed too:
   - validation closed locally with `npm run typecheck`
   - targeted Vitest passed on payment linking + registries
 
+The next high-value step is now closed too:
+
+- the unified launcher can now expose a first narrow `payment` write-draft
+  without writing anything directly in the CRM Q&A shell
+- the draft is intentionally strict:
+  - only quote-driven
+  - only when the quote status allows payment creation
+  - only when a deterministic residual amount still exists
+  - only for `acconto` / `saldo` / `parziale`
+- the answer flow now returns a structured `paymentDraft` payload separate from
+  markdown, so the UI can:
+  - let the user adjust `paymentType`
+  - let the user adjust `amount`
+  - let the user adjust `status`
+  - carry the draft into the approved `payments/create` surface
+- the launcher still does not write:
+  - the CTA opens `payments/create`
+  - real persistence still starts only from the destination form with explicit
+    user confirmation
+- runtime verification is now closed too on `qvdmzhyzpyaveniirsmo`:
+  - `unified_crm_answer` redeployed
+  - authenticated smoke question
+    `Preparami una bozza saldo dal preventivo aperto.` returned a structured
+    `paymentDraft`
+  - returned draft contained:
+    - `paymentType=saldo`
+    - `amount=450`
+    - `status=in_attesa`
+    - approved href to `/#/payments/create?...&draft_kind=payment_create`
+  - smoke user cleaned after verification
+
 The next high-value step is now:
 
-- close the last thin landing gaps that remain on lighter commercial surfaces,
-  especially where no deterministic amount suggestion exists yet
-- if no equally strong deterministic landing upgrade remains, only then open
-  the first narrow write-draft discussion with explicit confirmation on an
-  already approved surface
+- keep the same strict `write-draft -> approved surface -> explicit
+  confirmation` pattern and verify whether another equally deterministic
+  commercial draft is worth shipping
+- otherwise move to the first confirmation-on-surface workflow upgrade on top
+  of the existing payment draft, still without giving the general CRM chat
+  direct write execution
 - still no general write execution from the CRM Q&A shell
 
 Deferred note from real user trial:

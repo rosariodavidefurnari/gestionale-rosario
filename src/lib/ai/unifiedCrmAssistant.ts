@@ -31,10 +31,26 @@ export type UnifiedCrmSuggestedAction = {
     | "follow_unified_crm_handoff";
 };
 
+export type UnifiedCrmPaymentDraft = {
+  id: string;
+  resource: "payments";
+  originActionId: "quote_create_payment";
+  label: string;
+  explanation: string;
+  quoteId: string;
+  clientId: string;
+  projectId: string | null;
+  paymentType: "acconto" | "saldo" | "parziale";
+  amount: number;
+  status: "in_attesa" | "ricevuto";
+  href: string;
+};
+
 export type UnifiedCrmAnswer = {
   question: string;
   model: string;
   generatedAt: string;
   answerMarkdown: string;
   suggestedActions: UnifiedCrmSuggestedAction[];
+  paymentDraft: UnifiedCrmPaymentDraft | null;
 };

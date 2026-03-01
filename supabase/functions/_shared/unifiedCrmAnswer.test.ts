@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildUnifiedCrmPaymentDraftFromContext,
   buildUnifiedCrmSuggestedActions,
   validateUnifiedCrmAnswerPayload,
 } from "./unifiedCrmAnswer.ts";
@@ -186,6 +187,47 @@ describe("unifiedCrmAnswer", () => {
         capabilityActionId: "project_quick_payment",
         href:
           "/#/projects/project-1/show?launcher_source=unified_ai_launcher&launcher_action=project_quick_payment&open_dialog=quick_payment&payment_type=saldo",
+      }),
+    );
+  });
+
+  it("builds a narrow payment write-draft for the open quote when the question asks to prepare it", () => {
+    const draft = buildUnifiedCrmPaymentDraftFromContext({
+      question: "Preparami una bozza saldo dal preventivo aperto.",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          routePrefix: "/#/",
+        },
+        snapshot: {
+          openQuotes: [
+            {
+              quoteId: "quote-1",
+              clientId: "client-1",
+              projectId: "project-1",
+              status: "accettato",
+              remainingAmount: 450,
+            },
+          ],
+        },
+        registries: {
+          semantic: {},
+          capability: {},
+        },
+      },
+    });
+
+    expect(draft).toEqual(
+      expect.objectContaining({
+        originActionId: "quote_create_payment",
+        quoteId: "quote-1",
+        clientId: "client-1",
+        projectId: "project-1",
+        paymentType: "saldo",
+        amount: 450,
+        status: "in_attesa",
+        href:
+          "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
       }),
     );
   });

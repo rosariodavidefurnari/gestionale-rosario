@@ -57,6 +57,7 @@ describe("unifiedCrmReadContext", () => {
         {
           id: "payment-1",
           client_id: "client-1",
+          quote_id: "quote-1",
           project_id: "project-1",
           payment_type: "saldo",
           amount: 1200,
@@ -96,7 +97,9 @@ describe("unifiedCrmReadContext", () => {
     expect(context.snapshot.totals.pendingPaymentsAmount).toBe(1200);
     expect(context.snapshot.totals.expensesAmount).toBe(300);
     expect(context.snapshot.openQuotes[0]?.clientId).toBe("client-1");
-    expect(context.snapshot.pendingPayments[0]?.quoteId).toBeNull();
+    expect(context.snapshot.openQuotes[0]?.linkedPaymentsTotal).toBe(1200);
+    expect(context.snapshot.openQuotes[0]?.remainingAmount).toBe(1000);
+    expect(context.snapshot.pendingPayments[0]?.quoteId).toBe("quote-1");
     expect(context.snapshot.pendingPayments[0]?.projectId).toBe("project-1");
     expect(context.snapshot.openQuotes[0]?.statusLabel).toBe("In trattativa");
     expect(context.snapshot.pendingPayments[0]?.statusLabel).toBe("In attesa");
