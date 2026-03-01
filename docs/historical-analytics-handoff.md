@@ -1,5 +1,11 @@
 # Historical Analytics Handoff
 
+**Stato del documento:** `working`
+**Scopo:** handoff operativo e memoria di implementazione per riprendere il
+lavoro senza riaprire decisioni gia prese.
+**Quando NON usarlo da solo:** per dedurre architettura canonica o stato
+prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
+
 Last updated: 2026-03-01
 
 ## Goal
@@ -68,24 +74,29 @@ requires explicit confirmation before creating `payments` or `expenses`.
 Use a prompt like this:
 
 ```text
-Leggi docs/historical-analytics-handoff.md, docs/development-continuity-map.md, docs/historical-analytics-backlog.md, docs/contacts-client-project-architecture.md, doc/src/content/docs/developers/historical-analytics-ai-ready.mdx, progress.md e learnings.md.
+Leggi docs/README.md, docs/development-continuity-map.md, docs/historical-analytics-handoff.md, docs/historical-analytics-backlog.md, docs/contacts-client-project-architecture.md e doc/src/content/docs/developers/historical-analytics-ai-ready.mdx.
 Considera come obiettivo finale una chat AI unificata su tutto il CRM, ma senza aggiungere nuove AI sparse: prima vanno mantenute solide semantica, workflow e dati.
 Non ridefinire l'architettura già approvata.
 Continua dal primo punto aperto del backlog.
 Se aggiungi o cambi una feature, aggiorna sempre semantic registry, capability registry, eventuale communication layer, settings se la modifica e' config-driven, test e docs di continuità.
 Non chiudere mai una modifica senza sweep completo delle superfici impattate: pagine, create/edit/show/list/filter, dialog/sheet/modal, helper di linking o persistence, provider e funzioni server collegate.
 Ricorda i vincoli di prodotto: Gmail per mail cliente, CallMeBot per alert interni urgenti, nessuna mail automatica se ci sono servizi con is_taxable = false.
+Usa progress.md e learnings.md solo se serve ricostruire una decisione storica o recuperare un pattern specifico.
 ```
 
 Minimal reading order for a new session:
 
-1. `docs/historical-analytics-handoff.md`
+1. `docs/README.md`
 2. `docs/development-continuity-map.md`
-3. `docs/historical-analytics-backlog.md`
-4. `docs/contacts-client-project-architecture.md`
-5. `doc/src/content/docs/developers/historical-analytics-ai-ready.mdx`
-6. `progress.md`
-7. `learnings.md`
+3. `docs/historical-analytics-handoff.md`
+4. `docs/historical-analytics-backlog.md`
+5. `docs/contacts-client-project-architecture.md`
+6. `doc/src/content/docs/developers/historical-analytics-ai-ready.mdx`
+
+Optional deep archive, only if needed:
+
+- `progress.md`
+- `learnings.md`
 
 ## Mandatory Integration Checklist For New Features
 
@@ -109,8 +120,8 @@ until the relevant items below are updated too:
    - `docs/development-continuity-map.md`
    - `docs/historical-analytics-handoff.md`
    - `docs/historical-analytics-backlog.md`
-   - `progress.md`
-   - `learnings.md`
+   - `progress.md` only if the change adds relevant historical chronology
+   - `learnings.md` only if a new reusable pattern emerged
 
 This checklist exists because the future unified AI must know every important
 surface and rule of the CRM, not guess them from scattered components.

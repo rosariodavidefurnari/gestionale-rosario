@@ -1,8 +1,34 @@
 # Learnings — Gestionale Rosario Furnari
 
-Questo file cresce organicamente sessione dopo sessione.
-Claude aggiunge qui le scoperte, gli errori corretti, e i pattern emersi.
-Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
+**Stato del documento:** `historical`
+**Scopo:** archivio dei pattern emersi durante lo sviluppo, utile per evitare
+errori gia visti e ricostruire il perche' di una regola.
+**Quando usarlo:** dopo il reading order canonico, oppure con ricerca mirata su
+pattern/feature/date specifiche.
+**Quando NON usarlo:** non come fonte primaria delle regole correnti e non come
+lettura lineare obbligatoria a inizio sessione.
+**File/moduli correlati:** `docs/README.md`,
+`docs/development-continuity-map.md`, `.claude/rules/session-workflow.md`
+
+Questo file cresce organicamente sessione dopo sessione, ma non deve piu
+diventare la casa finale delle regole vive.
+
+Le scoperte ripetute vanno promosse in una sola casa stabile:
+
+- `docs/development-continuity-map.md` per sweep e integrazione
+- `docs/architecture.md` per fotografia implementativa
+- `.claude/rules/` per workflow e regole operative
+- documenti di dominio dedicati quando il learning appartiene a un modulo
+
+Questo file resta quindi un archivio, non la fonte canonica.
+
+## Uso corretto
+
+- preferire ricerca per keyword o data, non lettura completa
+- aggiungere nuove voci solo se c'e' un pattern non ancora promosso altrove o
+  un errore reale che vale la pena conservare
+- se una regola e' ormai stabile, spostarla nei documenti `canonical` o in
+  `.claude/rules/`
 
 ## Format per ogni voce
 

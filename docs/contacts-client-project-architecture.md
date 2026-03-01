@@ -1,5 +1,11 @@
 # Architettura Referenti CRM
 
+**Stato del documento:** `canonical`
+**Scopo:** fonte primaria per il dominio referenti e le relazioni
+`clients + contacts + project_contacts`.
+**Quando usarlo:** quando cambiano referenti, clienti, progetti o il loro uso
+nel contesto AI.
+
 Data: 2026-03-01
 
 ## Decisione

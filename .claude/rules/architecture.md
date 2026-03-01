@@ -1,38 +1,69 @@
 # Architecture Rules — Gestionale Rosario Furnari
 
-## Principio: seguire i pattern di Atomic CRM
-Le convenzioni di Atomic CRM (in .claude/skills/) sono la base.
-Queste regole AGGIUNGONO specifiche per il gestionale, non le sostituiscono.
+## Source Priority
 
-## Struttura moduli custom
-Ogni nuovo modulo (Progetti, Registro Lavori, Pagamenti, Spese) segue
-la stessa struttura dei moduli esistenti (contacts, deals, companies):
+Seguire i pattern locali del repo, non l'upstream Atomic CRM alla lettera.
 
+Ordine corretto:
+
+1. codice reale, migration, Edge Functions
+2. documenti `canonical` in `docs/`
+3. documenti `working`
+4. archivi storici
+
+## Resource Pattern
+
+Le resource vive del CRM includono almeno:
+
+- `clients`
+- `contacts`
+- `projects`
+- `services`
+- `quotes`
+- `payments`
+- `expenses`
+- `tasks` / `client_tasks`
+
+Ogni nuova resource deve allinearsi ai pattern locali gia presenti, non ai
+moduli legacy rimossi come `companies` o `deals`.
+
+## Module Structure
+
+Per i moduli CRUD classici il pattern base resta:
+
+```text
+src/components/atomic-crm/[module]/
+├── [Module]List.tsx
+├── [Module]Create.tsx
+├── [Module]Edit.tsx
+├── [Module]Show.tsx
+├── [Module]Inputs.tsx
+└── index.tsx
 ```
-src/components/atomic-crm/[modulo]/
-├── [Modulo]List.tsx        # Lista con filtri
-├── [Modulo]Create.tsx      # Form creazione
-├── [Modulo]Edit.tsx        # Form modifica
-├── [Modulo]Show.tsx        # Dettaglio
-├── [Modulo]Inputs.tsx      # Campi form riutilizzabili
-└── index.tsx               # Export
-```
 
-## Configurazione CRM via props
-Personalizzare il componente `<CRM>` in App.tsx con:
-- title: "Gestionale Rosario Furnari"
-- dealStages → stati pipeline preventivi
-- dealCategories → categorie servizio
-- disableTelemetry: true
+Eccezioni legittime:
 
-## File length limits (anti-bloat)
-- **Components**: MAX 150 righe. Se supera → split.
-- **Utility functions**: MAX 50 righe per funzione.
-- **Page files**: MAX 100 righe — devono SOLO comporre componenti.
+- `quotes` ha anche superfici Kanban, PDF e dialog dedicati
+- `dashboard` e `ai` non seguono il pattern CRUD classico
+- moduli con dialog/sheet/linking richiedono sweep aggiuntiva
 
-## VIETATO
-- Creare API routes custom quando Server Actions o dataProvider bastano
-- Modificare i componenti in src/components/ui/ senza motivo
-- Hardcodare stringhe UI — usare il sistema i18n (polyglot)
-- Ignorare RLS sulle nuove tabelle
-- Usare useEffect per data fetching (usare ra-core hooks)
+## Configuration Rule
+
+Se una modifica introduce una regola configurabile o cambia un default condiviso,
+aggiornare anche:
+
+- `defaultConfiguration`
+- `ConfigurationContext`
+- `SettingsPage`
+- section settings pertinente
+
+Se la modifica e' solo strutturale o read-only, non toccare `Settings` per
+riflesso: lasciare invece traccia nei docs di continuita'.
+
+## Anti-Bloat
+
+- non aggiungere nuove superfici quando una esistente puo' essere riusata
+- non duplicare logica business tra UI, provider e AI
+- non creare moduli "provvisori" fuori pattern senza documentare la ragione
+- se un file cresce per responsabilita' multiple, splittarlo per concern reale,
+  non per rispettare limiti arbitrari

@@ -5,6 +5,14 @@
 Fork di Atomic CRM personalizzato per gestire l'attività professionale
 di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
+Stato del documento:
+
+- `canonical`
+- descrive la fotografia implementativa ad alto livello
+- le vecchie "sessioni" citate nel file sono indizi storici, non la fonte
+  primaria della verita' operativa se entrano in conflitto con codice o
+  migration attuali
+
 ## Continuita'
 
 Per riprendere correttamente il progetto in una nuova chat o sessione, i file
@@ -12,6 +20,7 @@ di riferimento minimi non sono solo questa architettura generale.
 
 Leggere sempre anche:
 
+- `docs/README.md`
 - `docs/historical-analytics-handoff.md`
 - `docs/development-continuity-map.md`
 - `docs/historical-analytics-backlog.md`
@@ -24,13 +33,13 @@ Regola pratica:
 - se una modifica e' solo strutturale/read-only, `Impostazioni` non va toccata
   ma la motivazione va lasciata nei docs di continuita'
 
-## Stato Infrastruttura (verificato sessione 17, aggiornato)
+## Stato Infrastruttura (snapshot operativa aggiornata)
 
 ### Certezze — Audit superato
 
 | Componente | Stato | Verificato |
 |------------|-------|------------|
-| Schema DB (8 tabelle + 2 views + 2 tabelle tasks/notes) | Deployed e conforme | migration review |
+| Schema DB custom + referenti CRM + analytics views | Deployed e conforme | migration review |
 | Migration Fase 2 (discount + tariffe) | Applicata al DB remoto | `npx supabase db push` |
 | Migration quotes index | Applicata al DB remoto | sessione 9 |
 | Migration client_tasks + client_notes + tags | Applicata al DB remoto | sessione 11 |
@@ -42,7 +51,8 @@ Regola pratica:
 | Bilanci verificati: tutti i progetti Diego a 0 o pending | Confermato | sessione 13 |
 | Riepilogo finanziario su ClientShow/ProjectShow | Implementato | sessione 12 |
 | Dashboard Fase 2 (Recharts) | Implementata (desktop + mobile KPI) | sessione 10 |
-| Pulizia moduli Atomic CRM | Completata (companies, contacts, deals eliminati) | sessione 11 |
+| Pulizia moduli Atomic CRM | Completata in modo selettivo: `companies` e `deals` rimossi, `contacts` riattivato come dominio referenti | 2026-03-01 |
+| Referenti CRM (`contacts` + `project_contacts`) | Implementati e integrati con clienti, progetti e chat AI | 2026-03-01 |
 | Tasks adattati (Promemoria) | Funzionanti con client_tasks | sessione 11 |
 | Notes clienti | Funzionanti con client_notes | sessione 11 |
 | Tags clienti | Funzionanti (BIGINT[] su clients) | sessione 11 |
@@ -83,6 +93,8 @@ Regola pratica:
 | quotes | Preventivi + pipeline Kanban | auth.uid() IS NOT NULL | 15 col (+event_start, +event_end, +all_day, -event_date), 1 CHECK (10 stati), no CHECK service_type (dinamico) |
 | payments | Tracking pagamenti | auth.uid() IS NOT NULL | 12 col, 3 CHECK + tipo rimborso |
 | expenses | Spese e km | auth.uid() IS NOT NULL | 11 col, 1 CHECK + tipo credito_ricevuto |
+| contacts | Referenti / persone collegate ai clienti | auth.uid() IS NOT NULL | nome, ruolo, email/telefoni JSONB, background, FK `client_id`, timestamps |
+| project_contacts | Join referenti-progetti | auth.uid() IS NOT NULL | FK `project_id`, FK `contact_id`, `is_primary`, timestamps |
 | client_tasks | Promemoria (opzionalmente legati a un cliente) | auth.uid() IS NOT NULL | 9 col (+all_day), due_date TIMESTAMPTZ, FK opzionale |
 | client_notes | Note clienti (con allegati) | auth.uid() IS NOT NULL | 7 col, FK obbligatoria |
 | settings | Configurazione | auth.uid() IS NOT NULL | 3 col (key-value) |
@@ -102,6 +114,9 @@ acconto_ricevuto → in_lavorazione → completato → saldato → rifiutato / p
 - `default_fee_spot`: **312** (tariffa flat, riprese+montaggio)
 - `default_fee_editing_short`: **156** (Montaggio VIV/BTF)
 - `currency`: EUR
+- `aiConfig.historicalAnalysisModel`: modello condiviso per Storico, Annuale e
+  chat AI unificata read-only
+- `aiConfig.invoiceExtractionModel`: modello dedicato all'import documenti
 
 ### Views
 
@@ -146,14 +161,28 @@ PK esplicite nel dataProvider:
 | `20260227230519_add_quotes_service_type_check.sql` | CHECK su quotes.service_type (poi droppato) |
 | `20260227231714_drop_service_type_checks.sql` | DROP CHECK su quotes + services service_type (tipi ora dinamici) |
 | `20260228120000_datetime_range_support.sql` | DateTime Range Support: DATE→TIMESTAMPTZ, event_date→event_start/end, all_day su 4 tabelle |
+| `20260228133000_historical_analytics_views.sql` | Prime viste aggregate per storico analytics |
+| `20260228150000_normalize_monthly_revenue_net_basis.sql` | Allinea `monthly_revenue` alla base netta coerente con i modelli analytics |
+| `20260228170000_add_quotes_project_link.sql` | Aggiunge il collegamento `quotes.project_id` |
+| `20260228190000_add_quote_items_json.sql` | Aggiunge `quote_items` ai preventivi |
+| `20260228193000_add_historical_cash_inflow_view.sql` | Vista dedicata agli incassi storici |
+| `20260228220000_add_service_taxability_and_operational_semantics.sql` | Aggiunge `is_taxable` e basi semantiche operative |
+| `20260301100000_views_security_invoker.sql` | Hardening sicurezza sulle views |
+| `20260301110000_rls_initplan_optimization.sql` | Ottimizzazione RLS/initplan |
+| `20260301120000_index_foreign_keys.sql` | Indici su foreign key principali |
+| `20260301153000_add_client_billing_profile.sql` | Profilo fiscale clienti: billing_name, indirizzo fatturazione, SDI, PEC |
+| `20260301183000_normalize_client_fiscal_fields.sql` | Bonifica campi fiscali cliente e normalizzazione `billing_name`/`tax_id` |
+| `20260301193000_correct_diego_client_to_gustare_assoc.sql` | Correzione anagrafica fiscale Diego -> Associazione Culturale Gustare Sicilia |
+| `20260301213000_reactivate_contacts_for_clients_projects.sql` | Riattiva `contacts` per i referenti e aggiunge `project_contacts` |
 
-## Moduli Frontend (sessione 11)
+## Moduli Frontend
 
 ### Moduli IMPLEMENTATI
 
 | Modulo | Directory | File | Tipo | Stato |
 |--------|-----------|------|------|-------|
 | **Clienti** | `clients/` | 11 file | CRUD (Table) + Tags/Notes/Tasks | Completo |
+| **Referenti** | `contacts/` | risorsa riattivata + sezioni cliente/progetto | CRUD + relazioni | Completo |
 | **Progetti** | `projects/` | 8 file | CRUD (Table) | Completo |
 | **Registro Lavori** | `services/` | 9 file | CRUD (Table) | Completo |
 | **Preventivi** | `quotes/` | 13 file | Kanban drag-and-drop | Completo |
@@ -162,6 +191,7 @@ PK esplicite nel dataProvider:
 | **Promemoria** | `tasks/` | 11 file | Lista con filtri temporali | Completo |
 | **Tags** | `tags/` | 4 file | CRUD + array su clients | Completo |
 | **Dashboard** | `dashboard/` | 19 file | Recharts + KPI + alert + fiscale | Completo |
+| **AI unificata** | `ai/` | launcher + snapshot + import + handoff | Shell cross-module | Completo |
 
 ### Struttura moduli CRUD
 
@@ -240,7 +270,7 @@ src/components/atomic-crm/dashboard/
 └── TasksListEmpty.tsx                  # Helper stato vuoto task
 ```
 
-## Navigazione (sessione 11)
+## Navigazione
 
 ```
 Bacheca | Clienti | Progetti | Registro Lavori | Preventivi | Pagamenti | Spese | Promemoria
@@ -253,10 +283,10 @@ Mobile: Inizio | Clienti | [+] | Promemoria | Altro
 ## Risorse registrate in CRM.tsx
 
 ```
-clients, projects, services, payments,     ← CRUD con pagine
-expenses, quotes                           ← CRUD/Kanban con pagine
+clients, contacts, projects, services,     ← CRUD con pagine
+payments, expenses, quotes                 ← CRUD/Kanban con pagine
 client_tasks                               ← Lista con pagina desktop + mobile
-client_notes, sales, tags                  ← Headless (senza pagina dedicata)
+client_notes, project_contacts, sales, tags ← Headless (senza pagina dedicata)
 ```
 
 ### Utility condivise (misc/)
@@ -271,8 +301,8 @@ client_notes, sales, tags                  ← Headless (senza pagina dedicata)
 ## Tipi TypeScript (types.ts)
 
 ```
-Client, Project, Service, Payment,         ← CRUD
-Expense, Quote                             ← CRUD/Kanban
+Client, Contact, Project, Service, Payment, ← CRUD
+Expense, Quote, ProjectContact              ← CRUD/Kanban/relazioni
 ClientTask, ClientNote                     ← Tasks/Notes adattati
 Tag, Sale, SalesFormData, SignUpData        ← Infrastruttura
 RAFile, AttachmentNote                     ← File/allegati
@@ -305,6 +335,8 @@ FiscalConfig, FiscalTaxProfile             ← Fiscale
 /               → Dashboard finanziaria (Recharts: KPI, grafici, pipeline, alert, navigazione anno)
 /clients        → Lista clienti
 /clients/:id    → Scheda cliente (dettagli + tags + note + promemoria)
+/contacts       → Lista referenti
+/contacts/:id   → Scheda referente
 /projects       → Lista progetti
 /projects/:id   → Dettaglio progetto
 /services       → Registro lavori
@@ -315,6 +347,6 @@ FiscalConfig, FiscalTaxProfile             ← Fiscale
 /expenses       → Spese e km
 /expenses/:id   → Dettaglio spesa
 /client_tasks   → Lista promemoria (filtri: scaduti, oggi, domani, settimana, più avanti)
-/settings       → Impostazioni (Marchio, Tipi preventivo, Tipi servizio, Note, Attività, Fiscale)
+/settings       → Impostazioni (Marchio, Tipi preventivo, Tipi servizio, Note, Attività, AI, Fiscale)
 /profile        → Profilo utente
 ```

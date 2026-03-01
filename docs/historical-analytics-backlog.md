@@ -1,6 +1,17 @@
 # Historical Analytics Backlog
 
+**Stato del documento:** `working`
+**Scopo:** backlog e log evolutivo delle slice analytics/AI/commerciali.
+**Quando NON usarlo da solo:** per dedurre lo stato canonico del prodotto senza
+incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
+`canonical`.
+
 Last updated: 2026-03-01
+
+Archivio storico opzionale, da leggere solo se serve piu' contesto:
+
+- `progress.md`
+- `learnings.md`
 
 ## Current State
 
@@ -739,6 +750,10 @@ Ask the new session to:
 4. continue from the first unfinished priority without re-opening already closed architecture decisions
 5. if a feature changes CRM behavior, update the semantic registry, capability
    registry, tests, and continuity docs in the same pass
+
+Use `progress.md` and `learnings.md` only as optional deep archive if the open
+question depends on historical chronology or on a pattern already discovered in
+the past.
 
 ## Completed Since Last Update
 

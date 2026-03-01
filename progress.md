@@ -1,5 +1,26 @@
 # Progress — Gestionale Rosario Furnari
 
+**Stato del documento:** `historical`
+**Scopo:** log cronologico delle sessioni e delle decisioni utili per audit,
+recupero profondo e ricostruzione della sequenza implementativa.
+**Quando usarlo:** solo dopo aver letto `docs/README.md` e i documenti
+`canonical`, oppure quando serve ricostruire una decisione o una data
+specifica.
+**Quando NON usarlo:** non come fonte primaria dello stato attuale del
+prodotto e non come reading order iniziale di una nuova chat.
+**File/moduli correlati:** `docs/README.md`,
+`docs/development-continuity-map.md`,
+`docs/historical-analytics-handoff.md`, `learnings.md`
+
+## How To Use This File
+
+- partire da `docs/README.md`, non da qui
+- usare questo file come archivio cronologico, non come specifica corrente
+- cercare per data, feature o keyword con `rg` invece di leggerlo tutto in
+  sequenza
+- se emerge una regola ancora viva, promuoverla nei documenti `canonical` o in
+  `.claude/rules/`, non duplicarla qui come fonte primaria
+
 ## Current Phase
 
 🟢 Dashboard storico AI-ready stabile, AI operativa su `Annuale` chiusa sul

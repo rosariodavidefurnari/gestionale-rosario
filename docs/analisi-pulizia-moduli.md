@@ -1,7 +1,23 @@
 # Analisi Moduli Atomic CRM — Decisioni di Pulizia
 
+**Stato del documento:** `historical`
+**Scopo:** spiegare le decisioni iniziali di pulizia/adattamento del fork
+Atomic CRM.
+**Quando NON usarlo da solo:** per descrivere lo stato attuale del sistema.
+Alcune decisioni qui sono state superate, per esempio la riattivazione di
+`contacts` come dominio referenti. Per lo stato attuale usare
+`docs/README.md`, `docs/architecture.md` e
+`docs/contacts-client-project-architecture.md`.
+
+Esempi di punti superati:
+
+- `contacts` non e' piu una valutazione aperta: e' stato riattivato
+- `project_contacts` ora esiste
+- alcune note su resource registrate in `CRM.tsx` non vanno lette come stato
+  corrente
+
 **Data:** 2026-02-26
-**Stato:** In attesa di decisione utente
+**Stato storico originale:** In attesa di decisione utente
 
 Questo documento analizza in dettaglio ogni modulo ereditato da Atomic CRM
 che non è nella specifica del gestionale. Per ciascuno: cosa fa, a cosa serve,

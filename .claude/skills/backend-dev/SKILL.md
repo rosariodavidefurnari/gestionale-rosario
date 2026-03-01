@@ -1,21 +1,89 @@
 ---
 name: backend-dev
-description: Coding practices for backend development in Atomic CRM. Use when deciding whether backend logic is needed, or when creating/modifying database migrations, views, triggers, RLS policies, edge functions, or custom dataProvider methods that call Supabase APIs.
+description: Coding practices for backend work in Gestionale Rosario Furnari. Use when evaluating migrations, views, RLS, Edge Functions, server-side AI flows, or custom dataProvider methods backed by Supabase.
 ---
 
-There is no custom backend server. All server-side logic uses Supabase: PostgreSQL (tables, views, triggers, RLS), Auth API, Storage, and Edge Functions.
+There is no custom backend server. Backend logic lives in Supabase:
 
-Prefer frontend-only solutions via custom dataProvider methods calling the PostgREST API.
+- PostgreSQL schema, constraints, indexes, views
+- RLS and policies
+- Storage
+- Edge Functions
+- custom dataProvider methods that expose stable frontend entry points
 
-When backend logic is needed:
+## Decide First: frontend, DB, or Edge?
 
-- **Aggregation/read optimization**: Create a database view (`CREATE OR REPLACE VIEW` in a new migration). PostgREST exposes views like tables. When underlying table columns change, update the `contacts_summary` and `companies_summary` views too.
-- **Complex mutations** (multi-table writes): Create a Supabase edge function in Deno. Stored procedures via RPC are less preferred (code lives in migrations, harder to maintain). On the frontend, expose the edge function as a custom dataProvider method (using `httpClient(`${supabaseUrl}/functions/v1/<name>`)`) and call it via react-query. (e.g. `salesCreate()` → `/functions/v1/users`, `mergeContacts()` → `/functions/v1/merge_contacts`)
+Prefer the smallest correct layer:
 
-Edge function conventions:
-- Shared utils in `supabase/functions/_shared/` — reuse `authentication.ts`, `supabaseAdmin.ts`, `cors.ts`, `utils.ts`
-- Follow the middleware chain pattern: CORS preflight → `authenticate()` → handler
-- `verify_jwt = false` in config.toml, so JWT validation is manual via `authenticate()`
+- **frontend/provider only**
+  - deterministic UI glue
+  - local prefill/linking logic
+  - read composition that does not need secrets or transactions
+- **database migration / view**
+  - schema changes
+  - constraints and invariants
+  - read aggregation or semantic projections
+- **Edge Function**
+  - multi-step writes
+  - secret-backed integrations
+  - AI extraction/answer flows
+  - transactional or auditable confirmation paths
 
-Other conventions:
-- New tables need RLS policies and the auto-set `sales_id` trigger (see migration `20260108160722`)
+## Repo Conventions
+
+- prefer custom `dataProvider` methods over ad hoc fetch calls
+- when a new backend capability appears, expose one stable provider entry point
+- if a view is added, wire its PK handling in the provider when needed
+- if a resource is exposed in production, review FakeRest parity too
+
+## Views
+
+Use a new migration with `CREATE OR REPLACE VIEW` for read optimization and
+semantic aggregation.
+
+Current examples in this repo include:
+
+- `project_financials`
+- `monthly_revenue`
+- `analytics_*`
+
+When base columns or semantics change, update the affected views in the same
+slice.
+
+## Edge Functions
+
+Shared helpers live in `supabase/functions/_shared/`.
+
+Follow the usual chain:
+
+1. CORS / preflight
+2. `authenticate()`
+3. validated handler
+
+Typical frontend integration:
+
+- add a dedicated provider method
+- call the function from the provider
+- keep UI and AI consumers on that same stable entry point
+
+## Mandatory Backend Sweep
+
+If backend work changes real product behavior, also review:
+
+- `src/components/atomic-crm/types.ts`
+- `src/components/atomic-crm/providers/supabase/dataProvider.ts`
+- `src/components/atomic-crm/providers/fakerest/**` when relevant
+- the affected module UI and linking helpers
+- semantic/capability registry if AI reads or uses the feature
+- continuity docs in `docs/`
+
+## Continuity Rule
+
+Do not leave backend knowledge trapped in code only.
+
+When a backend change alters business meaning, update the matching canonical
+doc:
+
+- `docs/architecture.md`
+- `docs/development-continuity-map.md`
+- domain-specific docs when relevant

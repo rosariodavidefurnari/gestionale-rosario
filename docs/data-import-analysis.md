@@ -1,5 +1,10 @@
 # Analisi Dati Reali — File Numbers Diego Caltabiano
 
+**Stato del documento:** `reference`
+**Scopo:** caso reale di dominio/import e mapping operativo dei dati storici.
+**Quando NON usarlo da solo:** per dedurre architettura generale o stato
+completo del prodotto fuori dal perimetro import/documenti.
+
 **Fonte:** `Rosario Furnari - Servizi per Diego Caltabiano - DAL 27 10 24 AL 07 04 25.numbers`
 **Analizzato:** 2026-02-25
 **Stato:** Dati estratti e VALIDATI con Rosario

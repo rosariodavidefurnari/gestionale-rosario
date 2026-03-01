@@ -40,11 +40,14 @@ Claude Code le carica AUTOMATICAMENTE — non serve importarle.
 - `make build` — Build di produzione
 - `npx shadcn@latest add [component]` — Aggiungi componente UI
 
-## Learnings
+## Continuita' minima
 
-Leggi `learnings.md` per i learnings accumulati sessione dopo sessione.
+Per riprendere il progetto senza leggere i file sbagliati, partire da:
 
-## Stato progetto
+1. `docs/README.md`
+2. `docs/development-continuity-map.md`
+3. `docs/historical-analytics-handoff.md`
+4. `docs/architecture.md`
 
-Leggi `progress.md` per lo stato corrente.
-Leggi `docs/architecture.md` per la mappa dell'architettura.
+Usare `progress.md` e `learnings.md` solo come archivio secondario quando
+serve ricostruire una decisione, una data o un pattern storico specifico.

@@ -1,34 +1,92 @@
-# Session Workflow & Self-Improving System
+# Session Workflow & Continuity Rules
 
-## SESSION START (ogni sessione, senza eccezioni)
-1. CLAUDE.md e rules/ sono caricati automaticamente
-2. Leggi progress.md → capire fase corrente
-3. Leggi learnings.md → review learnings recenti
-4. Leggi docs/architecture.md → capire stato attuale
-5. Comunica in italiano:
-   "Siamo alla fase [X]. Ultima sessione: [Y]. Prossimi step: [Z].
-    Learnings recenti: [lista breve]. Da dove vuoi partire?"
-6. ASPETTA conferma utente prima di scrivere codice
+## Source Priority
 
-## CORE LOOP (dopo ogni lavoro non banale)
-1. **Reflect**: Cosa ha funzionato? Cosa no? Pattern emerso?
-2. **Triage**: Ogni scoperta → applica ora / cattura in learnings / dismissi
-3. **Cascade**: Il learning si applica ad altri file/pattern?
+Quando i documenti entrano in conflitto, l'ordine corretto e':
 
-## SESSION END (non negoziabile)
-1. Aggiorna progress.md (task completati, prossimo step, decisioni)
-2. Aggiorna docs/architecture.md (se tabelle/pagine/componenti aggiunti)
-3. Aggiorna learnings.md (nuove scoperte della sessione)
+1. codice reale, migration, Edge Functions
+2. `docs/README.md` e documenti `canonical`
+3. documenti `working`
+4. `progress.md` e `learnings.md` come archivio storico
 
-## EVOLUTION
-- Learning ripetuto 2+ volte → proponi promozione a regola in .claude/rules/
-- Workflow ripetuto 2+ volte → valuta creazione skill in .claude/skills/
-- learnings.md supera ~30 voci → consolidamento
-- SEMPRE chiedere all'utente prima di modifiche strutturali
+## SESSION START
+
+Leggere sempre in questo ordine minimo:
+
+1. `docs/README.md`
+2. `docs/development-continuity-map.md`
+3. `docs/historical-analytics-handoff.md`
+4. `docs/architecture.md`
+
+Leggere anche i documenti di dominio se pertinenti:
+
+- `docs/contacts-client-project-architecture.md`
+- `docs/data-import-analysis.md`
+- `Gestionale_Rosario_Furnari_Specifica.md`
+
+Leggere `progress.md` e `learnings.md` solo se serve:
+
+- ricostruire la sequenza cronologica di una decisione
+- recuperare un pattern storico specifico
+- capire perche' una regola e' nata
+
+Comunicazione iniziale:
+
+- riassumere fase corrente, slice aperta e assunzioni operative
+- non chiedere conferma preventiva se la richiesta e' chiara e il lavoro e'
+  sicuro/reversibile
+- chiedere invece solo quando c'e' ambiguita' rischiosa, impatto distruttivo o
+  tradeoff architetturale non deducibile dal repo
+
+## CORE LOOP
+
+Dopo ogni lavoro non banale:
+
+1. `Reflect`
+   - cosa e' cambiato davvero
+   - quale regola o pattern e' emerso
+2. `Triage`
+   - applicare subito nel codice
+   - promuovere a docs/rules
+   - oppure lasciare come nota storica se non vale una promozione
+3. `Cascade`
+   - fare sweep sulle superfici collegate seguendo
+     `docs/development-continuity-map.md`
+
+## SESSION END
+
+Aggiornare sempre, se toccati dal cambiamento reale:
+
+1. documenti `canonical`
+2. `docs/historical-analytics-handoff.md` e backlog se cambia il prossimo step
+   o la stop line
+3. `Settings` se la modifica e' config-driven
+
+Aggiornare `progress.md` e `learnings.md` solo se c'e' valore storico reale:
+
+- `progress.md`
+  - milestone importante
+  - verifica runtime/manuale significativa
+  - decisione che serve ricostruire nel tempo
+- `learnings.md`
+  - pattern nuovo non banale
+  - errore reale che vale la pena non ripetere
+
+## PROMOTION RULE
+
+Se una regola ricorre 2+ volte, non lasciarla solo in `learnings.md`.
+Promuoverla in una sola casa stabile:
+
+- `.claude/rules/` per workflow/regole operative
+- `docs/development-continuity-map.md` per sweep e integrazione
+- `docs/architecture.md` per fotografia implementativa
+- documento di dominio dedicato per logica business locale
 
 ## ANTI-PATTERNS
-- Non creare file "just in case"
-- Non finire sessione senza aggiornare progress.md
-- Non elencare scoperte senza triaggiare (applica/cattura/dismissi)
-- Non evolvere il sistema silenziosamente — chiedi all'utente
-- Non saltare il linting dopo le modifiche
+
+- partire da `progress.md` o `learnings.md` come fonte primaria
+- duplicare la stessa regola in piu' documenti senza dichiarare una casa
+  canonica
+- finire una modifica senza sweep delle superfici collegate
+- aggiornare `Settings` per riflesso quando la modifica non e' configurabile
+- lasciare `.claude/rules/` disallineate dai documenti `canonical`

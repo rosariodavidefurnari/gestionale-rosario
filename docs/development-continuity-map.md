@@ -1,5 +1,11 @@
 # Development Continuity Map
 
+**Stato del documento:** `canonical`
+**Scopo:** fonte primaria per reading order, checklist di integrazione e sweep
+obbligatoria delle superfici collegate.
+**Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
+prodotto.
+
 Last updated: 2026-03-01
 
 ## Goal
@@ -20,12 +26,13 @@ La regola operativa e' semplice:
 
 ## Reading Order For A New Chat
 
-1. `docs/historical-analytics-handoff.md`
+1. `docs/README.md`
 2. `docs/development-continuity-map.md`
-3. `docs/historical-analytics-backlog.md`
-4. `docs/contacts-client-project-architecture.md`
-5. `docs/data-import-analysis.md`
-6. `Gestionale_Rosario_Furnari_Specifica.md`
+3. `docs/historical-analytics-handoff.md`
+4. `docs/historical-analytics-backlog.md`
+5. `docs/contacts-client-project-architecture.md`
+6. `docs/data-import-analysis.md`
+7. `Gestionale_Rosario_Furnari_Specifica.md`
 
 ## Source Of Truth By Area
 
@@ -40,8 +47,6 @@ La regola operativa e' semplice:
   - `docs/contacts-client-project-architecture.md`
 - Import storico/fatture e casi reali:
   - `docs/data-import-analysis.md`
-
-## Change Impact Map
 
 ## Full Surface Sweep Rule
 

@@ -1,5 +1,19 @@
 # Design Fase 2 — Progetto Visivo Completo
 
+**Stato del documento:** `historical`
+**Scopo:** blueprint iniziale di trasformazione visiva e funzionale dal fork
+Atomic CRM.
+**Quando NON usarlo da solo:** per descrivere UI e moduli come sono oggi nel
+codice. Per lo stato corrente usare `docs/README.md`,
+`docs/architecture.md` e la sweep map in
+`docs/development-continuity-map.md`.
+
+Esempi di punti ormai superati:
+
+- il dominio referenti oggi esiste davvero tramite `contacts`
+- la chat AI unificata e l'import documenti non erano ancora dentro questo
+  blueprint iniziale
+
 **Data:** 2026-02-25
 **Stato:** Bozza per approvazione
 

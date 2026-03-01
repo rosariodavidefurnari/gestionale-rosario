@@ -15,7 +15,21 @@
 
 ## Project Overview
 
-Atomic CRM is a full-featured CRM built with React, shadcn-admin-kit, and Supabase. It provides contact management, task tracking, notes, email capture, and deal management with a Kanban board.
+Gestionale Rosario Furnari is a heavily customized fork of Atomic CRM built with
+React, shadcn-admin-kit, and Supabase.
+
+The active product surface includes:
+
+- clients and billing profiles
+- contacts as referents linked to clients and projects
+- projects
+- services / work log
+- quotes
+- payments
+- expenses
+- reminders
+- annual and historical dashboards
+- unified AI chat and document import
 
 ## Development Commands
 
@@ -77,24 +91,24 @@ make registry-build   # Build Shadcn registry
 src/
 ├── components/
 │   ├── admin/              # Shadcn Admin Kit components (mutable dependency)
-│   ├── atomic-crm/         # Main CRM application code (~15,000 LOC)
-│   │   ├── activity/       # Activity logs
-│   │   ├── companies/      # Company management
-│   │   ├── contacts/       # Contact management (includes CSV import/export)
-│   │   ├── dashboard/      # Dashboard widgets
-│   │   ├── deals/          # Deal pipeline (Kanban)
-│   │   ├── filters/        # List filters
+│   ├── atomic-crm/         # Main CRM application code
+│   │   ├── ai/             # Unified AI launcher, snapshot, import flows
+│   │   ├── clients/        # Client management + billing profile
+│   │   ├── contacts/       # Referents linked to clients/projects
+│   │   ├── dashboard/      # Annual and historical dashboards
+│   │   ├── expenses/       # Expenses and km flows
 │   │   ├── layout/         # App layout components
 │   │   ├── login/          # Authentication pages
-│   │   ├── misc/           # Shared utilities
-│   │   ├── notes/          # Note management
+│   │   ├── payments/       # Payment tracking
 │   │   ├── providers/      # Data providers (Supabase + FakeRest)
+│   │   ├── projects/       # Projects
+│   │   ├── quotes/         # Quotes and commercial flow
 │   │   ├── root/           # Root CRM component
-│   │   ├── sales/          # Sales team management
+│   │   ├── services/       # Work log / service records
 │   │   ├── settings/       # Settings page
-│   │   ├── simple-list/    # List components
 │   │   ├── tags/           # Tag management
-│   │   └── tasks/          # Task management
+│   │   ├── tasks/          # Reminders
+│   │   └── travel/         # Travel and km helpers
 │   ├── supabase/           # Supabase-specific auth components
 │   └── ui/                 # Shadcn UI components (mutable dependency)
 ├── hooks/                  # Custom React hooks
@@ -102,13 +116,18 @@ src/
 └── App.tsx                 # Application entry point
 
 supabase/
-├── functions/              # Edge functions (user management, inbound email)
+├── functions/              # Edge functions (AI, import, email, backend flows)
 └── migrations/             # Database migrations
 ```
 
 ### Key Architecture Patterns
 
-For more details, check out the doc/src/content/docs/developers/architecture-choices.mdx document.
+For repo-specific continuity, read first:
+
+1. `docs/README.md`
+2. `docs/development-continuity-map.md`
+3. `docs/historical-analytics-handoff.md`
+4. `docs/architecture.md`
 
 #### Mutable Dependencies
 
@@ -119,18 +138,15 @@ The codebase includes mutable dependencies that should be modified directly if n
 #### Configuration via `<CRM>` Component
 
 The `src/App.tsx` file renders the `<CRM>` component, which accepts props for domain-specific configuration:
-- `contactGender`: Gender options
-- `companySectors`: Company industry sectors
-- `dealCategories`, `dealStages`, `dealPipelineStatuses`: Deal configuration
-- `noteStatuses`: Note status options with colors
-- `taskTypes`: Task type options
-- `logo`, `title`: Branding
+- `title`: Branding
+- `logo`: Branding
+- `taskTypes`: Reminder types
 - `lightTheme`, `darkTheme`: Theme customization
 - `disableTelemetry`: Opt-out of anonymous usage tracking
 
 #### Database Views
 
-Complex queries are handled via database views to simplify frontend code and reduce HTTP overhead. For example, `contacts_summary` provides aggregated contact data including task counts.
+Complex queries are handled via database views to simplify frontend code and reduce HTTP overhead. Current important views include `project_financials`, `monthly_revenue`, and the `analytics_*` views used by dashboards and AI contexts.
 
 #### Database Triggers
 
@@ -139,8 +155,9 @@ User data syncs between Supabase's `auth.users` table and the CRM's `sales` tabl
 #### Edge Functions
 
 Located in `supabase/functions/`:
-- User management (creating/updating users, account disabling)
-- Inbound email webhook processing
+- AI answer/extraction flows
+- document import confirmation
+- email send flows and other multi-step backend actions
 
 #### Data Providers
 
@@ -166,18 +183,19 @@ The project uses TypeScript path aliases configured in `tsconfig.json` and `comp
 
 ### Adding Custom Fields
 
-When modifying contact or company data structures:
+When modifying active CRM data structures:
 1. Create a migration: `npx supabase migration new <name>`
-2. Update the sample CSV: `src/components/atomic-crm/contacts/contacts_export.csv`
-3. Update the import function: `src/components/atomic-crm/contacts/useContactImport.tsx`
-4. If using FakeRest, update data generators in `src/components/atomic-crm/providers/fakerest/dataGenerator/`
-5. Don't forget to update the views
-6. Don't forget the export functions
-7. Don't forget the contact merge logic
+2. Update `src/components/atomic-crm/types.ts`
+3. Update Supabase and FakeRest providers if the resource is exposed
+4. Update affected views or Edge Functions
+5. Update affected UI surfaces: list/create/edit/show, filters, dialogs, linking helpers
+6. Update continuity docs in `docs/`
+7. Update `Settings` too if the change is config-driven
 
 ### Running with Test Data
 
-Import `test-data/contacts.csv` via the Contacts page → Import button.
+Prefer the real Supabase-backed workflow or the existing FakeRest generators.
+The old upstream sample data/docs are not the source of truth for this repo.
 
 ### Git Hooks
 
@@ -193,8 +211,9 @@ Import `test-data/contacts.csv` via the Contacts page → Import button.
 
 ## Important Notes
 
-- The codebase is intentionally small (~15,000 LOC in `src/components/atomic-crm`) for easy customization
+- The codebase is intentionally customized beyond upstream Atomic CRM
 - Modify files in `src/components/admin` and `src/components/ui` directly - they are meant to be customized
 - Unit tests can be added in the `src/` directory (test files are named `*.test.ts` or `*.test.tsx`)
 - User deletion is not supported to avoid data loss; use account disabling instead
 - Filter operators must be supported by the `supabaseAdapter` when using FakeRest
+- `progress.md` and `learnings.md` are legacy archives, not the primary entry point for new sessions

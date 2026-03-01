@@ -1,5 +1,11 @@
 # Gestionale Rosario Furnari — Specifica Tecnica e Funzionale
 
+**Stato del documento:** `reference`
+**Scopo:** visione prodotto, vincoli di business e bootstrap originario.
+**Quando NON usarlo da solo:** per dedurre lo stato implementato corrente senza
+incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
+`canonical`.
+
 **Versione:** 1.0  
 **Data:** 25 Febbraio 2026  
 **Destinatario:** Rosario Davide Furnari  

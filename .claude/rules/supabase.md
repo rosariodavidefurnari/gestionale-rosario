@@ -1,34 +1,103 @@
 # Supabase Rules — Gestionale Rosario Furnari
 
-## Client usage
-Il data provider Supabase è già configurato in Atomic CRM.
-Non creare client Supabase custom — usa il dataProvider di ra-supabase-core.
+## Source Of Truth
 
-## Accesso esclusivo
-- Un solo utente: rosariodavide.furnari@gmail.com
-- Registrazione pubblica DISABILITATA in Supabase Dashboard
-- RLS policy semplice: `auth.uid() IS NOT NULL` su tutte le tabelle
+Per stato corrente di schema e backend leggere prima:
 
-## Environment variables (VITE_, non NEXT_PUBLIC_)
+1. `docs/README.md`
+2. `docs/architecture.md`
+3. `supabase/migrations/**`
+4. `supabase/functions/**`
 
+## Provider First
+
+- non creare client Supabase custom se il `dataProvider` esistente basta
+- preferire metodi espliciti nel provider rispetto a fetch sparsi
+- se nasce una nuova capability backend, esporre un entry point stabile anche
+  per la futura AI
+
+## Remote Deploy Rules
+
+- cambi DB:
+  - nuova migration
+  - `npx supabase db push`
+- cambi Edge Functions:
+  - `npx supabase functions deploy <name>`
+- `git push` non deploya le Edge Functions remote
+
+## Access Model
+
+- progetto single-user
+- registrazione pubblica disabilitata
+- business tables protette da RLS
+- regola standard:
+  - `auth.uid() IS NOT NULL`
+- eccezione intenzionale:
+  - `keep_alive` con `SELECT` pubblico
+
+## Current Core Schema
+
+Le tabelle operative principali sono:
+
+- `clients`
+- `contacts`
+- `project_contacts`
+- `projects`
+- `services`
+- `quotes`
+- `payments`
+- `expenses`
+- `client_tasks`
+- `client_notes`
+- `settings`
+- `keep_alive`
+
+Le viste e le funzioni operative principali includono anche:
+
+- `project_financials`
+- `monthly_revenue`
+- viste `analytics_*`
+- `invoice_import_extract`
+- `invoice_import_confirm`
+- `unified_crm_answer`
+
+## New Table / View Checklist
+
+Per ogni nuova tabella o view reale:
+
+1. creare migration in `supabase/migrations/`
+2. definire chiavi, vincoli e indici utili
+3. abilitare RLS se applicabile
+4. creare policy esplicite
+5. aggiungere `created_at` e `updated_at` dove serve
+6. aggiornare provider Supabase e FakeRest se la resource e' esposta al CRM
+7. aggiornare `types.ts`, eventuali view PK nel provider e docs di continuita'
+
+## Edge Function Rules
+
+- usare `supabase/functions/_shared/` per auth, CORS e helper riusabili
+- seguire il pattern:
+  - preflight
+  - `authenticate()`
+  - handler
+- usare Edge Functions per:
+  - multi-step mutations
+  - accesso a secret esterni
+  - import documenti
+  - logiche AI server-side
+- non spostare logica semplice nel backend se puo' restare deterministica nel
+  provider o nel DB
+
+## Environment Variables
+
+Frontend:
+
+```bash
+VITE_SUPABASE_URL=...
+VITE_SB_PUBLISHABLE_KEY=...
 ```
-VITE_SUPABASE_URL=https://tuoprogetto.supabase.co
-VITE_SB_PUBLISHABLE_KEY=sb_publishable_xxxxxxxxxxxxx
-```
 
-## Nuove tabelle — checklist obbligatoria
-Per ogni nuova tabella:
-1. Creare migration in `supabase/migrations/`
-2. Abilitare RLS
-3. Creare policy `auth.uid() IS NOT NULL` per ALL
-4. Aggiungere colonne `created_at` e `updated_at` con default NOW()
-5. Se serve, creare VIEW per aggregazioni
+Server / Edge Functions:
 
-## Schema del gestionale
-Le tabelle principali sono definite in `Gestionale_Rosario_Furnari_Specifica.md`:
-- clients, projects, services, quotes, payments, expenses, settings, keep_alive
-
-## API Keys (nuovo formato 2025/2026)
-- Publishable key: `sb_publishable_...` (frontend)
-- Secret key: `sb_secret_...` (solo server/Edge Functions)
-- JWT: asymmetric signing (RSA) per nuovi progetti
+- usare secret Supabase o file `.env` locali dedicati
+- non esporre mai secret key nel frontend
