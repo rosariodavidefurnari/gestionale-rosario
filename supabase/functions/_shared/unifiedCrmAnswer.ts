@@ -20,6 +20,7 @@ export type UnifiedCrmSuggestedAction = {
   capabilityActionId?:
     | "quote_create_payment"
     | "client_create_payment"
+    | "project_quick_episode"
     | "project_quick_payment"
     | "expense_create_km"
     | "follow_unified_crm_handoff";
@@ -71,6 +72,30 @@ export type UnifiedCrmTravelExpenseEstimate = {
   expenseDate: string | null;
   kmRate: number | null;
   reimbursementAmount: number | null;
+};
+
+export type UnifiedCrmTravelRouteCandidate = {
+  origin: string;
+  destination: string;
+};
+
+export type ParsedUnifiedCrmProjectQuickEpisodeQuestion = {
+  projectId: string;
+  clientId: string | null;
+  projectName: string;
+  serviceDate: string | null;
+  serviceType:
+    | "riprese"
+    | "montaggio"
+    | "riprese_montaggio"
+    | "fotografia"
+    | "sviluppo_web"
+    | "altro"
+    | null;
+  notes: string | null;
+  isRoundTrip: boolean;
+  travelRoute: UnifiedCrmTravelRouteCandidate | null;
+  travelRouteCandidates: UnifiedCrmTravelRouteCandidate[];
 };
 
 const italianMonthNumbers: Record<string, number> = {
@@ -163,6 +188,27 @@ const hasTravelEstimationIntent = (normalizedQuestion: string) =>
     "a-r",
   ]);
 
+const hasProjectQuickEpisodeIntent = (normalizedQuestion: string) =>
+  includesAny(normalizedQuestion, [
+    "nuovo lavoro",
+    "nuov lavor",
+    "nuovo servizio",
+    "nuov serviz",
+    "nuova puntata",
+    "registra puntata",
+    "intervist",
+  ]) &&
+  includesAny(normalizedQuestion, [
+    "registr",
+    "aggiung",
+    "inser",
+    "crea",
+    "precompilat",
+    "prepar",
+    "caric",
+  ]) &&
+  includesAny(normalizedQuestion, ["progett", "serviz", "puntat", "lavor"]);
+
 const getRoutePrefix = (context: Record<string, unknown>) => {
   const meta = isObject(context.meta) ? context.meta : null;
   return getString(meta?.routePrefix) ?? "/#/";
@@ -211,6 +257,88 @@ const stripTrailingTravelContext = (value: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+const getTravelRouteSource = (question: string) => {
+  const compactQuestion = question.replace(/\s+/g, " ").trim();
+  const namedRouteSource = getNamedTravelRouteSource(question);
+
+  if (namedRouteSource) {
+    return namedRouteSource;
+  }
+
+  if (splitTravelRoute(compactQuestion)) {
+    return compactQuestion;
+  }
+
+  const markerPatterns = [
+    /\btratta\s+/gi,
+    /\bpercor(?:so|sa)?\s+/gi,
+    /\btragitt(?:o|a)?\s+/gi,
+    /\b(?:devi\s+)?calcol\w*\s+/gi,
+    /\bstim\w*\s+/gi,
+  ];
+  let bestMarkerEnd = -1;
+
+  markerPatterns.forEach((pattern) => {
+    const matches = compactQuestion.matchAll(pattern);
+
+    for (const match of matches) {
+      if (typeof match.index !== "number") {
+        continue;
+      }
+
+      const markerEnd = match.index + match[0].length;
+
+      if (markerEnd > bestMarkerEnd) {
+        bestMarkerEnd = markerEnd;
+      }
+    }
+  });
+
+  return bestMarkerEnd >= 0
+    ? compactQuestion.slice(bestMarkerEnd).trim()
+    : compactQuestion;
+};
+
+const buildImplicitTravelRouteCandidates = (value: string) => {
+  const cleanedValue = stripTrailingTravelContext(value);
+  const tokens = cleanedValue.split(/\s+/).filter(Boolean);
+
+  if (tokens.length < 2 || tokens.length > 5) {
+    return [];
+  }
+
+  const splitIndices: number[] = [];
+
+  for (let offset = 1; offset < tokens.length; offset += 1) {
+    const leftToRightIndex = offset;
+    const rightToLeftIndex = tokens.length - offset;
+
+    if (!splitIndices.includes(leftToRightIndex)) {
+      splitIndices.push(leftToRightIndex);
+    }
+
+    if (!splitIndices.includes(rightToLeftIndex)) {
+      splitIndices.push(rightToLeftIndex);
+    }
+  }
+
+  return splitIndices
+    .map((splitIndex) => ({
+      origin: tokens.slice(0, splitIndex).join(" ").trim(),
+      destination: tokens.slice(splitIndex).join(" ").trim(),
+    }))
+    .filter(
+      (candidate, index, candidates) =>
+        candidate.origin &&
+        candidate.destination &&
+        candidates.findIndex(
+          (otherCandidate) =>
+            otherCandidate.origin === candidate.origin &&
+            otherCandidate.destination === candidate.destination,
+        ) === index,
+    );
+};
+
 const splitTravelRoute = (value: string) => {
   const dashMatch = value.match(/^(.+?)\s[-–—]\s(.+)$/);
   if (dashMatch) {
@@ -251,7 +379,7 @@ const splitTravelRoute = (value: string) => {
   return null;
 };
 
-const inferExpenseDateFromQuestion = (
+const inferDateFromQuestion = (
   question: string,
   normalizedQuestion: string,
   timeZone: string,
@@ -292,13 +420,177 @@ const inferExpenseDateFromQuestion = (
   return null;
 };
 
-export const parseUnifiedCrmTravelExpenseQuestion = ({
+const getNamedTravelRouteSource = (question: string) => {
+  const compactQuestion = question.replace(/\s+/g, " ").trim();
+  return (
+    compactQuestion.match(/\btratta\s+(.+)$/i)?.[1] ??
+    compactQuestion.match(/\bpercor(?:so|sa)?\s+(.+)$/i)?.[1] ??
+    null
+  );
+};
+
+const projectNameStopwords = new Set([
+  "il",
+  "lo",
+  "la",
+  "i",
+  "gli",
+  "le",
+  "di",
+  "del",
+  "della",
+  "dei",
+  "degli",
+  "delle",
+  "da",
+  "dai",
+  "dagli",
+  "dalle",
+  "per",
+  "con",
+  "nel",
+  "nella",
+  "nei",
+  "nelle",
+  "su",
+  "un",
+  "uno",
+  "una",
+  "e",
+]);
+
+const tokenizeProjectName = (value: string) =>
+  normalizeText(value)
+    .split(/[^a-z0-9]+/i)
+    .filter((token) => token.length >= 3 && !projectNameStopwords.has(token));
+
+const pickProjectFromQuestion = ({
+  normalizedQuestion,
+  context,
+}: {
+  normalizedQuestion: string;
+  context: Record<string, unknown>;
+}) => {
+  const snapshot = isObject(context.snapshot) ? context.snapshot : null;
+  const activeProjects = getObjectArray(snapshot?.activeProjects);
+
+  if (activeProjects.length === 0) {
+    return null;
+  }
+
+  const rankedProjects = activeProjects
+    .map((project) => {
+      const projectName = getString(project.projectName);
+
+      if (!projectName) {
+        return null;
+      }
+
+      const normalizedProjectName = normalizeText(projectName);
+      const projectTokens = tokenizeProjectName(projectName);
+      const tokenScore = projectTokens.filter((token) =>
+        normalizedQuestion.includes(token),
+      ).length;
+      const score =
+        tokenScore +
+        (normalizedQuestion.includes(normalizedProjectName) ? 10 : 0);
+
+      return {
+        project,
+        score,
+      };
+    })
+    .filter(
+      (
+        project,
+      ): project is {
+        project: Record<string, unknown>;
+        score: number;
+      } => project !== null,
+    )
+    .sort((left, right) => right.score - left.score);
+
+  const firstProject = rankedProjects[0];
+  const secondProject = rankedProjects[1];
+
+  if (!firstProject) {
+    return null;
+  }
+
+  if (
+    firstProject.score <= 0 &&
+    activeProjects.length === 1 &&
+    includesAny(normalizedQuestion, ["progett", "puntat", "serviz", "lavor"])
+  ) {
+    return activeProjects[0];
+  }
+
+  if (
+    firstProject.score > 0 &&
+    (!secondProject || firstProject.score > secondProject.score)
+  ) {
+    return firstProject.project;
+  }
+
+  return null;
+};
+
+const inferProjectQuickEpisodeServiceType = (
+  normalizedQuestion: string,
+): ParsedUnifiedCrmProjectQuickEpisodeQuestion["serviceType"] => {
+  const mentionsShooting = includesAny(normalizedQuestion, [
+    "ripres",
+    "ripresa",
+  ]);
+  const mentionsEditing = includesAny(normalizedQuestion, [
+    "montagg",
+    "editing",
+    "post-produ",
+  ]);
+
+  if (mentionsShooting && mentionsEditing) {
+    return "riprese_montaggio";
+  }
+
+  if (mentionsShooting) {
+    return "riprese";
+  }
+
+  if (mentionsEditing) {
+    return "montaggio";
+  }
+
+  if (includesAny(normalizedQuestion, ["fotograf"])) {
+    return "fotografia";
+  }
+
+  if (includesAny(normalizedQuestion, ["web", "sito", "svilupp"])) {
+    return "sviluppo_web";
+  }
+
+  return null;
+};
+
+const inferProjectQuickEpisodeNotes = (question: string) => {
+  const compactQuestion = question.replace(/\s+/g, " ").trim();
+  const interviewMatch = compactQuestion.match(
+    /\b(?:abbiamo\s+)?intervistat[oaie]*\s+(.+?)(?=\s*(?:[-–—]|,|;|\.|:|\bcome\b|\btratta\b|\bspesa\b|\bservizio\b|$))/i,
+  );
+
+  if (interviewMatch?.[1]) {
+    return `Intervista a ${interviewMatch[1].trim()}`;
+  }
+
+  return null;
+};
+
+export const buildUnifiedCrmTravelExpenseQuestionCandidates = ({
   question,
   context,
 }: {
   question: string;
   context: Record<string, unknown>;
-}): ParsedUnifiedCrmTravelExpenseQuestion | null => {
+}): ParsedUnifiedCrmTravelExpenseQuestion[] => {
   const normalizedQuestion = normalizeText(question);
   const travelIntent = hasTravelIntent(normalizedQuestion);
   const canEstimateRoute =
@@ -306,23 +598,90 @@ export const parseUnifiedCrmTravelExpenseQuestion = ({
     hasTravelEstimationIntent(normalizedQuestion);
 
   if (!travelIntent || !canEstimateRoute) {
-    return null;
+    return [];
   }
 
-  const compactQuestion = question.replace(/\s+/g, " ").trim();
-  const routeSource =
-    compactQuestion.match(/\btratta\s+(.+)$/i)?.[1] ??
-    compactQuestion.match(/\bpercor(?:so|sa)?\s+(.+)$/i)?.[1] ??
-    compactQuestion;
-  const route = splitTravelRoute(routeSource);
+  const routeSource = getTravelRouteSource(question);
+  const explicitRoute = splitTravelRoute(routeSource);
+  const isRoundTrip = includesAny(normalizedQuestion, [
+    "andata e ritorno",
+    "andata ritorno",
+    "andata che il ritorno",
+    "sia l'andata che il ritorno",
+    "a/r",
+    "a-r",
+  ]);
+  const expenseDate = inferDateFromQuestion(
+    question,
+    normalizedQuestion,
+    getBusinessTimezone(context),
+  );
+  const routeCandidates =
+    explicitRoute && explicitRoute.origin && explicitRoute.destination
+      ? [explicitRoute]
+      : buildImplicitTravelRouteCandidates(routeSource);
 
-  if (!route || !route.origin || !route.destination) {
-    return null;
-  }
-
-  return {
+  return routeCandidates.map((route) => ({
     origin: route.origin,
     destination: route.destination,
+    isRoundTrip,
+    expenseDate,
+  }));
+};
+
+export const parseUnifiedCrmTravelExpenseQuestion = ({
+  question,
+  context,
+}: {
+  question: string;
+  context: Record<string, unknown>;
+}): ParsedUnifiedCrmTravelExpenseQuestion | null =>
+  buildUnifiedCrmTravelExpenseQuestionCandidates({
+    question,
+    context,
+  })[0] ?? null;
+
+export const parseUnifiedCrmProjectQuickEpisodeQuestion = ({
+  question,
+  context,
+}: {
+  question: string;
+  context: Record<string, unknown>;
+}): ParsedUnifiedCrmProjectQuickEpisodeQuestion | null => {
+  const normalizedQuestion = normalizeText(question);
+
+  if (!hasProjectQuickEpisodeIntent(normalizedQuestion)) {
+    return null;
+  }
+
+  const matchedProject = pickProjectFromQuestion({
+    normalizedQuestion,
+    context,
+  });
+  const projectId = getString(matchedProject?.projectId);
+  const projectName = getString(matchedProject?.projectName);
+
+  if (!projectId || !projectName) {
+    return null;
+  }
+
+  const routeSource = getNamedTravelRouteSource(question);
+  const explicitTravelRoute =
+    hasTravelIntent(normalizedQuestion) && routeSource
+      ? splitTravelRoute(routeSource)
+      : null;
+
+  return {
+    projectId,
+    clientId: getString(matchedProject?.clientId),
+    projectName,
+    serviceDate: inferDateFromQuestion(
+      question,
+      normalizedQuestion,
+      getBusinessTimezone(context),
+    ),
+    serviceType: inferProjectQuickEpisodeServiceType(normalizedQuestion),
+    notes: inferProjectQuickEpisodeNotes(question),
     isRoundTrip: includesAny(normalizedQuestion, [
       "andata e ritorno",
       "andata ritorno",
@@ -331,11 +690,20 @@ export const parseUnifiedCrmTravelExpenseQuestion = ({
       "a/r",
       "a-r",
     ]),
-    expenseDate: inferExpenseDateFromQuestion(
-      question,
-      normalizedQuestion,
-      getBusinessTimezone(context),
-    ),
+    travelRoute:
+      explicitTravelRoute &&
+      explicitTravelRoute.origin &&
+      explicitTravelRoute.destination
+        ? explicitTravelRoute
+        : null,
+    travelRouteCandidates:
+      explicitTravelRoute &&
+      explicitTravelRoute.origin &&
+      explicitTravelRoute.destination
+        ? []
+        : hasTravelIntent(normalizedQuestion) && routeSource
+          ? buildImplicitTravelRouteCandidates(routeSource)
+          : [],
   };
 };
 
@@ -598,6 +966,174 @@ export const buildUnifiedCrmTravelExpenseSuggestedActions = ({
   ];
 };
 
+const formatIsoDateForHumans = (value: string | null) => {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+};
+
+const getProjectQuickEpisodeServiceTypeLabel = (
+  serviceType: ParsedUnifiedCrmProjectQuickEpisodeQuestion["serviceType"],
+) => {
+  switch (serviceType) {
+    case "riprese":
+      return "Riprese";
+    case "montaggio":
+      return "Montaggio";
+    case "riprese_montaggio":
+      return "Riprese + Montaggio";
+    case "fotografia":
+      return "Fotografia";
+    case "sviluppo_web":
+      return "Sviluppo Web";
+    case "altro":
+      return "Altro";
+    default:
+      return null;
+  }
+};
+
+export const buildProjectQuickEpisodeHref = ({
+  context,
+  parsedQuestion,
+  estimate,
+}: {
+  context: Record<string, unknown>;
+  parsedQuestion: ParsedUnifiedCrmProjectQuickEpisodeQuestion;
+  estimate?: UnifiedCrmTravelExpenseEstimate | null;
+}) =>
+  buildShowHrefWithSearch(
+    getRoutePrefix(context),
+    "projects",
+    parsedQuestion.projectId,
+    {
+      project_id: parsedQuestion.projectId,
+      client_id: parsedQuestion.clientId,
+      service_date: parsedQuestion.serviceDate,
+      service_type: parsedQuestion.serviceType,
+      km_distance:
+        estimate != null ? String(estimate.totalDistanceKm) : undefined,
+      km_rate: estimate?.kmRate != null ? String(estimate.kmRate) : undefined,
+      location:
+        estimate?.destinationQuery ??
+        parsedQuestion.travelRoute?.destination ??
+        undefined,
+      notes: parsedQuestion.notes,
+      launcher_source: "unified_ai_launcher",
+      launcher_action: "project_quick_episode",
+      open_dialog: "quick_episode",
+    },
+  );
+
+export const buildUnifiedCrmProjectQuickEpisodeAnswerMarkdown = ({
+  parsedQuestion,
+  estimate,
+}: {
+  parsedQuestion: ParsedUnifiedCrmProjectQuickEpisodeQuestion;
+  estimate?: UnifiedCrmTravelExpenseEstimate | null;
+}) => {
+  const dateLabel = formatIsoDateForHumans(parsedQuestion.serviceDate);
+  const serviceTypeLabel = getProjectQuickEpisodeServiceTypeLabel(
+    parsedQuestion.serviceType,
+  );
+  const shortRouteLabel =
+    estimate != null
+      ? `${estimate.originQuery} - ${estimate.destinationQuery}${estimate.isRoundTrip ? " A/R" : ""}`
+      : parsedQuestion.travelRoute != null
+        ? `${parsedQuestion.travelRoute.origin} - ${parsedQuestion.travelRoute.destination}${parsedQuestion.isRoundTrip ? " A/R" : ""}`
+        : null;
+
+  return [
+    "## Risposta breve",
+    estimate != null
+      ? `Da qui non salvo direttamente, ma ti apro il progetto ${parsedQuestion.projectName} sul workflow approvato di registrazione puntata gia precompilato con ${serviceTypeLabel ?? "il tipo servizio"}${dateLabel ? ` del ${dateLabel}` : ""} e ${formatNumber(estimate.totalDistanceKm)} km${estimate.isRoundTrip ? " A/R" : ""}.`
+      : `Da qui non salvo direttamente, ma ti apro il progetto ${parsedQuestion.projectName} sul workflow approvato di registrazione puntata gia precompilato${dateLabel ? ` per il ${dateLabel}` : ""}${serviceTypeLabel ? ` come ${serviceTypeLabel}` : ""}.`,
+    "",
+    "## Dati usati",
+    `- Nello snapshot c'e' un progetto attivo compatibile: ${parsedQuestion.projectName}.`,
+    ...(parsedQuestion.notes
+      ? [
+          `- Dalla richiesta ho estratto la nota operativa "${parsedQuestion.notes}".`,
+        ]
+      : []),
+    ...(estimate != null
+      ? [
+          `- Tratta risolta via routing: ${estimate.originLabel} -> ${estimate.destinationLabel}.`,
+          estimate.kmRate != null && estimate.reimbursementAmount != null
+            ? `- Rimborso km stimato: ${formatNumber(estimate.reimbursementAmount)} EUR con tariffa ${formatNumber(estimate.kmRate)} EUR/km.`
+            : `- Distanza stimata: ${formatNumber(estimate.totalDistanceKm)} km${estimate.isRoundTrip ? " complessivi" : ""}.`,
+        ]
+      : shortRouteLabel
+        ? [
+            `- La richiesta contiene la tratta ${shortRouteLabel}, ma i km andranno confermati nel dialog prima del salvataggio.`,
+          ]
+        : []),
+    "",
+    "## Limiti o prossima azione",
+    "- La chat resta read-only: la scrittura reale parte solo dal dialog Puntata del progetto con conferma esplicita.",
+    estimate != null
+      ? "- Prima di salvare puoi ancora correggere km, tariffa, localita' e note nel dialog."
+      : "- Se i km non sono gia precompilati, usa il calcolatore tratta dentro il dialog prima di confermare.",
+  ].join("\n");
+};
+
+export const buildUnifiedCrmProjectQuickEpisodeSuggestedActions = ({
+  context,
+  parsedQuestion,
+  estimate,
+}: {
+  context: Record<string, unknown>;
+  parsedQuestion: ParsedUnifiedCrmProjectQuickEpisodeQuestion;
+  estimate?: UnifiedCrmTravelExpenseEstimate | null;
+}): UnifiedCrmSuggestedAction[] => {
+  const quickEpisodeHref = buildProjectQuickEpisodeHref({
+    context,
+    parsedQuestion,
+    estimate,
+  });
+  const projectHref = buildShowHref(
+    getRoutePrefix(context),
+    "projects",
+    parsedQuestion.projectId,
+  );
+
+  return [
+    {
+      id: "project-quick-episode-handoff",
+      kind: "approved_action",
+      resource: "projects",
+      capabilityActionId: "project_quick_episode",
+      label: "Apri il progetto e registra questa puntata",
+      description:
+        estimate != null
+          ? "Apre il progetto con il dialog Puntata gia pronto, precompilato con data, note, localita', chilometri e tariffa km."
+          : "Apre il progetto con il dialog Puntata gia pronto, precompilato con i dettagli letti dalla richiesta.",
+      href:
+        quickEpisodeHref ?? buildListHref(getRoutePrefix(context), "projects"),
+      recommended: true,
+      recommendationReason:
+        "Consigliata perche usa il workflow TV gia approvato del progetto e lascia la conferma finale all'utente prima della scrittura.",
+    },
+    ...(projectHref
+      ? [
+          {
+            id: "open-project-from-quick-episode-context",
+            kind: "show" as const,
+            resource: "projects" as const,
+            capabilityActionId: "follow_unified_crm_handoff" as const,
+            label: "Apri il progetto senza dialog",
+            description:
+              "Vai alla scheda progetto se vuoi controllare prima il contesto operativo e finanziario.",
+            href: projectHref,
+          },
+        ]
+      : []),
+  ];
+};
+
 const buildRecommendedReason = ({
   suggestion,
   focusPayments,
@@ -627,6 +1163,10 @@ const buildRecommendedReason = ({
 
   if (suggestion.capabilityActionId === "project_quick_payment") {
     return "Consigliata perche il progetto collegato e' gia la superficie approvata per proseguire il flusso commerciale.";
+  }
+
+  if (suggestion.capabilityActionId === "project_quick_episode") {
+    return "Consigliata perche apre il workflow puntata gia approvato sul progetto corretto e lascia all'utente l'ultima conferma prima della scrittura.";
   }
 
   if (suggestion.capabilityActionId === "expense_create_km") {

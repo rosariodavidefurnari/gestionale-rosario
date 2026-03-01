@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildUnifiedCrmTravelExpenseQuestionCandidates,
   buildTravelExpenseCreateHref,
   buildUnifiedCrmPaymentDraftFromContext,
   buildUnifiedCrmTravelExpenseAnswerMarkdown,
@@ -363,6 +364,26 @@ describe("unifiedCrmAnswer", () => {
     expect(parsed).toEqual({
       origin: "Valguarnera Caropepe (EN)",
       destination: "Catania",
+      isRoundTrip: true,
+      expenseDate: null,
+    });
+  });
+
+  it("builds fallback route candidates for an undelimited place sequence", () => {
+    const candidates = buildUnifiedCrmTravelExpenseQuestionCandidates({
+      question:
+        "aiutami a calcolare la distanza ed il costo di uno spostamento, devi calcolare Catania Valguarnera Caropepe andata e ritorno",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          businessTimezone: "Europe/Rome",
+        },
+      },
+    });
+
+    expect(candidates).toContainEqual({
+      origin: "Catania",
+      destination: "Valguarnera Caropepe",
       isRoundTrip: true,
       expenseDate: null,
     });

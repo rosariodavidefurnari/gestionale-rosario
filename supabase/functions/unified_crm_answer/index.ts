@@ -9,12 +9,16 @@ import {
   getOpenRouteDrivingSummary,
 } from "../_shared/openRouteService.ts";
 import {
+  buildUnifiedCrmProjectQuickEpisodeAnswerMarkdown,
+  buildUnifiedCrmProjectQuickEpisodeSuggestedActions,
   buildUnifiedCrmPaymentDraftFromContext,
+  buildUnifiedCrmTravelExpenseQuestionCandidates,
   buildUnifiedCrmTravelExpenseAnswerMarkdown,
   buildUnifiedCrmTravelExpenseEstimate,
   buildUnifiedCrmTravelExpenseSuggestedActions,
   buildUnifiedCrmSuggestedActions,
-  parseUnifiedCrmTravelExpenseQuestion,
+  parseUnifiedCrmProjectQuickEpisodeQuestion,
+  type ParsedUnifiedCrmTravelExpenseQuestion,
   validateUnifiedCrmAnswerPayload,
 } from "../_shared/unifiedCrmAnswer.ts";
 import { createErrorResponse } from "../_shared/utils.ts";
@@ -62,6 +66,62 @@ Massimo 3 frasi molto chiare.
 1 o 2 punti. Se la richiesta sarebbe una scrittura, ricorda che serve un workflow confermato.
 `.trim();
 
+const resolveTravelEstimate = async ({
+  context,
+  travelQuestions,
+}: {
+  context: Record<string, unknown>;
+  travelQuestions: ParsedUnifiedCrmTravelExpenseQuestion[];
+}) => {
+  if (!openRouteServiceApiKey) {
+    return null;
+  }
+
+  for (const travelQuestion of travelQuestions) {
+    try {
+      const [origin, destination] = await Promise.all([
+        geocodeOpenRouteLocation({
+          apiKey: openRouteServiceApiKey,
+          baseUrl: openRouteServiceBaseUrl,
+          text: travelQuestion.origin,
+        }),
+        geocodeOpenRouteLocation({
+          apiKey: openRouteServiceApiKey,
+          baseUrl: openRouteServiceBaseUrl,
+          text: travelQuestion.destination,
+        }),
+      ]);
+      const route = await getOpenRouteDrivingSummary({
+        apiKey: openRouteServiceApiKey,
+        baseUrl: openRouteServiceBaseUrl,
+        coordinates: [
+          [origin.longitude, origin.latitude],
+          [destination.longitude, destination.latitude],
+        ],
+      });
+      const estimate = buildUnifiedCrmTravelExpenseEstimate({
+        context,
+        parsedQuestion: travelQuestion,
+        originLabel: origin.label,
+        destinationLabel: destination.label,
+        oneWayDistanceMeters: route.distanceMeters,
+      });
+
+      return {
+        estimate,
+      };
+    } catch (travelError) {
+      console.warn(
+        "unified_crm_answer.travel_route_candidate_failed",
+        travelQuestion,
+        travelError,
+      );
+    }
+  }
+
+  return null;
+};
+
 async function answerUnifiedCrmQuestion(
   req: Request,
   currentUserSale: unknown,
@@ -86,60 +146,49 @@ async function answerUnifiedCrmQuestion(
       : defaultAnalysisModel;
 
   try {
-    const travelExpenseQuestion = parseUnifiedCrmTravelExpenseQuestion({
+    const quickEpisodeQuestion = parseUnifiedCrmProjectQuickEpisodeQuestion({
       question,
       context,
     });
 
-    if (travelExpenseQuestion) {
-      if (!openRouteServiceApiKey) {
-        return createErrorResponse(
-          500,
-          "OPENROUTESERVICE_API_KEY non configurata nelle Edge Functions",
-        );
-      }
+    if (quickEpisodeQuestion) {
+      const quickEpisodeTravelQuestions = (
+        quickEpisodeQuestion.travelRoute
+          ? [quickEpisodeQuestion.travelRoute]
+          : quickEpisodeQuestion.travelRouteCandidates
+      ).map((route) => ({
+        origin: route.origin,
+        destination: route.destination,
+        isRoundTrip: quickEpisodeQuestion.isRoundTrip,
+        expenseDate: quickEpisodeQuestion.serviceDate,
+      }));
 
-      const [origin, destination] = await Promise.all([
-        geocodeOpenRouteLocation({
-          apiKey: openRouteServiceApiKey,
-          baseUrl: openRouteServiceBaseUrl,
-          text: travelExpenseQuestion.origin,
-        }),
-        geocodeOpenRouteLocation({
-          apiKey: openRouteServiceApiKey,
-          baseUrl: openRouteServiceBaseUrl,
-          text: travelExpenseQuestion.destination,
-        }),
-      ]);
-      const route = await getOpenRouteDrivingSummary({
-        apiKey: openRouteServiceApiKey,
-        baseUrl: openRouteServiceBaseUrl,
-        coordinates: [
-          [origin.longitude, origin.latitude],
-          [destination.longitude, destination.latitude],
-        ],
-      });
-      const estimate = buildUnifiedCrmTravelExpenseEstimate({
-        context,
-        parsedQuestion: travelExpenseQuestion,
-        originLabel: origin.label,
-        destinationLabel: destination.label,
-        oneWayDistanceMeters: route.distanceMeters,
-      });
+      const travelEstimateResult =
+        quickEpisodeTravelQuestions.length > 0
+          ? await resolveTravelEstimate({
+              context,
+              travelQuestions: quickEpisodeTravelQuestions,
+            })
+          : null;
 
       return new Response(
         JSON.stringify({
           data: {
             question,
-            model: "openrouteservice",
+            model: travelEstimateResult
+              ? "openrouteservice"
+              : "crm_rule_engine",
             generatedAt: new Date().toISOString(),
-            answerMarkdown: buildUnifiedCrmTravelExpenseAnswerMarkdown({
-              estimate,
+            answerMarkdown: buildUnifiedCrmProjectQuickEpisodeAnswerMarkdown({
+              parsedQuestion: quickEpisodeQuestion,
+              estimate: travelEstimateResult?.estimate ?? null,
             }),
-            suggestedActions: buildUnifiedCrmTravelExpenseSuggestedActions({
-              context,
-              estimate,
-            }),
+            suggestedActions:
+              buildUnifiedCrmProjectQuickEpisodeSuggestedActions({
+                context,
+                parsedQuestion: quickEpisodeQuestion,
+                estimate: travelEstimateResult?.estimate ?? null,
+              }),
             paymentDraft: null,
           },
         }),
@@ -147,6 +196,49 @@ async function answerUnifiedCrmQuestion(
           headers: { "Content-Type": "application/json", ...corsHeaders },
         },
       );
+    }
+
+    const travelExpenseQuestions =
+      buildUnifiedCrmTravelExpenseQuestionCandidates({
+        question,
+        context,
+      });
+
+    if (travelExpenseQuestions.length > 0) {
+      if (!openRouteServiceApiKey) {
+        return createErrorResponse(
+          500,
+          "OPENROUTESERVICE_API_KEY non configurata nelle Edge Functions",
+        );
+      }
+
+      const travelEstimateResult = await resolveTravelEstimate({
+        context,
+        travelQuestions: travelExpenseQuestions,
+      });
+
+      if (travelEstimateResult) {
+        return new Response(
+          JSON.stringify({
+            data: {
+              question,
+              model: "openrouteservice",
+              generatedAt: new Date().toISOString(),
+              answerMarkdown: buildUnifiedCrmTravelExpenseAnswerMarkdown({
+                estimate: travelEstimateResult.estimate,
+              }),
+              suggestedActions: buildUnifiedCrmTravelExpenseSuggestedActions({
+                context,
+                estimate: travelEstimateResult.estimate,
+              }),
+              paymentDraft: null,
+            },
+          }),
+          {
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          },
+        );
+      }
     }
 
     if (!openaiApiKey) {
