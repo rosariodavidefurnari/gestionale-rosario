@@ -148,6 +148,12 @@ const CreateButton = () => {
           </DropdownMenuItem>
           <DropdownMenuItem
             className="h-12 px-4 text-base"
+            onSelect={() => navigate("/services/create")}
+          >
+            Lavoro
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="h-12 px-4 text-base"
             onSelect={() => navigate("/payments/create")}
           >
             Pagamento
