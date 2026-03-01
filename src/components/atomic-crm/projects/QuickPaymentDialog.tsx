@@ -181,8 +181,8 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
           Pagamento
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <DialogContent className="max-w-md max-h-[85dvh] overflow-y-auto">
+        <DialogHeader className="pr-6">
           <DialogTitle>Registra Pagamento — {record.name}</DialogTitle>
         </DialogHeader>
 
@@ -226,7 +226,7 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 mt-2">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label htmlFor="pay-type">Tipo</Label>
               <select
