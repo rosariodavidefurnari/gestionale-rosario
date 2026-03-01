@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildProjectQuickEpisodeHref,
   buildUnifiedCrmTravelExpenseQuestionCandidates,
+  buildUnifiedCrmProjectQuickEpisodeAnswerMarkdown,
+  buildUnifiedCrmProjectQuickEpisodeSuggestedActions,
   buildTravelExpenseCreateHref,
   buildUnifiedCrmPaymentDraftFromContext,
   buildUnifiedCrmTravelExpenseAnswerMarkdown,
   buildUnifiedCrmTravelExpenseEstimate,
   buildUnifiedCrmTravelExpenseSuggestedActions,
   buildUnifiedCrmSuggestedActions,
+  parseUnifiedCrmProjectQuickEpisodeQuestion,
   parseUnifiedCrmTravelExpenseQuestion,
   validateUnifiedCrmAnswerPayload,
 } from "./unifiedCrmAnswer.ts";
@@ -488,6 +492,155 @@ describe("unifiedCrmAnswer", () => {
         resource: "expenses",
       }),
     );
+  });
+
+  it("parses a project quick-episode request with project match, date, notes and route candidates", () => {
+    const parsed = parseUnifiedCrmProjectQuickEpisodeQuestion({
+      question:
+        "mi serve da inserire nel CRM un nuovo lavoro che ho fatto dentro il progetto per il viaggio: data 22 febbraio 2026 - abbiamo intervistato Roberto Lipari - come spesa di viaggio devi calcolare la tratta Valguarnera Caropepe Acireale andate e ritorno il servizio lo devi considerare ripresa e montaggio",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          businessTimezone: "Europe/Rome",
+        },
+        snapshot: {
+          activeProjects: [
+            {
+              projectId: "project-viv",
+              clientId: "client-1",
+              projectName: "Vale il Viaggio",
+            },
+            {
+              projectId: "project-other",
+              clientId: "client-2",
+              projectName: "Wedding Mario",
+            },
+          ],
+        },
+        registries: {
+          semantic: {},
+          capability: {},
+        },
+      },
+    });
+
+    expect(parsed).toEqual(
+      expect.objectContaining({
+        projectId: "project-viv",
+        clientId: "client-1",
+        projectName: "Vale il Viaggio",
+        requestedLabel: "servizio",
+        serviceDate: "2026-02-22",
+        serviceType: "riprese_montaggio",
+        notes: "Intervista a Roberto Lipari",
+        isRoundTrip: true,
+      }),
+    );
+    expect(parsed?.travelRoute).toBeNull();
+    expect(parsed?.travelRouteCandidates[0]).toEqual({
+      origin: "Valguarnera Caropepe",
+      destination: "Acireale",
+    });
+    expect(parsed?.travelRouteCandidates).toContainEqual({
+      origin: "Valguarnera Caropepe",
+      destination: "Acireale",
+    });
+  });
+
+  it("builds a quick-episode handoff with prefilled project dialog data", () => {
+    const parsedQuestion = {
+      projectId: "project-viv",
+      clientId: "client-1",
+      projectName: "Vale il Viaggio",
+      requestedLabel: "servizio" as const,
+      serviceDate: "2026-02-22",
+      serviceType: "riprese_montaggio" as const,
+      notes: "Intervista a Roberto Lipari",
+      isRoundTrip: true,
+      travelRoute: {
+        origin: "Valguarnera Caropepe",
+        destination: "Acireale",
+      },
+      travelRouteCandidates: [],
+    };
+    const estimate = buildUnifiedCrmTravelExpenseEstimate({
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          routePrefix: "/#/",
+        },
+        registries: {
+          semantic: {
+            rules: {
+              travelReimbursement: {
+                defaultKmRate: 0.19,
+              },
+            },
+          },
+        },
+      },
+      parsedQuestion: {
+        origin: "Valguarnera Caropepe",
+        destination: "Acireale",
+        isRoundTrip: true,
+        expenseDate: "2026-02-22",
+      },
+      originLabel: "Valguarnera Caropepe, EN, Italy",
+      destinationLabel: "Acireale, CT, Italy",
+      oneWayDistanceMeters: 72123,
+    });
+
+    expect(
+      buildProjectQuickEpisodeHref({
+        context: {
+          meta: {
+            scope: "crm_read_snapshot",
+            routePrefix: "/#/",
+          },
+        },
+        parsedQuestion,
+        estimate,
+      }),
+    ).toContain(
+      "/#/projects/project-viv/show?project_id=project-viv&client_id=client-1&service_date=2026-02-22",
+    );
+
+    const actions = buildUnifiedCrmProjectQuickEpisodeSuggestedActions({
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          routePrefix: "/#/",
+        },
+      },
+      parsedQuestion,
+      estimate,
+    });
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        capabilityActionId: "project_quick_episode",
+        resource: "projects",
+        recommended: true,
+      }),
+    );
+    expect(actions[0]?.label).toContain("questo servizio");
+    expect(actions[0]?.href).toContain("open_dialog=quick_episode");
+    expect(actions[0]?.href).toContain("service_type=riprese_montaggio");
+    expect(actions[0]?.href).toContain("km_distance=144.24");
+    expect(actions[0]?.href).toContain("location=Acireale");
+
+    expect(
+      buildUnifiedCrmProjectQuickEpisodeAnswerMarkdown({
+        parsedQuestion,
+        estimate,
+      }),
+    ).toContain("Vale il Viaggio");
+    expect(
+      buildUnifiedCrmProjectQuickEpisodeAnswerMarkdown({
+        parsedQuestion,
+        estimate,
+      }),
+    ).toContain("22/02/2026");
   });
 
   it("builds a travel-expense handoff and answer grounded on routing data", () => {

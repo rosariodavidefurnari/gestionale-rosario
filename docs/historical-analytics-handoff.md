@@ -2007,6 +2007,55 @@ Risks kept explicit:
 - `QuickEpisodeForm` now exposes `km_rate` explicitly, but no dedicated browser
   smoke was run in this session on that dialog after the change
 
+## Project Quick-Episode Handoff From Launcher
+
+- The unified CRM launcher now has a deterministic write-handoff for TV project
+  work-item requests that clearly imply creation, such as:
+  - `nuovo lavoro`
+  - `nuovo servizio`
+  - `registra puntata`
+  - phrasing that mentions an interview plus a related travel expense
+- This branch remains read-only in chat, but instead of stopping at
+  explanation-only guidance it can now:
+  - match the most coherent active project already present in snapshot
+  - extract an explicit Italian date
+  - extract an operational note such as `Intervista a Roberto Lipari`
+  - recognize round-trip travel wording including `andate e ritorno`
+  - try route candidates even when the user writes undelimited place sequences
+    like `Valguarnera Caropepe Acireale`
+- When the matched project is the TV flow already supported by the product, the
+  launcher now returns a new approved action:
+  - capability id: `project_quick_episode`
+  - destination: `/#/projects/:id/show`
+  - search params:
+    - `launcher_source=unified_ai_launcher`
+    - `launcher_action=project_quick_episode`
+    - `open_dialog=quick_episode`
+    - `service_date`
+    - `service_type`
+    - optional `km_distance`
+    - optional `km_rate`
+    - optional `location`
+    - optional `notes`
+- The destination project surface now:
+  - shows a launcher banner in `ProjectShow`
+  - auto-opens `QuickEpisodeDialog` when the handoff is present
+  - reads the launcher prefills through `projectQuickEpisodeLinking`
+  - applies those defaults into `QuickEpisodeForm`
+- Copy is intentionally less rigid:
+  - if the user asks for a `servizio`, the launcher answer/action says
+    `servizio`
+  - if the user asks for a `puntata`, it says `puntata`
+  - the underlying destination still remains the approved TV quick-episode
+    workflow
+
+Explicit boundary kept in place:
+
+- the generic non-TV `nuovo servizio` path to `services/create` is still a
+  separate next slice and was not folded into this TV-focused handoff
+- the launcher must not pretend the service already exists in CRM; it only
+  prepares the right destination workflow with prefills
+
 ## Travel Route Auth Stabilization
 
 - The first real mobile-browser test of `travel_route_estimate` exposed a

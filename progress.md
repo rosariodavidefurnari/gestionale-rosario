@@ -3377,3 +3377,45 @@ invece separato e ancora aperto.
   - `learnings.md`
 - [x] Runtime remoto riallineato
   - deploy di `travel_location_suggest` sul progetto Supabase linkato
+
+## Sessione 87 (2026-03-01, launcher project write handoff for TV work items)
+
+- [x] Esteso il launcher CRM read-only con un nuovo handoff approvato verso il
+  workflow reale `project quick episode` per richieste come:
+  - `nuovo lavoro`
+  - `nuovo servizio`
+  - `registra puntata`
+  - richieste TV con `intervista ...` e spesa viaggio collegata
+- [x] Nuovo branch deterministico in `unified_crm_answer`
+  - aggancia il progetto attivo piu' coerente dallo snapshot
+  - estrae data italiana esplicita
+  - estrae nota operativa tipo `Intervista a Roberto Lipari`
+  - riconosce anche wording round-trip tipo `andate e ritorno`
+  - prova a risolvere tratte scritte senza delimitatore esplicito, ad esempio
+    `Valguarnera Caropepe Acireale`
+- [x] Nuovo handoff `project_quick_episode`
+  - apre `/#/projects/:id/show`
+  - auto-apre il dialog `Puntata`
+  - porta prefills per `service_date`, `service_type`, `km_distance`,
+    `km_rate`, `location`, `notes`
+- [x] UI progetto riallineata
+  - banner esplicito in `ProjectShow`
+  - `QuickEpisodeDialog` auto-open da search params launcher
+  - `QuickEpisodeForm` ora accetta default completi e non solo fee defaults
+  - parser dedicato `projectQuickEpisodeLinking`
+- [x] Copy launcher meno rigido
+  - se l'utente chiede `servizio`, l'azione e la risposta parlano di
+    `servizio`, non forzano sempre `puntata`
+- [x] Continuita' aggiornata
+  - `progress.md`
+  - `docs/historical-analytics-handoff.md`
+  - `docs/historical-analytics-backlog.md`
+- [x] Validation:
+  - `npm run typecheck`
+  - `npx vitest --run supabase/functions/_shared/unifiedCrmAnswer.test.ts src/components/atomic-crm/payments/paymentLinking.test.ts src/components/atomic-crm/projects/projectQuickEpisodeLinking.test.ts`
+
+Rischio esplicito lasciato aperto:
+
+- il caso generico `nuovo servizio` per progetti non TV non passa ancora da
+  `services/create`; questa estensione va trattata come slice successiva,
+  separata dal handoff TV gia chiuso.

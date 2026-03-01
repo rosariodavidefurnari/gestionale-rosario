@@ -13,6 +13,13 @@ export interface FeeDefaults {
   km_rate: number;
 }
 
+export interface EpisodeFormDefaults extends FeeDefaults {
+  service_date: string;
+  km_distance: number;
+  location: string;
+  notes: string;
+}
+
 /** Pre-fill fees based on tv_show type */
 export const getDefaultFees = (
   tvShow?: string | null,
@@ -60,7 +67,7 @@ export interface EpisodeFormData {
 }
 
 interface Props {
-  defaults: FeeDefaults;
+  defaults: EpisodeFormDefaults;
   saving: boolean;
   onSubmit: (data: EpisodeFormData) => void;
   onCancel: () => void;
@@ -72,14 +79,14 @@ export const QuickEpisodeForm = ({
   onSubmit,
   onCancel,
 }: Props) => {
-  const [serviceDate, setServiceDate] = useState("");
+  const [serviceDate, setServiceDate] = useState(defaults.service_date);
   const [feeShooting, setFeeShooting] = useState(defaults.fee_shooting);
   const [feeEditing, setFeeEditing] = useState(defaults.fee_editing);
   const [feeOther, setFeeOther] = useState(defaults.fee_other);
-  const [kmDistance, setKmDistance] = useState(0);
+  const [kmDistance, setKmDistance] = useState(defaults.km_distance);
   const [kmRate, setKmRate] = useState(defaults.km_rate);
-  const [location, setLocation] = useState("");
-  const [notes, setNotes] = useState("");
+  const [location, setLocation] = useState(defaults.location);
+  const [notes, setNotes] = useState(defaults.notes);
 
   const totalFees = feeShooting + feeEditing + feeOther;
   const kmCost = kmDistance * kmRate;

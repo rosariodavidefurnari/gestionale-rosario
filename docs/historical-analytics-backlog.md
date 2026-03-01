@@ -1462,6 +1462,9 @@ Only after the base is stable:
 
 - Travel-expense questions in the launcher must resolve to `expenses/create`
   and never fall back to payment drafts or payment handoff.
+- TV work-item creation requests grounded on a real active project may now hand
+  off to the approved `project quick episode` flow, but only as a project-level
+  destination with explicit confirmation still required there.
 - The unified launcher question-length limit is currently `1200` characters and
   must remain aligned across both composer variants and the backend validator.
 - Natural-language route wording such as `da ... fino al ...` must stay covered
@@ -1470,6 +1473,9 @@ Only after the base is stable:
   ground itself on the project found in snapshot, but it must not claim that
   the specific service/work item already exists unless that granularity is
   really present in the read context.
+- The generic non-TV `nuovo servizio` case is still open: do not silently route
+  those requests through the TV quick-episode dialog once the project boundary
+  becomes explicit.
 
 ## Current Travel-UI Guardrails
 

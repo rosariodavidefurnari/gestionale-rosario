@@ -174,6 +174,18 @@ describe("paymentLinking", () => {
     });
 
     expect(
+      getUnifiedAiHandoffContextFromSearch(
+        "?launcher_source=unified_ai_launcher&launcher_action=project_quick_episode&open_dialog=quick_episode",
+      ),
+    ).toEqual({
+      source: "unified_ai_launcher",
+      action: "project_quick_episode",
+      openDialog: "quick_episode",
+      paymentType: null,
+      draftKind: null,
+    });
+
+    expect(
       getUnifiedAiHandoffContextFromSearch("?client_id=client-2"),
     ).toBeNull();
   });

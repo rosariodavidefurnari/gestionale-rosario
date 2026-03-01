@@ -44,6 +44,12 @@ const ProjectShowContent = () => {
             ? "Aperto dalla chat AI unificata con una bozza quick payment: questo progetto e' la superficie approvata dove controllare e confermare il pagamento."
             : "Aperto dalla chat AI unificata: questo progetto e' stato indicato come superficie giusta per il quick payment gia approvato."}
         </div>
+      ) : launcherHandoff?.action === "project_quick_episode" ? (
+        <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          Aperto dalla chat AI unificata: questo progetto e' la superficie
+          approvata dove controllare e confermare la registrazione della
+          puntata.
+        </div>
       ) : null}
       <Card>
         <CardContent>

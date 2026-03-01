@@ -25,6 +25,7 @@ type PaymentCreateDefaults = Partial<
 export type UnifiedAiHandoffAction =
   | "quote_create_payment"
   | "client_create_payment"
+  | "project_quick_episode"
   | "project_quick_payment"
   | "follow_unified_crm_handoff";
 
@@ -34,7 +35,7 @@ type UnifiedAiDraftKind = "payment_create" | "project_quick_payment";
 export type UnifiedAiHandoffContext = {
   source: UnifiedAiHandoffSource;
   action: UnifiedAiHandoffAction | null;
-  openDialog: "quick_payment" | null;
+  openDialog: "quick_payment" | "quick_episode" | null;
   paymentType: Payment["payment_type"] | null;
   draftKind: UnifiedAiDraftKind | null;
 };
@@ -60,6 +61,7 @@ const toOptionalIdentifier = (value?: string | null) =>
 const unifiedAiHandoffActions = new Set<UnifiedAiHandoffAction>([
   "quote_create_payment",
   "client_create_payment",
+  "project_quick_episode",
   "project_quick_payment",
   "follow_unified_crm_handoff",
 ]);
@@ -228,7 +230,10 @@ export const getUnifiedAiHandoffContextFromSearch = (
       action && unifiedAiHandoffActions.has(action as UnifiedAiHandoffAction)
         ? (action as UnifiedAiHandoffAction)
         : null,
-    openDialog: openDialog === "quick_payment" ? "quick_payment" : null,
+    openDialog:
+      openDialog === "quick_payment" || openDialog === "quick_episode"
+        ? openDialog
+        : null,
     paymentType: getOptionalPaymentType(searchParams.get("payment_type")),
     draftKind:
       searchParams.get("draft_kind") === "payment_create" ||
