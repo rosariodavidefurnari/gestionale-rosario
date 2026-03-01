@@ -258,7 +258,7 @@ describe("UnifiedAiLauncher", () => {
     });
   });
 
-  it("opens the launcher and shows the invoice chat shell", async () => {
+  it("opens on chat view and lets the user reach snapshot/import from the launcher menu", async () => {
     renderLauncher();
 
     const launcherButton = screen.getByRole("button", {
@@ -267,10 +267,33 @@ describe("UnifiedAiLauncher", () => {
 
     fireEvent.click(launcherButton);
 
-    expect(await screen.findByText("Chat AI unificata")).toBeInTheDocument();
-    expect(await screen.findByText("Snapshot CRM")).toBeInTheDocument();
-    expect(await screen.findByText("Chat CRM read-only")).toBeInTheDocument();
-    expect(await screen.findByText("Import fatture")).toBeInTheDocument();
+    expect(await screen.findByText("Chat AI")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Dammi un riepilogo operativo rapido del CRM.",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Snapshot CRM")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Documenti")).not.toBeInTheDocument();
+
+    fireEvent.pointerDown(
+      screen.getByRole("button", { name: "Apri altre viste AI" }),
+    );
+
+    expect(
+      await screen.findByRole("menuitem", { name: "Snapshot CRM" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: "Import fatture" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "Snapshot CRM" }));
+
+    expect(await screen.findByText("Pagamenti da seguire")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Torna alla chat AI" }));
+
+    expect(await screen.findByText("Chat AI")).toBeInTheDocument();
     await waitFor(() =>
       expect(getInvoiceImportWorkspace).toHaveBeenCalledTimes(1),
     );
@@ -336,9 +359,7 @@ describe("UnifiedAiLauncher", () => {
 
     fireEvent.click(suggestionButton);
 
-    await waitFor(() =>
-      expect(askUnifiedCrmQuestion).toHaveBeenCalledTimes(1),
-    );
+    await waitFor(() => expect(askUnifiedCrmQuestion).toHaveBeenCalledTimes(1));
 
     expect(askUnifiedCrmQuestion).toHaveBeenCalledWith(
       "Dammi un riepilogo operativo rapido del CRM.",
@@ -349,10 +370,16 @@ describe("UnifiedAiLauncher", () => {
       }),
     );
 
-    expect(await screen.findByText("Tutto sotto controllo.")).toBeInTheDocument();
-    expect(await screen.findByText("Bozza pagamento proposta")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Tutto sotto controllo."),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("Bozza pagamento proposta"),
+    ).toBeInTheDocument();
     expect(await screen.findByText("Azioni suggerite")).toBeInTheDocument();
-    expect(screen.getByText("Registra pagamento dal preventivo")).toBeInTheDocument();
+    expect(
+      screen.getByText("Registra pagamento dal preventivo"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Consigliata ora")).toBeInTheDocument();
     expect(screen.getByText("Azione approvata")).toBeInTheDocument();
     expect(
@@ -367,17 +394,13 @@ describe("UnifiedAiLauncher", () => {
     ).toBeInTheDocument();
     expect(screen.getByDisplayValue("450")).toBeInTheDocument();
     expect(
-      screen
-        .getByText("Registra pagamento dal preventivo")
-        .closest("a"),
+      screen.getByText("Registra pagamento dal preventivo").closest("a"),
     ).toHaveAttribute(
       "href",
       "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&launcher_action=quote_create_payment&launcher_source=unified_ai_launcher",
     );
     expect(
-      screen
-        .getByText("Apri form pagamenti con questa bozza")
-        .closest("a"),
+      screen.getByText("Apri form pagamenti con questa bozza").closest("a"),
     ).toHaveAttribute(
       "href",
       "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
@@ -431,6 +454,13 @@ describe("UnifiedAiLauncher", () => {
     renderLauncher();
     fireEvent.click(
       screen.getByRole("button", { name: "Apri chat AI unificata" }),
+    );
+
+    fireEvent.pointerDown(
+      await screen.findByRole("button", { name: "Apri altre viste AI" }),
+    );
+    fireEvent.click(
+      await screen.findByRole("menuitem", { name: "Import fatture" }),
     );
 
     const fileInput = await screen.findByLabelText("Documenti");

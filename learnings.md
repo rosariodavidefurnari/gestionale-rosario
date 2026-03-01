@@ -10,6 +10,13 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se una shell AI unificata ospita piu capability, la chat deve
+  essere la vista primaria e le altre funzioni devono stare dietro navigazione
+  esplicita** — Nel launcher unificato impilare snapshot CRM, Q&A e import
+  fatture nello stesso scroll rende tutto piu pesante da usare. Il pattern
+  corretto e' aprire sempre su `Chat AI`, tenere la chat montata per preservare
+  stato e spostare le funzioni secondarie dietro un menu/selector di viste.
+
 - [2026-03-01] **Se un suggerimento automatico condivide il campo con un edit
   manuale, dopo il primo tocco l'automatismo deve farsi da parte** — Nel
   percorso `payments/create` non basta evitare l'override di un valore gia

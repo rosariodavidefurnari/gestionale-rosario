@@ -414,6 +414,20 @@ The next open priority is:
   - or open a second write-assisted case only if it is equally deterministic
 - still do not give the general CRM chat direct write execution
 
+Tactical UX slice closed out of sequence:
+
+- the launcher shell was simplified before opening the next milestone:
+  - `Chat AI` now opens as the default view
+  - `Snapshot CRM` and `Import fatture` moved behind a `+` menu
+  - the chat view remains mounted while switching views, so state is preserved
+- this did not widen the AI capability perimeter:
+  - no new routes
+  - no new edge functions
+  - no new write power
+- validation closed with:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx`
+
 Deferred note from real usage, not current priority:
 
 - importing an older customer invoice can legitimately find a real client that

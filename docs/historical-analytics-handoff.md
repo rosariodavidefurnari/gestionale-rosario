@@ -451,6 +451,22 @@ The next high-value step is now:
   tightly bounded as the quote-driven payment path
 - still no general write execution from the CRM Q&A shell
 
+Tactical UX slice closed out of sequence:
+
+- the unified launcher no longer stacks snapshot, chat, and invoice import in a
+  single endless scroll
+- `Chat AI` is now the default primary view
+- secondary views moved behind a `+` menu:
+  - `Snapshot CRM`
+  - `Import fatture`
+- the CRM chat stays mounted while switching views, so question/answer state is
+  preserved during navigation inside the same launcher session
+- invoice import and payment-draft logic were only extracted/reframed, not
+  functionally widened
+- local validation closed with:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx`
+
 Deferred note from real user trial:
 
 - invoice import can already read a valid historical customer invoice even when

@@ -89,8 +89,41 @@ test reale utente:
 l'import fatture incontra anche clienti storici assenti dal CRM e in quel
 caso mancano ancora creazione assistita cliente e alcuni campi anagrafici da
 fatturazione; non e' il focus adesso, ma il backlog lo conserva.
+Fuori sequenza ma chiuso subito per sbloccare l'uso quotidiano: il launcher AI
+non impila piu tutto in un unico scroll. Ora apre su `Chat AI`, mentre
+`Snapshot CRM` e `Import fatture` stanno dietro un menu `+`; lo stato della
+chat resta preservato mentre si cambia vista nella stessa sessione.
 
 ## Last Session
+
+### Sessione 69 (2026-03-01, redesign UX del launcher AI)
+
+- Completed:
+  - **Il launcher AI ora apre sulla chat come vista primaria**:
+    - `Chat AI` e' la vista default
+    - `Snapshot CRM` e `Import fatture` non stanno piu nello stesso scroll
+      infinito
+    - le viste secondarie si aprono dal bottone `+`
+  - **La shell e' stata separata in viste chiare senza rompere la logica
+    esistente**:
+    - nuovo header a viste
+    - answer panel alleggerito e compattato
+    - import fatture estratto in vista dedicata
+    - `PaymentDraftCard` estratta dal pannello chat
+  - **La chat conserva il proprio stato mentre navighi nelle altre viste del
+    launcher**:
+    - il pannello chat resta montato
+    - snapshot/import non invadono piu il percorso principale
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx`
+
+- Decisions:
+  - per una shell AI unificata, la chat deve essere la vista primaria e le
+    utility secondarie devono stare dietro navigazione esplicita
+  - il redesign UX del launcher puo essere fatto come slice tattico, senza
+    cambiare il perimetro funzionale o semantico approvato
 
 ### Sessione 68 (2026-03-01, stop auto-refill after first manual amount edit)
 
