@@ -160,6 +160,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/services/serviceLinking.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/services/index.tsx",
           "type": "registry:component"
         },
@@ -385,6 +389,10 @@
         },
         {
           "path": "src/components/atomic-crm/providers/commons/canAccess.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/projects/quickEpisodePersistence.ts",
           "type": "registry:component"
         },
         {
