@@ -561,6 +561,18 @@ The launcher continuity/reading-space slice is now closed too:
     CRM at reopen time
   - the visible answer timestamp is now the explicit clue for that boundary
 
+The launcher composer continuity slice is now closed too:
+
+- the compact composer now exposes the expand action from the third visible
+  line onward
+- the compact composer only starts its own scrollbar from the seventh line
+- the expanded writer stays inside the same launcher conversation instead of
+  creating a separate draft flow
+- known residual risk:
+  - the line thresholds depend on runtime line-height measurement
+  - mobile keyboard/browser-chrome overlap still deserves real-device smoke
+    beyond local UI tests
+
 Why this comes next:
 
 - the launcher now has the base layers it needed:

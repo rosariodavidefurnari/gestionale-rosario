@@ -181,6 +181,14 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       entryPoints: ["global_floating_button"],
     },
     {
+      id: "unified_ai_composer_dialog",
+      label: "Editor esteso chat AI",
+      description:
+        "Dialog full-screen per continuare a scrivere domande lunghe nel launcher: l'icona compare dalla terza riga del composer compatto, mentre la scrollbar locale compare dalla settima.",
+      sourceFile: "src/components/atomic-crm/ai/UnifiedCrmAnswerPanel.tsx",
+      entryPoints: ["unified_ai_launcher_sheet"],
+    },
+    {
       id: "quote_create_dialog",
       label: "Nuovo preventivo",
       description: "Creazione preventivo in dialog sopra la board preventivi.",

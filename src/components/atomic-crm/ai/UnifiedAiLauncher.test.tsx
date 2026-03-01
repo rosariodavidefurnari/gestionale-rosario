@@ -578,4 +578,54 @@ describe("UnifiedAiLauncher", () => {
     expect(dialog.className).toContain("h-dvh");
     expect(dialog.className).toContain("rounded-none");
   });
+
+  it("shows the expanded-editor action from the third line and scrolls from the seventh", async () => {
+    renderLauncher();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri chat AI unificata" }),
+    );
+
+    const textarea = (await screen.findByLabelText(
+      "Fai una domanda sul CRM corrente",
+    )) as HTMLTextAreaElement;
+
+    textarea.style.lineHeight = "20px";
+    textarea.style.paddingTop = "0px";
+    textarea.style.paddingBottom = "0px";
+    Object.defineProperty(textarea, "scrollHeight", {
+      configurable: true,
+      get: () =>
+        Math.max(1, textarea.value.split(/\r?\n/).length) * 20,
+    });
+
+    fireEvent.change(textarea, {
+      target: {
+        value: "riga 1\nriga 2\nriga 3",
+      },
+    });
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Apri editor esteso per la domanda",
+      }),
+    ).toBeInTheDocument();
+    expect(textarea.style.overflowY).toBe("hidden");
+
+    fireEvent.change(textarea, {
+      target: {
+        value: "riga 1\nriga 2\nriga 3\nriga 4\nriga 5\nriga 6\nriga 7",
+      },
+    });
+
+    expect(textarea.style.overflowY).toBe("auto");
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Apri editor esteso per la domanda",
+      }),
+    );
+
+    expect(await screen.findByText("Scrivi con piu spazio")).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue(/riga 1/).length).toBeGreaterThan(0);
+  });
 });

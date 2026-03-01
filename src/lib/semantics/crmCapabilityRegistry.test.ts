@@ -13,6 +13,16 @@ describe("crmCapabilityRegistry", () => {
       ),
     ).toBe(true);
     expect(
+      registry.dialogs.some(
+        (dialog) => dialog.id === "unified_ai_composer_dialog",
+      ),
+    ).toBe(true);
+    expect(
+      registry.dialogs.find(
+        (dialog) => dialog.id === "unified_ai_composer_dialog",
+      )?.description,
+    ).toContain("terza riga");
+    expect(
       registry.resources.some(
         (resource) =>
           resource.resource === "quotes" &&

@@ -10,6 +10,13 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Per un composer chat mobile conviene separare la soglia di
+  "espansione" dalla soglia di "scroll locale"** — Far comparire troppo tardi
+  l'azione full-screen costringe a scrivere in uno spazio compresso; far
+  partire troppo presto la scrollbar toglie area utile. Nel launcher AI il
+  pattern migliore e' stato: icona editor esteso gia dalla terza riga, ma
+  scrollbar locale solo dalla settima.
+
 - [2026-03-01] **In un launcher AI a drawer conviene preservare la
   conversazione read-only, ma non i workflow documentali temporanei** — Se la
   chat unificata perde tutto a ogni close/reopen, la UX sembra fragile. Pero'

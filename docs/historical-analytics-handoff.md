@@ -1738,6 +1738,21 @@ The next launcher-UX continuity slice is now closed too:
   - no function redeploy
   - validation closed with `npm run typecheck` and targeted Vitest
 
+The next composer-UX continuity slice is now closed too:
+
+- the compact launcher composer now shows the expand action from the third
+  visible line
+- the compact launcher composer now keeps growing only up to six visible lines
+- after that threshold:
+  - the textarea keeps its own scrollbar
+  - an explicit full-screen expand action appears
+- the expanded writer reuses the same draft question and same launcher
+  conversation instead of opening a separate flow
+- explicit residual risks documented:
+  - the long-text threshold depends on runtime line-height measurement
+  - mobile keyboard/browser chrome still need real-device smoke beyond local
+    UI tests
+
 ## Environment Blockers
 
 ### Supabase migration state

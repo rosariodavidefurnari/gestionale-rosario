@@ -141,10 +141,16 @@ invece separato e ancora aperto.
   - **Su mobile il launcher ora usa tutta l'altezza disponibile**:
     - niente piu `88vh`
     - drawer full-screen fino al bordo alto
+  - **Il composer della chat ora ha soglie UX esplicite per testi lunghi**:
+    - dalla terza riga compare l'icona per aprire l'editor esteso
+    - dalla settima riga compare la scrollbar locale nel composer compatto
+    - l'editor esteso continua a modificare la stessa domanda, non una copia
 
 - Risks / notes:
   - riaprendo il launcher l'ultima risposta puo riferirsi a una snapshot CRM
     non piu freschissima; il timestamp visibile resta il boundary esplicito
+  - le soglie del composer dipendono dalla misura runtime del `line-height`,
+    quindi il fine-tuning reale va confermato su browser/device veri
   - non ho ancora fatto smoke browser mobile reale su device, solo validazione
     locale e test UI
 
