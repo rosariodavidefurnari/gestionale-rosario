@@ -1754,6 +1754,16 @@ The next composer-UX continuity slice is now closed too:
   - the long-text threshold depends on runtime line-height measurement
   - mobile keyboard/browser chrome still need real-device smoke beyond local
     UI tests
+- that real-device smoke is now partially closed too:
+  - an iPhone Safari verification found that the launcher content could stop
+    scrolling after a long answer
+  - the fix was to harden the mobile drawer scroll chain with:
+    - `min-h-0` on the launcher wrappers that own the chat height
+    - a dedicated scroll area for the conversation body
+    - touch-friendly scrolling on that area
+    - a non-growing (`shrink-0`) composer footer
+  - validation closed with `npm run typecheck` and
+    `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx`
 
 The next composer cleanup slice is now closed too:
 

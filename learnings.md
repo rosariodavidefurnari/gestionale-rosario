@@ -60,6 +60,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   pattern migliore e' stato: icona editor esteso gia dalla terza riga, ma
   scrollbar locale solo dalla settima.
 
+- [2026-03-01] **Su iPhone Safari, un drawer chat con footer composer richiede
+  una chain di `min-h-0` + scroll area esplicita** — Avere solo
+  `overflow-y-auto` sul body della chat non basta se uno dei wrapper flex
+  intermedi resta con altezza implicita. Il pattern che ha chiuso il blocco di
+  scroll reale e': `SheetContent` con `overflow-hidden`, wrapper intermedi con
+  `min-h-0`, area messaggi unica con `overflow-y-auto` +
+  `webkit-overflow-scrolling: touch`, composer `shrink-0`.
+
 - [2026-03-01] **Le soglie del composer non possono dipendere solo dai `\n`
   manuali** — Nel launcher AI il primo tentativo contava bene le righe solo
   nei test artificiali con `Invio`. In browser reale, se l'utente scrive testo

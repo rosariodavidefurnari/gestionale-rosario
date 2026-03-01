@@ -576,7 +576,25 @@ describe("UnifiedAiLauncher", () => {
     const dialog = await screen.findByRole("dialog");
     expect(dialog.className).toContain("inset-0");
     expect(dialog.className).toContain("h-dvh");
+    expect(dialog.className).toContain("overflow-hidden");
     expect(dialog.className).toContain("rounded-none");
+  });
+
+  it("keeps a dedicated scroll area for mobile chat content", async () => {
+    useIsMobile.mockReturnValue(true);
+
+    renderLauncher();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri chat AI unificata" }),
+    );
+
+    const scrollArea = await screen.findByTestId("unified-crm-scroll-area");
+    const composer = screen.getByTestId("unified-crm-composer");
+
+    expect(scrollArea.className).toContain("overflow-y-auto");
+    expect(scrollArea.className).toContain("min-h-0");
+    expect(scrollArea.className).toContain("[webkit-overflow-scrolling:touch]");
+    expect(composer.className).toContain("shrink-0");
   });
 
   it("shows the expanded-editor action from the third line and scrolls from the seventh", async () => {

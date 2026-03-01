@@ -212,6 +212,24 @@ invece separato e ancora aperto.
     - ora `List` e `ExportButton` condividono lo stesso exporter locale
     - `/#/expenses` non va piu in errore con `exporter is not defined`
 
+### Sessione 81 (2026-03-01, fix scroll chat launcher su iPhone)
+
+- Completed:
+  - **Chiuso un regress reale di scroll nel launcher chat su mobile**:
+    - da screenshot utente su iPhone Safari il drawer apriva correttamente ma
+      il corpo della conversazione non riusciva piu a scrollare dopo una
+      risposta lunga
+    - il launcher ora forza una chain di layout compatibile con nested scroll
+      mobile:
+      - `SheetContent` con `min-h-0` e `overflow-hidden`
+      - wrapper chat con `min-h-0`
+      - area messaggi dedicata con `overflow-y-auto`,
+        `webkit-overflow-scrolling: touch` e `touch-action: pan-y`
+      - composer marcato `shrink-0` per non mangiare l'overflow del body
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx`
+
 - Risks / notes:
   - la verifica chat ora e' chiusa sul browser locale che ha mostrato il bug
   - resta comunque utile uno smoke piu ampio su altri device/browser quando

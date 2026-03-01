@@ -580,6 +580,11 @@ The launcher composer continuity slice is now closed too:
 - that local smoke is now at least partially closed:
   - the launcher chat fixes were rechecked in the real local browser and the
     reported regressions are resolved
+- that mobile real-device smoke is now partially closed too:
+  - an iPhone Safari smoke found a blocked scroll state on long answers
+  - the launcher now relies on one explicit mobile scroll area plus `min-h-0`
+    wrappers and a `shrink-0` composer footer
+  - validation closed with typecheck and targeted Vitest
 
 The expenses list regression is now closed too:
 

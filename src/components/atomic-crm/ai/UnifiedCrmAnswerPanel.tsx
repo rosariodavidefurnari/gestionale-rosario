@@ -242,7 +242,10 @@ export const UnifiedCrmAnswerPanel = ({
   return (
     <>
       <div className="flex h-full min-h-0 flex-col overflow-hidden">
-        <div className="flex-1 space-y-3 overflow-y-auto overflow-x-hidden px-3 py-3">
+        <div
+          data-testid="unified-crm-scroll-area"
+          className="flex-1 min-h-0 space-y-3 overflow-y-auto overflow-x-hidden overscroll-y-contain px-3 py-3 [touch-action:pan-y] [webkit-overflow-scrolling:touch]"
+        >
           {!hasConversation ? (
             <div className="flex h-full flex-col items-center justify-end gap-4 pb-2">
               <p className="text-center text-sm text-muted-foreground">
@@ -353,7 +356,7 @@ export const UnifiedCrmAnswerPanel = ({
 
         <div
           data-testid="unified-crm-composer"
-          className="bg-background px-3 pb-3 pt-1"
+          className="shrink-0 bg-background px-3 pb-3 pt-1"
         >
           <Label htmlFor="unified-crm-question" className="sr-only">
             Fai una domanda sul CRM corrente

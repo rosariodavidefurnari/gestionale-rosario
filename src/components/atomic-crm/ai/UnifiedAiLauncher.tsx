@@ -240,7 +240,7 @@ export const UnifiedAiLauncher = () => {
       <SheetContent
         side={isMobile ? "bottom" : "right"}
         className={cn(
-          "gap-0 p-0",
+          "min-h-0 overflow-hidden gap-0 p-0",
           isMobile
             ? "inset-0 h-dvh max-h-dvh rounded-none border-t-0"
             : "w-full sm:max-w-2xl",
@@ -251,10 +251,10 @@ export const UnifiedAiLauncher = () => {
           onViewChange={setActiveView}
         />
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex min-h-0 flex-1 overflow-hidden">
           <div
             className={cn(
-              "h-full",
+              "h-full min-h-0",
               activeView === "chat"
                 ? "overflow-hidden"
                 : "overflow-y-auto px-3 py-3",
