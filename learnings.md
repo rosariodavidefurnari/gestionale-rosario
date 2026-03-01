@@ -10,6 +10,15 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se un write-draft attraversa launcher e form finale, la
+  superficie di arrivo deve preservare gli edit espliciti fatti dall'utente nel
+  launcher** — Nel caso della bozza pagamento non basta portare `amount` nei
+  search params: se il form finale ha anche un suggerimento locale
+  deterministico, quel suggerimento non puo sovrascrivere al primo render un
+  valore che l'utente ha gia corretto nella chat. Il pattern corretto e'
+  mostrare entrambi i livelli e lasciare l'override solo a una scelta
+  esplicita dell'utente.
+
 - [2026-03-01] **Se il launcher apre il primo write-draft generale, il draft va
   restituito come payload strutturato separato dal markdown** — Per la prima
   bozza pagamento della chat unificata il pattern corretto non e' chiedere al

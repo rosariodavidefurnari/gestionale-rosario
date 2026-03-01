@@ -84,6 +84,9 @@ describe("crmSemanticRegistry", () => {
     expect(registry.rules.unifiedAiWriteDraft.confirmationRule).toContain(
       "form pagamenti",
     );
+    expect(registry.rules.unifiedAiWriteDraft.meaning).toContain(
+      "preservare quel valore",
+    );
   });
 
   it("uses km and taxable helpers consistently", () => {

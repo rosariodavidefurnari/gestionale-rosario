@@ -1,5 +1,6 @@
 import { required, minValue, useGetList, useGetOne } from "ra-core";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useLocation } from "react-router";
 import { useFormContext, useFormState, useWatch } from "react-hook-form";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,10 @@ import {
 } from "./paymentTypes";
 import {
   buildQuoteSearchFilter,
+  getPaymentCreateDraftContextFromSearch,
   buildPaymentPatchFromQuote,
   getSuggestedPaymentAmountFromQuote,
+  shouldAutoApplySuggestedPaymentAmount,
   shouldClearProjectForClient,
   shouldClearQuoteForClient,
 } from "./paymentLinking";
@@ -240,6 +243,7 @@ const formatCurrency = (value: number) =>
   });
 
 const QuotePaymentSuggestionCard = () => {
+  const location = useLocation();
   const quoteId = useWatch({ name: "quote_id" });
   const paymentType = useWatch({ name: "payment_type" }) as
     | Payment["payment_type"]
@@ -250,6 +254,10 @@ const QuotePaymentSuggestionCard = () => {
     control,
     name: "amount",
   });
+  const draftContext = useMemo(
+    () => getPaymentCreateDraftContextFromSearch(location.search),
+    [location.search],
+  );
 
   const { data: quote } = useGetOne<Quote>(
     "quotes",
@@ -287,19 +295,24 @@ const QuotePaymentSuggestionCard = () => {
           payments: linkedPayments,
         })
       : null;
+  const numericAmount =
+    typeof amount === "number" ? amount : Number(amount ?? 0);
+  const isDraftAmountPreserved =
+    draftContext?.amount != null &&
+    !dirtyFields.amount &&
+    Number.isFinite(numericAmount) &&
+    numericAmount === draftContext.amount;
 
   useEffect(() => {
-    if (!quoteId || suggestedAmount == null) {
-      return;
-    }
-
-    const numericAmount =
-      typeof amount === "number" ? amount : Number(amount ?? 0);
-    if (dirtyFields.amount && Number.isFinite(numericAmount) && numericAmount > 0) {
-      return;
-    }
-
-    if (!dirtyFields.amount && numericAmount === suggestedAmount) {
+    if (
+      !quoteId ||
+      !shouldAutoApplySuggestedPaymentAmount({
+        currentAmount: amount,
+        suggestedAmount,
+        isAmountDirty: Boolean(dirtyFields.amount),
+        draftAmount: draftContext?.amount ?? null,
+      })
+    ) {
       return;
     }
 
@@ -308,7 +321,14 @@ const QuotePaymentSuggestionCard = () => {
       shouldTouch: false,
       shouldValidate: true,
     });
-  }, [amount, paymentType, quoteId, setValue, suggestedAmount]);
+  }, [
+    amount,
+    dirtyFields.amount,
+    draftContext?.amount,
+    quoteId,
+    setValue,
+    suggestedAmount,
+  ]);
 
   if (!quoteId || !quote) {
     return null;
@@ -331,13 +351,27 @@ const QuotePaymentSuggestionCard = () => {
           {formatCurrency(summary.linkedTotal)} · residuo{" "}
           {formatCurrency(summary.remainingAmount)}
         </p>
+        {draftContext?.amount != null ? (
+          <p className="text-xs text-muted-foreground">
+            Importo arrivato dalla bozza AI{" "}
+            {formatCurrency(draftContext.amount)}
+            {draftContext.amount !== summary.remainingAmount
+              ? ` · residuo locale ${formatCurrency(summary.remainingAmount)}`
+              : ""}
+            {isDraftAmountPreserved
+              ? " · il form mantiene la bozza finche non scegli tu un altro valore."
+              : " · stai lavorando su un valore diverso dalla bozza iniziale."}
+          </p>
+        ) : null}
       </div>
 
       {suggestedAmount != null ? (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground">
             Suggerimento per{" "}
-            {paymentType ? paymentTypeLabels[paymentType] ?? paymentType : "questo pagamento"}
+            {paymentType
+              ? (paymentTypeLabels[paymentType] ?? paymentType)
+              : "questo pagamento"}
             : usa il residuo non ancora collegato al preventivo.
           </p>
           <Button

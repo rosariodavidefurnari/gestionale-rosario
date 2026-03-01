@@ -347,14 +347,29 @@ The next open priority is now closed too:
     - approved `/#/payments/create?...&draft_kind=payment_create` href
   - smoke user cleaned after verification
 
+The next open priority is now closed too:
+
+- the first confirmation-on-surface workflow upgrade around the payment draft is
+  now implemented on `payments/create`
+- the approved destination form now preserves an explicit amount edited in the
+  launcher draft instead of silently replacing it with the local residual
+  suggestion
+- the form now also exposes both layers when relevant:
+  - imported AI draft amount
+  - current deterministic residual from the linked quote
+- the user can still switch manually to the local residual suggestion, but that
+  choice is explicit on the approved surface
+- this slice stayed local:
+  - no function changes needed
+  - no chat-side write added
+  - validation closed with `npm run typecheck` plus targeted Vitest
+
 The next open priority is:
 
-- keep the launcher on the same strict path:
-  - either extend the `write-draft -> approved surface -> explicit
-    confirmation` pattern only where the business meaning stays equally
-    deterministic
-  - or deepen the confirmation-on-surface workflow around the payment draft
-    already approved
+- stay selective on future write-assisted slices:
+  - either identify another equally deterministic commercial draft
+  - or prefer a stability hardening pass over the existing launcher/payment
+    path before widening write-assisted coverage
 - still do not give the general CRM chat direct write execution
 
 Deferred note from real usage, not current priority:

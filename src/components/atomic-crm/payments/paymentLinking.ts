@@ -13,7 +13,12 @@ export const quoteStatusesEligibleForPaymentCreation = new Set([
 type PaymentCreateDefaults = Partial<
   Pick<
     Payment,
-    "quote_id" | "client_id" | "project_id" | "payment_type" | "amount" | "status"
+    | "quote_id"
+    | "client_id"
+    | "project_id"
+    | "payment_type"
+    | "amount"
+    | "status"
   >
 >;
 
@@ -31,6 +36,14 @@ export type UnifiedAiHandoffContext = {
   openDialog: "quick_payment" | null;
   paymentType: Payment["payment_type"] | null;
   draftKind: "payment_create" | null;
+};
+
+export type PaymentCreateDraftContext = UnifiedAiHandoffContext & {
+  quoteId: Identifier | null;
+  clientId: Identifier | null;
+  projectId: Identifier | null;
+  amount: number | null;
+  status: Payment["status"] | null;
 };
 
 const toOptionalIdentifier = (value?: string | null) =>
@@ -194,6 +207,25 @@ export const getUnifiedAiHandoffContextFromSearch = (
   };
 };
 
+export const getPaymentCreateDraftContextFromSearch = (
+  search: string,
+): PaymentCreateDraftContext | null => {
+  const handoff = getUnifiedAiHandoffContextFromSearch(search);
+  if (!handoff || handoff.draftKind !== "payment_create") {
+    return null;
+  }
+
+  const defaults = getPaymentCreateDefaultsFromSearch(search);
+  return {
+    ...handoff,
+    quoteId: defaults.quote_id ?? null,
+    clientId: defaults.client_id ?? null,
+    projectId: defaults.project_id ?? null,
+    amount: defaults.amount ?? null,
+    status: defaults.status ?? null,
+  };
+};
+
 export const buildPaymentCreatePathFromDraft = ({
   draft,
 }: {
@@ -217,6 +249,46 @@ export const buildPaymentCreatePathFromDraft = ({
       : {}),
     ...(draft.draftKind ? { draft_kind: draft.draftKind } : {}),
   });
+
+export const shouldAutoApplySuggestedPaymentAmount = ({
+  currentAmount,
+  suggestedAmount,
+  isAmountDirty,
+  draftAmount,
+}: {
+  currentAmount: unknown;
+  suggestedAmount: number | null | undefined;
+  isAmountDirty: boolean;
+  draftAmount?: number | null;
+}) => {
+  if (suggestedAmount == null) {
+    return false;
+  }
+
+  const numericAmount =
+    typeof currentAmount === "number"
+      ? currentAmount
+      : Number(currentAmount ?? 0);
+
+  if (
+    draftAmount != null &&
+    !isAmountDirty &&
+    Number.isFinite(numericAmount) &&
+    numericAmount === draftAmount
+  ) {
+    return false;
+  }
+
+  if (isAmountDirty && Number.isFinite(numericAmount) && numericAmount > 0) {
+    return false;
+  }
+
+  if (!isAmountDirty && numericAmount === suggestedAmount) {
+    return false;
+  }
+
+  return true;
+};
 
 export const getSuggestedPaymentAmountFromQuote = ({
   quoteAmount,

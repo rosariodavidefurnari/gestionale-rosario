@@ -68,16 +68,53 @@ preventivo collegato e puo suggerire in modo deterministico il residuo ancora
 non collegato, sempre modificabile dall'utente. Anche il primo write-draft
 stretto e' ora chiuso: il launcher puo proporre una bozza pagamento
 quote-driven modificabile, ma non scrive nulla e porta la conferma dentro la
-superficie approvata `payments/create`. Il prossimo lavoro ad alto valore non
-e' una nuova AI sparsa o una write autonoma, ma estendere questo pattern solo
-se resta altrettanto deterministico oppure irrobustire il tratto
-`write-draft -> form approvato -> conferma esplicita`. Nota differita gia
+superficie approvata `payments/create`. Anche il primo irrobustimento del tratto
+`write-draft -> form approvato -> conferma esplicita` e' ora chiuso: se
+l'utente modifica l'importo nel launcher, `payments/create` preserva quel
+valore e lo distingue dal residuo locale del preventivo invece di
+sovrascriverlo al primo render. Il prossimo lavoro ad alto valore non e' una
+nuova AI sparsa o una write autonoma, ma restare selettivi: aprire un altro
+draft solo se e' altrettanto deterministico oppure fare un passaggio mirato di
+stability hardening sul launcher/payment path gia approvato. Nota differita gia
 registrata da test reale utente:
 l'import fatture incontra anche clienti storici assenti dal CRM e in quel
 caso mancano ancora creazione assistita cliente e alcuni campi anagrafici da
 fatturazione; non e' il focus adesso, ma il backlog lo conserva.
 
 ## Last Session
+
+### Sessione 65 (2026-03-01, preserve draft amount on payments/create)
+
+- Completed:
+  - **Il form `payments/create` non sovrascrive piu l'importo corretto nel
+    launcher**:
+    - se la bozza AI arriva con un importo esplicito modificato dall'utente:
+      - il primo render del form lo preserva
+      - il suggerimento locale del residuo non lo rimpiazza in automatico
+  - **La superficie approvata distingue chiaramente tra bozza AI e suggerimento
+    locale**:
+    - il contesto preventivo ora puo mostrare insieme:
+      - importo arrivato dalla bozza AI
+      - residuo locale del preventivo
+    - se i due valori differiscono:
+      - l'utente vede la differenza
+      - puo scegliere esplicitamente se usare il residuo locale
+  - **Semantica e capability allineate anche su questo comportamento di
+    preservazione**:
+    - `prepare_payment_write_draft` dichiara che la superficie di arrivo deve
+      preservare gli edit espliciti del launcher
+    - `unifiedAiWriteDraft` esplicita che il suggerimento residuo resta solo
+      un'alternativa locale, non un override silenzioso
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/payments/paymentLinking.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`
+
+- Decisions:
+  - se una bozza write-assisted attraversa due superfici, la superficie finale
+    non deve cancellare gli edit espliciti gia fatti dall'utente nella prima
+  - i suggerimenti deterministici locali restano utili, ma solo come scelta
+    esplicita e non come override implicito
 
 ### Sessione 64 (2026-03-01, first narrow payment write-draft nel launcher)
 

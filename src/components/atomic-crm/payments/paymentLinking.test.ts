@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildPaymentCreateDefaultsFromClient,
+  getPaymentCreateDraftContextFromSearch,
   buildPaymentCreatePathFromClient,
   buildPaymentCreateDefaultsFromQuote,
   buildPaymentCreatePathFromQuote,
@@ -10,6 +11,7 @@ import {
   buildQuoteSearchFilter,
   buildPaymentPatchFromQuote,
   getPaymentCreateDefaultsFromSearch,
+  shouldAutoApplySuggestedPaymentAmount,
   getSuggestedPaymentAmountFromQuote,
   getUnifiedAiHandoffContextFromSearch,
   shouldClearProjectForClient,
@@ -168,7 +170,34 @@ describe("paymentLinking", () => {
       draftKind: null,
     });
 
-    expect(getUnifiedAiHandoffContextFromSearch("?client_id=client-2")).toBeNull();
+    expect(
+      getUnifiedAiHandoffContextFromSearch("?client_id=client-2"),
+    ).toBeNull();
+  });
+
+  it("parses the editable payment draft context from the launcher search params", () => {
+    expect(
+      getPaymentCreateDraftContextFromSearch(
+        "?quote_id=quote-7&client_id=client-2&project_id=project-9&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
+      ),
+    ).toEqual({
+      source: "unified_ai_launcher",
+      action: "quote_create_payment",
+      openDialog: null,
+      paymentType: "saldo",
+      draftKind: "payment_create",
+      quoteId: "quote-7",
+      clientId: "client-2",
+      projectId: "project-9",
+      amount: 450,
+      status: "in_attesa",
+    });
+
+    expect(
+      getPaymentCreateDraftContextFromSearch(
+        "?launcher_source=unified_ai_launcher&launcher_action=quote_create_payment",
+      ),
+    ).toBeNull();
   });
 
   it("builds a payment-create path from an editable launcher draft", () => {
@@ -241,5 +270,34 @@ describe("paymentLinking", () => {
         ],
       }),
     ).toBeNull();
+  });
+
+  it("does not auto-override an explicit launcher draft amount on the destination form", () => {
+    expect(
+      shouldAutoApplySuggestedPaymentAmount({
+        currentAmount: 320,
+        suggestedAmount: 450,
+        isAmountDirty: false,
+        draftAmount: 320,
+      }),
+    ).toBe(false);
+
+    expect(
+      shouldAutoApplySuggestedPaymentAmount({
+        currentAmount: 0,
+        suggestedAmount: 450,
+        isAmountDirty: true,
+        draftAmount: 320,
+      }),
+    ).toBe(true);
+
+    expect(
+      shouldAutoApplySuggestedPaymentAmount({
+        currentAmount: 450,
+        suggestedAmount: 450,
+        isAmountDirty: false,
+        draftAmount: null,
+      }),
+    ).toBe(false);
   });
 });

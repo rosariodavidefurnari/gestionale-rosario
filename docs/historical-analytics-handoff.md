@@ -371,14 +371,33 @@ The next high-value step is now closed too:
     - approved href to `/#/payments/create?...&draft_kind=payment_create`
   - smoke user cleaned after verification
 
+The next high-value step is now closed too:
+
+- the first confirmation-on-surface upgrade around the payment draft is now in
+  place on `payments/create`
+- the approved destination surface now distinguishes between:
+  - the explicit amount carried from the launcher draft
+  - the deterministic residual suggestion calculated locally from the linked
+    quote
+- if the user already changed the draft amount in the launcher, the destination
+  form now preserves that explicit value on first render instead of overwriting
+  it with the residual suggestion
+- the destination UI now makes that distinction visible:
+  - it shows the amount coming from the AI draft
+  - it shows the current local residual when different
+  - it still lets the user switch to the residual suggestion explicitly
+- this slice stayed fully inside the approved payment surface:
+  - no new write capability was introduced
+  - no function redeploy was required
+  - validation closed locally with `npm run typecheck` and targeted Vitest
+
 The next high-value step is now:
 
-- keep the same strict `write-draft -> approved surface -> explicit
-  confirmation` pattern and verify whether another equally deterministic
-  commercial draft is worth shipping
-- otherwise move to the first confirmation-on-surface workflow upgrade on top
-  of the existing payment draft, still without giving the general CRM chat
-  direct write execution
+- resist broadening the general CRM chat write perimeter
+- only ship another commercial write-draft if its business meaning is as
+  deterministic as the quote-driven payment case
+- otherwise start a focused stability hardening pass on the already approved
+  launcher/payment path before adding more write-assisted cases
 - still no general write execution from the CRM Q&A shell
 
 Deferred note from real user trial:

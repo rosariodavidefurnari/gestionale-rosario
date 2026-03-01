@@ -18,7 +18,7 @@ const getUnifiedAiBannerCopy = (search: string) => {
   }
 
   if (handoff.draftKind === "payment_create") {
-    return "Aperto dalla chat AI unificata con una bozza pagamento modificabile. Controlla importo, tipo e stato prima di salvare.";
+    return "Aperto dalla chat AI unificata con una bozza pagamento modificabile. Controlla importo, tipo e stato prima di salvare: se avevi corretto l'importo nel launcher, il form lo mantiene finche non scegli tu un altro valore.";
   }
 
   if (handoff.action === "quote_create_payment") {
