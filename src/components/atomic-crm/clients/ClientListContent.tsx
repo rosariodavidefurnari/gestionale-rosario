@@ -11,6 +11,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 import type { Client } from "../types";
+import {
+  getClientBillingDisplayName,
+  getClientBillingIdentityLines,
+} from "./clientBilling";
 import { clientTypeLabels, clientSourceLabels } from "./clientTypes";
 import { ErrorMessage } from "../misc/ErrorMessage";
 
@@ -39,16 +43,36 @@ export const ClientListContent = () => {
             className="cursor-pointer hover:bg-muted/50"
           >
             <TableCell>
-              <Link
-                to={createPath({
-                  resource: "clients",
-                  type: "show",
-                  id: client.id,
-                })}
-                className="font-medium text-primary hover:underline"
-              >
-                {client.name}
-              </Link>
+              <div className="space-y-1.5">
+                <Link
+                  to={createPath({
+                    resource: "clients",
+                    type: "show",
+                    id: client.id,
+                  })}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {client.name}
+                </Link>
+                {getClientBillingDisplayName(client) &&
+                getClientBillingDisplayName(client) !== client.name ? (
+                  <p className="text-xs text-muted-foreground">
+                    Fatturazione: {getClientBillingDisplayName(client)}
+                  </p>
+                ) : null}
+                <div className="flex flex-wrap gap-1">
+                  {getClientBillingIdentityLines(client).map((line) => (
+                    <Badge key={line} variant="outline" className="text-[11px]">
+                      {line}
+                    </Badge>
+                  ))}
+                  {client.billing_city ? (
+                    <Badge variant="outline" className="text-[11px]">
+                      {client.billing_city}
+                    </Badge>
+                  ) : null}
+                </div>
+              </div>
             </TableCell>
             <TableCell>
               <ClientTypeBadge type={client.client_type} />

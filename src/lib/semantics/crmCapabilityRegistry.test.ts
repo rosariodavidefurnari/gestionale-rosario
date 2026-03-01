@@ -38,6 +38,14 @@ describe("crmCapabilityRegistry", () => {
       ),
     ).toBe(true);
     expect(
+      registry.actions.find((action) => action.id === "read_unified_crm_context")
+        ?.description,
+    ).toContain("profilo fiscale");
+    expect(
+      registry.actions.find((action) => action.id === "read_unified_crm_context")
+        ?.description,
+    ).toContain("recapiti di fatturazione");
+    expect(
       registry.actions.some((action) => action.id === "ask_unified_crm_question"),
     ).toBe(true);
     expect(

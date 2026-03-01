@@ -267,7 +267,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "read_unified_crm_context",
       label: "Leggi snapshot CRM unificata",
       description:
-        "Carica nel launcher unificato un contesto read-only dei moduli core del CRM, riusando registri semantici e capability senza cambiare pagina.",
+        "Carica nel launcher unificato un contesto read-only dei moduli core del CRM, includendo per i clienti recenti il profilo fiscale essenziale, i recapiti di fatturazione principali e nomi cliente coerenti con la fatturazione quando disponibili, sempre riusando registri semantici e capability senza cambiare pagina.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
       actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
       requiredFields: [],

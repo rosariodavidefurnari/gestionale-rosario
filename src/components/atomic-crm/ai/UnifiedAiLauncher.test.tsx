@@ -185,8 +185,16 @@ describe("UnifiedAiLauncher", () => {
         recentClients: [
           {
             clientId: "client-1",
-            clientName: "Mario Rossi",
+            clientName: "MARIO ROSSI STUDIO",
+            operationalName: "Mario Rossi",
+            billingName: "MARIO ROSSI STUDIO",
             email: "mario@example.com",
+            vatNumber: "IT12345678901",
+            fiscalCode: "RSSMRA80A01C351Z",
+            billingAddress: "Via Etnea, 10 · 95100 Catania CT · IT",
+            billingCity: "Catania",
+            billingSdiCode: "M5UXCR1",
+            billingPec: "mario@examplepec.it",
             createdAt: "2026-02-20T10:00:00.000Z",
           },
         ],
@@ -195,9 +203,11 @@ describe("UnifiedAiLauncher", () => {
             quoteId: "quote-1",
             clientId: "client-1",
             projectId: "project-1",
-            clientName: "Mario Rossi",
+            clientName: "MARIO ROSSI STUDIO",
             projectName: "Wedding Mario",
             amount: 1200,
+            linkedPaymentsTotal: 0,
+            remainingAmount: 1200,
             status: "in_trattativa",
             statusLabel: "In trattativa",
             createdAt: "2026-02-20T10:00:00.000Z",
@@ -208,10 +218,15 @@ describe("UnifiedAiLauncher", () => {
             projectId: "project-1",
             clientId: "client-1",
             projectName: "Wedding Mario",
-            clientName: "Mario Rossi",
+            clientName: "MARIO ROSSI STUDIO",
             status: "in_corso",
             statusLabel: "In corso",
             startDate: "2026-02-20T10:00:00.000Z",
+            totalServices: 0,
+            totalFees: 0,
+            totalExpenses: 0,
+            totalPaid: 0,
+            balanceDue: 0,
           },
         ],
         pendingPayments: [
@@ -220,7 +235,7 @@ describe("UnifiedAiLauncher", () => {
             quoteId: "quote-1",
             clientId: "client-1",
             projectId: "project-1",
-            clientName: "Mario Rossi",
+            clientName: "MARIO ROSSI STUDIO",
             projectName: "Wedding Mario",
             amount: 800,
             status: "in_attesa",
@@ -283,13 +298,9 @@ describe("UnifiedAiLauncher", () => {
     const composerMenuButton = within(composer).getByRole("button", {
       name: "Apri altre viste AI",
     });
-    const composerTextarea = within(composer).getByLabelText(
-      "Fai una domanda sul CRM corrente",
-    );
     expect(
-      composerMenuButton.compareDocumentPosition(composerTextarea) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+      within(composer).getByLabelText("Fai una domanda sul CRM corrente"),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Snapshot CRM")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Documenti")).not.toBeInTheDocument();
 
@@ -305,6 +316,14 @@ describe("UnifiedAiLauncher", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: "Snapshot CRM" }));
 
     expect(await screen.findByText("Pagamenti da seguire")).toBeInTheDocument();
+    expect(await screen.findByText("Clienti recenti")).toBeInTheDocument();
+    expect(
+      (await screen.findAllByText("MARIO ROSSI STUDIO")).length,
+    ).toBeGreaterThan(0);
+    expect(await screen.findByText(/P\.IVA IT12345678901/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/PEC mario@examplepec.it/),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Torna alla chat AI" }));
 

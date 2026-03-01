@@ -1,37 +1,91 @@
 import { useListFilterContext } from "ra-core";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Building2, Megaphone } from "lucide-react";
+import { Building2, FileBadge2, MapPin, Megaphone, Search } from "lucide-react";
 
 import { clientTypeChoices, clientSourceChoices } from "./clientTypes";
+import {
+  getClientTextFilterValue,
+  patchClientTextFilter,
+} from "./clientListFilters";
 
 export const ClientListFilter = () => {
   const { filterValues, setFilters } = useListFilterContext();
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value) {
-      setFilters({ ...filterValues, "name@ilike": `%${value}%` });
-    } else {
-      const { "name@ilike": _, ...rest } = filterValues;
-      setFilters(rest);
-    }
-  };
+  const handleTextFilterChange =
+    (
+      field:
+        | "name"
+        | "billing_name"
+        | "vat_number"
+        | "fiscal_code"
+        | "billing_city"
+        | "billing_sdi_code"
+        | "billing_pec",
+    ) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFilters(
+        patchClientTextFilter({
+          filterValues,
+          field,
+          value: e.target.value,
+        }),
+      );
+    };
 
   return (
     <div className="shrink-0 w-56 order-last hidden md:block">
       <div className="flex flex-col gap-6">
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 size-4 text-muted-foreground" />
+        <FilterSection icon={<Search className="size-4" />} label="Ricerca">
+          <div className="space-y-2">
+            <Input
+              placeholder="Nome / ragione sociale"
+              value={getClientTextFilterValue(filterValues, "name")}
+              onChange={handleTextFilterChange("name")}
+            />
+            <Input
+              placeholder="Denominazione fatturazione"
+              value={getClientTextFilterValue(filterValues, "billing_name")}
+              onChange={handleTextFilterChange("billing_name")}
+            />
+          </div>
+        </FilterSection>
+
+        <FilterSection
+          icon={<FileBadge2 className="size-4" />}
+          label="Identificativi fiscali"
+        >
+          <div className="space-y-2">
+            <Input
+              placeholder="Partita IVA"
+              value={getClientTextFilterValue(filterValues, "vat_number")}
+              onChange={handleTextFilterChange("vat_number")}
+            />
+            <Input
+              placeholder="Codice fiscale"
+              value={getClientTextFilterValue(filterValues, "fiscal_code")}
+              onChange={handleTextFilterChange("fiscal_code")}
+            />
+            <Input
+              placeholder="Codice destinatario"
+              value={getClientTextFilterValue(filterValues, "billing_sdi_code")}
+              onChange={handleTextFilterChange("billing_sdi_code")}
+            />
+            <Input
+              placeholder="PEC"
+              value={getClientTextFilterValue(filterValues, "billing_pec")}
+              onChange={handleTextFilterChange("billing_pec")}
+            />
+          </div>
+        </FilterSection>
+
+        <FilterSection icon={<MapPin className="size-4" />} label="Fatturazione">
           <Input
-            placeholder="Cerca nome..."
-            className="pl-8"
-            value={
-              (filterValues["name@ilike"] as string)?.replace(/%/g, "") ?? ""
-            }
-            onChange={handleSearchChange}
+            placeholder="Comune fiscale"
+            value={getClientTextFilterValue(filterValues, "billing_city")}
+            onChange={handleTextFilterChange("billing_city")}
           />
-        </div>
+        </FilterSection>
 
         <FilterSection
           icon={<Building2 className="size-4" />}

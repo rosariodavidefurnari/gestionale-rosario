@@ -3,6 +3,10 @@ import { paymentStatusLabels } from "@/components/atomic-crm/payments/paymentTyp
 import { projectStatusLabels } from "@/components/atomic-crm/projects/projectTypes";
 import { buildQuotePaymentsSummary } from "@/components/atomic-crm/quotes/quotePaymentsSummary";
 import { quoteStatusLabels } from "@/components/atomic-crm/quotes/quotesTypes";
+import {
+  formatClientBillingAddress,
+  getClientBillingDisplayName,
+} from "@/components/atomic-crm/clients/clientBilling";
 import type {
   Client,
   Expense,
@@ -141,9 +145,13 @@ const buildProjectFinancialSummaries = ({
 };
 
 const getClientName = (
-  clientById: Map<string, Pick<Client, "id" | "name">>,
+  clientById: Map<string, Client>,
   clientId?: Client["id"] | null,
-) => (clientId ? clientById.get(String(clientId))?.name ?? "Cliente non trovato" : null);
+) =>
+  clientId
+    ? getClientBillingDisplayName(clientById.get(String(clientId))) ??
+      "Cliente non trovato"
+    : null;
 
 const getProjectName = (
   projectById: Map<string, Pick<Project, "id" | "name">>,
@@ -180,7 +188,15 @@ export type UnifiedCrmReadContext = {
     recentClients: Array<{
       clientId: string;
       clientName: string;
+      operationalName: string | null;
+      billingName: string | null;
       email: string | null;
+      vatNumber: string | null;
+      fiscalCode: string | null;
+      billingAddress: string | null;
+      billingCity: string | null;
+      billingSdiCode: string | null;
+      billingPec: string | null;
       createdAt: string;
     }>;
     openQuotes: Array<{
@@ -346,8 +362,16 @@ export const buildUnifiedCrmReadContext = ({
       },
       recentClients: recentClients.slice(0, 5).map((client) => ({
         clientId: String(client.id),
-        clientName: client.name,
+        clientName: getClientBillingDisplayName(client) ?? client.name,
+        operationalName: client.name ?? null,
+        billingName: client.billing_name ?? null,
         email: client.email ?? null,
+        vatNumber: client.vat_number ?? null,
+        fiscalCode: client.fiscal_code ?? null,
+        billingAddress: formatClientBillingAddress(client),
+        billingCity: client.billing_city ?? null,
+        billingSdiCode: client.billing_sdi_code ?? null,
+        billingPec: client.billing_pec ?? null,
         createdAt: client.created_at,
       })),
       openQuotes: openQuotes.slice(0, 5).map((quote) => {

@@ -1695,6 +1695,26 @@ Implementation is now closed too:
     - `billingSdiCode = M5UXCR1`
     - warning for missing client still absent from the CRM
 
+The immediate continuity follow-up is now closed too:
+
+- the unified launcher read snapshot now exposes recent clients with:
+  - billing-coherent customer name
+  - `Partita IVA`
+  - `Codice Fiscale`
+  - `Codice Destinatario`
+  - `PEC`
+  - summarized billing address
+- the same billing-coherent customer naming is now reused on client-linked
+  quote/project/payment references shown inside the launcher
+- client list discovery is now aligned with the new billing profile too:
+  - row preview now shows billing identity badges
+  - filters now support billing name, `P.IVA`, `CF`, `Codice Destinatario`,
+    `PEC`, and billing city
+- this slice stayed local:
+  - no migration
+  - no function redeploy
+  - validation closed with `npm run typecheck` and targeted Vitest
+
 ## Environment Blockers
 
 ### Supabase migration state
@@ -1765,8 +1785,11 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Keep the new client billing-profile tests aligned whenever client, quote PDF
-   or invoice-import surfaces evolve.
+1. Keep the client billing-profile foundations aligned across:
+   - client CRUD/show/export
+   - invoice import
+   - unified launcher read snapshot
+   - client list discovery/search
 2. If import-born counterparties become the next priority, open the supplier
    resource/page as a separate slice and stop routing supplier expenses through
    `client_id`.
@@ -1788,7 +1811,8 @@ Stable rollback note:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
   - keeping the new client billing-profile foundation aligned across client UI,
-    quote PDF and invoice import
+    quote PDF, invoice import, unified launcher read snapshot, and client list
+    search
   - deciding separately if/when to open the dedicated supplier slice
   - only later evaluating deeper launcher-side create/update assistance on top
     of this stronger base

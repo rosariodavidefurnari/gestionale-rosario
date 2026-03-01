@@ -526,6 +526,27 @@ That customer billing-profile slice is now closed too:
   - `expenses` still links through `client_id`
   - no supplier resource/page was introduced here
 
+The immediate continuity follow-up is now closed too:
+
+- the unified launcher read snapshot now exposes the new customer
+  billing/fiscal profile on recent clients:
+  - billing-coherent name
+  - `P.IVA`
+  - `CF`
+  - `Codice Destinatario`
+  - `PEC`
+  - summarized billing address
+- client-linked quote/project/payment references inside the launcher now reuse
+  that billing-coherent naming
+- client list discovery is now aligned with the same data:
+  - row preview shows billing identity badges
+  - filters/search now support billing name, `P.IVA`, `CF`,
+    `Codice Destinatario`, `PEC`, and billing city
+- this stayed a local continuity slice:
+  - no DB change
+  - no edge-function change
+  - validation closed with `npm run typecheck` and targeted Vitest
+
 Why this comes next:
 
 - the launcher now has the base layers it needed:
@@ -543,6 +564,17 @@ Why this comes next:
 - the next Pareto gain is therefore not another raw Q&A surface, but closing
   the last manual context gaps on top of those approved landings
 - the semantic/capability backbone is already strong enough for this next step
+
+The next open priority is now:
+
+- keep the supplier/vendor problem as its own explicit slice instead of
+  widening the customer billing model again
+- if expense counterparties become the active pain point:
+  - introduce a dedicated supplier resource/page
+  - stop overloading `client_id` for supplier expenses
+- only after that boundary is explicit, evaluate richer create/update
+  assistance from invoice import on top of the stronger customer profile now in
+  place
 
 Not the next step by default:
 

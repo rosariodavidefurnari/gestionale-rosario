@@ -12,7 +12,18 @@ describe("unifiedCrmReadContext", () => {
         {
           id: "client-1",
           name: "Mario Rossi",
+          billing_name: "MARIO ROSSI STUDIO",
           client_type: "privato_wedding",
+          vat_number: "IT12345678901",
+          fiscal_code: "RSSMRA80A01C351Z",
+          billing_address_street: "Via Etnea",
+          billing_address_number: "10",
+          billing_postal_code: "95100",
+          billing_city: "Catania",
+          billing_province: "CT",
+          billing_country: "IT",
+          billing_sdi_code: "M5UXCR1",
+          billing_pec: "mario@examplepec.it",
           tags: [],
           created_at: "2026-02-10T10:00:00.000Z",
           updated_at: "2026-02-10T10:00:00.000Z",
@@ -114,10 +125,24 @@ describe("unifiedCrmReadContext", () => {
     expect(context.snapshot.totals.pendingPaymentsAmount).toBe(1200);
     expect(context.snapshot.totals.expensesAmount).toBe(300);
     expect(context.snapshot.openQuotes[0]?.clientId).toBe("client-1");
+    expect(context.snapshot.openQuotes[0]?.clientName).toBe(
+      "MARIO ROSSI STUDIO",
+    );
     expect(context.snapshot.openQuotes[0]?.linkedPaymentsTotal).toBe(1200);
     expect(context.snapshot.openQuotes[0]?.remainingAmount).toBe(1000);
     expect(context.snapshot.pendingPayments[0]?.quoteId).toBe("quote-1");
     expect(context.snapshot.pendingPayments[0]?.projectId).toBe("project-1");
+    expect(context.snapshot.recentClients[0]?.billingName).toBe(
+      "MARIO ROSSI STUDIO",
+    );
+    expect(context.snapshot.recentClients[0]?.vatNumber).toBe("IT12345678901");
+    expect(context.snapshot.recentClients[0]?.billingAddress).toBe(
+      "Via Etnea, 10 · 95100 Catania CT · IT",
+    );
+    expect(context.snapshot.recentClients[0]?.billingSdiCode).toBe("M5UXCR1");
+    expect(context.snapshot.recentClients[0]?.billingPec).toBe(
+      "mario@examplepec.it",
+    );
     expect(context.snapshot.openQuotes[0]?.statusLabel).toBe("In trattativa");
     expect(context.snapshot.pendingPayments[0]?.statusLabel).toBe("In attesa");
     expect(context.snapshot.recentExpenses[0]?.expenseTypeLabel).toBe("Noleggio");

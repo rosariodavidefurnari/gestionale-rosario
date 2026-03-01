@@ -111,9 +111,35 @@ profilo fiscale cliente strutturato, il CRM lo espone nei form/show/export/PDF
 e l'import fatture trasporta gli stessi campi fino al draft editor. Se il
 cliente storico manca ancora dal CRM, il launcher non si blocca piu: puo
 aprire `clients/create` gia precompilato, sempre con conferma esplicita sul
-form. Il tema fornitori resta invece separato e ancora aperto.
+form. Anche il follow-up immediato di continuita' e' ora chiuso: la snapshot
+read-only del launcher vede anche denominazione fatturazione, `P.IVA`, `CF`,
+`Codice Destinatario`, `PEC` e indirizzo fiscale riassunto dei clienti
+recenti, mentre lista e filtri clienti permettono finalmente di trovare lo
+stesso profilo tramite denominazione, identificativi fiscali e comune di
+fatturazione. Il tema fornitori resta invece separato e ancora aperto.
 
 ## Last Session
+
+### Sessione 73 (2026-03-01, continuita' billing profile su chat e lista clienti)
+
+- Completed:
+  - **Allineata la snapshot CRM-wide del launcher ai nuovi campi fiscali
+    cliente**:
+    - `recentClients` ora espone denominazione fatturazione, `P.IVA`, `CF`,
+      `Codice Destinatario`, `PEC` e indirizzo fiscale riassunto
+    - le referenze cliente collegate a preventivi, progetti e pagamenti
+      riusano il nome piu coerente con la fatturazione quando disponibile
+  - **Allineata anche la discovery clienti nel CRM**:
+    - la lista mostra badge fiscali e anagrafica di fatturazione sintetica
+    - i filtri supportano `billing_name`, `vat_number`, `fiscal_code`,
+      `billing_sdi_code`, `billing_pec` e `billing_city`
+  - **Riallineati semantica e capability registry**:
+    - il contesto read-only del launcher dichiara ora anche recapiti di
+      fatturazione principali, non solo il profilo fiscale essenziale
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/lib/ai/unifiedCrmReadContext.test.ts src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx src/components/atomic-crm/clients/clientListFilters.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`
 
 ### Sessione 72 (2026-03-01, foundation anagrafica cliente fiscale)
 

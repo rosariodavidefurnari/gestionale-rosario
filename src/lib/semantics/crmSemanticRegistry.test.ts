@@ -91,6 +91,12 @@ describe("crmSemanticRegistry", () => {
     expect(registry.rules.unifiedAiReadContext.meaning).toContain(
       "residuo ancora non collegato",
     );
+    expect(registry.rules.unifiedAiReadContext.meaning).toContain(
+      "profilo fiscale essenziale",
+    );
+    expect(registry.rules.unifiedAiReadContext.meaning).toContain(
+      "recapiti di fatturazione principali",
+    );
     expect(registry.rules.unifiedAiWriteDraft.approvedResource).toBe("payments");
     expect(registry.rules.unifiedAiWriteDraft.confirmationRule).toContain(
       "superfici pagamento",

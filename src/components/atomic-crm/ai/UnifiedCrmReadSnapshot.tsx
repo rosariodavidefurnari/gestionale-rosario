@@ -126,6 +126,50 @@ export const UnifiedCrmReadSnapshot = ({
 
       <div className="grid gap-4 xl:grid-cols-2">
         <SnapshotList
+          title="Clienti recenti"
+          emptyLabel="Nessun cliente recente nel contesto corrente."
+          items={snapshot.recentClients.map((client) => (
+            <div
+              key={client.clientId}
+              className="rounded-xl border bg-muted/10 px-3 py-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-medium">{client.clientName}</p>
+                <Badge variant="outline">Cliente</Badge>
+              </div>
+              {client.billingName &&
+              client.billingName !== client.operationalName ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Fatturazione: {client.billingName}
+                </p>
+              ) : null}
+              <p className="mt-1 text-sm text-muted-foreground">
+                {[
+                  client.vatNumber ? `P.IVA ${client.vatNumber}` : null,
+                  client.fiscalCode ? `CF ${client.fiscalCode}` : null,
+                  client.billingCity ? client.billingCity : null,
+                  client.billingSdiCode
+                    ? `Codice dest. ${client.billingSdiCode}`
+                    : null,
+                  client.billingPec ? `PEC ${client.billingPec}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || "Profilo fiscale non completo"}
+              </p>
+              {client.billingAddress ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {client.billingAddress}
+                </p>
+              ) : null}
+              <p className="mt-1 text-xs text-muted-foreground">
+                Creato il {formatDate(client.createdAt)}
+                {client.email ? ` · ${client.email}` : ""}
+              </p>
+            </div>
+          ))}
+        />
+
+        <SnapshotList
           title="Preventivi aperti"
           emptyLabel="Nessun preventivo aperto nel contesto corrente."
           items={snapshot.openQuotes.map((quote) => (

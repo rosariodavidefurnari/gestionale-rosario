@@ -10,6 +10,21 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Quando allarghi l'anagrafica fiscale cliente, la chat
+  unificata e la discovery clienti vanno aggiornate nello stesso slice** —
+  Non basta estendere schema, form e import fatture. Se il launcher read-only
+  continua a vedere solo `name/email` e la lista clienti non cerca per
+  `P.IVA`, `CF` o `PEC`, il CRM resta semanticamente spezzato: i dati nuovi
+  esistono ma non sono davvero riusabili ne' dall'utente ne' dall'AI.
+
+- [2026-03-01] **Per i record finanziari collegati conviene mostrare il nome
+  cliente piu coerente con la fatturazione, ma senza perdere il nome
+  operativo** — Dopo aver introdotto `billing_name`, quote, pagamenti,
+  progetti e snapshot AI non dovrebbero continuare a usare ciecamente il solo
+  `client.name`. Il pattern corretto e' preferire il nome di fatturazione
+  quando il contesto e' economico/documentale, mantenendo comunque visibile il
+  nome operativo nelle superfici clienti dove serve continuita' umana.
+
 - [2026-03-01] **Quando l'import fatture trova un cliente reale non ancora nel
   CRM, il ponte corretto non e' una creazione automatica ma un handoff
   precompilato verso `clients/create`** — Dopo aver introdotto i campi fiscali
