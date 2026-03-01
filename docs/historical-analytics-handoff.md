@@ -120,6 +120,7 @@ until the relevant items below are updated too:
    - `docs/development-continuity-map.md`
    - `docs/historical-analytics-handoff.md`
    - `docs/historical-analytics-backlog.md`
+   - the relevant canonical/working docs for the touched domain
    - `progress.md` only if the change adds relevant historical chronology
    - `learnings.md` only if a new reusable pattern emerged
 
@@ -731,7 +732,8 @@ Purpose:
 Current behavior:
 
 - the capability registry now declares:
-  - main CRM resources
+  - main CRM resources, including `contacts` as a first-class navigable
+    resource and not just an embedded legacy surface
   - hash-route conventions
   - important dialogs such as:
     - quote create/show/edit

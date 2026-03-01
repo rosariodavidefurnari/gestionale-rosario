@@ -81,6 +81,19 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       supportedViews: ["list", "show", "create", "edit"],
     },
     {
+      resource: "contacts",
+      label: "Referenti",
+      description:
+        "Persone collegate ai clienti e, tramite project_contacts, ai progetti operativi.",
+      routePatterns: [
+        "/#/contacts",
+        "/#/contacts/create",
+        "/#/contacts/:id",
+        "/#/contacts/:id/show",
+      ],
+      supportedViews: ["list", "show", "create", "edit"],
+    },
+    {
       resource: "quotes",
       label: "Preventivi",
       description:
@@ -603,9 +616,9 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
     },
     {
       id: "continuity-docs",
-      label: "Aggiornare handoff, backlog, progress e learnings",
+      label: "Aggiornare i docs di continuita' corretti",
       description:
-        "I cambi strutturali devono sopravvivere ai reset di chat e diventare memoria esplicita del progetto.",
+        "I cambi strutturali devono sopravvivere ai reset di chat: aggiornare i documenti canonici/working pertinenti e usare progress/learnings solo come archivio storico quando serve davvero.",
     },
   ],
 });
