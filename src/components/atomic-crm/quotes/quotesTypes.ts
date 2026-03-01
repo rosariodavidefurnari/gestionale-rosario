@@ -2,7 +2,8 @@ export const quoteStatuses = [
   {
     value: "primo_contatto",
     label: "Primo contatto",
-    description: "Richiesta iniziale non ancora trasformata in proposta inviata.",
+    description:
+      "Richiesta iniziale non ancora trasformata in proposta inviata.",
   },
   {
     value: "preventivo_inviato",

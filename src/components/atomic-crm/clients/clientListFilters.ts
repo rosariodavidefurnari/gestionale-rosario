@@ -5,7 +5,11 @@ const toFilterKey = (field: string) => `${field}@ilike`;
 export const getClientTextFilterValue = (
   filterValues: FilterValues,
   field: string,
-) => ((filterValues[toFilterKey(field)] as string | undefined) ?? "").replace(/%/g, "");
+) =>
+  ((filterValues[toFilterKey(field)] as string | undefined) ?? "").replace(
+    /%/g,
+    "",
+  );
 
 export const patchClientTextFilter = ({
   filterValues,

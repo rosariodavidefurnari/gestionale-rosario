@@ -32,7 +32,8 @@ export const buildClientCreatePathFromInvoiceDraft = ({
   >;
 }) => {
   const searchParams = new URLSearchParams();
-  const billingName = record.billingName?.trim() || record.counterpartyName?.trim() || "";
+  const billingName =
+    record.billingName?.trim() || record.counterpartyName?.trim() || "";
   const displayName = record.counterpartyName?.trim() || billingName;
 
   setOptional(searchParams, "name", displayName);

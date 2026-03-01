@@ -108,11 +108,7 @@ const ClientBillingInputs = () => (
         label="Numero civico"
         helperText={false}
       />
-      <TextInput
-        source="billing_postal_code"
-        label="CAP"
-        helperText={false}
-      />
+      <TextInput source="billing_postal_code" label="CAP" helperText={false} />
       <TextInput source="billing_city" label="Comune" helperText={false} />
       <TextInput
         source="billing_province"

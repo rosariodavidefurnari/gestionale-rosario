@@ -153,10 +153,7 @@ export const SignupPage = () => {
               )}
             </Button>
             {googleWorkplaceDomain ? (
-              <SSOAuthButton
-                className="w-full"
-                domain={googleWorkplaceDomain}
-              >
+              <SSOAuthButton className="w-full" domain={googleWorkplaceDomain}>
                 Accedi con Google Workplace
               </SSOAuthButton>
             ) : null}

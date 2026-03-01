@@ -114,10 +114,11 @@ describe("DashboardHistoricalCashInflowCard", () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText((_, element) =>
-        element?.tagName === "P" &&
-        element.textContent ===
-          "1 pagamento ricevuto · 1 progetto · 1 cliente",
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === "P" &&
+          element.textContent ===
+            "1 pagamento ricevuto · 1 progetto · 1 cliente",
       ),
     ).toBeInTheDocument();
     expect(

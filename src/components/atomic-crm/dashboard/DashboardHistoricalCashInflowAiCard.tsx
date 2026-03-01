@@ -189,7 +189,9 @@ export const DashboardHistoricalCashInflowAiCard = () => {
             <div className="space-y-3 rounded-md border px-4 py-4">
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <Badge variant="secondary">{answer.model}</Badge>
-                <span>Risposta del {formatGeneratedAt(answer.generatedAt)}</span>
+                <span>
+                  Risposta del {formatGeneratedAt(answer.generatedAt)}
+                </span>
               </div>
               <div className="rounded-md bg-muted/50 px-3 py-2 text-sm">
                 <span className="font-medium">Domanda:</span> {answer.question}

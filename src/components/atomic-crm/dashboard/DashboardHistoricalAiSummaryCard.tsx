@@ -150,8 +150,8 @@ export const DashboardHistoricalAiSummaryCard = () => {
           <div className="space-y-1">
             <p className="text-sm font-medium">Oppure fai una domanda</p>
             <p className="text-xs text-muted-foreground">
-              L'AI risponde usando solo i dati storici mostrati qui. Se una
-              cosa non è dimostrabile, te lo dice.
+              L'AI risponde usando solo i dati storici mostrati qui. Se una cosa
+              non è dimostrabile, te lo dice.
             </p>
           </div>
 
@@ -192,7 +192,9 @@ export const DashboardHistoricalAiSummaryCard = () => {
             <div className="space-y-3 rounded-md border px-4 py-4">
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <Badge variant="secondary">{answer.model}</Badge>
-                <span>Risposta del {formatGeneratedAt(answer.generatedAt)}</span>
+                <span>
+                  Risposta del {formatGeneratedAt(answer.generatedAt)}
+                </span>
               </div>
               <div className="rounded-md bg-muted/50 px-3 py-2 text-sm">
                 <span className="font-medium">Domanda:</span> {answer.question}

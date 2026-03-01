@@ -43,7 +43,10 @@ Bullet brevi su limiti, anno in corso parziale, confronti corretti e caveat del 
 2 o 3 verifiche operative utili.
 `.trim();
 
-async function createHistoricalAnalyticsSummary(req: Request, currentUserSale: any) {
+async function createHistoricalAnalyticsSummary(
+  req: Request,
+  currentUserSale: any,
+) {
   if (!openaiApiKey) {
     return createErrorResponse(
       500,
@@ -80,7 +83,10 @@ async function createHistoricalAnalyticsSummary(req: Request, currentUserSale: a
     const summaryMarkdown = response.output_text?.trim();
 
     if (!summaryMarkdown) {
-      return createErrorResponse(502, "OpenAI ha restituito una risposta vuota");
+      return createErrorResponse(
+        502,
+        "OpenAI ha restituito una risposta vuota",
+      );
     }
 
     return new Response(

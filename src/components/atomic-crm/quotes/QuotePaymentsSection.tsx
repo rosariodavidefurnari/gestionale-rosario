@@ -16,11 +16,8 @@ const formatCurrency = (value: number) =>
     minimumFractionDigits: 2,
   });
 
-const formatCountLabel = (
-  value: number,
-  singular: string,
-  plural: string,
-) => `${value} ${value === 1 ? singular : plural}`;
+const formatCountLabel = (value: number, singular: string, plural: string) =>
+  `${value} ${value === 1 ? singular : plural}`;
 
 const getRemainingLabel = (remainingAmount: number) => {
   if (remainingAmount < 0) return "Oltre il preventivo";
@@ -49,14 +46,22 @@ const getOpenRegisteredSubtitle = ({
   }
 
   if (pendingCount > 0) {
-    return formatCountLabel(pendingCount, "pagamento in attesa", "pagamenti in attesa");
+    return formatCountLabel(
+      pendingCount,
+      "pagamento in attesa",
+      "pagamenti in attesa",
+    );
   }
 
   return "Nessun pagamento aperto";
 };
 
-const getDisplayPaymentAmount = (payment: Pick<Payment, "amount" | "payment_type">) =>
-  formatCurrency(payment.payment_type === "rimborso" ? -payment.amount : payment.amount);
+const getDisplayPaymentAmount = (
+  payment: Pick<Payment, "amount" | "payment_type">,
+) =>
+  formatCurrency(
+    payment.payment_type === "rimborso" ? -payment.amount : payment.amount,
+  );
 
 export const QuotePaymentsSection = ({
   quote,
@@ -173,12 +178,15 @@ const QuotePaymentsLoadedState = ({
                 to={`/payments/${payment.id}/show`}
                 className="text-sm font-medium text-primary hover:underline"
               >
-                {paymentTypeLabels[payment.payment_type] ?? payment.payment_type}
+                {paymentTypeLabels[payment.payment_type] ??
+                  payment.payment_type}
               </Link>
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <span>{formatPaymentDate(payment.payment_date)}</span>
                 <PaymentStatusBadge status={payment.status} />
-                {payment.invoice_ref ? <span>{payment.invoice_ref}</span> : null}
+                {payment.invoice_ref ? (
+                  <span>{payment.invoice_ref}</span>
+                ) : null}
               </div>
             </div>
 

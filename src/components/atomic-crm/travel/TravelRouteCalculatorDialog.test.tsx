@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 
 import "@/setupTests";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const estimateTravelRoute = vi.fn();
@@ -13,7 +19,7 @@ const dataProvider = {
 };
 
 vi.mock("ra-core", async () => {
-  const actual = await vi.importActual<typeof import("ra-core")>("ra-core");
+  const actual = await vi.importActual("ra-core");
   return {
     ...actual,
     useDataProvider: () => dataProvider,

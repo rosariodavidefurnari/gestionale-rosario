@@ -16,10 +16,7 @@ import {
   getClientBillingIdentityLines,
 } from "../clients/clientBilling";
 import { formatDateLong } from "../misc/formatDateRange";
-import {
-  getQuoteItemLineTotal,
-  sanitizeQuoteItems,
-} from "./quoteItems";
+import { getQuoteItemLineTotal, sanitizeQuoteItems } from "./quoteItems";
 
 // ── Business info (customize here) ────────────────────────────────
 const LOGO_URL = "/logos/logo_rosario_furnari.png";
@@ -333,25 +330,33 @@ const QuotePDFDocument = ({
           </Text>
         </View>
         {sanitizeQuoteItems(quoteItems ?? quote.quote_items).length > 0 ? (
-          sanitizeQuoteItems(quoteItems ?? quote.quote_items).map((item, index) => (
-            <View style={styles.tableRow} key={`${item.description}-${index}`}>
-              <Text style={[{ fontSize: 10 }, styles.colDesc]}>
-                {item.description}
-              </Text>
-              <Text style={[{ fontSize: 10 }, styles.colType]}>
-                {serviceLabel} · {item.quantity} × {fmtCurrency(item.unit_price)}
-              </Text>
-              <Text style={[{ fontSize: 10 }, styles.colAmount]}>
-                {fmtCurrency(getQuoteItemLineTotal(item))}
-              </Text>
-            </View>
-          ))
+          sanitizeQuoteItems(quoteItems ?? quote.quote_items).map(
+            (item, index) => (
+              <View
+                style={styles.tableRow}
+                key={`${item.description}-${index}`}
+              >
+                <Text style={[{ fontSize: 10 }, styles.colDesc]}>
+                  {item.description}
+                </Text>
+                <Text style={[{ fontSize: 10 }, styles.colType]}>
+                  {serviceLabel} · {item.quantity} ×{" "}
+                  {fmtCurrency(item.unit_price)}
+                </Text>
+                <Text style={[{ fontSize: 10 }, styles.colAmount]}>
+                  {fmtCurrency(getQuoteItemLineTotal(item))}
+                </Text>
+              </View>
+            ),
+          )
         ) : (
           <View style={styles.tableRow}>
             <Text style={[{ fontSize: 10 }, styles.colDesc]}>
               {quote.description || "Servizio professionale"}
             </Text>
-            <Text style={[{ fontSize: 10 }, styles.colType]}>{serviceLabel}</Text>
+            <Text style={[{ fontSize: 10 }, styles.colType]}>
+              {serviceLabel}
+            </Text>
             <Text style={[{ fontSize: 10 }, styles.colAmount]}>
               {fmtCurrency(quote.amount)}
             </Text>

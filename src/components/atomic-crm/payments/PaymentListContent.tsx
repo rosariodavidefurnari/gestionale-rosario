@@ -112,13 +112,7 @@ const PaymentMobileCard = ({
 };
 
 /* ---- Desktop table row ---- */
-const PaymentRow = ({
-  payment,
-  link,
-}: {
-  payment: Payment;
-  link: string;
-}) => {
+const PaymentRow = ({ payment, link }: { payment: Payment; link: string }) => {
   const { data: client } = useGetOne("clients", { id: payment.client_id });
   const { data: project } = useGetOne(
     "projects",

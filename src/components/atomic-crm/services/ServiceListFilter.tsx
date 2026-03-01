@@ -146,8 +146,7 @@ const ServiceFilterContent = () => {
           placeholder="Cerca località..."
           className="pl-8"
           value={
-            (filterValues["location@ilike"] as string)?.replace(/%/g, "") ??
-            ""
+            (filterValues["location@ilike"] as string)?.replace(/%/g, "") ?? ""
           }
           onChange={handleSearchChange}
         />
@@ -169,8 +168,7 @@ const ServiceFilterContent = () => {
                   <span className="truncate">
                     {filterValues["project_id@eq"]
                       ? (projects.find(
-                          (p) =>
-                            String(p.id) === filterValues["project_id@eq"],
+                          (p) => String(p.id) === filterValues["project_id@eq"],
                         )?.name ?? "Tutti")
                       : "Tutti"}
                   </span>

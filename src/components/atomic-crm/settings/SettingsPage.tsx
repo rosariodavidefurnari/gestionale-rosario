@@ -53,9 +53,7 @@ const transformFormValues = (data: Record<string, any>) => ({
 
 /** Ensure every item in a { value, label } array has a value (slug from label). */
 const ensureValues = (
-  items:
-    | { value?: string; label: string; description?: string }[]
-    | undefined,
+  items: { value?: string; label: string; description?: string }[] | undefined,
 ) =>
   items?.map((item) => ({
     ...item,

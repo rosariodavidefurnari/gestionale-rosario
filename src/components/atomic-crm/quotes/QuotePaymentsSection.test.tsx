@@ -78,7 +78,9 @@ describe("QuotePaymentsSection", () => {
     renderSection();
 
     expect(
-      screen.getByText("Nessun pagamento collegato ancora a questo preventivo."),
+      screen.getByText(
+        "Nessun pagamento collegato ancora a questo preventivo.",
+      ),
     ).toBeInTheDocument();
   });
 

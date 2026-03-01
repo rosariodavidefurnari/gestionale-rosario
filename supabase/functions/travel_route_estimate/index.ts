@@ -9,10 +9,10 @@ import {
 } from "../_shared/travelRouteEstimate.ts";
 import { createErrorResponse } from "../_shared/utils.ts";
 
-const openRouteServiceApiKey =
-  Deno.env.get("OPENROUTESERVICE_API_KEY") ?? "";
+const openRouteServiceApiKey = Deno.env.get("OPENROUTESERVICE_API_KEY") ?? "";
 const openRouteServiceBaseUrl =
-  Deno.env.get("OPENROUTESERVICE_BASE_URL") ?? "https://api.openrouteservice.org";
+  Deno.env.get("OPENROUTESERVICE_BASE_URL") ??
+  "https://api.openrouteservice.org";
 
 async function handleTravelRouteEstimate(
   req: Request,
@@ -82,4 +82,3 @@ Deno.serve(async (req: Request) =>
     ),
   ),
 );
-

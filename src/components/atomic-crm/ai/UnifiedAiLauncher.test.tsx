@@ -451,7 +451,9 @@ describe("UnifiedAiLauncher", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
 
-    expect(screen.queryByText("Tutto sotto controllo.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Tutto sotto controllo."),
+    ).not.toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Apri chat AI unificata" }),
@@ -460,7 +462,9 @@ describe("UnifiedAiLauncher", () => {
     expect(
       await screen.findByText("Tutto sotto controllo."),
     ).toBeInTheDocument();
-    expect(await screen.findByText("Bozza pagamento proposta")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Bozza pagamento proposta"),
+    ).toBeInTheDocument();
     expect(askUnifiedCrmQuestion).toHaveBeenCalledTimes(1);
   });
 
@@ -518,7 +522,9 @@ describe("UnifiedAiLauncher", () => {
       [],
     );
 
-    expect(await screen.findByText(/160,98 km complessivi/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/160,98 km complessivi/),
+    ).toBeInTheDocument();
     expect(
       screen.getByText("Registra questa spesa km").closest("a"),
     ).toHaveAttribute(
@@ -787,8 +793,7 @@ describe("UnifiedAiLauncher", () => {
     textarea.style.paddingBottom = "0px";
     Object.defineProperty(textarea, "scrollHeight", {
       configurable: true,
-      get: () =>
-        Math.max(1, textarea.value.split(/\r?\n/).length) * 20,
+      get: () => Math.max(1, textarea.value.split(/\r?\n/).length) * 20,
     });
 
     fireEvent.change(textarea, {
@@ -820,7 +825,9 @@ describe("UnifiedAiLauncher", () => {
 
     expect(screen.getAllByDisplayValue(/riga 1/).length).toBeGreaterThan(0);
     expect(
-      screen.queryByText("Continua a scrivere senza comprimere il composer della chat."),
+      screen.queryByText(
+        "Continua a scrivere senza comprimere il composer della chat.",
+      ),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByText(

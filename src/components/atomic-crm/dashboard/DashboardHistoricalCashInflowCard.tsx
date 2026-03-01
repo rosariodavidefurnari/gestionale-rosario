@@ -20,11 +20,8 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   });
 
-const formatCountLabel = (
-  value: number,
-  singular: string,
-  plural: string,
-) => `${value} ${value === 1 ? singular : plural}`;
+const formatCountLabel = (value: number, singular: string, plural: string) =>
+  `${value} ${value === 1 ? singular : plural}`;
 
 export const DashboardHistoricalCashInflowCard = () => {
   const dataProvider = useDataProvider<CrmDataProvider>();
@@ -37,7 +34,9 @@ export const DashboardHistoricalCashInflowCard = () => {
     return (
       <Card className="gap-0">
         <CardHeader className="px-4 pb-3">
-          <CardTitle className="text-base">Incassi ricevuti nel tempo</CardTitle>
+          <CardTitle className="text-base">
+            Incassi ricevuti nel tempo
+          </CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4 space-y-3">
           <p className="text-sm text-muted-foreground">
@@ -57,7 +56,9 @@ export const DashboardHistoricalCashInflowCard = () => {
     return (
       <Card className="gap-0">
         <CardHeader className="px-4 pb-3">
-          <CardTitle className="text-base">Incassi ricevuti nel tempo</CardTitle>
+          <CardTitle className="text-base">
+            Incassi ricevuti nel tempo
+          </CardTitle>
         </CardHeader>
         <CardContent className="px-4 py-10 text-center text-sm text-muted-foreground">
           Caricamento incassi storici...
@@ -70,7 +71,9 @@ export const DashboardHistoricalCashInflowCard = () => {
     return (
       <Card className="gap-0">
         <CardHeader className="px-4 pb-3">
-          <CardTitle className="text-base">Incassi ricevuti nel tempo</CardTitle>
+          <CardTitle className="text-base">
+            Incassi ricevuti nel tempo
+          </CardTitle>
           <p className="text-xs text-muted-foreground">
             Qui guardi solo soldi già entrati, letti per data pagamento. Questo
             blocco resta separato dal valore del lavoro.
@@ -93,7 +96,10 @@ export const DashboardHistoricalCashInflowCard = () => {
     (metric) => metric.id === "latest_closed_year_cash_inflow",
   );
   const visibleRows = [...data.series.yearlyCashInflow].slice(-3).reverse();
-  const maxCashInflow = Math.max(...visibleRows.map((row) => row.cashInflow), 0);
+  const maxCashInflow = Math.max(
+    ...visibleRows.map((row) => row.cashInflow),
+    0,
+  );
 
   return (
     <Card className="gap-0">
@@ -146,7 +152,9 @@ export const DashboardHistoricalCashInflowCard = () => {
 
         <div className="space-y-3">
           <div className="space-y-1">
-            <p className="text-sm font-medium">Come si distribuiscono gli incassi</p>
+            <p className="text-sm font-medium">
+              Come si distribuiscono gli incassi
+            </p>
             <p className="text-xs text-muted-foreground">
               Ultimi anni disponibili, senza confonderli con i compensi.
             </p>
@@ -160,7 +168,9 @@ export const DashboardHistoricalCashInflowCard = () => {
                     {row.year}
                     {row.isYtd ? " finora" : ""}
                   </span>
-                  {row.isYtd ? <Badge variant="secondary">parziale</Badge> : null}
+                  {row.isYtd ? (
+                    <Badge variant="secondary">parziale</Badge>
+                  ) : null}
                 </div>
                 <span className="text-muted-foreground whitespace-nowrap">
                   {formatCurrency(row.cashInflow)}

@@ -136,10 +136,8 @@ const ExpenseFilterContent = () => {
           placeholder="Cerca descrizione..."
           className="pl-8"
           value={
-            (filterValues["description@ilike"] as string)?.replace(
-              /%/g,
-              "",
-            ) ?? ""
+            (filterValues["description@ilike"] as string)?.replace(/%/g, "") ??
+            ""
           }
           onChange={handleSearchChange}
         />
@@ -179,8 +177,7 @@ const ExpenseFilterContent = () => {
                   <span className="truncate">
                     {filterValues["client_id@eq"]
                       ? (clients.find(
-                          (c) =>
-                            String(c.id) === filterValues["client_id@eq"],
+                          (c) => String(c.id) === filterValues["client_id@eq"],
                         )?.name ?? "Tutti")
                       : "Tutti"}
                   </span>
@@ -244,8 +241,7 @@ const ExpenseFilterContent = () => {
                   <span className="truncate">
                     {filterValues["project_id@eq"]
                       ? (projects.find(
-                          (p) =>
-                            String(p.id) === filterValues["project_id@eq"],
+                          (p) => String(p.id) === filterValues["project_id@eq"],
                         )?.name ?? "Tutti")
                       : "Tutti"}
                   </span>

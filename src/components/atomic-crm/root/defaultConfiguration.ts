@@ -86,7 +86,8 @@ export const defaultServiceTypeChoices = [
   {
     value: "riprese_montaggio",
     label: "Riprese + Montaggio",
-    description: "Servizio completo che comprende produzione e post-produzione.",
+    description:
+      "Servizio completo che comprende produzione e post-produzione.",
   },
   {
     value: "fotografia",

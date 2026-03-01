@@ -171,7 +171,9 @@ describe("DashboardHistorical", () => {
     render(<DashboardHistorical />);
 
     expect(
-      screen.getByText("Storico non disponibile: nessun servizio registrato fino al 28/02/2026."),
+      screen.getByText(
+        "Storico non disponibile: nessun servizio registrato fino al 28/02/2026.",
+      ),
     ).toBeInTheDocument();
   });
 
@@ -215,7 +217,9 @@ describe("DashboardHistorical", () => {
     expect(
       screen.getByTestId("historical-cash-inflow-card"),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("historical-ai-summary-card")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("historical-ai-summary-card"),
+    ).toBeInTheDocument();
     expect(
       screen.getByTestId("historical-cash-inflow-ai-card"),
     ).toBeInTheDocument();

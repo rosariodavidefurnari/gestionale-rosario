@@ -25,7 +25,9 @@ export const QuoteInputs = () => {
   const clientId = useWatch({ name: "client_id" });
   const projectId = useWatch({ name: "project_id" });
   const amount = useWatch({ name: "amount" });
-  const quoteItems = useWatch({ name: "quote_items" }) as QuoteItem[] | undefined;
+  const quoteItems = useWatch({ name: "quote_items" }) as
+    | QuoteItem[]
+    | undefined;
   const allDay = useWatch({ name: "all_day" }) ?? true;
   const { setValue } = useFormContext();
   const { quoteServiceTypes } = useConfigurationContext();
@@ -139,7 +141,10 @@ export const QuoteInputs = () => {
         label="Voci preventivo"
         helperText="Opzionale. Se aggiungi voci, l'importo totale si calcola da solo."
       >
-        <SimpleFormIterator disableReordering getItemLabel={(index) => `Voce ${index + 1}`}>
+        <SimpleFormIterator
+          disableReordering
+          getItemLabel={(index) => `Voce ${index + 1}`}
+        >
           <TextInput
             source="description"
             label="Voce"

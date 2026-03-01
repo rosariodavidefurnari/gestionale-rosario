@@ -99,7 +99,9 @@ const HistoricalContextCard = ({
 }) => (
   <Card>
     <CardHeader>
-      <CardTitle className="text-base">Spiegazione semplice dei numeri</CardTitle>
+      <CardTitle className="text-base">
+        Spiegazione semplice dei numeri
+      </CardTitle>
     </CardHeader>
     <CardContent className="space-y-4">
       <div className="space-y-1">
@@ -142,8 +144,8 @@ const HistoricalContextCard = ({
 
       {model.qualityFlags.includes("insufficient_closed_years") ? (
         <div className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-          Per misurare la crescita tra un anno e l'altro servono almeno due
-          anni completi.
+          Per misurare la crescita tra un anno e l'altro servono almeno due anni
+          completi.
         </div>
       ) : null}
     </CardContent>

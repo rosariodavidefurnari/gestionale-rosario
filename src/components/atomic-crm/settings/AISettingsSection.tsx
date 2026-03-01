@@ -7,9 +7,9 @@ export const AISettingsSection = () => {
     <div className="space-y-6">
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Scegli il modello AI usato per generare le analisi di Storico,
-          Annuale e le risposte read-only della chat CRM unificata. La chiamata
-          parte lato server e usa payload semantici, non le tabelle raw.
+          Scegli il modello AI usato per generare le analisi di Storico, Annuale
+          e le risposte read-only della chat CRM unificata. La chiamata parte
+          lato server e usa payload semantici, non le tabelle raw.
         </p>
 
         <SelectInput
@@ -24,9 +24,9 @@ export const AISettingsSection = () => {
 
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Scegli il modello Gemini che verra' usato per estrarre dati da
-          fatture miste nella chat AI unificata. Questo setting resta separato
-          dai modelli usati per le analisi testuali.
+          Scegli il modello Gemini che verra' usato per estrarre dati da fatture
+          miste nella chat AI unificata. Questo setting resta separato dai
+          modelli usati per le analisi testuali.
         </p>
 
         <SelectInput

@@ -79,15 +79,30 @@ describe("buildFiscalModel", () => {
       baseProject({ id: 4, client_id: 4, name: "Progetto D" }),
     ];
     const services: Service[] = [
-      baseService({ id: 1, project_id: 1, fee_shooting: 400, is_taxable: true }),
+      baseService({
+        id: 1,
+        project_id: 1,
+        fee_shooting: 400,
+        is_taxable: true,
+      }),
       baseService({
         id: 2,
         project_id: 2,
         fee_shooting: 300,
         is_taxable: false,
       }),
-      baseService({ id: 3, project_id: 3, fee_shooting: 200, is_taxable: true }),
-      baseService({ id: 4, project_id: 4, fee_shooting: 100, is_taxable: true }),
+      baseService({
+        id: 3,
+        project_id: 3,
+        fee_shooting: 200,
+        is_taxable: true,
+      }),
+      baseService({
+        id: 4,
+        project_id: 4,
+        fee_shooting: 100,
+        is_taxable: true,
+      }),
     ];
 
     const model = buildFiscalModel({

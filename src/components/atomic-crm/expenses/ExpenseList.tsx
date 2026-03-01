@@ -84,30 +84,30 @@ const computeTotal = (e: Expense, defaultKmRate: number) => {
 const buildExporter =
   (defaultKmRate: number): Exporter<Expense> =>
   async (records, fetchRelatedRecords) => {
-  const clients = await fetchRelatedRecords<Client>(
-    records,
-    "client_id",
-    "clients",
-  );
-  const projects = await fetchRelatedRecords<Project>(
-    records,
-    "project_id",
-    "projects",
-  );
-  const rows = records.map((e) => ({
-    data: e.expense_date,
-    cliente: e.client_id ? (clients[e.client_id]?.name ?? "") : "",
-    progetto: e.project_id ? (projects[e.project_id]?.name ?? "") : "",
-    tipo: expenseTypeLabels[e.expense_type] ?? e.expense_type,
-    km: e.km_distance ?? "",
-    tariffa_km: e.km_rate ?? "",
-    importo: e.amount ?? "",
-    ricarico_percent: e.markup_percent ?? "",
-    totale: computeTotal(e, defaultKmRate).toFixed(2),
-    descrizione: e.description ?? "",
-    rif_fattura: e.invoice_ref ?? "",
-  }));
-  return jsonExport(rows, {}, (_err: any, csv: string) => {
-    downloadCSV(csv, "spese");
-  });
-};
+    const clients = await fetchRelatedRecords<Client>(
+      records,
+      "client_id",
+      "clients",
+    );
+    const projects = await fetchRelatedRecords<Project>(
+      records,
+      "project_id",
+      "projects",
+    );
+    const rows = records.map((e) => ({
+      data: e.expense_date,
+      cliente: e.client_id ? (clients[e.client_id]?.name ?? "") : "",
+      progetto: e.project_id ? (projects[e.project_id]?.name ?? "") : "",
+      tipo: expenseTypeLabels[e.expense_type] ?? e.expense_type,
+      km: e.km_distance ?? "",
+      tariffa_km: e.km_rate ?? "",
+      importo: e.amount ?? "",
+      ricarico_percent: e.markup_percent ?? "",
+      totale: computeTotal(e, defaultKmRate).toFixed(2),
+      descrizione: e.description ?? "",
+      rif_fattura: e.invoice_ref ?? "",
+    }));
+    return jsonExport(rows, {}, (_err: any, csv: string) => {
+      downloadCSV(csv, "spese");
+    });
+  };

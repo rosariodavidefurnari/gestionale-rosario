@@ -7,12 +7,12 @@ const normalizePositiveNumber = (
   fallback: number,
 ) => {
   const numberValue = Number(value);
-  return Number.isFinite(numberValue) && numberValue >= 0 ? numberValue : fallback;
+  return Number.isFinite(numberValue) && numberValue >= 0
+    ? numberValue
+    : fallback;
 };
 
-export const sanitizeQuoteItems = (
-  items?: QuoteItem[] | null,
-): QuoteItem[] =>
+export const sanitizeQuoteItems = (items?: QuoteItem[] | null): QuoteItem[] =>
   (items ?? [])
     .map((item) => ({
       description: normalizeDescription(item?.description),
@@ -24,8 +24,9 @@ export const sanitizeQuoteItems = (
 export const hasQuoteItems = (items?: QuoteItem[] | null) =>
   sanitizeQuoteItems(items).length > 0;
 
-export const getQuoteItemLineTotal = (item: Pick<QuoteItem, "quantity" | "unit_price">) =>
-  item.quantity * item.unit_price;
+export const getQuoteItemLineTotal = (
+  item: Pick<QuoteItem, "quantity" | "unit_price">,
+) => item.quantity * item.unit_price;
 
 export const computeQuoteItemsTotal = (items?: QuoteItem[] | null) =>
   sanitizeQuoteItems(items).reduce(

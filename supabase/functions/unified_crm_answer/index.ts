@@ -25,7 +25,8 @@ const allowedModels = new Set(["gpt-5.2", "gpt-5-mini", "gpt-5-nano"]);
 const openaiApiKey = Deno.env.get("OPENAI_API_KEY") ?? "";
 const openRouteServiceApiKey = Deno.env.get("OPENROUTESERVICE_API_KEY") ?? "";
 const openRouteServiceBaseUrl =
-  Deno.env.get("OPENROUTESERVICE_BASE_URL") ?? "https://api.openrouteservice.org";
+  Deno.env.get("OPENROUTESERVICE_BASE_URL") ??
+  "https://api.openrouteservice.org";
 
 const openai = new OpenAI({
   apiKey: openaiApiKey,
@@ -61,7 +62,10 @@ Massimo 3 frasi molto chiare.
 1 o 2 punti. Se la richiesta sarebbe una scrittura, ricorda che serve un workflow confermato.
 `.trim();
 
-async function answerUnifiedCrmQuestion(req: Request, currentUserSale: unknown) {
+async function answerUnifiedCrmQuestion(
+  req: Request,
+  currentUserSale: unknown,
+) {
   if (!currentUserSale) {
     return createErrorResponse(401, "Unauthorized");
   }
@@ -69,7 +73,10 @@ async function answerUnifiedCrmQuestion(req: Request, currentUserSale: unknown) 
   const payloadResult = validateUnifiedCrmAnswerPayload(await req.json());
 
   if (payloadResult.error || !payloadResult.data) {
-    return createErrorResponse(400, payloadResult.error ?? "Payload non valido");
+    return createErrorResponse(
+      400,
+      payloadResult.error ?? "Payload non valido",
+    );
   }
 
   const { context, question, model, conversationHistory } = payloadResult.data;
@@ -180,7 +187,10 @@ async function answerUnifiedCrmQuestion(req: Request, currentUserSale: unknown) 
     const answerMarkdown = response.output_text?.trim();
 
     if (!answerMarkdown) {
-      return createErrorResponse(502, "OpenAI ha restituito una risposta vuota");
+      return createErrorResponse(
+        502,
+        "OpenAI ha restituito una risposta vuota",
+      );
     }
 
     return new Response(

@@ -93,7 +93,10 @@ async function answerHistoricalAnalyticsQuestion(
     const answerMarkdown = response.output_text?.trim();
 
     if (!answerMarkdown) {
-      return createErrorResponse(502, "OpenAI ha restituito una risposta vuota");
+      return createErrorResponse(
+        502,
+        "OpenAI ha restituito una risposta vuota",
+      );
     }
 
     return new Response(

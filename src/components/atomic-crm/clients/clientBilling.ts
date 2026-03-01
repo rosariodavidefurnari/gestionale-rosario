@@ -23,15 +23,21 @@ type ClientBillingShape = Partial<
 
 const clean = (value?: string | null) => value?.trim() || "";
 
-export const getClientBillingDisplayName = (client?: ClientBillingShape | null) =>
-  clean(client?.billing_name) || clean(client?.name) || null;
+export const getClientBillingDisplayName = (
+  client?: ClientBillingShape | null,
+) => clean(client?.billing_name) || clean(client?.name) || null;
 
-export const formatClientBillingAddress = (client?: ClientBillingShape | null) => {
+export const formatClientBillingAddress = (
+  client?: ClientBillingShape | null,
+) => {
   if (!client) {
     return null;
   }
 
-  const streetLine = [clean(client.billing_address_street), clean(client.billing_address_number)]
+  const streetLine = [
+    clean(client.billing_address_street),
+    clean(client.billing_address_number),
+  ]
     .filter(Boolean)
     .join(", ");
   const cityLine = [
@@ -42,7 +48,9 @@ export const formatClientBillingAddress = (client?: ClientBillingShape | null) =
     .filter(Boolean)
     .join(" ");
   const country = clean(client.billing_country);
-  const structured = [streetLine, cityLine, country].filter(Boolean).join(" · ");
+  const structured = [streetLine, cityLine, country]
+    .filter(Boolean)
+    .join(" · ");
 
   return structured || clean(client.address) || null;
 };

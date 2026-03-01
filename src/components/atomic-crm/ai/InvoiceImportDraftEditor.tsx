@@ -262,7 +262,9 @@ export const InvoiceImportDraftEditor = ({
 
                     onChange(index, {
                       clientId: nextClientId,
-                      projectId: hasMatchingProject ? record.projectId ?? null : null,
+                      projectId: hasMatchingProject
+                        ? (record.projectId ?? null)
+                        : null,
                     });
                   }}
                 >
@@ -281,7 +283,9 @@ export const InvoiceImportDraftEditor = ({
                 record.counterpartyName) ? (
                 <div className="md:col-span-2">
                   <Button asChild type="button" variant="outline">
-                    <Link to={buildClientCreatePathFromInvoiceDraft({ record })}>
+                    <Link
+                      to={buildClientCreatePathFromInvoiceDraft({ record })}
+                    >
                       Apri nuovo cliente precompilato
                     </Link>
                   </Button>
@@ -299,7 +303,8 @@ export const InvoiceImportDraftEditor = ({
 
                     onChange(index, {
                       projectId: nextProject?.id ?? null,
-                      clientId: nextProject?.client_id ?? record.clientId ?? null,
+                      clientId:
+                        nextProject?.client_id ?? record.clientId ?? null,
                     });
                   }}
                 >
@@ -398,7 +403,9 @@ export const InvoiceImportDraftEditor = ({
                     <Input
                       value={
                         record.description ??
-                        expenseTypeLabels[record.expenseType ?? "acquisto_materiale"] ??
+                        expenseTypeLabels[
+                          record.expenseType ?? "acquisto_materiale"
+                        ] ??
                         ""
                       }
                       onChange={(event) =>

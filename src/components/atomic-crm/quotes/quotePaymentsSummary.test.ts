@@ -59,4 +59,3 @@ describe("buildQuotePaymentsSummary", () => {
     expect(summary.remainingAmount).toBe(-100);
   });
 });
-

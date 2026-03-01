@@ -46,4 +46,3 @@ describe("travelRouteEstimate", () => {
     ).toBe("Spostamento — Valguarnera Caropepe - Catania A/R");
   });
 });
-

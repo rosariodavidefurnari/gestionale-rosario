@@ -156,9 +156,7 @@ describe("historical dashboard widgets", () => {
       />,
     );
 
-    expect(
-      screen.getByText("Da dove arrivano i guadagni"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Da dove arrivano i guadagni")).toBeInTheDocument();
     expect(
       screen.getByText(
         "Qui vedi quali tipi di lavoro pesano di più ogni anno. Il 2026 si ferma al 28/02/2026, quindi non è un anno completo.",
@@ -181,7 +179,9 @@ describe("historical dashboard widgets", () => {
     );
 
     expect(
-      screen.getByText("Nessun cliente storico disponibile fino al 28/02/2026."),
+      screen.getByText(
+        "Nessun cliente storico disponibile fino al 28/02/2026.",
+      ),
     ).toBeInTheDocument();
   });
 

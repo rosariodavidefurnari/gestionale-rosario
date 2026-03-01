@@ -22,7 +22,9 @@ const isSessionMissingOrStale = (
     return false;
   }
 
-  return session.expires_at * 1000 <= now + EDGE_FUNCTION_SESSION_REFRESH_BUFFER_MS;
+  return (
+    session.expires_at * 1000 <= now + EDGE_FUNCTION_SESSION_REFRESH_BUFFER_MS
+  );
 };
 
 export const getEdgeFunctionAuthorizationHeaders = async (
@@ -39,9 +41,7 @@ export const getEdgeFunctionAuthorizationHeaders = async (
   }
 
   const nextSession = isSessionMissingOrStale(currentSession, now())
-    ? (
-        await auth.refreshSession()
-      ).data.session
+    ? (await auth.refreshSession()).data.session
     : currentSession;
 
   const accessToken = nextSession?.access_token?.trim();

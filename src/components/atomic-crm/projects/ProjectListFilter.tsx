@@ -149,8 +149,7 @@ const ProjectFilterContent = () => {
                   <span className="truncate">
                     {filterValues["client_id@eq"]
                       ? (clients.find(
-                          (c) =>
-                            String(c.id) === filterValues["client_id@eq"],
+                          (c) => String(c.id) === filterValues["client_id@eq"],
                         )?.name ?? "Tutti")
                       : "Tutti"}
                   </span>

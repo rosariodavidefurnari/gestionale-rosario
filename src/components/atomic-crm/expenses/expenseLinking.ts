@@ -134,7 +134,9 @@ export const getUnifiedAiExpenseHandoffContextFromSearch = (
     source,
     action:
       action &&
-      unifiedAiExpenseHandoffActions.has(action as UnifiedAiExpenseHandoffAction)
+      unifiedAiExpenseHandoffActions.has(
+        action as UnifiedAiExpenseHandoffAction,
+      )
         ? (action as UnifiedAiExpenseHandoffAction)
         : null,
   };

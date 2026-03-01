@@ -84,7 +84,10 @@ async function createHistoricalCashInflowSummary(
     const summaryMarkdown = response.output_text?.trim();
 
     if (!summaryMarkdown) {
-      return createErrorResponse(502, "OpenAI ha restituito una risposta vuota");
+      return createErrorResponse(
+        502,
+        "OpenAI ha restituito una risposta vuota",
+      );
     }
 
     return new Response(

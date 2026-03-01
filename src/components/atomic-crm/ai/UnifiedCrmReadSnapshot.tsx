@@ -1,4 +1,10 @@
-import { Database, FolderKanban, ReceiptText, Users2, Wallet } from "lucide-react";
+import {
+  Database,
+  FolderKanban,
+  ReceiptText,
+  Users2,
+  Wallet,
+} from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -182,7 +188,8 @@ export const UnifiedCrmReadSnapshot = ({
                 <Badge variant="outline">{quote.statusLabel}</Badge>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                {quote.projectName ?? "Nessun progetto"} · {formatCurrency(quote.amount)}
+                {quote.projectName ?? "Nessun progetto"} ·{" "}
+                {formatCurrency(quote.amount)}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Creato il {formatDate(quote.createdAt)}

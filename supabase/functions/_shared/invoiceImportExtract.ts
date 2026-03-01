@@ -64,7 +64,12 @@ export const invoiceImportResponseJsonSchema = {
           },
           documentType: {
             type: "string",
-            enum: ["customer_invoice", "supplier_invoice", "receipt", "unknown"],
+            enum: [
+              "customer_invoice",
+              "supplier_invoice",
+              "receipt",
+              "unknown",
+            ],
           },
           rationale: { type: ["string", "null"] },
           counterpartyName: { type: ["string", "null"] },
@@ -151,7 +156,10 @@ export const validateInvoiceImportExtractPayload = (payload: unknown) => {
   }
 
   if (payload.files.length > 6) {
-    return { error: "Puoi analizzare al massimo 6 file alla volta", data: null };
+    return {
+      error: "Puoi analizzare al massimo 6 file alla volta",
+      data: null,
+    };
   }
 
   for (const file of payload.files) {
@@ -203,7 +211,9 @@ export const parseInvoiceImportModelResponse = ({
   }
 
   const warnings = Array.isArray(parsed.warnings)
-    ? parsed.warnings.filter((warning): warning is string => typeof warning === "string")
+    ? parsed.warnings.filter(
+        (warning): warning is string => typeof warning === "string",
+      )
     : [];
   const records = Array.isArray(parsed.records) ? parsed.records : [];
 
@@ -215,83 +225,84 @@ export const parseInvoiceImportModelResponse = ({
         ? parsed.summary
         : "Bozza fatture generata.",
     warnings,
-    records: records
-      .filter(isObject)
-      .map((record, index) => ({
-        id:
-          typeof record.id === "string" && record.id.trim()
-            ? record.id
-            : `invoice-draft-${index + 1}`,
-        sourceFileNames: Array.isArray(record.sourceFileNames)
-          ? record.sourceFileNames.filter(
-              (fileName): fileName is string => typeof fileName === "string",
-            )
-          : [],
-        resource: normalizeOptionalEnum(record.resource, resources) ?? "expenses",
-        confidence:
-          normalizeOptionalEnum(record.confidence, confidences) ?? "medium",
-        documentType:
-          normalizeOptionalEnum(record.documentType, documentTypes) ?? "unknown",
-        rationale:
-          typeof record.rationale === "string" ? record.rationale : null,
-        counterpartyName:
-          typeof record.counterpartyName === "string"
-            ? record.counterpartyName
-            : null,
-        billingName:
-          typeof record.billingName === "string" ? record.billingName : null,
-        vatNumber:
-          typeof record.vatNumber === "string" ? record.vatNumber : null,
-        fiscalCode:
-          typeof record.fiscalCode === "string" ? record.fiscalCode : null,
-        billingAddressStreet:
-          typeof record.billingAddressStreet === "string"
-            ? record.billingAddressStreet
-            : null,
-        billingAddressNumber:
-          typeof record.billingAddressNumber === "string"
-            ? record.billingAddressNumber
-            : null,
-        billingPostalCode:
-          typeof record.billingPostalCode === "string"
-            ? record.billingPostalCode
-            : null,
-        billingCity:
-          typeof record.billingCity === "string" ? record.billingCity : null,
-        billingProvince:
-          typeof record.billingProvince === "string"
-            ? record.billingProvince
-            : null,
-        billingCountry:
-          typeof record.billingCountry === "string"
-            ? record.billingCountry
-            : null,
-        billingSdiCode:
-          typeof record.billingSdiCode === "string"
-            ? record.billingSdiCode
-            : null,
-        billingPec:
-          typeof record.billingPec === "string" ? record.billingPec : null,
-        invoiceRef:
-          typeof record.invoiceRef === "string" ? record.invoiceRef : null,
-        amount:
-          typeof record.amount === "number" && Number.isFinite(record.amount)
-            ? record.amount
-            : null,
-        currency: typeof record.currency === "string" ? record.currency : "EUR",
-        documentDate:
-          typeof record.documentDate === "string" ? record.documentDate : null,
-        dueDate: typeof record.dueDate === "string" ? record.dueDate : null,
-        notes: typeof record.notes === "string" ? record.notes : null,
-        clientId: typeof record.clientId === "string" ? record.clientId : null,
-        projectId:
-          typeof record.projectId === "string" ? record.projectId : null,
-        paymentType: normalizeOptionalEnum(record.paymentType, paymentTypes),
-        paymentMethod: normalizeOptionalEnum(record.paymentMethod, paymentMethods),
-        paymentStatus: normalizeOptionalEnum(record.paymentStatus, paymentStatuses),
-        expenseType: normalizeOptionalEnum(record.expenseType, expenseTypes),
-        description:
-          typeof record.description === "string" ? record.description : null,
-      })),
+    records: records.filter(isObject).map((record, index) => ({
+      id:
+        typeof record.id === "string" && record.id.trim()
+          ? record.id
+          : `invoice-draft-${index + 1}`,
+      sourceFileNames: Array.isArray(record.sourceFileNames)
+        ? record.sourceFileNames.filter(
+            (fileName): fileName is string => typeof fileName === "string",
+          )
+        : [],
+      resource: normalizeOptionalEnum(record.resource, resources) ?? "expenses",
+      confidence:
+        normalizeOptionalEnum(record.confidence, confidences) ?? "medium",
+      documentType:
+        normalizeOptionalEnum(record.documentType, documentTypes) ?? "unknown",
+      rationale: typeof record.rationale === "string" ? record.rationale : null,
+      counterpartyName:
+        typeof record.counterpartyName === "string"
+          ? record.counterpartyName
+          : null,
+      billingName:
+        typeof record.billingName === "string" ? record.billingName : null,
+      vatNumber: typeof record.vatNumber === "string" ? record.vatNumber : null,
+      fiscalCode:
+        typeof record.fiscalCode === "string" ? record.fiscalCode : null,
+      billingAddressStreet:
+        typeof record.billingAddressStreet === "string"
+          ? record.billingAddressStreet
+          : null,
+      billingAddressNumber:
+        typeof record.billingAddressNumber === "string"
+          ? record.billingAddressNumber
+          : null,
+      billingPostalCode:
+        typeof record.billingPostalCode === "string"
+          ? record.billingPostalCode
+          : null,
+      billingCity:
+        typeof record.billingCity === "string" ? record.billingCity : null,
+      billingProvince:
+        typeof record.billingProvince === "string"
+          ? record.billingProvince
+          : null,
+      billingCountry:
+        typeof record.billingCountry === "string"
+          ? record.billingCountry
+          : null,
+      billingSdiCode:
+        typeof record.billingSdiCode === "string"
+          ? record.billingSdiCode
+          : null,
+      billingPec:
+        typeof record.billingPec === "string" ? record.billingPec : null,
+      invoiceRef:
+        typeof record.invoiceRef === "string" ? record.invoiceRef : null,
+      amount:
+        typeof record.amount === "number" && Number.isFinite(record.amount)
+          ? record.amount
+          : null,
+      currency: typeof record.currency === "string" ? record.currency : "EUR",
+      documentDate:
+        typeof record.documentDate === "string" ? record.documentDate : null,
+      dueDate: typeof record.dueDate === "string" ? record.dueDate : null,
+      notes: typeof record.notes === "string" ? record.notes : null,
+      clientId: typeof record.clientId === "string" ? record.clientId : null,
+      projectId: typeof record.projectId === "string" ? record.projectId : null,
+      paymentType: normalizeOptionalEnum(record.paymentType, paymentTypes),
+      paymentMethod: normalizeOptionalEnum(
+        record.paymentMethod,
+        paymentMethods,
+      ),
+      paymentStatus: normalizeOptionalEnum(
+        record.paymentStatus,
+        paymentStatuses,
+      ),
+      expenseType: normalizeOptionalEnum(record.expenseType, expenseTypes),
+      description:
+        typeof record.description === "string" ? record.description : null,
+    })),
   };
 };

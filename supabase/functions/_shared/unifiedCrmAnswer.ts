@@ -238,7 +238,9 @@ const splitTravelRoute = (value: string) => {
     };
   }
 
-  const fromVersusMatch = value.match(/\bda\s+(.+?)\s+(?:verso|fino\s+in)\s+(.+)$/i);
+  const fromVersusMatch = value.match(
+    /\bda\s+(.+?)\s+(?:verso|fino\s+in)\s+(.+)$/i,
+  );
   if (fromVersusMatch) {
     return {
       origin: stripTrailingTravelContext(fromVersusMatch[1] ?? ""),
@@ -383,10 +385,7 @@ const normalizeConversationHistory = (
     }))
     .filter(
       (item) =>
-        item.question &&
-        item.answerMarkdown &&
-        item.generatedAt &&
-        item.model,
+        item.question && item.answerMarkdown && item.generatedAt && item.model,
     )
     .slice(-6);
 };

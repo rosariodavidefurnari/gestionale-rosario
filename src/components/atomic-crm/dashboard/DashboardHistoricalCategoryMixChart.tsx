@@ -32,7 +32,9 @@ export const DashboardHistoricalCategoryMixChart = ({
     return (
       <Card className="gap-0">
         <CardHeader className="px-4 pb-3">
-          <CardTitle className="text-base">Da dove arrivano i guadagni</CardTitle>
+          <CardTitle className="text-base">
+            Da dove arrivano i guadagni
+          </CardTitle>
         </CardHeader>
         <CardContent className="px-4 py-10 text-center text-sm text-muted-foreground">
           Impossibile caricare il mix categorie.
@@ -45,7 +47,9 @@ export const DashboardHistoricalCategoryMixChart = ({
     return (
       <Card className="gap-0">
         <CardHeader className="px-4 pb-3">
-          <CardTitle className="text-base">Da dove arrivano i guadagni</CardTitle>
+          <CardTitle className="text-base">
+            Da dove arrivano i guadagni
+          </CardTitle>
         </CardHeader>
         <CardContent className="px-4 py-10 text-center text-sm text-muted-foreground">
           Caricamento mix categorie...

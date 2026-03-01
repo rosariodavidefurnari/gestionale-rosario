@@ -25,10 +25,7 @@ describe("clientBilling", () => {
         vat_number: "12345678901",
         fiscal_code: "ABCDEF12G34H567I",
       }),
-    ).toEqual([
-      "P.IVA: 12345678901",
-      "CF: ABCDEF12G34H567I",
-    ]);
+    ).toEqual(["P.IVA: 12345678901", "CF: ABCDEF12G34H567I"]);
 
     expect(
       getClientBillingIdentityLines({

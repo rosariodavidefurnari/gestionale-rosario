@@ -152,8 +152,7 @@ const PaymentFilterContent = () => {
                   <span className="truncate">
                     {filterValues["client_id@eq"]
                       ? (clients.find(
-                          (c) =>
-                            String(c.id) === filterValues["client_id@eq"],
+                          (c) => String(c.id) === filterValues["client_id@eq"],
                         )?.name ?? "Tutti")
                       : "Tutti"}
                   </span>
@@ -217,8 +216,7 @@ const PaymentFilterContent = () => {
                   <span className="truncate">
                     {filterValues["project_id@eq"]
                       ? (projects.find(
-                          (p) =>
-                            String(p.id) === filterValues["project_id@eq"],
+                          (p) => String(p.id) === filterValues["project_id@eq"],
                         )?.name ?? "Tutti")
                       : "Tutti"}
                   </span>

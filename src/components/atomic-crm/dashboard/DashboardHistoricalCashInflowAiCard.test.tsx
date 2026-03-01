@@ -71,7 +71,9 @@ describe("DashboardHistoricalCashInflowAiCard", () => {
         name: "Qual è stato l'anno con più incassi ricevuti?",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Chiedi all'AI" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Chiedi all'AI" }),
+    ).toBeDisabled();
   });
 
   it("asks a suggested question and renders the answer", async () => {
@@ -114,7 +116,9 @@ describe("DashboardHistoricalCashInflowAiCard", () => {
 
     renderCard();
 
-    fireEvent.click(screen.getByRole("button", { name: "Spiegami gli incassi" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Spiegami gli incassi" }),
+    );
 
     await waitFor(() =>
       expect(generateHistoricalCashInflowSummary).toHaveBeenCalledTimes(1),

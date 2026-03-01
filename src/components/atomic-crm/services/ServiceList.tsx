@@ -9,10 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Project, Service } from "../types";
 import { ServiceListContent } from "./ServiceListContent";
-import {
-  ServiceListFilter,
-  ServiceMobileFilter,
-} from "./ServiceListFilter";
+import { ServiceListFilter, ServiceMobileFilter } from "./ServiceListFilter";
 import { TopToolbar } from "../layout/TopToolbar";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import {

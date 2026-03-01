@@ -52,16 +52,16 @@ const ServiceShowContent = () => {
         )}
         <Card>
           <CardContent>
-          <ServiceHeader record={record} />
-          <Separator className="my-4" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ServiceFees record={record} total={total} />
-            <ServiceKmDetails
-              record={record}
-              defaultKmRate={operationalConfig.defaultKmRate}
-              kmReimbursement={kmReimbursement}
-            />
-          </div>
+            <ServiceHeader record={record} />
+            <Separator className="my-4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ServiceFees record={record} total={total} />
+              <ServiceKmDetails
+                record={record}
+                defaultKmRate={operationalConfig.defaultKmRate}
+                kmReimbursement={kmReimbursement}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -81,7 +81,9 @@ const ServiceHeader = ({ record }: { record: Service }) => {
       <div>
         <h2 className="text-2xl font-bold">{serviceLabel}</h2>
         <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
-          <Badge variant={record.is_taxable === false ? "secondary" : "outline"}>
+          <Badge
+            variant={record.is_taxable === false ? "secondary" : "outline"}
+          >
             {record.is_taxable === false ? "Non tassabile" : "Tassabile"}
           </Badge>
           <span className="flex items-center gap-1">

@@ -185,7 +185,8 @@ export const UnifiedCrmAnswerPanel = ({
   const latestAnswer = answer;
   const suggestedActions = latestAnswer?.suggestedActions ?? [];
   const hasConversation = !!latestAnswer || isPending || !!error;
-  const canOpenExpandedComposer = composerLineCount >= composerExpandTriggerLine;
+  const canOpenExpandedComposer =
+    composerLineCount >= composerExpandTriggerLine;
 
   const resetTextareaHeight = () => {
     if (textareaRef.current) {
@@ -463,7 +464,10 @@ export const UnifiedCrmAnswerPanel = ({
         </div>
       </div>
 
-      <Dialog open={isExpandedComposerOpen} onOpenChange={setIsExpandedComposerOpen}>
+      <Dialog
+        open={isExpandedComposerOpen}
+        onOpenChange={setIsExpandedComposerOpen}
+      >
         <DialogContent className="!flex h-dvh w-screen !max-w-none !flex-col !gap-0 rounded-none border-0 !p-0 sm:!max-w-none">
           <DialogTitle className="sr-only">
             Editor esteso della domanda

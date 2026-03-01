@@ -520,11 +520,13 @@ export const buildDashboardModel = ({
       return {
         paymentId: String(payment.id),
         clientId: String(payment.client_id),
-        clientName: clientById.get(String(payment.client_id))?.name ?? "Cliente",
+        clientName:
+          clientById.get(String(payment.client_id))?.name ?? "Cliente",
         projectId:
           payment.project_id != null ? String(payment.project_id) : undefined,
         projectName: project?.name,
-        quoteId: payment.quote_id != null ? String(payment.quote_id) : undefined,
+        quoteId:
+          payment.quote_id != null ? String(payment.quote_id) : undefined,
         amount: toNumber(payment.amount),
         status: payment.status,
         paymentDate: payment.payment_date ?? undefined,

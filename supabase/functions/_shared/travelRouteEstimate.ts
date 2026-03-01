@@ -53,7 +53,9 @@ export const buildTravelRouteDescription = ({
     tripMode === "round_trip" ? " A/R" : ""
   }`;
 
-export const validateTravelRouteEstimatePayload = (payload: unknown): {
+export const validateTravelRouteEstimatePayload = (
+  payload: unknown,
+): {
   data: TravelRouteEstimatePayload | null;
   error: string | null;
 } => {
@@ -65,7 +67,9 @@ export const validateTravelRouteEstimatePayload = (payload: unknown): {
   }
 
   const origin = getString((payload as Record<string, unknown>).origin);
-  const destination = getString((payload as Record<string, unknown>).destination);
+  const destination = getString(
+    (payload as Record<string, unknown>).destination,
+  );
   const tripMode = getString((payload as Record<string, unknown>).tripMode);
   const kmRate = getOptionalNumber((payload as Record<string, unknown>).kmRate);
 
@@ -140,7 +144,9 @@ export const estimateTravelRoute = async ({
   });
 
   const multiplier = payload.tripMode === "round_trip" ? 2 : 1;
-  const oneWayDistanceKm = roundToTwoDecimals(routeSummary.distanceMeters / 1000);
+  const oneWayDistanceKm = roundToTwoDecimals(
+    routeSummary.distanceMeters / 1000,
+  );
   const totalDistanceKm = roundToTwoDecimals(
     (routeSummary.distanceMeters * multiplier) / 1000,
   );
@@ -175,4 +181,3 @@ export const estimateTravelRoute = async ({
     generatedLocation: payload.destination,
   };
 };
-

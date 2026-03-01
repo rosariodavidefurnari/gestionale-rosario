@@ -17,9 +17,7 @@ export type QuotePaymentSummary = {
   remainingAmount: number;
 };
 
-const getSignedAmount = (
-  payment: Pick<Payment, "amount" | "payment_type">,
-) => {
+const getSignedAmount = (payment: Pick<Payment, "amount" | "payment_type">) => {
   if (payment.payment_type === "rimborso") {
     return -payment.amount;
   }
@@ -69,4 +67,3 @@ export const buildQuotePaymentsSummary = ({
     remainingAmount: quoteAmount - summary.linkedTotal,
   };
 };
-

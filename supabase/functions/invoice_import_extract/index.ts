@@ -1,8 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import {
-  GoogleGenAI,
-  createPartFromBase64,
-} from "npm:@google/genai";
+import { GoogleGenAI, createPartFromBase64 } from "npm:@google/genai";
 
 import { AuthMiddleware, UserMiddleware } from "../_shared/authentication.ts";
 import { corsHeaders, OptionsMiddleware } from "../_shared/cors.ts";
@@ -50,7 +47,8 @@ const buildPrompt = ({
     billing_city: string | null;
   }>;
   projects: Array<{ id: string; name: string; client_id: string }>;
-}) => `
+}) =>
+  `
 Sei l'assistente AI unificato del CRM Rosario Furnari.
 Devi leggere i documenti allegati (fatture PDF digitali, scansioni o foto) e proporre dati strutturati da importare nel CRM.
 
@@ -94,7 +92,10 @@ Istruzioni aggiuntive utente:
 ${userInstructions?.trim() || "Nessuna istruzione aggiuntiva"}
 `.trim();
 
-async function extractInvoiceImportDraft(req: Request, currentUserSale: unknown) {
+async function extractInvoiceImportDraft(
+  req: Request,
+  currentUserSale: unknown,
+) {
   if (!currentUserSale) {
     return createErrorResponse(401, "Unauthorized");
   }
@@ -148,7 +149,9 @@ async function extractInvoiceImportDraft(req: Request, currentUserSale: unknown)
         .download(file.path);
 
       if (downloaded.error || !downloaded.data) {
-        throw downloaded.error ?? new Error(`File non disponibile: ${file.name}`);
+        throw (
+          downloaded.error ?? new Error(`File non disponibile: ${file.name}`)
+        );
       }
 
       const base64 = arrayBufferToBase64(await downloaded.data.arrayBuffer());

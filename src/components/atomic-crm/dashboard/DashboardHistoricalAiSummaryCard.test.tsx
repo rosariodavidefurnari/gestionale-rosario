@@ -57,9 +57,7 @@ describe("DashboardHistoricalAiSummaryCard", () => {
     renderCard();
 
     expect(screen.getByText("AI: spiegami questi numeri")).toBeInTheDocument();
-    expect(
-      screen.getByText("Oppure fai una domanda"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Oppure fai una domanda")).toBeInTheDocument();
     expect(
       screen.getByLabelText("Fai una domanda su questi numeri"),
     ).toBeInTheDocument();
@@ -69,9 +67,13 @@ describe("DashboardHistoricalAiSummaryCard", () => {
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Perché il 2025 è andato meglio del 2024?" }),
+      screen.getByRole("button", {
+        name: "Perché il 2025 è andato meglio del 2024?",
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Chiedi all'AI" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Chiedi all'AI" }),
+    ).toBeDisabled();
   });
 
   it("asks a suggested question and renders the answer", async () => {
@@ -101,9 +103,7 @@ describe("DashboardHistoricalAiSummaryCard", () => {
         "Il 2025 è più forte perché il valore del lavoro è molto più alto del 2024.",
       ),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Domanda:/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Domanda:/)).toBeInTheDocument();
   });
 
   it("generates the guided summary without breaking the existing flow", async () => {
@@ -116,7 +116,9 @@ describe("DashboardHistoricalAiSummaryCard", () => {
 
     renderCard();
 
-    fireEvent.click(screen.getByRole("button", { name: "Spiegami lo storico" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Spiegami lo storico" }),
+    );
 
     await waitFor(() =>
       expect(generateHistoricalAnalyticsSummary).toHaveBeenCalledTimes(1),
