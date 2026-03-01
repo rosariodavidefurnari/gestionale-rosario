@@ -57,7 +57,7 @@ Regola pratica:
 | Notes clienti | Funzionanti con client_notes | sessione 11 |
 | Tags clienti | Funzionanti (BIGINT[] su clients) | sessione 11 |
 | RLS policies | Attive su tutte le tabelle | audit manuale |
-| Signup pubblico libero | Non supportato; resta solo il bootstrap del primo utente quando l'app non e' inizializzata | 2026-03-01 |
+| Signup pubblico libero | Non supportato; le route tecniche di bootstrap/recovery restano nel router, ma nel runtime Supabase single-user corrente il flusso normale resta login-only | 2026-03-01 |
 | Keep-alive workflow | Attivo, testato con successo (HTTP 200) | `gh workflow run` |
 | Localizzazione IT | Completa su ~70+ file, 3 livelli | audit sessione 4 |
 | DateTime Range Support (all_day pattern) | Implementato su 4 moduli | sessione 16 |
@@ -100,7 +100,7 @@ Regola pratica:
 | client_notes | Note clienti (con allegati) | auth.uid() IS NOT NULL | FK cliente obbligatoria, testo, data, allegati, timestamps |
 | settings | Configurazione | auth.uid() IS NOT NULL | record `config` persistito per branding, tipi, AI, fiscale, operativita' |
 | sales | Profilo utente e supporto auth single-user | auth.uid() IS NOT NULL | identita' utente, avatar, admin/disabled, FK `auth.users` |
-| tags | Catalogo etichette riusato da clienti e referenti | auth.uid() IS NOT NULL | nome, colore |
+| tags | Catalogo etichette riusato dai clienti e disponibile anche nel modello dati dei referenti | auth.uid() IS NOT NULL | nome, colore |
 | keep_alive | Heartbeat free tier | SELECT public | ping e timestamp |
 
 ### Quotes — 10 stati pipeline
@@ -199,7 +199,7 @@ PK esplicite nel dataProvider:
 | **Pagamenti** | `payments/` | CRUD + handoff commerciali | Completo |
 | **Spese** | `expenses/` | CRUD + km/travel flows | Completo |
 | **Promemoria** | `tasks/` | Lista con filtri temporali | Completo |
-| **Tags** | `tags/` | Gestione embedded + modali + array su clients/contacts | Completo |
+| **Tags** | `tags/` | Gestione embedded + modali attiva su clienti/impostazioni; supporto dati referenti parziale | Completo |
 | **Travel / KM** | `travel/` | Dialog cross-cutting per suggerimenti luogo e calcolo tratta | Completo |
 | **Dashboard** | `dashboard/` | Recharts + KPI + alert + fiscale + storico | Completo |
 | **AI unificata** | `ai/` | Launcher, snapshot, import, handoff, chat read-only | Completo |
@@ -273,8 +273,11 @@ src/components/atomic-crm/tags/
 └── colors.ts              # Palette colori
 ```
 
-Non esiste una pagina dedicata `tags`: la gestione avviene in scheda cliente e
-in `Impostazioni`.
+Non esiste una pagina dedicata `tags`: la gestione UI attiva avviene in scheda
+cliente e in `Impostazioni`.
+
+Il modello dati dei referenti conserva `tags`, ma la relativa UI non e' ancora
+esposta come superficie operativa nei form/show dei `contacts`.
 
 ### Dashboard (Recharts + Fiscale)
 
@@ -379,9 +382,11 @@ FiscalConfig, FiscalTaxProfile             ← Fiscale
 - User: rosariodavide.furnari@gmail.com (unico)
 - Signup pubblico libero: non supportato
 - Bootstrap primo utente:
-  - disponibile solo quando l'app non e' ancora inizializzata
-  - usa la route `/sign-up` e poi reindirizza al login normale quando esiste gia'
-    un utente
+  - resta come superficie tecnica nel router
+  - nel runtime Supabase single-user corrente non e' il percorso normale, perche'
+    `getIsInitialized()` e' forzato a `true`
+  - se la route viene aperta mentre l'app risulta gia inizializzata, reindirizza
+    al login normale
 - API Keys: VITE_SB_PUBLISHABLE_KEY (formato sb_publishable_...)
 
 ## Supabase Config
@@ -398,9 +403,9 @@ FiscalConfig, FiscalTaxProfile             ← Fiscale
 ## Pages Map
 
 ```
-/login               → Entry auth principale; se l'app non e' inizializzata puo' reindirizzare al bootstrap `/sign-up`
-/sign-up             → Bootstrap primo utente (non signup pubblico generico)
-/sign-up/confirm     → Schermata conferma email del bootstrap iniziale
+/login               → Entry auth principale; nel runtime Supabase corrente resta il percorso normale di accesso
+/sign-up             → Superficie tecnica di bootstrap primo utente; nel runtime corrente rimbalza sul login se l'app risulta gia inizializzata
+/sign-up/confirm     → Schermata tecnica di conferma bootstrap iniziale
 /forgot-password     → Recupero password
 /set-password        → Impostazione/reset password
 /oauth/consent       → Consenso OAuth

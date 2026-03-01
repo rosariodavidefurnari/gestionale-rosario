@@ -34,7 +34,8 @@ workflow va sempre verificato in `docs/architecture.md` e nel codice reale.
   - esiste un record `config` letto da `ConfigurationContext`
 - l'autenticazione reale ha route pubbliche tecniche di supporto:
   - login
-  - bootstrap primo utente
+  - bootstrap primo utente (tecnicamente presente, ma non flow attivo nel
+    runtime single-user corrente)
   - forgot/reset password
   - consenso OAuth
 
@@ -552,8 +553,10 @@ https://tuoprogetto.supabase.co/auth/v1/.well-known/jwks.json
   - Google Workplace SSO se configurato
 - Un solo account creato manualmente: `rosariodavide.furnari@gmail.com`
 - Registrazione pubblica libera: non supportata
-- Bootstrap primo utente: disponibile solo quando l'app non e' ancora
-  inizializzata
+- Bootstrap primo utente:
+  - resta come superficie tecnica nel router
+  - nel runtime Supabase single-user corrente non e' il percorso normale,
+    perche' l'app viene trattata come gia' inizializzata
 - Route pubbliche tecniche presenti nel runtime:
   - `/login`
   - `/sign-up`
