@@ -38,7 +38,7 @@ const ClientShowContent = () => {
   if (isPending || !record) return null;
 
   return (
-    <div className="mt-4 mb-20 md:mb-2 flex flex-col gap-6 px-4 md:px-0">
+    <div className="mt-4 mb-28 md:mb-2 flex flex-col gap-6 px-4 md:px-0">
       {isMobile && (
         <div className="mb-3">
           <MobileBackButton />
@@ -84,7 +84,7 @@ const ClientShowContent = () => {
 };
 
 const ClientHeader = ({ record }: { record: Client }) => (
-  <div className="flex items-start justify-between">
+  <div className="flex flex-col gap-3">
     <div>
       <h2 className="text-2xl font-bold">{record.name}</h2>
       <div className="flex items-center gap-2 mt-1">
@@ -96,7 +96,7 @@ const ClientHeader = ({ record }: { record: Client }) => (
         )}
       </div>
     </div>
-    <div className="flex gap-2">
+    <div className="flex gap-2 overflow-x-auto pb-1 -mb-1">
       <Button asChild size="sm" variant="outline">
         <Link
           to={buildPaymentCreatePathFromClient({

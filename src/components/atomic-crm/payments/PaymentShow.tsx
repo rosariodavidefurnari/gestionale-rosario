@@ -54,7 +54,7 @@ const PaymentShowContent = () => {
   if (isPending || !record) return null;
 
   return (
-    <div className="mt-4 mb-2 flex flex-col md:flex-row gap-4 md:gap-8 px-4 md:px-0">
+    <div className="mt-4 mb-28 md:mb-2 flex flex-col md:flex-row gap-4 md:gap-8 px-4 md:px-0">
       <div className="flex-1">
         {isMobile && (
           <div className="mb-3">

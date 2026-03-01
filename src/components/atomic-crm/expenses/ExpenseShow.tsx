@@ -57,7 +57,7 @@ const ExpenseShowContent = () => {
   const total = computeTotal(record, operationalConfig.defaultKmRate);
 
   return (
-    <div className="mt-4 mb-2 flex gap-8 px-4 md:px-0">
+    <div className="mt-4 mb-28 md:mb-2 flex gap-8 px-4 md:px-0">
       <div className="flex-1">
         {isMobile && (
           <div className="mb-3">
@@ -66,7 +66,7 @@ const ExpenseShowContent = () => {
         )}
         <Card>
           <CardContent>
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col gap-3">
               <div>
                 <h2 className="text-2xl font-bold">
                   {expenseTypeLabels[record.expense_type]} — EUR {eur(total)}

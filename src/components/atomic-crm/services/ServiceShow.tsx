@@ -43,7 +43,7 @@ const ServiceShowContent = () => {
   });
 
   return (
-    <div className="mt-4 mb-2 flex gap-4 md:gap-8 px-4 md:px-0">
+    <div className="mt-4 mb-28 md:mb-2 flex gap-4 md:gap-8 px-4 md:px-0">
       <div className="flex-1">
         {isMobile && (
           <div className="mb-3">
@@ -77,7 +77,7 @@ const ServiceHeader = ({ record }: { record: Service }) => {
     record.service_type;
 
   return (
-    <div className="flex items-start justify-between">
+    <div className="flex flex-col gap-3">
       <div>
         <h2 className="text-2xl font-bold">{serviceLabel}</h2>
         <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
