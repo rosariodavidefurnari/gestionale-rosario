@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Client } from "../types";
 import {
@@ -21,9 +22,28 @@ import { ErrorMessage } from "../misc/ErrorMessage";
 export const ClientListContent = () => {
   const { data, isPending, error } = useListContext<Client>();
   const createPath = useCreatePath();
+  const isMobile = useIsMobile();
 
   if (error) return <ErrorMessage />;
   if (isPending || !data) return null;
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col divide-y px-4">
+        {data.map((client) => (
+          <ClientMobileCard
+            key={client.id}
+            client={client}
+            link={createPath({
+              resource: "clients",
+              type: "show",
+              id: client.id,
+            })}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <Table>
@@ -92,6 +112,32 @@ export const ClientListContent = () => {
     </Table>
   );
 };
+
+/* ---- Mobile card ---- */
+const ClientMobileCard = ({
+  client,
+  link,
+}: {
+  client: Client;
+  link: string;
+}) => (
+  <Link to={link} className="flex flex-col gap-1 px-1 py-3 active:bg-muted/50">
+    <span className="text-sm font-medium">{client.name}</span>
+    <div className="flex items-center gap-2">
+      <ClientTypeBadge type={client.client_type} />
+      {client.billing_city && (
+        <span className="text-xs text-muted-foreground">
+          {client.billing_city}
+        </span>
+      )}
+    </div>
+    {(client.email || client.phone) && (
+      <span className="text-xs text-muted-foreground">
+        {client.email || client.phone}
+      </span>
+    )}
+  </Link>
+);
 
 const clientTypeBadgeColors: Record<string, string> = {
   produzione_tv:

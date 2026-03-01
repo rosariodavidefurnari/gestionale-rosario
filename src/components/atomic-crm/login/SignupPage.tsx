@@ -18,11 +18,7 @@ import { SSOAuthButton } from "./SSOAuthButton";
 export const SignupPage = () => {
   const queryClient = useQueryClient();
   const dataProvider = useDataProvider<CrmDataProvider>();
-  const {
-    darkModeLogo: logo,
-    title,
-    googleWorkplaceDomain,
-  } = useConfigurationContext();
+  const { title, googleWorkplaceDomain } = useConfigurationContext();
   const navigate = useNavigate();
   const { data: isInitialized, isPending } = useQuery({
     queryKey: ["init"],
@@ -91,85 +87,81 @@ export const SignupPage = () => {
   };
 
   return (
-    <div className="h-screen p-8">
-      <div className="flex items-center gap-4">
+    <div className="min-h-screen flex flex-col items-center px-6 py-10">
+      <div className="size-24 rounded-full bg-white shadow-md overflow-hidden">
         <img
-          src={logo}
+          src="/android-chrome-512x512.png"
           alt={title}
-          width={24}
-          className="filter brightness-0 invert"
+          className="size-full object-cover"
         />
-        <h1 className="text-xl font-semibold">{title}</h1>
       </div>
-      <div className="h-full">
-        <div className="max-w-sm mx-auto h-full flex flex-col justify-center gap-4">
-          <h1 className="text-2xl font-bold mb-4">Benvenuto nel Gestionale</h1>
-          <p className="text-base mb-4">
-            Crea il primo account utente per completare la configurazione.
-          </p>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="first_name">Nome</Label>
-              <Input
-                {...register("first_name", { required: true })}
-                id="first_name"
-                type="text"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="last_name">Cognome</Label>
-              <Input
-                {...register("last_name", { required: true })}
-                id="last_name"
-                type="text"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                {...register("email", { required: true })}
-                id="email"
-                type="email"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                {...register("password", { required: true })}
-                id="password"
-                type="password"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-4 justify-between items-center mt-8">
-              <Button
-                type="submit"
-                disabled={!isValid || isSignUpPending}
+      <div className="w-full max-w-sm flex flex-col gap-4 mt-8">
+        <h1 className="text-2xl font-bold">Benvenuto nel Gestionale</h1>
+        <p className="text-sm text-muted-foreground">
+          Crea il primo account utente per completare la configurazione.
+        </p>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="first_name">Nome</Label>
+            <Input
+              {...register("first_name", { required: true })}
+              id="first_name"
+              type="text"
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="last_name">Cognome</Label>
+            <Input
+              {...register("last_name", { required: true })}
+              id="last_name"
+              type="text"
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              {...register("email", { required: true })}
+              id="email"
+              type="email"
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              {...register("password", { required: true })}
+              id="password"
+              type="password"
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-4 items-center mt-8">
+            <Button
+              type="submit"
+              disabled={!isValid || isSignUpPending}
+              className="w-full"
+            >
+              {isSignUpPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Creazione...
+                </>
+              ) : (
+                "Crea account"
+              )}
+            </Button>
+            {googleWorkplaceDomain ? (
+              <SSOAuthButton
                 className="w-full"
+                domain={googleWorkplaceDomain}
               >
-                {isSignUpPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    Creazione...
-                  </>
-                ) : (
-                  "Crea account"
-                )}
-              </Button>
-              {googleWorkplaceDomain ? (
-                <SSOAuthButton
-                  className="w-full"
-                  domain={googleWorkplaceDomain}
-                >
-                  Accedi con Google Workplace
-                </SSOAuthButton>
-              ) : null}
-            </div>
-          </form>
-        </div>
+                Accedi con Google Workplace
+              </SSOAuthButton>
+            ) : null}
+          </div>
+        </form>
       </div>
       <Notification />
     </div>

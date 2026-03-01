@@ -6,11 +6,13 @@ import { DeleteButton } from "@/components/admin/delete-button";
 import { Calendar, FileText } from "lucide-react";
 import { Link } from "react-router";
 import { calculateKmReimbursement } from "@/lib/semantics/crmSemanticRegistry";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Expense } from "../types";
 import { expenseTypeLabels } from "./expenseTypes";
 import { ErrorMessage } from "../misc/ErrorMessage";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { MobileBackButton } from "../misc/MobileBackButton";
 
 const eur = (n: number) =>
   n.toLocaleString("it-IT", { minimumFractionDigits: 2 });
@@ -47,6 +49,7 @@ const ExpenseShowContent = () => {
       enabled: !!record?.project_id,
     },
   );
+  const isMobile = useIsMobile();
 
   if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
@@ -54,8 +57,13 @@ const ExpenseShowContent = () => {
   const total = computeTotal(record, operationalConfig.defaultKmRate);
 
   return (
-    <div className="mt-2 mb-2 flex gap-8">
+    <div className="mt-4 mb-2 flex gap-8 px-4 md:px-0">
       <div className="flex-1">
+        {isMobile && (
+          <div className="mb-3">
+            <MobileBackButton />
+          </div>
+        )}
         <Card>
           <CardContent>
             <div className="flex items-start justify-between">

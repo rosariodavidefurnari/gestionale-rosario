@@ -5,11 +5,13 @@ import { EditButton } from "@/components/admin/edit-button";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { Calendar, User, FileText } from "lucide-react";
 import { Link } from "react-router";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Payment } from "../types";
 import { PaymentStatusBadge } from "./PaymentListContent";
 import { paymentTypeLabels } from "./paymentTypes";
 import { ErrorMessage } from "../misc/ErrorMessage";
+import { MobileBackButton } from "../misc/MobileBackButton";
 
 const eur = (n: number) =>
   n.toLocaleString("it-IT", { minimumFractionDigits: 2 });
@@ -46,17 +48,24 @@ const PaymentShowContent = () => {
     },
   );
 
+  const isMobile = useIsMobile();
+
   if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
 
   return (
-    <div className="mt-2 mb-2 flex gap-8">
+    <div className="mt-4 mb-2 flex flex-col md:flex-row gap-4 md:gap-8 px-4 md:px-0">
       <div className="flex-1">
+        {isMobile && (
+          <div className="mb-3">
+            <MobileBackButton />
+          </div>
+        )}
         <Card>
           <CardContent>
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-xl sm:text-2xl font-bold wrap-break-word">
                   {paymentTypeLabels[record.payment_type]} — EUR{" "}
                   {eur(record.amount)}
                 </h2>

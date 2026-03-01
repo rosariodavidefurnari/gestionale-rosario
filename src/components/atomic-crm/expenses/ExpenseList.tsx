@@ -4,10 +4,11 @@ import { CreateButton } from "@/components/admin/create-button";
 import { ExportButton } from "@/components/admin/export-button";
 import { List } from "@/components/admin/list";
 import { SortButton } from "@/components/admin/sort-button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Client, Expense, Project } from "../types";
 import { ExpenseListContent } from "./ExpenseListContent";
-import { ExpenseListFilter } from "./ExpenseListFilter";
+import { ExpenseListFilter, ExpenseMobileFilter } from "./ExpenseListFilter";
 import { TopToolbar } from "../layout/TopToolbar";
 import { expenseTypeLabels } from "./expenseTypes";
 import { calculateKmReimbursement } from "@/lib/semantics/crmSemanticRegistry";
@@ -45,7 +46,7 @@ const ExpenseListLayout = () => {
   }
 
   return (
-    <div className="flex flex-row gap-8">
+    <div className="mt-4 flex flex-col md:flex-row md:gap-8">
       <ExpenseListFilter />
       <div className="w-full flex flex-col gap-4">
         <ExpenseListContent />
@@ -54,13 +55,17 @@ const ExpenseListLayout = () => {
   );
 };
 
-const ExpenseListActions = ({ exporter }: { exporter: Exporter<Expense> }) => (
-  <TopToolbar>
-    <SortButton fields={["expense_date", "created_at"]} />
-    <ExportButton exporter={exporter} />
-    <CreateButton />
-  </TopToolbar>
-);
+const ExpenseListActions = ({ exporter }: { exporter: Exporter<Expense> }) => {
+  const isMobile = useIsMobile();
+  return (
+    <TopToolbar className={isMobile ? "justify-center" : undefined}>
+      {isMobile && <ExpenseMobileFilter />}
+      <SortButton fields={["expense_date", "created_at"]} />
+      <ExportButton exporter={exporter} />
+      <CreateButton />
+    </TopToolbar>
+  );
+};
 
 const computeTotal = (e: Expense, defaultKmRate: number) => {
   if (e.expense_type === "credito_ricevuto") {

@@ -6,6 +6,7 @@ import { EditButton } from "@/components/admin/edit-button";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { Phone, Mail, MapPin, FileText, Euro } from "lucide-react";
 import { Link } from "react-router";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Client } from "../types";
 import { ClientTypeBadge } from "./ClientListContent";
@@ -20,6 +21,7 @@ import { ClientNotesSection } from "./ClientNotesSection";
 import { ClientTasksSection } from "./ClientTasksSection";
 import { ClientFinancialSummary } from "./ClientFinancialSummary";
 import { ErrorMessage } from "../misc/ErrorMessage";
+import { MobileBackButton } from "../misc/MobileBackButton";
 import { buildPaymentCreatePathFromClient } from "../payments/paymentLinking";
 
 export const ClientShow = () => (
@@ -30,11 +32,18 @@ export const ClientShow = () => (
 
 const ClientShowContent = () => {
   const { record, isPending, error } = useShowContext<Client>();
+  const isMobile = useIsMobile();
+
   if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
 
   return (
-    <div className="mt-2 mb-2 flex flex-col gap-6">
+    <div className="mt-4 mb-20 md:mb-2 flex flex-col gap-6 px-4 md:px-0">
+      {isMobile && (
+        <div className="mb-3">
+          <MobileBackButton />
+        </div>
+      )}
       <Card>
         <CardContent>
           <ClientHeader record={record} />

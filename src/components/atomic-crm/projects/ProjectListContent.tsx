@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Project } from "../types";
 import {
@@ -21,8 +22,27 @@ import { formatDateRange } from "../misc/formatDateRange";
 export const ProjectListContent = () => {
   const { data, isPending } = useListContext<Project>();
   const createPath = useCreatePath();
+  const isMobile = useIsMobile();
 
   if (isPending || !data) return null;
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col divide-y px-4">
+        {data.map((project) => (
+          <ProjectMobileCard
+            key={project.id}
+            project={project}
+            link={createPath({
+              resource: "projects",
+              type: "show",
+              id: project.id,
+            })}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <Table>
@@ -52,6 +72,41 @@ export const ProjectListContent = () => {
   );
 };
 
+/* ---- Mobile card ---- */
+const ProjectMobileCard = ({
+  project,
+  link,
+}: {
+  project: Project;
+  link: string;
+}) => {
+  const { data: client } = useGetOne("clients", { id: project.client_id });
+
+  return (
+    <Link
+      to={link}
+      className="flex flex-col gap-1 px-1 py-3 active:bg-muted/50"
+    >
+      <span className="text-sm font-medium">{project.name}</span>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">
+          {client?.name ?? ""}
+        </span>
+        <ProjectStatusBadge status={project.status} />
+      </div>
+      <div className="flex items-center gap-2">
+        <ProjectCategoryBadge category={project.category} />
+        {project.tv_show && (
+          <span className="text-xs text-muted-foreground">
+            {projectTvShowLabels[project.tv_show]}
+          </span>
+        )}
+      </div>
+    </Link>
+  );
+};
+
+/* ---- Desktop table row ---- */
 const ProjectRow = ({ project, link }: { project: Project; link: string }) => {
   const { data: client } = useGetOne("clients", { id: project.client_id });
 

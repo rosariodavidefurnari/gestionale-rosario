@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Expense } from "../types";
 import { expenseTypeLabels } from "./expenseTypes";
@@ -36,9 +37,29 @@ export const ExpenseListContent = () => {
   const { data, isPending, error } = useListContext<Expense>();
   const { operationalConfig } = useConfigurationContext();
   const createPath = useCreatePath();
+  const isMobile = useIsMobile();
 
   if (error) return <ErrorMessage />;
   if (isPending || !data) return null;
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col divide-y px-4">
+        {data.map((expense) => (
+          <ExpenseMobileCard
+            key={expense.id}
+            expense={expense}
+            defaultKmRate={operationalConfig.defaultKmRate}
+            link={createPath({
+              resource: "expenses",
+              type: "show",
+              id: expense.id,
+            })}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <Table>
@@ -68,6 +89,49 @@ export const ExpenseListContent = () => {
         ))}
       </TableBody>
     </Table>
+  );
+};
+
+/* ---- Mobile card ---- */
+const ExpenseMobileCard = ({
+  expense,
+  link,
+  defaultKmRate,
+}: {
+  expense: Expense;
+  link: string;
+  defaultKmRate: number;
+}) => {
+  const { data: project } = useGetOne(
+    "projects",
+    { id: expense.project_id ?? undefined },
+    { enabled: !!expense.project_id },
+  );
+  const total = computeTotal(expense, defaultKmRate);
+
+  return (
+    <Link
+      to={link}
+      className="flex flex-col gap-1 px-1 py-3 active:bg-muted/50"
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">
+          {new Date(expense.expense_date).toLocaleDateString("it-IT")}
+        </span>
+        <span className="text-xs text-muted-foreground">
+          {expenseTypeLabels[expense.expense_type] ?? expense.expense_type}
+        </span>
+      </div>
+      <span className="text-sm font-medium">{project?.name ?? ""}</span>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground truncate mr-2">
+          {expense.description ?? ""}
+        </span>
+        <span className="text-sm font-semibold tabular-nums">
+          EUR {eur(total)}
+        </span>
+      </div>
+    </Link>
   );
 };
 

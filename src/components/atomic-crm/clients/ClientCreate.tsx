@@ -2,6 +2,7 @@ import { CreateBase, Form } from "ra-core";
 import { useMemo } from "react";
 import { useLocation } from "react-router";
 import { Card, CardContent } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { ClientInputs } from "./ClientInputs";
 import {
@@ -9,6 +10,7 @@ import {
   getClientCreateLauncherContextFromSearch,
 } from "./clientLinking";
 import { FormToolbar } from "../layout/FormToolbar";
+import { MobileBackButton } from "../misc/MobileBackButton";
 
 const getLauncherBannerCopy = (search: string) => {
   const handoff = getClientCreateLauncherContextFromSearch(search);
@@ -31,11 +33,18 @@ export const ClientCreate = () => {
     [location.search],
   );
 
+  const isMobile = useIsMobile();
+
   return (
     <CreateBase redirect="show">
-      <div className="mt-2 flex">
+      <div className="mt-4 flex px-4 md:px-0">
         <div className="flex-1">
           <Form defaultValues={defaultValues}>
+            {isMobile && (
+              <div className="mb-3">
+                <MobileBackButton />
+              </div>
+            )}
             {launcherBanner ? (
               <div className="mb-3 rounded-lg border border-dashed bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
                 {launcherBanner}

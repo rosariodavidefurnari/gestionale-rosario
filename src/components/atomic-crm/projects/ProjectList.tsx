@@ -4,10 +4,11 @@ import { CreateButton } from "@/components/admin/create-button";
 import { ExportButton } from "@/components/admin/export-button";
 import { List } from "@/components/admin/list";
 import { SortButton } from "@/components/admin/sort-button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Client, Project } from "../types";
 import { ProjectListContent } from "./ProjectListContent";
-import { ProjectListFilter } from "./ProjectListFilter";
+import { ProjectListFilter, ProjectMobileFilter } from "./ProjectListFilter";
 import { TopToolbar } from "../layout/TopToolbar";
 
 export const ProjectList = () => (
@@ -37,7 +38,7 @@ const ProjectListLayout = () => {
   }
 
   return (
-    <div className="flex flex-row gap-8">
+    <div className="mt-4 flex flex-col md:flex-row md:gap-8">
       <ProjectListFilter />
       <div className="w-full flex flex-col gap-4">
         <ProjectListContent />
@@ -46,13 +47,17 @@ const ProjectListLayout = () => {
   );
 };
 
-const ProjectListActions = () => (
-  <TopToolbar>
-    <SortButton fields={["name", "start_date", "created_at"]} />
-    <ExportButton exporter={exporter} />
-    <CreateButton />
-  </TopToolbar>
-);
+const ProjectListActions = () => {
+  const isMobile = useIsMobile();
+  return (
+    <TopToolbar className={isMobile ? "justify-center" : undefined}>
+      {isMobile && <ProjectMobileFilter />}
+      <SortButton fields={["name", "start_date", "created_at"]} />
+      <ExportButton exporter={exporter} />
+      <CreateButton />
+    </TopToolbar>
+  );
+};
 
 const exporter: Exporter<Project> = async (records, fetchRelatedRecords) => {
   const clients = await fetchRelatedRecords<Client>(

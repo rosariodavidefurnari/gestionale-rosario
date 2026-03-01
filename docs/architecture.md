@@ -33,6 +33,9 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 | Localizzazione IT | Completa su ~70+ file, 3 livelli | audit sessione 4 |
 | DateTime Range Support (all_day pattern) | Implementato su 4 moduli | sessione 16 |
 | Simulatore Fiscale + KPI Salute Aziendale | Implementato | sessione 17 |
+| Mobile UX (card lists, Sheet filters, MobileBackButton) | Tutti i moduli CRUD | sessione 77 |
+| Login/Signup branding (foto utente, maschera circolare) | Implementato | sessione 77 |
+| Auth init bypass (single-user hardcoded) | Implementato | sessione 77 |
 | Navigazione per anno Dashboard | Implementata | sessione 18 |
 | Colori semantici Dashboard (success/warning badge + progress) | Implementati | sessione 18 |
 | Typecheck | 0 errori | sessione 18 |

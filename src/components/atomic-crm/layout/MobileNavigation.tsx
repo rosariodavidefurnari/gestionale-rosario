@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Briefcase,
   CreditCard,
@@ -183,7 +184,11 @@ const SettingsButton = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="top" className="w-56">
         <DropdownMenuLabel className="font-normal h-12 px-4">
-          <div className="flex flex-col justify-center h-full">
+          <div className="flex items-center gap-3 h-full">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={identity?.avatar} role="presentation" />
+              <AvatarFallback>{identity?.fullName?.charAt(0)}</AvatarFallback>
+            </Avatar>
             <p className="text-base font-medium leading-none">
               {identity?.fullName}
             </p>

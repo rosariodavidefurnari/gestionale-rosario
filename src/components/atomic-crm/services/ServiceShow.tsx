@@ -6,10 +6,12 @@ import { EditButton } from "@/components/admin/edit-button";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { Calendar, MapPin, FileText } from "lucide-react";
 import { Link } from "react-router";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Service } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { ErrorMessage } from "../misc/ErrorMessage";
+import { MobileBackButton } from "../misc/MobileBackButton";
 import { formatDateRange } from "../misc/formatDateRange";
 import {
   calculateKmReimbursement,
@@ -28,6 +30,8 @@ export const ServiceShow = () => (
 const ServiceShowContent = () => {
   const { record, isPending, error } = useShowContext<Service>();
   const { operationalConfig } = useConfigurationContext();
+  const isMobile = useIsMobile();
+
   if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
 
@@ -39,8 +43,13 @@ const ServiceShowContent = () => {
   });
 
   return (
-    <div className="mt-2 mb-2 flex gap-8">
+    <div className="mt-4 mb-2 flex gap-4 md:gap-8 px-4 md:px-0">
       <div className="flex-1">
+        {isMobile && (
+          <div className="mb-3">
+            <MobileBackButton />
+          </div>
+        )}
         <Card>
           <CardContent>
           <ServiceHeader record={record} />

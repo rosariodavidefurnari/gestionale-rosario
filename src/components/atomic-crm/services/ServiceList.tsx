@@ -5,10 +5,14 @@ import { CreateButton } from "@/components/admin/create-button";
 import { ExportButton } from "@/components/admin/export-button";
 import { List } from "@/components/admin/list";
 import { SortButton } from "@/components/admin/sort-button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Project, Service } from "../types";
 import { ServiceListContent } from "./ServiceListContent";
-import { ServiceListFilter } from "./ServiceListFilter";
+import {
+  ServiceListFilter,
+  ServiceMobileFilter,
+} from "./ServiceListFilter";
 import { TopToolbar } from "../layout/TopToolbar";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import {
@@ -87,19 +91,23 @@ const ServiceListLayout = () => {
   }
 
   return (
-    <div className="flex flex-row gap-8">
+    <div className="mt-4 flex flex-col md:flex-row md:gap-8">
       <ServiceListFilter />
-      <div className="w-full flex flex-col gap-4 overflow-x-auto">
+      <div className="w-full flex flex-col gap-4">
         <ServiceListContent />
       </div>
     </div>
   );
 };
 
-const ServiceListActions = ({ exporter }: { exporter: Exporter<Service> }) => (
-  <TopToolbar>
-    <SortButton fields={["service_date", "created_at"]} />
-    <ExportButton exporter={exporter} />
-    <CreateButton />
-  </TopToolbar>
-);
+const ServiceListActions = ({ exporter }: { exporter: Exporter<Service> }) => {
+  const isMobile = useIsMobile();
+  return (
+    <TopToolbar className={isMobile ? "justify-center" : undefined}>
+      {isMobile && <ServiceMobileFilter />}
+      <SortButton fields={["service_date", "created_at"]} />
+      <ExportButton exporter={exporter} />
+      <CreateButton />
+    </TopToolbar>
+  );
+};

@@ -1,9 +1,11 @@
 import { EditBase, Form, useEditContext } from "ra-core";
 import { Card, CardContent } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Project } from "../types";
 import { ProjectInputs } from "./ProjectInputs";
 import { FormToolbar } from "../layout/FormToolbar";
+import { MobileBackButton } from "../misc/MobileBackButton";
 
 export const ProjectEdit = () => (
   <EditBase redirect="show">
@@ -13,10 +15,16 @@ export const ProjectEdit = () => (
 
 const ProjectEditContent = () => {
   const { isPending, record } = useEditContext<Project>();
+  const isMobile = useIsMobile();
   if (isPending || !record) return null;
   return (
-    <div className="mt-2 flex gap-8">
+    <div className="mt-4 flex gap-4 md:gap-8 px-4 md:px-0">
       <Form className="flex flex-1 flex-col gap-4">
+        {isMobile && (
+          <div>
+            <MobileBackButton />
+          </div>
+        )}
         <Card>
           <CardContent>
             <ProjectInputs />

@@ -10,6 +10,25 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Mobile UX: card view + Sheet filter e' il pattern base per
+  ogni lista CRUD** — Su mobile le tabelle sono illeggibili. Il pattern
+  consolidato e': `useIsMobile()` branch nel ListContent (card `divide-y`),
+  filtri in un Sheet dal basso (`SheetContent side="bottom" className="h-dvh"`),
+  bottone trigger con badge contatore filtri attivi. Replicato su 5 moduli.
+
+- [2026-03-01] **MobileBackButton va PRIMA dei return condizionali** — Se
+  `useIsMobile()` viene chiamato dopo un `if (isPending) return null`, viola
+  le regole dei React hooks. Spostare sempre gli hook prima dei return.
+
+- [2026-03-01] **FormToolbar ha bisogno di `pb-20 md:pb-0`** — Su mobile la
+  navigation bar fissa `h-14` copre i bottoni Annulla/Salva. Il padding bottom
+  extra li rende raggiungibili.
+
+- [2026-03-01] **`getIsInitialized` e `init_state` su Supabase remoto con RLS
+  causa redirect a signup dopo clear cache** — Il client non autenticato riceve
+  un array vuoto (non errore) da PostgREST. Per app single-user, hardcodare
+  `return true` e' la soluzione piu robusta.
+
 - [2026-03-01] **Se una list action riusa un exporter custom, va cablato con
   lo stesso exporter passato alla `List`** — Nel caso `Spese` il crash reale
   non veniva da query o dati, ma da un wiring incompleto: `ExpenseListActions`

@@ -125,6 +125,37 @@ invece separato e ancora aperto.
 
 ## Last Session
 
+### Sessione 77 (2026-03-01, mobile UX overhaul + login/signup fix)
+
+- Completed:
+  - **Mobile UX completa su tutti i moduli CRUD** (Pagamenti, Spese, Clienti,
+    Progetti, Servizi):
+    - Card-based list view su mobile (no tabelle cramped)
+    - Sheet-based mobile filter (drawer dal basso) con contatore filtri attivi
+    - MobileBackButton su tutte le pagine Show/Edit/Create
+    - FormToolbar con `pb-20 md:pb-0` per non nascondersi dietro la nav bar
+    - TopToolbar centrata su mobile
+    - Spacing uniforme `mt-4` su tutte le pagine (List, Show, Edit, Create)
+  - **Rimosso MobileHeader** da Dashboard e Tasks (troppo ingombrante)
+  - **MobileContent** semplificato: `pt-4` (era `pt-18`)
+  - **Login page**: aggiunta foto utente con maschera circolare sopra "Accedi"
+  - **Signup page**: rimossa scritta titolo, aggiunta foto utente con maschera
+    circolare, usata immagine `/android-chrome-512x512.png`
+  - **Auth fix**: `getIsInitialized()` ora ritorna sempre `true` (app single-user,
+    account gia esistente sul remoto). Eliminato il bug che dopo clear cache del
+    browser mostrava il signup invece del login.
+
+- Risks / notes:
+  - Il pattern mobile filter (Sheet) e' replicato in 5 moduli — se cambia la
+    struttura va toccato ovunque
+  - `getIsInitialized` hardcoded a `true` significa che la signup page non
+    apparira mai piu — corretto per single-user, da rivedere se il progetto
+    diventa multi-user
+
+- Validation:
+  - `npm run typecheck` — 0 errori
+  - Verifica visiva su iPhone 12 Pro (screenshot reali utente)
+
 ### Sessione 76 (2026-03-01, verifica reale chat launcher e fix crash spese)
 
 - Completed:

@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Payment } from "../types";
 import { paymentTypeLabels, paymentStatusLabels } from "./paymentTypes";
@@ -20,9 +21,28 @@ const eur = (n: number) =>
 export const PaymentListContent = () => {
   const { data, isPending, error } = useListContext<Payment>();
   const createPath = useCreatePath();
+  const isMobile = useIsMobile();
 
   if (error) return <ErrorMessage />;
   if (isPending || !data) return null;
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col divide-y px-4">
+        {data.map((payment) => (
+          <PaymentMobileCard
+            key={payment.id}
+            payment={payment}
+            link={createPath({
+              resource: "payments",
+              type: "show",
+              id: payment.id,
+            })}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <Table>
@@ -55,7 +75,50 @@ export const PaymentListContent = () => {
   );
 };
 
-const PaymentRow = ({ payment, link }: { payment: Payment; link: string }) => {
+/* ---- Mobile card ---- */
+const PaymentMobileCard = ({
+  payment,
+  link,
+}: {
+  payment: Payment;
+  link: string;
+}) => {
+  const { data: client } = useGetOne("clients", { id: payment.client_id });
+
+  return (
+    <Link
+      to={link}
+      className="flex flex-col gap-1 px-1 py-3 active:bg-muted/50"
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">
+          {payment.payment_date
+            ? new Date(payment.payment_date).toLocaleDateString("it-IT")
+            : "--"}
+        </span>
+        <PaymentStatusBadge status={payment.status} />
+      </div>
+      <span className="text-sm font-medium">{client?.name ?? ""}</span>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">
+          {paymentTypeLabels[payment.payment_type] ?? payment.payment_type}
+        </span>
+        <span className="text-sm font-semibold tabular-nums">
+          EUR {eur(payment.amount)}
+        </span>
+      </div>
+    </Link>
+  );
+};
+
+/* ---- Desktop table row ---- */
+const PaymentRow = ({
+  payment,
+  link,
+}: {
+  payment: Payment;
+  link: string;
+}) => {
   const { data: client } = useGetOne("clients", { id: payment.client_id });
   const { data: project } = useGetOne(
     "projects",
@@ -110,6 +173,7 @@ const PaymentRow = ({ payment, link }: { payment: Payment; link: string }) => {
   );
 };
 
+/* ---- Status badge ---- */
 const statusBadgeColors: Record<string, string> = {
   ricevuto: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   in_attesa:

@@ -5,6 +5,7 @@ import { EditButton } from "@/components/admin/edit-button";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { Calendar, Wallet, User, Euro, Car, Hash } from "lucide-react";
 import { Link, useLocation } from "react-router";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Project } from "../types";
 import { ProjectCategoryBadge, ProjectStatusBadge } from "./ProjectListContent";
@@ -12,6 +13,7 @@ import { projectTvShowLabels } from "./projectTypes";
 import { QuickEpisodeDialog } from "./QuickEpisodeDialog";
 import { QuickPaymentDialog } from "./QuickPaymentDialog";
 import { ErrorMessage } from "../misc/ErrorMessage";
+import { MobileBackButton } from "../misc/MobileBackButton";
 import { formatDateRange } from "../misc/formatDateRange";
 import { getUnifiedAiHandoffContextFromSearch } from "../payments/paymentLinking";
 
@@ -25,11 +27,17 @@ const ProjectShowContent = () => {
   const { record, isPending, error } = useShowContext<Project>();
   const location = useLocation();
   const launcherHandoff = getUnifiedAiHandoffContextFromSearch(location.search);
+  const isMobile = useIsMobile();
   if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
 
   return (
-    <div className="mt-2 mb-2 flex flex-col gap-6">
+    <div className="mt-4 mb-20 md:mb-2 flex flex-col gap-6 px-4 md:px-0">
+      {isMobile && (
+        <div className="mb-3">
+          <MobileBackButton />
+        </div>
+      )}
       {launcherHandoff?.action === "project_quick_payment" ? (
         <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
           {launcherHandoff.draftKind === "project_quick_payment"

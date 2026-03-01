@@ -4,10 +4,11 @@ import { CreateButton } from "@/components/admin/create-button";
 import { ExportButton } from "@/components/admin/export-button";
 import { List } from "@/components/admin/list";
 import { SortButton } from "@/components/admin/sort-button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Client } from "../types";
 import { ClientListContent } from "./ClientListContent";
-import { ClientListFilter } from "./ClientListFilter";
+import { ClientListFilter, ClientMobileFilter } from "./ClientListFilter";
 import { TopToolbar } from "../layout/TopToolbar";
 
 export const ClientList = () => (
@@ -37,7 +38,7 @@ const ClientListLayout = () => {
   }
 
   return (
-    <div className="flex flex-row gap-8">
+    <div className="mt-4 flex flex-col md:flex-row md:gap-8">
       <ClientListFilter />
       <div className="w-full flex flex-col gap-4">
         <ClientListContent />
@@ -46,13 +47,17 @@ const ClientListLayout = () => {
   );
 };
 
-const ClientListActions = () => (
-  <TopToolbar>
-    <SortButton fields={["name", "created_at"]} />
-    <ExportButton exporter={exporter} />
-    <CreateButton />
-  </TopToolbar>
-);
+const ClientListActions = () => {
+  const isMobile = useIsMobile();
+  return (
+    <TopToolbar className={isMobile ? "justify-center" : undefined}>
+      {isMobile && <ClientMobileFilter />}
+      <SortButton fields={["name", "created_at"]} />
+      <ExportButton exporter={exporter} />
+      <CreateButton />
+    </TopToolbar>
+  );
+};
 
 const exporter: Exporter<Client> = async (records) => {
   const clients = records.map((client) => ({

@@ -1,16 +1,19 @@
 import { CreateBase, Form } from "ra-core";
 import { Card, CardContent } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { ServiceInputs } from "./ServiceInputs";
 import { FormToolbar } from "../layout/FormToolbar";
+import { MobileBackButton } from "../misc/MobileBackButton";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 
 export const ServiceCreate = () => {
   const { operationalConfig } = useConfigurationContext();
+  const isMobile = useIsMobile();
 
   return (
     <CreateBase redirect="show">
-      <div className="mt-2 flex">
+      <div className="mt-4 flex px-4 md:px-0">
         <div className="flex-1">
           <Form
             defaultValues={{
@@ -24,6 +27,11 @@ export const ServiceCreate = () => {
               km_rate: operationalConfig.defaultKmRate,
             }}
           >
+            {isMobile && (
+              <div className="mb-3">
+                <MobileBackButton />
+              </div>
+            )}
             <Card>
               <CardContent>
                 <ServiceInputs />

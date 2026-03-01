@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Service } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
@@ -21,9 +22,28 @@ const eur = (n: number) =>
 export const ServiceListContent = () => {
   const { data, isPending, error } = useListContext<Service>();
   const createPath = useCreatePath();
+  const isMobile = useIsMobile();
 
   if (error) return <ErrorMessage />;
   if (isPending || !data) return null;
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col divide-y px-4">
+        {data.map((service) => (
+          <ServiceMobileCard
+            key={service.id}
+            service={service}
+            link={createPath({
+              resource: "services",
+              type: "show",
+              id: service.id,
+            })}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <Table>
@@ -66,6 +86,54 @@ export const ServiceListContent = () => {
   );
 };
 
+/* ---- Mobile card ---- */
+const ServiceMobileCard = ({
+  service,
+  link,
+}: {
+  service: Service;
+  link: string;
+}) => {
+  const { data: project } = useGetOne("projects", { id: service.project_id });
+  const { serviceTypeChoices } = useConfigurationContext();
+  const total = calculateServiceNetValue(service);
+  const typeLabel =
+    serviceTypeChoices.find((t) => t.value === service.service_type)?.label ??
+    service.service_type;
+
+  return (
+    <Link
+      to={link}
+      className="flex flex-col gap-1 px-1 py-3 active:bg-muted/50"
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">
+          {formatDateRange(
+            service.service_date,
+            service.service_end,
+            service.all_day,
+          )}
+        </span>
+        <span className="text-xs text-muted-foreground">{typeLabel}</span>
+      </div>
+      <span className="text-sm font-medium">{project?.name ?? ""}</span>
+      <div className="flex items-center justify-between">
+        {service.location ? (
+          <span className="text-xs text-muted-foreground">
+            {service.location}
+          </span>
+        ) : (
+          <span />
+        )}
+        <span className="text-sm font-semibold tabular-nums">
+          EUR {eur(total)}
+        </span>
+      </div>
+    </Link>
+  );
+};
+
+/* ---- Desktop table row ---- */
 const ServiceRow = ({ service, link }: { service: Service; link: string }) => {
   const { data: project } = useGetOne("projects", { id: service.project_id });
   const { serviceTypeChoices } = useConfigurationContext();
