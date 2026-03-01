@@ -1804,11 +1804,23 @@ The next launcher km-expense slice is now closed too:
     and route description
 - `ExpenseCreate` now consumes those search params and shows a launcher banner
   before save, keeping the last correction on the approved expense form
-- this slice stayed local:
-  - no migration
-  - no remote deploy yet
-  - validation closed with `npm run typecheck`, targeted Vitest, and live local
-    ORS calls on the real `Valguarnera Caropepe -> Catania` route
+- this slice has now been verified on the linked remote runtime too:
+  - no migration was needed
+  - `OPENROUTESERVICE_API_KEY` and `OPENROUTESERVICE_BASE_URL` were added to
+    the linked Supabase Edge Function secrets
+  - `unified_crm_answer` was redeployed on `qvdmzhyzpyaveniirsmo`
+  - authenticated remote smoke on `2026-03-01` returned HTTP `200`
+  - smoke question used:
+    `Devo registrare una spesa oggi: ho percorso la tratta Valguarnera Caropepe - Catania andata e ritorno. Calcola quanti chilometri ho percorso e dimmi come caricarli nel CRM.`
+  - returned model: `openrouteservice`
+  - returned first suggested action:
+    `expense_create_km`
+  - returned prefilled route:
+    `/#/expenses/create?expense_type=spostamento_km&expense_date=2026-03-01&km_distance=160.98&km_rate=0.19...`
+  - temporary smoke user was cleaned after verification
+  - validation also remains closed with `npm run typecheck`, targeted Vitest,
+    and live local ORS calls on the real `Valguarnera Caropepe -> Catania`
+    route
 - explicit residual risks:
   - geocoding on a city/locality name can resolve the city center or a generic
     point instead of the exact street address

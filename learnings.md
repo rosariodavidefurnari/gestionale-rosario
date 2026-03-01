@@ -1278,3 +1278,11 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   reale resta solo locale, il repository traccia `supabase/functions/.env.example`
   con placeholder. Se una key reale è già finita in git, va considerata esposta e
   ruotata: ignorare il file da oggi non sana la history.
+
+- [2026-03-01] **I secret remoti Edge Functions vanno verificati prima dello smoke** —
+  Per il flow `openrouteservice`, il deploy della function da solo non basta:
+  prima dello smoke bisogna controllare con `npx supabase secrets list` che
+  `OPENROUTESERVICE_API_KEY` sia davvero presente sul project ref remoto.
+  Regola pratica: `secrets set` in modo sequenziale, poi verifica, poi smoke
+  autenticato. Altrimenti si perde tempo a leggere un `500` che dipende solo da
+  runtime non ancora allineato.

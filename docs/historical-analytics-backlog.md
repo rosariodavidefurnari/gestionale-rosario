@@ -606,8 +606,18 @@ The launcher km-expense slice is now closed too:
 - known residual risk:
   - if the route uses only a city/locality name, ORS may resolve a generic
     point instead of the exact address, so km stay user-correctable before save
-- validation closed with typecheck, targeted Vitest, and live local ORS calls
-  on the first real route used as product benchmark
+- validation closed with:
+  - `npm run typecheck`
+  - targeted Vitest
+  - live local ORS calls on the first real route used as product benchmark
+  - authenticated remote smoke on `2026-03-01` after setting
+    `OPENROUTESERVICE_API_KEY` on `qvdmzhyzpyaveniirsmo`
+  - remote smoke result:
+    - HTTP `200`
+    - model `openrouteservice`
+    - first suggested action `expense_create_km`
+    - handoff prefilled on `/#/expenses/create`
+  - smoke user cleaned after verification
 
 Why this comes next:
 

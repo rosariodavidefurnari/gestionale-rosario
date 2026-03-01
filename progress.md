@@ -3226,3 +3226,18 @@ invece separato e ancora aperto.
   la decisione di prodotto di non reintrodurre Postmark
 - [x] Regola di continuità documentata: secret reali solo in env locali / secret
   remoti, mai in git
+
+## Sessione 80 (2026-03-01, remote ORS runtime verification)
+
+- [x] `OPENROUTESERVICE_API_KEY` impostata sul progetto remoto
+  `qvdmzhyzpyaveniirsmo`
+- [x] `OPENROUTESERVICE_BASE_URL` impostata sul runtime remoto Edge Functions
+- [x] `unified_crm_answer` redeployata sul progetto remoto
+- [x] Smoke autenticato remoto chiuso sul flow km con domanda reale:
+  `Valguarnera Caropepe - Catania` A/R
+- [x] Risposta remota verificata:
+  - HTTP `200`
+  - model `openrouteservice`
+  - first action `expense_create_km`
+  - handoff `/#/expenses/create` con `km_distance=160.98` e `km_rate=0.19`
+- [x] Utente smoke remoto ripulito dopo la verifica
