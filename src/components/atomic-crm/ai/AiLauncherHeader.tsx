@@ -18,7 +18,7 @@ export type UnifiedAiLauncherView = "chat" | "snapshot" | "import";
 const viewTitles: Record<UnifiedAiLauncherView, string> = {
   chat: "Chat AI",
   snapshot: "Snapshot CRM",
-  import: "Import fatture",
+  import: "Importa fatture e ricevute",
 };
 
 export const AiLauncherHeader = ({
@@ -55,7 +55,7 @@ export const AiLauncherHeader = ({
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => onViewChange("import")}>
                 <FileUp className="size-4" />
-                Import fatture
+                Importa fatture e ricevute
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

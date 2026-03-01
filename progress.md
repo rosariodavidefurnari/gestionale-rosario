@@ -91,7 +91,7 @@ caso mancano ancora creazione assistita cliente e alcuni campi anagrafici da
 fatturazione; non e' il focus adesso, ma il backlog lo conserva.
 Fuori sequenza ma chiuso subito per sbloccare l'uso quotidiano: il launcher AI
 non impila piu tutto in un unico scroll. Ora apre su `Chat AI`, mentre
-`Snapshot CRM` e `Import fatture` stanno dietro un menu `+`; lo stato della
+`Snapshot CRM` e `Importa fatture e ricevute` stanno dietro un menu `+`; lo stato della
 chat resta preservato mentre si cambia vista nella stessa sessione.
 
 ## Last Session
@@ -101,7 +101,7 @@ chat resta preservato mentre si cambia vista nella stessa sessione.
 - Completed:
   - **Il launcher AI ora apre sulla chat come vista primaria**:
     - `Chat AI` e' la vista default
-    - `Snapshot CRM` e `Import fatture` non stanno piu nello stesso scroll
+    - `Snapshot CRM` e `Importa fatture e ricevute` non stanno piu nello stesso scroll
       infinito
     - le viste secondarie si aprono dal bottone `+`
   - **La shell e' stata separata in viste chiare senza rompere la logica

@@ -79,11 +79,11 @@ export const AiInvoiceImportView = ({
           <FileUp className="size-4" />
         </div>
         <div className="space-y-1">
-          <p className="text-sm font-medium">Import fatture</p>
+          <p className="text-sm font-medium">Importa fatture e ricevute</p>
           <p className="text-sm text-muted-foreground">
-            Carica PDF, scansioni o foto. L&apos;AI propone il mapping su
-            `payments` o `expenses`, ma nulla viene scritto senza la tua
-            conferma esplicita.
+            Carica PDF, scansioni o foto. L&apos;AI prepara una bozza
+            strutturata per incassi o spese, che puoi correggere prima della
+            conferma.
           </p>
         </div>
       </div>

@@ -284,7 +284,7 @@ describe("UnifiedAiLauncher", () => {
       await screen.findByRole("menuitem", { name: "Snapshot CRM" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("menuitem", { name: "Import fatture" }),
+      screen.getByRole("menuitem", { name: "Importa fatture e ricevute" }),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("menuitem", { name: "Snapshot CRM" }));
@@ -460,7 +460,9 @@ describe("UnifiedAiLauncher", () => {
       await screen.findByRole("button", { name: "Apri altre viste AI" }),
     );
     fireEvent.click(
-      await screen.findByRole("menuitem", { name: "Import fatture" }),
+      await screen.findByRole("menuitem", {
+        name: "Importa fatture e ricevute",
+      }),
     );
 
     const fileInput = await screen.findByLabelText("Documenti");

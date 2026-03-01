@@ -458,7 +458,7 @@ Tactical UX slice closed out of sequence:
 - `Chat AI` is now the default primary view
 - secondary views moved behind a `+` menu:
   - `Snapshot CRM`
-  - `Import fatture`
+  - `Importa fatture e ricevute`
 - the CRM chat stays mounted while switching views, so question/answer state is
   preserved during navigation inside the same launcher session
 - invoice import and payment-draft logic were only extracted/reframed, not

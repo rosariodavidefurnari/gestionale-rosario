@@ -110,7 +110,7 @@ export const UnifiedAiLauncher = () => {
     },
     onSuccess: (result) => {
       setConfirmation(result);
-      notify("Import fatture confermato nel CRM.", { type: "success" });
+      notify("Import documenti confermato nel CRM.", { type: "success" });
     },
     onError: (error: Error) => {
       notify(

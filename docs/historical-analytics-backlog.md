@@ -418,7 +418,7 @@ Tactical UX slice closed out of sequence:
 
 - the launcher shell was simplified before opening the next milestone:
   - `Chat AI` now opens as the default view
-  - `Snapshot CRM` and `Import fatture` moved behind a `+` menu
+  - `Snapshot CRM` and `Importa fatture e ricevute` moved behind a `+` menu
   - the chat view remains mounted while switching views, so state is preserved
 - this did not widen the AI capability perimeter:
   - no new routes
