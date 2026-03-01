@@ -10,6 +10,13 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **DEPLOY: `git push` aggiorna Vercel, non deploya Supabase
+  Functions** — In questo repo il frontend hosted va in auto-deploy su Vercel
+  direttamente dal push su `main`, quindi non va trattato come se richiedesse
+  un secondo deploy manuale separato. Il deploy separato serve invece per le
+  Edge Functions Supabase quando vengono toccate. Contesto: correzione di una
+  confusione esplicita tra deploy UI e deploy backend edge.
+
 - [2026-03-01] **Quando la chat unificata deve aiutare su lavori e spese, la
   regola Pareto corretta e' riusare le superfici gia approvate invece di
   inventare un mega-form trasversale** — Nel CRM Rosario il taglio giusto e':

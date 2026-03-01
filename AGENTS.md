@@ -1,5 +1,18 @@
 # AGENTS.md
 
+## DEPLOYMENT RULES - NON DIMENTICARE
+
+- `git push` su `main` aggiorna automaticamente il frontend su `Vercel`
+- quindi, se il lavoro tocca solo UI/frontend, **NON** serve parlare di un
+  deploy frontend manuale separato
+- `git push` **NON** deploya le Supabase Edge Functions remote
+- quindi, se il lavoro tocca `supabase/functions/**`, serve valutare e spesso
+  fare anche `npx supabase functions deploy ...` sul progetto remoto
+- regola pratica:
+  - modifiche frontend -> commit/push e Vercel fa auto-deploy
+  - modifiche Edge Functions -> commit/push + deploy Supabase separato
+  - modifiche miste -> entrambe le cose
+
 ## Project Overview
 
 Atomic CRM is a full-featured CRM built with React, shadcn-admin-kit, and Supabase. It provides contact management, task tracking, notes, email capture, and deal management with a Kanban board.
