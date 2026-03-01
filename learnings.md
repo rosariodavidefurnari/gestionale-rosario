@@ -17,6 +17,13 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   pattern migliore e' stato: icona editor esteso gia dalla terza riga, ma
   scrollbar locale solo dalla settima.
 
+- [2026-03-01] **Le soglie del composer non possono dipendere solo dai `\n`
+  manuali** — Nel launcher AI il primo tentativo contava bene le righe solo
+  nei test artificiali con `Invio`. In browser reale, se l'utente scrive testo
+  lungo che va a capo da solo, l'icona di espansione deve comunque comparire.
+  Il conteggio va quindi derivato anche dall'altezza reale del testo wrapped,
+  non solo dal numero di newline.
+
 - [2026-03-01] **In un launcher AI a drawer conviene preservare la
   conversazione read-only, ma non i workflow documentali temporanei** — Se la
   chat unificata perde tutto a ogni close/reopen, la UX sembra fragile. Pero'

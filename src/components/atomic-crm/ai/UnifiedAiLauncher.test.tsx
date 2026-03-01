@@ -628,4 +628,55 @@ describe("UnifiedAiLauncher", () => {
     expect(await screen.findByText("Scrivi con piu spazio")).toBeInTheDocument();
     expect(screen.getAllByDisplayValue(/riga 1/).length).toBeGreaterThan(0);
   });
+
+  it("also detects wrapped long text without explicit newlines", async () => {
+    renderLauncher();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri chat AI unificata" }),
+    );
+
+    const textarea = (await screen.findByLabelText(
+      "Fai una domanda sul CRM corrente",
+    )) as HTMLTextAreaElement;
+
+    textarea.style.lineHeight = "normal";
+    textarea.style.fontSize = "16px";
+    textarea.style.paddingTop = "0px";
+    textarea.style.paddingBottom = "0px";
+    Object.defineProperty(textarea, "scrollHeight", {
+      configurable: true,
+      get: () => {
+        if (textarea.value.length >= 180) {
+          return 168;
+        }
+        if (textarea.value.length >= 60) {
+          return 72;
+        }
+        return 24;
+      },
+    });
+
+    fireEvent.change(textarea, {
+      target: {
+        value:
+          "Questo testo lungo non contiene invii manuali ma deve comunque far comparire l'azione di editor esteso.",
+      },
+    });
+
+    expect(
+      await screen.findByRole("button", {
+        name: "Apri editor esteso per la domanda",
+      }),
+    ).toBeInTheDocument();
+    expect(textarea.style.overflowY).toBe("hidden");
+
+    fireEvent.change(textarea, {
+      target: {
+        value:
+          "Questo testo molto piu lungo continua senza invii manuali ma deve essere trattato come sette righe equivalenti per far partire la scrollbar locale del composer compatto quando la domanda diventa davvero estesa e l'utente non ha ancora aperto l'editor full-screen.",
+      },
+    });
+
+    expect(textarea.style.overflowY).toBe("auto");
+  });
 });

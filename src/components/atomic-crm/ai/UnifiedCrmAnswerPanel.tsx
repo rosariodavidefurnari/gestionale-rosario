@@ -81,20 +81,28 @@ const syncTextareaHeight = (
 
   const styles = window.getComputedStyle(textarea);
   const lineHeight = Number.parseFloat(styles.lineHeight || "");
+  const fontSize = Number.parseFloat(styles.fontSize || "16");
   const paddingTop = Number.parseFloat(styles.paddingTop || "0");
   const paddingBottom = Number.parseFloat(styles.paddingBottom || "0");
   const contentHeight = fullHeight - paddingTop - paddingBottom;
+  const effectiveLineHeight =
+    Number.isFinite(lineHeight) && lineHeight > 0
+      ? lineHeight
+      : Number.isFinite(fontSize) && fontSize > 0
+        ? fontSize * 1.5
+        : 24;
 
-  if (!Number.isFinite(lineHeight) || lineHeight <= 0 || contentHeight <= 0) {
+  if (contentHeight <= 0) {
     textarea.style.height = `${fullHeight}px`;
     return getFallbackLineCount(value);
   }
 
-  const lineCount = Math.max(1, Math.round(contentHeight / lineHeight));
+  const lineCount = Math.max(1, Math.ceil(contentHeight / effectiveLineHeight));
   const maxLines = options?.maxLines;
 
   if (maxLines && lineCount > maxLines) {
-    const cappedHeight = lineHeight * maxLines + paddingTop + paddingBottom;
+    const cappedHeight =
+      effectiveLineHeight * maxLines + paddingTop + paddingBottom;
     textarea.style.height = `${cappedHeight}px`;
     textarea.style.overflowY = "auto";
     return lineCount;
@@ -174,9 +182,11 @@ export const UnifiedCrmAnswerPanel = ({
   const resetTextareaHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
+      textareaRef.current.style.overflowY = "hidden";
     }
     if (expandedTextareaRef.current) {
       expandedTextareaRef.current.style.height = "auto";
+      expandedTextareaRef.current.style.overflowY = "hidden";
     }
     setComposerLineCount(1);
   };
@@ -419,7 +429,7 @@ export const UnifiedCrmAnswerPanel = ({
                   placeholder="Chiedi qualcosa sul CRM..."
                   maxLength={300}
                   rows={1}
-                  className="min-h-0 flex-1 resize-none border-0 bg-transparent py-2.5 pr-0 pl-3 text-sm shadow-none focus-visible:ring-0"
+                  className="min-h-0 flex-1 resize-none border-0 bg-transparent py-2.5 pr-0 pl-3 text-sm leading-6 shadow-none focus-visible:ring-0"
                   disabled={!context || isPending}
                 />
                 <Button

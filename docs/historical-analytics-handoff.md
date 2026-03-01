@@ -1746,6 +1746,8 @@ The next composer-UX continuity slice is now closed too:
 - after that threshold:
   - the textarea keeps its own scrollbar
   - an explicit full-screen expand action appears
+- wrapped text without explicit manual line breaks must still count toward
+  those thresholds
 - the expanded writer reuses the same draft question and same launcher
   conversation instead of opening a separate flow
 - explicit residual risks documented:

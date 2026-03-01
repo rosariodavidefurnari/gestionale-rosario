@@ -145,6 +145,8 @@ invece separato e ancora aperto.
     - dalla terza riga compare l'icona per aprire l'editor esteso
     - dalla settima riga compare la scrollbar locale nel composer compatto
     - l'editor esteso continua a modificare la stessa domanda, non una copia
+    - anche i ritorni a capo automatici del testo lungo contano per quelle
+      soglie, non solo gli `Invio` manuali
 
 - Risks / notes:
   - riaprendo il launcher l'ultima risposta puo riferirsi a una snapshot CRM
