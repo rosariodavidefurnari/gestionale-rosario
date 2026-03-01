@@ -44,6 +44,12 @@ describe("crmSemanticRegistry", () => {
       },
     ]);
     expect(registry.rules.travelReimbursement.defaultKmRate).toBe(0.42);
+    expect(registry.rules.travelReimbursement.meaning).toContain(
+      "calcolatore tratta manuale",
+    );
+    expect(registry.rules.travelReimbursement.meaning).toContain(
+      "spese, servizi e puntate rapide",
+    );
     expect(
       registry.dictionaries.paymentMethods.some(
         (item) => item.value === "bonifico" && item.label === "Bonifico",

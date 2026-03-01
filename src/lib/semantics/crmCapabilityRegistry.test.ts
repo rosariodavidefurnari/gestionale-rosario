@@ -18,10 +18,20 @@ describe("crmCapabilityRegistry", () => {
       ),
     ).toBe(true);
     expect(
+      registry.dialogs.some(
+        (dialog) => dialog.id === "travel_route_calculator_dialog",
+      ),
+    ).toBe(true);
+    expect(
       registry.dialogs.find(
         (dialog) => dialog.id === "unified_ai_composer_dialog",
       )?.description,
     ).toContain("terza riga");
+    expect(
+      registry.dialogs.find(
+        (dialog) => dialog.id === "travel_route_calculator_dialog",
+      )?.description,
+    ).toContain("openrouteservice");
     expect(
       registry.resources.some(
         (resource) =>
@@ -134,6 +144,17 @@ describe("crmCapabilityRegistry", () => {
       registry.actions.find((action) => action.id === "project_quick_payment")
         ?.description,
     ).toContain("importo e stato");
+    expect(
+      registry.actions.some((action) => action.id === "estimate_travel_route"),
+    ).toBe(true);
+    expect(
+      registry.actions.find((action) => action.id === "estimate_travel_route")
+        ?.requiredFields,
+    ).toContain("tripMode");
+    expect(
+      registry.actions.find((action) => action.id === "estimate_travel_route")
+        ?.description,
+    ).toContain("spese, servizi e puntate rapide");
     expect(
       registry.actions.some((action) => action.id === "invoice_import_extract"),
     ).toBe(true);

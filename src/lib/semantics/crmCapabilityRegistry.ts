@@ -223,10 +223,20 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
     {
       id: "quick_episode_dialog",
       label: "Registra puntata",
-      description: "Inserimento rapido di servizio+spostamento per progetti TV.",
+      description:
+        "Inserimento rapido di servizio+spostamento per progetti TV, con calcolatore tratta km riusabile per compilare chilometri, tariffa e costo trasferta.",
       sourceFile: "src/components/atomic-crm/projects/QuickEpisodeDialog.tsx",
       entryPoints: ["/#/projects/:id/show"],
       actsOn: ["projects", "services", "expenses"],
+    },
+    {
+      id: "travel_route_calculator_dialog",
+      label: "Calcolatore tratta km",
+      description:
+        "Dialog riusabile che chiede partenza, arrivo, tipo tratta e tariffa km, usa openrouteservice lato server e applica il risultato ai campi km/costo nelle UI che gestiscono spostamenti.",
+      sourceFile: "src/components/atomic-crm/travel/TravelRouteCalculatorDialog.tsx",
+      entryPoints: ["expenses", "services", "quick_episode_dialog"],
+      actsOn: ["services", "expenses", "projects"],
     },
     {
       id: "quick_payment_dialog",
@@ -340,6 +350,16 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
         "description",
       ],
       sideEffects: ["precompila il form spese via search params supportati"],
+    },
+    {
+      id: "estimate_travel_route",
+      label: "Calcola tratta km nelle UI operative",
+      description:
+        "Stima lato server una tratta km da partenza, arrivo e tipo percorso, riusando openrouteservice e la tariffa km corrente o predefinita, poi rimanda il risultato alle UI di spese, servizi e puntate rapide senza salvare nulla automaticamente.",
+      sourceFile: "src/components/atomic-crm/travel/TravelRouteCalculatorDialog.tsx",
+      actsOn: ["services", "expenses", "projects"],
+      requiredFields: ["origin", "destination", "tripMode", "kmRate"],
+      sideEffects: ["invoke openrouteservice via Edge Function"],
     },
     {
       id: "invoice_import_extract",

@@ -1469,6 +1469,17 @@ Only after the base is stable:
   the specific service/work item already exists unless that granularity is
   really present in the read context.
 
+## Current Travel-UI Guardrails
+
+- The manual km calculator must stay shared across `expenses`, `services` and
+  `quick episode`, not fork into per-page variants.
+- The calculator may prefill host fields, but the user must still see and edit:
+  - `km_distance`
+  - `km_rate`
+  - any generated travel description/location before save
+- Route estimation must stay server-side through a provider entry point; do not
+  move ORS calls into the browser bundle.
+
 ## Non-Negotiable Rules
 
 These rules must remain true in all future work:

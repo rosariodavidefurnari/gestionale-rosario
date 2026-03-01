@@ -1,5 +1,5 @@
 import { required, minValue } from "ra-core";
-import { useWatch } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import { Separator } from "@/components/ui/separator";
 import { TextInput } from "@/components/admin/text-input";
 import { SelectInput } from "@/components/admin/select-input";
@@ -9,6 +9,7 @@ import { DateInput } from "@/components/admin/date-input";
 import { calculateKmReimbursement } from "@/lib/semantics/crmSemanticRegistry";
 
 import { expenseTypeChoices, expenseTypeDescriptions } from "./expenseTypes";
+import { TravelRouteCalculatorDialog } from "../travel/TravelRouteCalculatorDialog";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 
 export const ExpenseInputs = () => {
@@ -89,6 +90,7 @@ const CreditSection = () => (
 
 const KmSection = () => {
   const { operationalConfig } = useConfigurationContext();
+  const { getValues, setValue } = useFormContext();
   const defaultKmRate = operationalConfig.defaultKmRate;
   const kmDistance = useWatch({ name: "km_distance" }) ?? 0;
   const kmRate = useWatch({ name: "km_rate" }) ?? defaultKmRate;
@@ -100,6 +102,31 @@ const KmSection = () => {
 
   return (
     <>
+      <div className="flex justify-end">
+        <TravelRouteCalculatorDialog
+          defaultKmRate={defaultKmRate}
+          currentKmRate={kmRate}
+          onApply={(estimate) => {
+            setValue("km_distance", estimate.totalDistanceKm, {
+              shouldDirty: true,
+            });
+            setValue("km_rate", estimate.kmRate ?? defaultKmRate, {
+              shouldDirty: true,
+            });
+
+            const currentDescription = getValues("description");
+            if (
+              typeof currentDescription !== "string" ||
+              currentDescription.trim() === "" ||
+              currentDescription.startsWith("Spostamento —")
+            ) {
+              setValue("description", estimate.generatedDescription, {
+                shouldDirty: true,
+              });
+            }
+          }}
+        />
+      </div>
       <NumberInput
         source="km_distance"
         label="Km percorsi"

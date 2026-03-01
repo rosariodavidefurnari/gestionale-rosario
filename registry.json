@@ -36,6 +36,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/travel/TravelRouteCalculatorDialog.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/tasks/taskFilters.ts",
           "type": "registry:component"
         },

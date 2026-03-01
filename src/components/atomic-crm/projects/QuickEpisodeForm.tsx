@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { TravelRouteCalculatorDialog } from "../travel/TravelRouteCalculatorDialog";
 
 export interface FeeDefaults {
   fee_shooting: number;
@@ -76,7 +77,7 @@ export const QuickEpisodeForm = ({
   const [feeEditing, setFeeEditing] = useState(defaults.fee_editing);
   const [feeOther, setFeeOther] = useState(defaults.fee_other);
   const [kmDistance, setKmDistance] = useState(0);
-  const [kmRate] = useState(defaults.km_rate);
+  const [kmRate, setKmRate] = useState(defaults.km_rate);
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -102,8 +103,8 @@ export const QuickEpisodeForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="sm:col-span-2">
           <Label htmlFor="ep-date">Data *</Label>
           <Input
             id="ep-date"
@@ -153,7 +154,32 @@ export const QuickEpisodeForm = ({
             onChange={(e) => setKmDistance(Number(e.target.value))}
           />
         </div>
-        <div className="col-span-2">
+        <div>
+          <Label htmlFor="ep-km-rate">Tariffa km (EUR)</Label>
+          <Input
+            id="ep-km-rate"
+            type="number"
+            step="0.01"
+            min="0"
+            value={kmRate}
+            onChange={(e) => setKmRate(Number(e.target.value))}
+          />
+        </div>
+        <div className="sm:col-span-2 flex justify-end">
+          <TravelRouteCalculatorDialog
+            defaultKmRate={defaults.km_rate}
+            currentKmRate={kmRate}
+            initialDestination={location}
+            onApply={(estimate) => {
+              setKmDistance(estimate.totalDistanceKm);
+              setKmRate(estimate.kmRate ?? defaults.km_rate);
+              if (!location.trim()) {
+                setLocation(estimate.generatedLocation);
+              }
+            }}
+          />
+        </div>
+        <div className="sm:col-span-2">
           <Label htmlFor="ep-location">Località</Label>
           <Input
             id="ep-location"
@@ -162,7 +188,7 @@ export const QuickEpisodeForm = ({
             placeholder="es. Catania"
           />
         </div>
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <Label htmlFor="ep-notes">Note</Label>
           <Input
             id="ep-notes"

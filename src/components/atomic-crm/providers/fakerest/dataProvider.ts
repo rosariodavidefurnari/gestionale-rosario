@@ -40,6 +40,10 @@ import type {
   UnifiedCrmAnswer,
   UnifiedCrmConversationTurn,
 } from "@/lib/ai/unifiedCrmAssistant";
+import type {
+  TravelRouteEstimate,
+  TravelRouteEstimateRequest,
+} from "@/lib/travelRouteEstimate";
 import type { AnalyticsContext } from "@/lib/analytics/buildAnalyticsContext";
 import type { AnnualOperationsContext } from "@/lib/analytics/buildAnnualOperationsContext";
 import type { HistoricalCashInflowContext } from "@/lib/analytics/buildHistoricalCashInflowContext";
@@ -233,6 +237,13 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
   ): Promise<UnifiedCrmAnswer> => {
     throw new Error(
       "Unified CRM AI answers are not available in the FakeRest provider.",
+    );
+  },
+  estimateTravelRoute: async (
+    _request?: TravelRouteEstimateRequest,
+  ): Promise<TravelRouteEstimate> => {
+    throw new Error(
+      "Il calcolo tratta km non e' disponibile nel provider FakeRest.",
     );
   },
   getInvoiceImportWorkspace: async (): Promise<InvoiceImportWorkspace> => {

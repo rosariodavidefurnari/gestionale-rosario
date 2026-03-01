@@ -295,7 +295,7 @@ export const buildCrmSemanticRegistry = (
         formula: "km_distance * km_rate",
         defaultKmRate: getDefaultKmRate(mergedConfig),
         meaning:
-          "Il rimborso spostamento deriva sempre da km percorsi per tariffa km, con una tariffa predefinita condivisa. Se la chat AI unificata propone una trasferta km calcolata tramite routing, quei km restano sempre un suggerimento modificabile prima del salvataggio su `expenses/create`.",
+          "Il rimborso spostamento deriva sempre da km percorsi per tariffa km, con una tariffa predefinita condivisa. Se la chat AI unificata propone una trasferta km calcolata tramite routing, quei km restano sempre un suggerimento modificabile prima del salvataggio su `expenses/create`. Lo stesso criterio vale anche nel calcolatore tratta manuale riusato nelle UI di spese, servizi e puntate rapide: la tariffa parte dal default condiviso ma resta sempre correggibile dall'utente prima di applicare km e costo stimato.",
       },
       dateRanges: {
         allDayField: "all_day",

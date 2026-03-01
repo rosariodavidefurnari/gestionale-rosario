@@ -71,6 +71,10 @@ import type {
   UnifiedCrmAnswer,
   UnifiedCrmConversationTurn,
 } from "@/lib/ai/unifiedCrmAssistant";
+import type {
+  TravelRouteEstimate,
+  TravelRouteEstimateRequest,
+} from "@/lib/travelRouteEstimate";
 import {
   buildCrmSemanticRegistry,
   type CrmSemanticRegistry,
@@ -555,6 +559,32 @@ const dataProviderWithCustomMethods = {
       throw new Error(
         errorDetails?.message ||
           "Impossibile ottenere una risposta AI sul CRM unificato",
+      );
+    }
+
+    return data.data;
+  },
+  async estimateTravelRoute(
+    request: TravelRouteEstimateRequest,
+  ): Promise<TravelRouteEstimate> {
+    const { data, error } = await supabase.functions.invoke<{
+      data: TravelRouteEstimate;
+    }>("travel_route_estimate", {
+      method: "POST",
+      body: request,
+    });
+
+    if (!data || error) {
+      console.error("estimateTravelRoute.error", error);
+      const errorDetails = await (async () => {
+        try {
+          return (await error?.context?.json()) ?? {};
+        } catch {
+          return {};
+        }
+      })();
+      throw new Error(
+        errorDetails?.message || "Impossibile calcolare la tratta richiesta",
       );
     }
 

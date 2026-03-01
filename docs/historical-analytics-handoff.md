@@ -1975,3 +1975,28 @@ Risks kept explicit:
   state from other launcher views such as half-edited invoice-import drafts
 - travel parsing remains heuristic for very free-form Italian phrasing, so new
   route phrasings should extend tests before further broadening the prompt layer
+
+## Manual KM Calculator Surfaces
+
+- A shared `Calcola tratta` dialog now exists for manual km entry in all current
+  operational surfaces that really edit travel data:
+  - `expenses` km section
+  - `services` km section
+  - `quick episode` dialog for TV projects
+- The dialog asks for:
+  - origin
+  - destination
+  - one-way vs round-trip
+  - editable `EUR/km` rate prefilled from the shared default
+- The route is estimated server-side through a dedicated Edge Function
+  `travel_route_estimate`, not from the browser.
+- Applying the estimate updates km/rate in the host UI and can also prefill:
+  - `description` on expenses when empty or already travel-generated
+  - `location` on services / quick episodes when empty
+
+Risks kept explicit:
+
+- geocoding/routing still depends on textual place quality; the final km value
+  must remain user-editable before saving
+- `QuickEpisodeForm` now exposes `km_rate` explicitly, but no dedicated browser
+  smoke was run in this session on that dialog after the change

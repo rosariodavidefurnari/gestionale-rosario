@@ -3277,3 +3277,25 @@ invece separato e ancora aperto.
   - il launcher puo' ancorarsi al progetto trovato in snapshot
   - ma non deve inventare l'esistenza del servizio/lavoro specifico se quel
     livello non e' realmente nel contesto read-only
+
+## Sessione 82 (2026-03-01, manual km calculator across UI)
+
+- [x] Aggiunto calcolatore tratta km riusabile nelle UI operative che
+  manipolano davvero `km_distance` / `km_rate`:
+  - `ExpenseInputs`
+  - `ServiceInputs`
+  - `QuickEpisodeForm`
+- [x] Nuova Edge Function `travel_route_estimate` con provider entry point
+  dedicato per stimare la tratta lato server tramite openrouteservice
+- [x] Dialog condiviso con:
+  - partenza
+  - arrivo
+  - andata / andata e ritorno
+  - tariffa `EUR/km` precompilata dal default condiviso ma modificabile
+- [x] `QuickEpisodeForm` ora mostra anche `km_rate` esplicitamente, non solo i km
+- [x] Applicazione stima:
+  - aggiorna km e tariffa nel form ospite
+  - puo' precompilare descrizione spesa o localita' se ancora vuote
+- [x] Test verdi:
+  - `npm run typecheck`
+  - `vitest --run src/components/atomic-crm/travel/TravelRouteCalculatorDialog.test.tsx supabase/functions/_shared/travelRouteEstimate.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`

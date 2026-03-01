@@ -1317,3 +1317,26 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   messaggio esista gia' davvero se il read context non espone quel livello di
   dettaglio. Prima regola: dichiarare il progetto trovato, non inventare il
   servizio specifico.
+
+- [2026-03-01] **Il calcolatore km va centralizzato e servito lato server** —
+  Se `km_distance` / `km_rate` compaiono in piu' UI (`expenses`, `services`,
+  `quick episode`), non conviene duplicare mini-widget locali. Pattern corretto:
+  un dialog condiviso, un entry point provider unico e una Edge Function
+  dedicata. Questo mantiene coerenti:
+  - UX
+  - default `EUR/km`
+  - geocoding/routing
+  - gestione errori
+
+- [2026-03-01] **`QuickEpisodeForm` era fuori specifica sui km** —
+  Prima del slice, la puntata rapida gestiva `km_distance` ma non mostrava
+  `km_rate` come campo esplicito. Se una regola di prodotto dice che la tariffa
+  deve essere visibile/modificabile ovunque si inseriscano km o costo
+  spostamento, va verificata anche sulle superfici veloci e non solo sui CRUD
+  principali.
+
+- [2026-03-01] **Per importi euro meglio non ricalcolare se il server ha gia' il valore** —
+  Nel dialog tratta km, se il backend ha gia' restituito `reimbursementAmount`
+  per la tariffa corrente, conviene riusarlo. Ricalcolare sempre lato client da
+  float (`distance * kmRate`) puo' introdurre centesimi sbagliati (`40.24`
+  invece di `40.25`) per precisione binaria.

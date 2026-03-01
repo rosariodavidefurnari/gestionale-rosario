@@ -1,5 +1,5 @@
 import { required, minValue } from "ra-core";
-import { useWatch } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import { Separator } from "@/components/ui/separator";
 import { TextInput } from "@/components/admin/text-input";
 import { SelectInput } from "@/components/admin/select-input";
@@ -11,6 +11,7 @@ import { BooleanInput } from "@/components/admin/boolean-input";
 import { calculateKmReimbursement } from "@/lib/semantics/crmSemanticRegistry";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { TravelRouteCalculatorDialog } from "../travel/TravelRouteCalculatorDialog";
 import { ServiceTotals } from "./ServiceTotals";
 
 export const ServiceInputs = () => {
@@ -131,9 +132,11 @@ const ServiceFeeInputs = () => (
 
 const ServiceKmInputs = () => {
   const { operationalConfig } = useConfigurationContext();
+  const { getValues, setValue } = useFormContext();
   const defaultKmRate = operationalConfig.defaultKmRate;
   const kmDistance = useWatch({ name: "km_distance" }) ?? 0;
   const kmRate = useWatch({ name: "km_rate" }) ?? defaultKmRate;
+  const location = useWatch({ name: "location" }) ?? "";
   const kmReimbursement = calculateKmReimbursement({
     kmDistance,
     kmRate,
@@ -142,7 +145,32 @@ const ServiceKmInputs = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <h6 className="text-lg font-semibold">Spostamento</h6>
+      <div className="flex items-center justify-between gap-3">
+        <h6 className="text-lg font-semibold">Spostamento</h6>
+        <TravelRouteCalculatorDialog
+          defaultKmRate={defaultKmRate}
+          currentKmRate={kmRate}
+          initialDestination={typeof location === "string" ? location : ""}
+          onApply={(estimate) => {
+            setValue("km_distance", estimate.totalDistanceKm, {
+              shouldDirty: true,
+            });
+            setValue("km_rate", estimate.kmRate ?? defaultKmRate, {
+              shouldDirty: true,
+            });
+
+            const currentLocation = getValues("location");
+            if (
+              typeof currentLocation !== "string" ||
+              currentLocation.trim() === ""
+            ) {
+              setValue("location", estimate.generatedLocation, {
+                shouldDirty: true,
+              });
+            }
+          }}
+        />
+      </div>
       <NumberInput
         source="km_distance"
         label="Km percorsi"
