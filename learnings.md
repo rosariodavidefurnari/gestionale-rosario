@@ -10,6 +10,21 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **In un launcher AI a drawer conviene preservare la
+  conversazione read-only, ma non i workflow documentali temporanei** — Se la
+  chat unificata perde tutto a ogni close/reopen, la UX sembra fragile. Pero'
+  applicare la stessa persistenza anche a file caricati, draft fatture e
+  conferme documentali alza il rischio di stati sporchi o poco chiari. Il
+  pattern corretto e' tenere viva la conversazione chat piu recente e lasciare
+  invece reset-on-close i flussi con file temporanei.
+
+- [2026-03-01] **Se riapri una risposta AI gia generata, il rischio principale
+  non e' tecnico ma semantico: puo essere meno fresca del CRM attuale** — Nel
+  launcher unificato la persistenza dell'ultima risposta funziona bene, ma va
+  accompagnata da un boundary esplicito. Il timestamp della risposta deve
+  restare visibile e la documentazione deve dire chiaramente che al reopen la
+  risposta puo riflettere una snapshot precedente.
+
 - [2026-03-01] **Quando allarghi l'anagrafica fiscale cliente, la chat
   unificata e la discovery clienti vanno aggiornate nello stesso slice** —
   Non basta estendere schema, form e import fatture. Se il launcher read-only

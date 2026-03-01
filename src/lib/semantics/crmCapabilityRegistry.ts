@@ -258,7 +258,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "open_unified_ai_launcher",
       label: "Apri chat AI unificata",
       description:
-        "Apre la shell AI globale dal bottone flottante disponibile ovunque nel CRM.",
+        "Apre la shell AI globale dal bottone flottante disponibile ovunque nel CRM; la conversazione chat piu recente resta visibile anche se il drawer viene chiuso e riaperto, mentre i workflow documentali restano separati e si resettano alla chiusura.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
       actsOn: [],
       requiredFields: [],

@@ -547,6 +547,20 @@ The immediate continuity follow-up is now closed too:
   - no edge-function change
   - validation closed with `npm run typecheck` and targeted Vitest
 
+The launcher continuity/reading-space slice is now closed too:
+
+- mobile launcher now fills the whole viewport height for reading room
+- the CRM chat inside the launcher now survives close/reopen with:
+  - last answer
+  - current payment draft
+  - current unsent question
+- invoice import intentionally stays reset-on-close to avoid carrying temporary
+  document state across drawer sessions
+- known residual risk:
+  - the restored answer may refer to a slightly older snapshot than the live
+    CRM at reopen time
+  - the visible answer timestamp is now the explicit clue for that boundary
+
 Why this comes next:
 
 - the launcher now has the base layers it needed:

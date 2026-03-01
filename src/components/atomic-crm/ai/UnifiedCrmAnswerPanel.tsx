@@ -7,7 +7,7 @@ import {
   Plus,
   SendHorizontal,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { useDataProvider, useNotify } from "ra-core";
 
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +46,12 @@ const formatGeneratedAt = (value: string) => {
 type UnifiedCrmAnswerPanelProps = {
   context: UnifiedCrmReadContext | null;
   selectedModel: string;
+  question: string;
+  onQuestionChange: (question: string) => void;
+  answer: UnifiedCrmAnswer | null;
+  onAnswerChange: (answer: UnifiedCrmAnswer | null) => void;
+  paymentDraft: UnifiedCrmPaymentDraft | null;
+  onPaymentDraftChange: (draft: UnifiedCrmPaymentDraft | null) => void;
   onNavigate?: () => void;
   onOpenView?: (view: "snapshot" | "import") => void;
 };
@@ -53,18 +59,20 @@ type UnifiedCrmAnswerPanelProps = {
 export const UnifiedCrmAnswerPanel = ({
   context,
   selectedModel: _selectedModel,
+  question,
+  onQuestionChange,
+  answer,
+  onAnswerChange,
+  paymentDraft,
+  onPaymentDraftChange,
   onNavigate,
   onOpenView,
 }: UnifiedCrmAnswerPanelProps) => {
   const dataProvider = useDataProvider<CrmDataProvider>();
   const notify = useNotify();
-  const [question, setQuestion] = useState("");
-  const [paymentDraft, setPaymentDraft] =
-    useState<UnifiedCrmPaymentDraft | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const {
-    data: answer,
     error,
     isPending,
     mutate: askQuestion,
@@ -80,7 +88,7 @@ export const UnifiedCrmAnswerPanel = ({
       return dataProvider.askUnifiedCrmQuestion(nextQuestion, context);
     },
     onSuccess: () => {
-      setQuestion("");
+      onQuestionChange("");
       resetTextareaHeight();
     },
     onError: (mutationError: Error) => {
@@ -97,10 +105,6 @@ export const UnifiedCrmAnswerPanel = ({
   const trimmedQuestion = question.trim();
   const suggestedActions = answer?.suggestedActions ?? [];
   const hasConversation = !!answer || isPending || !!error;
-
-  useEffect(() => {
-    setPaymentDraft(answer?.paymentDraft ?? null);
-  }, [answer?.paymentDraft]);
 
   const resetTextareaHeight = () => {
     if (textareaRef.current) {
@@ -124,8 +128,13 @@ export const UnifiedCrmAnswerPanel = ({
       return;
     }
 
-    setQuestion(trimmed);
-    askQuestion(trimmed);
+    onQuestionChange(trimmed);
+    askQuestion(trimmed, {
+      onSuccess: (nextAnswer) => {
+        onAnswerChange(nextAnswer);
+        onPaymentDraftChange(nextAnswer.paymentDraft ?? null);
+      },
+    });
     resetTextareaHeight();
   };
 
@@ -179,7 +188,7 @@ export const UnifiedCrmAnswerPanel = ({
               <PaymentDraftCard
                 draft={paymentDraft}
                 routePrefix={context?.meta.routePrefix ?? "/#/"}
-                onChange={setPaymentDraft}
+                onChange={onPaymentDraftChange}
                 onNavigate={onNavigate}
               />
             ) : null}
@@ -280,7 +289,7 @@ export const UnifiedCrmAnswerPanel = ({
               id="unified-crm-question"
               value={question}
               onChange={(event) => {
-                setQuestion(event.target.value);
+                onQuestionChange(event.target.value);
                 const target = event.target;
                 target.style.height = "auto";
                 target.style.height = `${Math.min(target.scrollHeight, 120)}px`;

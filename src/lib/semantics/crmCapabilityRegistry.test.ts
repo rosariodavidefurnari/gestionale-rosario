@@ -33,6 +33,11 @@ describe("crmCapabilityRegistry", () => {
       ),
     ).toBe(true);
     expect(
+      registry.actions.find(
+        (action) => action.id === "open_unified_ai_launcher",
+      )?.description,
+    ).toContain("riaperto");
+    expect(
       registry.actions.some(
         (action) => action.id === "read_unified_crm_context",
       ),

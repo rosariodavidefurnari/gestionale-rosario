@@ -12,6 +12,10 @@ import {
   type InvoiceImportConfirmation,
   type InvoiceImportDraft,
 } from "@/lib/ai/invoiceImport";
+import type {
+  UnifiedCrmAnswer,
+  UnifiedCrmPaymentDraft,
+} from "@/lib/ai/unifiedCrmAssistant";
 import { cn } from "@/lib/utils";
 
 import { AiChatView } from "./AiChatView";
@@ -27,6 +31,10 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 export const UnifiedAiLauncher = () => {
   const [open, setOpen] = useState(false);
   const [activeView, setActiveView] = useState<UnifiedAiLauncherView>("chat");
+  const [chatQuestion, setChatQuestion] = useState("");
+  const [chatAnswer, setChatAnswer] = useState<UnifiedCrmAnswer | null>(null);
+  const [chatPaymentDraft, setChatPaymentDraft] =
+    useState<UnifiedCrmPaymentDraft | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [userInstructions, setUserInstructions] = useState("");
   const [draft, setDraft] = useState<InvoiceImportDraft | null>(null);
@@ -120,7 +128,7 @@ export const UnifiedAiLauncher = () => {
     },
   });
 
-  const resetConversation = () => {
+  const resetImportWorkspace = () => {
     setSelectedFiles([]);
     setUserInstructions("");
     setDraft(null);
@@ -209,7 +217,7 @@ export const UnifiedAiLauncher = () => {
         setOpen(nextOpen);
         setActiveView("chat");
         if (!nextOpen) {
-          resetConversation();
+          resetImportWorkspace();
         }
       }}
     >
@@ -233,7 +241,9 @@ export const UnifiedAiLauncher = () => {
         side={isMobile ? "bottom" : "right"}
         className={cn(
           "gap-0 p-0",
-          isMobile ? "h-[88vh] rounded-t-2xl" : "w-full sm:max-w-2xl",
+          isMobile
+            ? "inset-0 h-dvh max-h-dvh rounded-none border-t-0"
+            : "w-full sm:max-w-2xl",
         )}
       >
         <AiLauncherHeader
@@ -256,6 +266,12 @@ export const UnifiedAiLauncher = () => {
                 selectedModel={selectedAnswerModel}
                 isReadContextPending={isReadContextPending && open}
                 readContextError={readContextError}
+                question={chatQuestion}
+                onQuestionChange={setChatQuestion}
+                answer={chatAnswer}
+                onAnswerChange={setChatAnswer}
+                paymentDraft={chatPaymentDraft}
+                onPaymentDraftChange={setChatPaymentDraft}
                 onNavigate={() => setOpen(false)}
                 onOpenView={setActiveView}
               />

@@ -1,4 +1,8 @@
 import { UnifiedCrmAnswerPanel } from "./UnifiedCrmAnswerPanel";
+import type {
+  UnifiedCrmAnswer,
+  UnifiedCrmPaymentDraft,
+} from "@/lib/ai/unifiedCrmAssistant";
 import type { UnifiedCrmReadContext } from "@/lib/ai/unifiedCrmReadContext";
 
 export const AiChatView = ({
@@ -6,6 +10,12 @@ export const AiChatView = ({
   selectedModel,
   isReadContextPending,
   readContextError,
+  question,
+  onQuestionChange,
+  answer,
+  onAnswerChange,
+  paymentDraft,
+  onPaymentDraftChange,
   onNavigate,
   onOpenView,
 }: {
@@ -13,6 +23,12 @@ export const AiChatView = ({
   selectedModel: string;
   isReadContextPending: boolean;
   readContextError: unknown;
+  question: string;
+  onQuestionChange: (question: string) => void;
+  answer: UnifiedCrmAnswer | null;
+  onAnswerChange: (answer: UnifiedCrmAnswer | null) => void;
+  paymentDraft: UnifiedCrmPaymentDraft | null;
+  onPaymentDraftChange: (draft: UnifiedCrmPaymentDraft | null) => void;
   onNavigate?: () => void;
   onOpenView?: (view: "snapshot" | "import") => void;
 }) => (
@@ -33,6 +49,12 @@ export const AiChatView = ({
       <UnifiedCrmAnswerPanel
         context={context}
         selectedModel={selectedModel}
+        question={question}
+        onQuestionChange={onQuestionChange}
+        answer={answer}
+        onAnswerChange={onAnswerChange}
+        paymentDraft={paymentDraft}
+        onPaymentDraftChange={onPaymentDraftChange}
         onNavigate={onNavigate}
         onOpenView={onOpenView}
       />

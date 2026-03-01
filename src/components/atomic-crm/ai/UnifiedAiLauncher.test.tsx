@@ -446,6 +446,20 @@ describe("UnifiedAiLauncher", () => {
       "href",
       "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&payment_type=saldo&amount=450&status=in_attesa&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment&draft_kind=payment_create",
     );
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+    expect(screen.queryByText("Tutto sotto controllo.")).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri chat AI unificata" }),
+    );
+
+    expect(
+      await screen.findByText("Tutto sotto controllo."),
+    ).toBeInTheDocument();
+    expect(await screen.findByText("Bozza pagamento proposta")).toBeInTheDocument();
+    expect(askUnifiedCrmQuestion).toHaveBeenCalledTimes(1);
   });
 
   it("uploads files, generates a draft, and confirms the import", async () => {
@@ -529,5 +543,39 @@ describe("UnifiedAiLauncher", () => {
       expect(confirmInvoiceImportDraft).toHaveBeenCalledTimes(1),
     );
     expect(await screen.findByText("Import completato")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri chat AI unificata" }),
+    );
+    fireEvent.pointerDown(
+      await screen.findByRole("button", { name: "Apri altre viste AI" }),
+    );
+    fireEvent.click(
+      await screen.findByRole("menuitem", {
+        name: "Importa fatture e ricevute",
+      }),
+    );
+
+    expect(screen.queryByText("Bozza pronta")).not.toBeInTheDocument();
+    expect(screen.queryByText("Import completato")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Analizza documenti" }),
+    ).toBeDisabled();
+  });
+
+  it("uses the full mobile viewport for the launcher drawer", async () => {
+    useIsMobile.mockReturnValue(true);
+
+    renderLauncher();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri chat AI unificata" }),
+    );
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog.className).toContain("inset-0");
+    expect(dialog.className).toContain("h-dvh");
+    expect(dialog.className).toContain("rounded-none");
   });
 });

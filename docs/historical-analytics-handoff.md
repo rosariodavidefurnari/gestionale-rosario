@@ -1715,6 +1715,29 @@ The immediate continuity follow-up is now closed too:
   - no function redeploy
   - validation closed with `npm run typecheck` and targeted Vitest
 
+The next launcher-UX continuity slice is now closed too:
+
+- on mobile the launcher sheet now uses the full viewport height instead of
+  stopping below the top edge
+- the general CRM chat now preserves its last visible conversation across
+  drawer close/reopen:
+  - last answer
+  - last payment draft linked to that answer
+  - current unsent question text
+- the invoice-import workspace deliberately does **not** follow that rule:
+  - selected files
+  - generated invoice draft
+  - confirmation state
+  still reset on close
+- explicit residual risk documented:
+  - reopening the launcher can show an answer grounded on an older snapshot
+  - the timestamp remains visible in the UI and the next question still uses
+    the current loaded context
+- this slice stayed local too:
+  - no migration
+  - no function redeploy
+  - validation closed with `npm run typecheck` and targeted Vitest
+
 ## Environment Blockers
 
 ### Supabase migration state

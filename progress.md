@@ -116,9 +116,41 @@ read-only del launcher vede anche denominazione fatturazione, `P.IVA`, `CF`,
 `Codice Destinatario`, `PEC` e indirizzo fiscale riassunto dei clienti
 recenti, mentre lista e filtri clienti permettono finalmente di trovare lo
 stesso profilo tramite denominazione, identificativi fiscali e comune di
-fatturazione. Il tema fornitori resta invece separato e ancora aperto.
+fatturazione. Anche il follow-up UX del launcher e' ora chiuso: su cellulare
+la chat usa tutto lo schermo in altezza e la conversazione read-only piu
+recente non si perde piu quando chiudi e riapri il drawer. Resta intenzionale
+solo il reset del workflow import fatture, per non trascinare file temporanei
+e draft documentali tra una sessione drawer e l'altra. Il tema fornitori resta
+invece separato e ancora aperto.
 
 ## Last Session
+
+### Sessione 74 (2026-03-01, persistenza chat launcher e drawer mobile full-screen)
+
+- Completed:
+  - **La chat del launcher ora sopravvive a close/reopen**:
+    - ultima risposta CRM preservata
+    - bozza pagamento collegata preservata
+    - testo domanda non ancora inviata preservato
+    - il reset automatico alla chiusura non tocca piu la conversazione chat
+  - **Il reset resta confinato al workflow documentale**:
+    - file selezionati import fatture
+    - bozza import generata
+    - stato conferma import
+    continuano a resettarsi alla chiusura del drawer
+  - **Su mobile il launcher ora usa tutta l'altezza disponibile**:
+    - niente piu `88vh`
+    - drawer full-screen fino al bordo alto
+
+- Risks / notes:
+  - riaprendo il launcher l'ultima risposta puo riferirsi a una snapshot CRM
+    non piu freschissima; il timestamp visibile resta il boundary esplicito
+  - non ho ancora fatto smoke browser mobile reale su device, solo validazione
+    locale e test UI
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx src/lib/semantics/crmCapabilityRegistry.test.ts`
 
 ### Sessione 73 (2026-03-01, continuita' billing profile su chat e lista clienti)
 
