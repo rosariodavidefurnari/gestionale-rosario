@@ -181,3 +181,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.travel_route_estimate]
 verify_jwt = false
+[functions.travel_location_suggest]
+verify_jwt = false

@@ -233,7 +233,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "travel_route_calculator_dialog",
       label: "Calcolatore tratta km",
       description:
-        "Dialog riusabile che chiede partenza, arrivo, tipo tratta e tariffa km, usa openrouteservice lato server e applica il risultato ai campi km/costo nelle UI che gestiscono spostamenti.",
+        "Dialog riusabile che chiede partenza, arrivo, tipo tratta e tariffa km, offre suggerimenti luogo mentre scrivi, usa openrouteservice lato server e applica il risultato ai campi km/costo nelle UI che gestiscono spostamenti.",
       sourceFile: "src/components/atomic-crm/travel/TravelRouteCalculatorDialog.tsx",
       entryPoints: ["expenses", "services", "quick_episode_dialog"],
       actsOn: ["services", "expenses", "projects"],
@@ -350,6 +350,16 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
         "description",
       ],
       sideEffects: ["precompila il form spese via search params supportati"],
+    },
+    {
+      id: "suggest_travel_locations",
+      label: "Suggerisci luoghi nel calcolatore km",
+      description:
+        "Mentre l'utente scrive partenza o arrivo nel calcolatore tratta km, cerca lato server luoghi compatibili tramite openrouteservice e lascia la selezione finale all'utente prima del calcolo.",
+      sourceFile: "src/components/atomic-crm/travel/TravelRouteCalculatorDialog.tsx",
+      actsOn: ["services", "expenses", "projects"],
+      requiredFields: ["query"],
+      sideEffects: ["invoke openrouteservice geocoding via Edge Function"],
     },
     {
       id: "estimate_travel_route",

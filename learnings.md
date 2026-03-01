@@ -1361,3 +1361,13 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   Pattern corretto: aggiungere sempre la function al `config.toml` del progetto
   e centralizzare un helper provider che risolve/refresh-a la sessione prima
   delle invoke autenticate.
+
+- [2026-03-01] **Un modal mobile alto richiede un body scrollabile esplicito, non solo `overflow-y-auto` sul pannello** —
+  Nel dialog `Calcola tratta km` su iPhone il pannello restava visibile ma non
+  realmente scrollabile perche' il contenuto viveva in un box centrato con
+  `top-1/2` e altezza implicita. Il pattern che chiude il bug reale e':
+  - su mobile ancorare il dialog in alto invece di centrarlo verticalmente
+  - dare un `max-h` in `dvh`
+  - mettere `overflow-hidden` sul contenitore
+  - creare una colonna con header/footer `shrink-0`
+  - dare al body `min-h-0 flex-1 overflow-y-auto`

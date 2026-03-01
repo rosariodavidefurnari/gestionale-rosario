@@ -1,5 +1,15 @@
 export type TravelRouteTripMode = "one_way" | "round_trip";
 
+export type TravelRouteLocationSuggestRequest = {
+  query: string;
+};
+
+export type TravelRouteLocationSuggestion = {
+  label: string;
+  longitude: number;
+  latitude: number;
+};
+
 export type TravelRouteEstimateRequest = {
   origin: string;
   destination: string;
@@ -35,4 +45,3 @@ export const buildTravelRouteDescription = ({
   `Spostamento — ${origin.trim()} - ${destination.trim()}${
     tripMode === "round_trip" ? " A/R" : ""
   }`;
-

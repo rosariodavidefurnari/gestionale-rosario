@@ -43,6 +43,8 @@ import type {
 import type {
   TravelRouteEstimate,
   TravelRouteEstimateRequest,
+  TravelRouteLocationSuggestRequest,
+  TravelRouteLocationSuggestion,
 } from "@/lib/travelRouteEstimate";
 import type { AnalyticsContext } from "@/lib/analytics/buildAnalyticsContext";
 import type { AnnualOperationsContext } from "@/lib/analytics/buildAnnualOperationsContext";
@@ -244,6 +246,13 @@ const dataProviderWithCustomMethod: CrmDataProvider = {
   ): Promise<TravelRouteEstimate> => {
     throw new Error(
       "Il calcolo tratta km non e' disponibile nel provider FakeRest.",
+    );
+  },
+  suggestTravelLocations: async (
+    _request?: TravelRouteLocationSuggestRequest,
+  ): Promise<TravelRouteLocationSuggestion[]> => {
+    throw new Error(
+      "I suggerimenti luogo non sono disponibili nel provider FakeRest.",
     );
   },
   getInvoiceImportWorkspace: async (): Promise<InvoiceImportWorkspace> => {

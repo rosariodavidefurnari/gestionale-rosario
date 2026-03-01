@@ -3355,3 +3355,25 @@ invece separato e ancora aperto.
 - [x] Validation:
   - `npm run typecheck`
   - `npx vitest --run src/components/atomic-crm/providers/supabase/edgeFunctions.test.ts src/components/atomic-crm/travel/TravelRouteCalculatorDialog.test.tsx`
+
+## Sessione 86 (2026-03-01, travel-route mobile scroll + autocomplete hardening)
+
+- [x] Chiuso il blocco di scroll reale nel modale `Calcola tratta km` su
+  iPhone/mobile
+  - `DialogContent` del calcolatore non resta piu' centrato con altezza
+    implicita oltre viewport
+  - layout ristrutturato con header/footer fissi e body interno scrollabile
+  - aggiunto padding safe-area bottom per non schiacciare le CTA contro la
+    toolbar mobile
+- [x] Rafforzato il corridoio autocomplete luoghi
+  - il suggeritore usa il ramo `geocode/autocomplete` del geocoder ORS, coerente
+    con la documentazione ufficiale
+  - assenza risultati non viene piu' trattata come errore bloccante ma come
+    lista vuota gestibile dalla UI
+  - aggiunta entry `[functions.travel_location_suggest]` in
+    `supabase/config.toml` per tenere coerente il runtime edge
+- [x] Continuita' aggiornata
+  - `progress.md`
+  - `learnings.md`
+- [x] Runtime remoto riallineato
+  - deploy di `travel_location_suggest` sul progetto Supabase linkato

@@ -2,9 +2,10 @@
 
 import "@/setupTests";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const estimateTravelRoute = vi.fn();
+const suggestTravelLocations = vi.fn();
 const notify = vi.fn();
 
 vi.mock("ra-core", async () => {
@@ -13,6 +14,7 @@ vi.mock("ra-core", async () => {
     ...actual,
     useDataProvider: () => ({
       estimateTravelRoute,
+      suggestTravelLocations,
     }),
     useNotify: () => notify,
   };
@@ -23,12 +25,90 @@ import { TravelRouteCalculatorDialog } from "./TravelRouteCalculatorDialog";
 describe("TravelRouteCalculatorDialog", () => {
   beforeEach(() => {
     estimateTravelRoute.mockReset();
+    suggestTravelLocations.mockReset();
     notify.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("suggests locations while typing and lets the user pick one", async () => {
+    vi.useFakeTimers();
+
+    suggestTravelLocations.mockResolvedValue([
+      {
+        label: "Valguarnera Caropepe, EN, Italia",
+        longitude: 14.3901,
+        latitude: 37.4952,
+      },
+    ]);
+
+    render(
+      <TravelRouteCalculatorDialog
+        defaultKmRate={0.19}
+        currentKmRate={0.19}
+        onApply={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri calcolatore tratta km" }),
+    );
+
+    fireEvent.focus(screen.getByLabelText("Luogo di partenza"));
+    fireEvent.change(screen.getByLabelText("Luogo di partenza"), {
+      target: { value: "Valg" },
+    });
+
+    await vi.advanceTimersByTimeAsync(250);
+
+    await waitFor(() =>
+      expect(suggestTravelLocations).toHaveBeenCalledWith({
+        query: "Valg",
+      }),
+    );
+
+    fireEvent.click(
+      await screen.findByRole("option", {
+        name: "Valguarnera Caropepe, EN, Italia",
+      }),
+    );
+
+    expect(screen.getByLabelText("Luogo di partenza")).toHaveValue(
+      "Valguarnera Caropepe, EN, Italia",
+    );
+    expect(
+      screen.queryByRole("option", {
+        name: "Valguarnera Caropepe, EN, Italia",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the dialog body scrollable on mobile layouts", () => {
+    render(
+      <TravelRouteCalculatorDialog
+        defaultKmRate={0.19}
+        currentKmRate={0.19}
+        onApply={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri calcolatore tratta km" }),
+    );
+
+    expect(screen.getByTestId("travel-route-dialog-body")).toHaveClass(
+      "min-h-0",
+      "flex-1",
+      "overflow-y-auto",
+    );
   });
 
   it("calculates a route and applies km plus rate back to the host UI", async () => {
     const onApply = vi.fn();
 
+    suggestTravelLocations.mockResolvedValue([]);
     estimateTravelRoute.mockResolvedValue({
       originQuery: "Valguarnera Caropepe",
       destinationQuery: "Catania",
@@ -41,8 +121,7 @@ describe("TravelRouteCalculatorDialog", () => {
       totalDurationMinutes: 146,
       kmRate: 0.25,
       reimbursementAmount: 40.25,
-      generatedDescription:
-        "Spostamento — Valguarnera Caropepe - Catania A/R",
+      generatedDescription: "Spostamento — Valguarnera Caropepe - Catania A/R",
       generatedLocation: "Catania",
     });
 
@@ -80,7 +159,9 @@ describe("TravelRouteCalculatorDialog", () => {
       }),
     );
 
-    expect(await screen.findByText(/Valguarnera Caropepe, EN, Italia/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Valguarnera Caropepe, EN, Italia/),
+    ).toBeInTheDocument();
     expect(screen.getByText(/160,98 km/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Applica" }));

@@ -5,6 +5,12 @@ export type OpenRouteResolvedLocation = {
   latitude: number;
 };
 
+export type OpenRouteLocationSuggestion = {
+  label: string;
+  longitude: number;
+  latitude: number;
+};
+
 export type OpenRouteRouteSummary = {
   distanceMeters: number;
   durationSeconds: number;
@@ -50,7 +56,9 @@ export const geocodeOpenRouteLocation = async ({
   }
 
   const payload = await response.json();
-  const firstFeature = Array.isArray(payload?.features) ? payload.features[0] : null;
+  const firstFeature = Array.isArray(payload?.features)
+    ? payload.features[0]
+    : null;
   const coordinates = Array.isArray(firstFeature?.geometry?.coordinates)
     ? firstFeature.geometry.coordinates
     : null;
@@ -73,6 +81,66 @@ export const geocodeOpenRouteLocation = async ({
     longitude: coordinates[0],
     latitude: coordinates[1],
   };
+};
+
+export const searchOpenRouteLocations = async ({
+  apiKey,
+  baseUrl,
+  text,
+  size = 5,
+}: {
+  apiKey: string;
+  baseUrl: string;
+  text: string;
+  size?: number;
+}): Promise<OpenRouteLocationSuggestion[]> => {
+  const url = buildUrl(baseUrl, "geocode/autocomplete");
+  url.searchParams.set("api_key", apiKey);
+  url.searchParams.set("text", text);
+  url.searchParams.set(
+    "size",
+    String(Math.max(1, Math.min(10, Math.trunc(size) || 5))),
+  );
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(
+      `openrouteservice autocomplete non disponibile: ${await getErrorMessage(response)}`,
+    );
+  }
+
+  const payload = await response.json();
+  const features = Array.isArray(payload?.features) ? payload.features : [];
+  const suggestions = features
+    .map((feature): OpenRouteLocationSuggestion | null => {
+      const coordinates = Array.isArray(feature?.geometry?.coordinates)
+        ? feature.geometry.coordinates
+        : null;
+
+      if (
+        !coordinates ||
+        typeof coordinates[0] !== "number" ||
+        typeof coordinates[1] !== "number"
+      ) {
+        return null;
+      }
+
+      return {
+        label:
+          typeof feature?.properties?.label === "string"
+            ? feature.properties.label
+            : text,
+        longitude: coordinates[0],
+        latitude: coordinates[1],
+      };
+    })
+    .filter(
+      (suggestion): suggestion is OpenRouteLocationSuggestion =>
+        suggestion !== null,
+    );
+
+  return suggestions;
 };
 
 export const getOpenRouteDrivingSummary = async ({

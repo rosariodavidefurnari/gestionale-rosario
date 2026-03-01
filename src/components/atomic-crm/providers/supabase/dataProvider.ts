@@ -75,6 +75,8 @@ import type {
 import type {
   TravelRouteEstimate,
   TravelRouteEstimateRequest,
+  TravelRouteLocationSuggestRequest,
+  TravelRouteLocationSuggestion,
 } from "@/lib/travelRouteEstimate";
 import {
   buildCrmSemanticRegistry,
@@ -448,13 +450,10 @@ const dataProviderWithCustomMethods = {
   async salesCreate(body: SalesFormData) {
     const { data, error } = await invokeAuthenticatedEdgeFunction<{
       data: Sale;
-    }>(
-      "users",
-      {
-        method: "POST",
-        body,
-      },
-    );
+    }>("users", {
+      method: "POST",
+      body,
+    });
 
     if (!data || error) {
       console.error("salesCreate.error", error);
@@ -602,6 +601,32 @@ const dataProviderWithCustomMethods = {
       })();
       throw new Error(
         errorDetails?.message || "Impossibile calcolare la tratta richiesta",
+      );
+    }
+
+    return data.data;
+  },
+  async suggestTravelLocations(
+    request: TravelRouteLocationSuggestRequest,
+  ): Promise<TravelRouteLocationSuggestion[]> {
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
+      data: TravelRouteLocationSuggestion[];
+    }>("travel_location_suggest", {
+      method: "POST",
+      body: request,
+    });
+
+    if (!data || error) {
+      console.error("suggestTravelLocations.error", error);
+      const errorDetails = await (async () => {
+        try {
+          return (await error?.context?.json()) ?? {};
+        } catch {
+          return {};
+        }
+      })();
+      throw new Error(
+        errorDetails?.message || "Impossibile cercare i luoghi richiesti",
       );
     }
 
