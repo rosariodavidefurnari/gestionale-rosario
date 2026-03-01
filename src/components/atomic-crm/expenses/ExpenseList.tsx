@@ -15,14 +15,15 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 
 export const ExpenseList = () => {
   const { operationalConfig } = useConfigurationContext();
+  const exporter = buildExporter(operationalConfig.defaultKmRate);
 
   return (
     <List
       title={false}
-      actions={<ExpenseListActions />}
+      actions={<ExpenseListActions exporter={exporter} />}
       perPage={25}
       sort={{ field: "expense_date", order: "DESC" }}
-      exporter={buildExporter(operationalConfig.defaultKmRate)}
+      exporter={exporter}
     >
       <ExpenseListLayout />
     </List>
@@ -53,7 +54,7 @@ const ExpenseListLayout = () => {
   );
 };
 
-const ExpenseListActions = () => (
+const ExpenseListActions = ({ exporter }: { exporter: Exporter<Expense> }) => (
   <TopToolbar>
     <SortButton fields={["expense_date", "created_at"]} />
     <ExportButton exporter={exporter} />
