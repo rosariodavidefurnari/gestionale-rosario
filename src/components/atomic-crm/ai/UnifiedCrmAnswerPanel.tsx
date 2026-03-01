@@ -79,6 +79,10 @@ export const UnifiedCrmAnswerPanel = ({
 
       return dataProvider.askUnifiedCrmQuestion(nextQuestion, context);
     },
+    onSuccess: () => {
+      setQuestion("");
+      resetTextareaHeight();
+    },
     onError: (mutationError: Error) => {
       notify(
         mutationError.message ||

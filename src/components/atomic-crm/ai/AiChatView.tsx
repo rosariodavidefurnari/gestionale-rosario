@@ -16,15 +16,15 @@ export const AiChatView = ({
   onNavigate?: () => void;
   onOpenView?: (view: "snapshot" | "import") => void;
 }) => (
-  <div className="flex h-full min-h-0 flex-col gap-4">
+  <div className="flex h-full min-h-0 flex-col">
     {readContextError ? (
-      <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      <div className="mx-3 mt-3 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
         Impossibile leggere la snapshot CRM del launcher unificato.
       </div>
     ) : null}
 
     {isReadContextPending ? (
-      <div className="rounded-2xl border border-dashed px-4 py-4 text-sm text-muted-foreground">
+      <div className="mx-3 mt-3 rounded-2xl border border-dashed px-4 py-4 text-sm text-muted-foreground">
         Sto leggendo il contesto CRM unificato...
       </div>
     ) : null}
