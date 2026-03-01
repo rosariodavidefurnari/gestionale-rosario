@@ -22,7 +22,7 @@ import {
   Users,
 } from "lucide-react";
 import { Translate, useAuthProvider, useGetIdentity, useLogout } from "ra-core";
-import { Link, matchPath, useLocation, useMatch } from "react-router";
+import { Link, matchPath, useLocation, useMatch, useNavigate } from "react-router";
 import { TaskCreateSheet } from "../tasks/TaskCreateSheet";
 import { useState } from "react";
 
@@ -112,6 +112,7 @@ const NavigationButton = ({
 const CreateButton = () => {
   const client_id = useMatch("/clients/:id/*")?.params.id;
   const [taskCreateOpen, setTaskCreateOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -132,6 +133,18 @@ const CreateButton = () => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
+          <DropdownMenuItem
+            className="h-12 px-4 text-base"
+            onSelect={() => navigate("/expenses/create")}
+          >
+            Spesa
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="h-12 px-4 text-base"
+            onSelect={() => navigate("/payments/create")}
+          >
+            Pagamento
+          </DropdownMenuItem>
           <DropdownMenuItem
             className="h-12 px-4 text-base"
             onSelect={() => {

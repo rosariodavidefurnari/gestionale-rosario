@@ -233,7 +233,7 @@ export const UnifiedAiLauncher = () => {
         side={isMobile ? "bottom" : "right"}
         className={cn(
           "gap-0 p-0",
-          isMobile ? "max-h-[88vh] rounded-t-2xl" : "w-full sm:max-w-2xl",
+          isMobile ? "h-[88vh] rounded-t-2xl" : "w-full sm:max-w-2xl",
         )}
       >
         <AiLauncherHeader

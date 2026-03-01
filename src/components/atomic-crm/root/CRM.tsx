@@ -238,7 +238,14 @@ const MobileAdmin = (props: CoreAdminProps) => {
           />
           <Route path={OAuthConsentPage.path} element={<OAuthConsentPage />} />
         </CustomRoutes>
+        <Resource name="clients" {...clients} />
+        <Resource name="expenses" {...expenses} />
+        <Resource name="payments" {...payments} />
+        <Resource name="projects" {...projects} />
         <Resource name="client_tasks" list={MobileTasksList} />
+        <Resource name="client_notes" />
+        <Resource name="sales" />
+        <Resource name="tags" />
       </Admin>
     </PersistQueryClientProvider>
   );
