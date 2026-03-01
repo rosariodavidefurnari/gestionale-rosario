@@ -10,6 +10,22 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se l'import storico incontra clienti assenti dal CRM, prima
+  di aprire creazione assistita cliente serve derivare il profilo fiscale dai
+  documenti reali** — Nel gestionale Rosario la scorciatoia `name + address +
+  tax_id` non basta per una vera anagrafica da fatturazione. Il pattern
+  corretto e' ispezionare le fatture elettroniche reali e fissare prima i
+  campi ricorrenti (`Denominazione`, `IdCodice`, `CodiceFiscale`, indirizzo
+  spezzato, `CodiceDestinatario`), poi estendere schema e draft, e solo dopo
+  aprire la creazione cliente con conferma.
+
+- [2026-03-01] **Il gap fornitori non va assorbito di nascosto dentro il primo
+  slice di anagrafica cliente fiscale** — L'analisi sull'import storico ha
+  confermato che il problema fornitori esiste davvero, perche' oggi le spese
+  referenziano ancora `client_id` e non esiste una resource dedicata. Proprio
+  per questo va tenuto come slice separato: mischiarlo alla migration cliente
+  renderebbe piu incerto il primo passo e allargherebbe troppo il perimetro.
+
 - [2026-03-01] **Se apri un secondo write-draft nella chat generale, deve
   riusare una superficie che possiede gia' financials locali deterministici**
   — Dopo il draft quote-driven, l'unico secondo caso ancora legittimo in

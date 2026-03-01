@@ -100,8 +100,48 @@ la chat puo preparare una seconda bozza pagamento stretta sul ramo
 `project -> quick payment`, usando financials di progetto aggregati in modo
 deterministico nel contesto read-only e portando `tipo/importo/stato` dentro
 il dialog approvato senza scrivere dal launcher.
+La prossima fase esplicita e' ora definita meglio: prima di aprire creazione
+assistita cliente da import storico, serve introdurre una vera anagrafica
+cliente da fatturazione. L'analisi sui file reali in `Fatture/2023-2025`
+conferma che il modello attuale `name/address/tax_id` e' troppo povero; il gap
+fornitori esiste davvero, ma resta un task separato perche' oggi le spese
+puntano ancora a `client_id` e non va mischiato con questa prima migration.
 
 ## Last Session
+
+### Sessione 71 (2026-03-01, analisi anagrafica cliente da fatturazione)
+
+- Completed:
+  - **Chiusa l'analisi del slice `anagrafica cliente da fatturazione/import
+    storico`**:
+    - verificati schema `clients`, UI cliente e contratto attuale
+      dell'import fatture
+    - ispezionate fatture XML reali in `Fatture/2023`, `Fatture/2024`,
+      `Fatture/2025`
+    - fissato il perimetro del prossimo intervento prima di toccare il DB
+  - **Definito il minimo profilo fiscale cliente che ricorre davvero nelle
+    fatture reali**:
+    - `Denominazione`
+    - `IdPaese`
+    - `IdCodice`
+    - `CodiceFiscale`
+    - `Indirizzo`
+    - `NumeroCivico`
+    - `CAP`
+    - `Comune`
+    - `Provincia`
+    - `Nazione`
+    - `CodiceDestinatario`
+  - **Confermato il confine col tema fornitori**:
+    - il problema fornitori e' reale
+    - oggi `expenses` usa ancora `client_id`
+    - ma la pagina/risorsa fornitori resta uno slice separato da affrontare
+      dopo
+
+- Validation:
+  - lettura strutturata dello schema locale
+  - ispezione manuale di fatture XML reali in repo
+  - continuita' aggiornata in `handoff`, `backlog`, `progress`, `learnings`
 
 ### Sessione 70 (2026-03-01, project quick-payment draft nel launcher)
 

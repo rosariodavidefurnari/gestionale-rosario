@@ -1618,6 +1618,53 @@ Additional runtime note for the annual flow:
   - redeploy `annual_operations_summary`
 - re-test immediately after the second deploy returned `200 OK`.
 
+## Current Explicit Next Slice
+
+The next explicit slice is now `anagrafica cliente da fatturazione/import
+storico`.
+
+Analysis is now closed before implementation:
+
+- evidence inspected:
+  - current `clients` schema + forms
+  - current invoice-import workspace / draft / extract contract
+  - real outgoing XML invoices in `Fatture/2023`, `Fatture/2024`,
+    `Fatture/2025`
+  - current expense linkage
+- the gap is structural:
+  - `clients` only keeps one freeform `address`
+  - `clients.tax_id` still collapses `Partita IVA` and `Codice Fiscale`
+  - invoice import cannot yet carry structured billing fields from extraction
+- recurring customer fields observed in real XML invoices:
+  - `Denominazione`
+  - `IdPaese`
+  - `IdCodice`
+  - `CodiceFiscale`
+  - `Indirizzo`
+  - `NumeroCivico`
+  - `CAP`
+  - `Comune`
+  - `Provincia`
+  - `Nazione`
+  - `CodiceDestinatario`
+
+Execution order for this slice:
+
+1. extend the client billing profile in DB schema, types and UI
+2. extend invoice extraction + draft transport so the launcher can hold the
+   same fields coherently
+3. only later allow AI-assisted creation of a missing client from invoice
+   import, always with explicit confirmation
+
+Important boundary:
+
+- the suspected supplier gap is real too:
+  - `expenses` still references `client_id`
+  - there is still no dedicated supplier resource/page
+- but that is a different slice:
+  - do not mix supplier-resource design into the customer billing-profile
+    migration unless it becomes a hard blocker for the current step
+
 ## Environment Blockers
 
 ### Supabase migration state
@@ -1688,15 +1735,16 @@ Stable rollback note:
 - if a future change breaks the runtime or semantics, return to that pushed
   commit before investigating forward again.
 
-1. Keep the new historical / annual / commercial tests updated whenever the
-   current widgets evolve.
-2. Re-check whether any real workflow hole is still left after the now-closed
-   `client -> payment`, `quote -> payment`, and `quote -> project -> payment`
-   paths.
-3. If no real gap is left after that review, stop this phase and treat new
-   ideas as `v2`.
-4. Only later, if useful, polish prompt/copy or markdown presentation further.
-5. Only later, if product scope changes, revisit broader AI/chat or FakeRest.
+1. Implement the customer billing-profile schema from the real invoice
+   evidence, without inventing a supplier model inside the same branch.
+2. Extend invoice-import extraction and draft transport so the launcher can
+   keep those billing fields coherently before any client-creation flow.
+3. Only after those two pieces are stable, open the explicit
+   client-creation-from-invoice slice with confirmation.
+4. Keep the existing historical / annual / launcher tests aligned while doing
+   that work.
+5. Treat the supplier resource/page as a later dedicated slice unless it
+   blocks the customer billing-profile work directly.
 
 ## Quick Resume Checklist
 
@@ -1707,6 +1755,8 @@ Stable rollback note:
 - Read the backlog:
   - `docs/historical-analytics-backlog.md`
 - Then continue from:
-  - keeping historical, annual and commercial tests aligned with future widget changes
-  - checking whether the commercial base is now enough on the three target paths
-  - otherwise closing the phase and deferring new ideas to `v2`
+  - implementing the customer billing-profile fields from real invoice
+    evidence
+  - extending invoice import so those fields survive extraction and draft
+    editing
+  - only later opening assisted missing-client creation with confirmation

@@ -455,6 +455,44 @@ Deferred note from real usage, not current priority:
   - define the missing billing anagraphic fields first
   - then allow AI-assisted client creation only with explicit confirmation
 
+That deferred note is now promoted to the next explicit slice, and the
+analysis is now closed:
+
+- evidence inspected:
+  - current `clients` table and UI
+  - current invoice-import draft / extract contract
+  - real outgoing invoices under `Fatture/2023`, `Fatture/2024`,
+    `Fatture/2025`
+  - current `expenses` linkage
+- the current gap is structural, not just UX:
+  - `clients` still stores only one freeform `address`
+  - `clients` still merges `Partita IVA / Codice Fiscale` into one `tax_id`
+  - invoice import still has nowhere structured to keep billing anagraphic
+    fields even when Gemini sees them
+- recurring customer billing fields observed in real XML invoices:
+  - `Denominazione`
+  - `IdPaese`
+  - `IdCodice`
+  - `CodiceFiscale`
+  - `Indirizzo`
+  - `NumeroCivico`
+  - `CAP`
+  - `Comune`
+  - `Provincia`
+  - `Nazione`
+  - `CodiceDestinatario`
+- the next slice must therefore proceed in this order:
+  - first define the client billing-profile fields in schema, types and UI
+  - then extend invoice extraction + draft payload so the launcher can carry
+    those fields coherently
+  - only after that consider AI-assisted client creation, always with explicit
+    confirmation
+- keep the supplier/vendor problem as a separate later slice:
+  - `expenses` still links counterparties through `client_id`
+  - there is still no dedicated supplier resource/page
+  - do not mix supplier-resource design into the customer billing-profile
+    migration unless a hard blocker appears
+
 Why this comes next:
 
 - the launcher now has the base layers it needed:
