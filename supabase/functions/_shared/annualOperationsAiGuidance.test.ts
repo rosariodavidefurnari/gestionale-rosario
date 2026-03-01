@@ -30,7 +30,7 @@ const closedYearContext = {
   ],
   topClients: [
     {
-      clientName: "Diego Caltabiano",
+      clientName: "ASSOCIAZIONE CULTURALE GUSTARE SICILIA",
       revenue: 20582,
     },
   ],
@@ -54,7 +54,7 @@ describe("buildAnnualOperationsAiGuidance", () => {
       'Se la domanda cerca un punto debole, rispondi come "segnale piu fragile visibile nei dati", non come verdetto assoluto sull\'azienda.',
     );
     expect(guidance).toContain(
-      "In questo contesto il segnale fragile piu supportato e la concentrazione su un solo cliente (Diego Caltabiano), non i valori a 0 da soli.",
+      "In questo contesto il segnale fragile piu supportato e la concentrazione su un solo cliente (ASSOCIAZIONE CULTURALE GUSTARE SICILIA), non i valori a 0 da soli.",
     );
   });
 

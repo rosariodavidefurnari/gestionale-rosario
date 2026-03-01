@@ -802,7 +802,7 @@ describe("unifiedCrmAnswer", () => {
             {
               projectId: "project-viv",
               clientId: "client-1",
-              clientName: "Diego Caltabiano",
+              clientName: "ASSOCIAZIONE CULTURALE GUSTARE SICILIA",
               projectName: "Vale il Viaggio",
               projectCategory: "produzione_tv",
               projectTvShow: "vale_il_viaggio",
@@ -864,7 +864,9 @@ describe("unifiedCrmAnswer", () => {
       buildUnifiedCrmExpenseCreateAnswerMarkdown({
         parsedQuestion: parsedQuestion!,
       }),
-    ).toContain("cliente Diego Caltabiano e progetto Vale il Viaggio");
+    ).toContain(
+      "cliente ASSOCIAZIONE CULTURALE GUSTARE SICILIA e progetto Vale il Viaggio",
+    );
   });
 
   it("builds a travel-expense handoff and answer grounded on routing data", () => {

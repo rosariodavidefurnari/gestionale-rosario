@@ -19,12 +19,12 @@ describe("quoteProjectLinking", () => {
         all_day: true,
         amount: 1800,
       },
-      clientName: "Diego Caltabiano",
+      clientName: "ASSOCIAZIONE CULTURALE GUSTARE SICILIA",
     });
 
     expect(draft).toMatchObject({
       client_id: "client-1",
-      name: "Bella tra i Fornelli - Puntata 12 - Diego Caltabiano",
+      name: "Bella tra i Fornelli - Puntata 12 - ASSOCIAZIONE CULTURALE GUSTARE SICILIA",
       category: "produzione_tv",
       status: "in_corso",
       start_date: "2026-03-10",

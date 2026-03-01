@@ -71,7 +71,7 @@ const clientRow = (
   overrides: Partial<AnalyticsClientLifetimeCompetenceRevenueRow> = {},
 ): AnalyticsClientLifetimeCompetenceRevenueRow => ({
   client_id: "1",
-  client_name: "Diego Caltabiano",
+  client_name: "ASSOCIAZIONE CULTURALE GUSTARE SICILIA",
   first_service_date: "2024-01-01",
   last_service_date: "2025-12-31",
   lifetime_revenue: 23700,

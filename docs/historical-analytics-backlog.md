@@ -13,6 +13,20 @@ Archivio storico opzionale, da leggere solo se serve piu' contesto:
 - `progress.md`
 - `learnings.md`
 
+## Historical Naming Note
+
+Some older closed slices below still quote runtime observations collected
+before the fiscal/customer correction introduced by
+`20260301193000_correct_diego_client_to_gustare_assoc.sql`.
+
+When those historical notes mention `Diego Caltabiano` as the client label,
+read them as pre-correction evidence only.
+
+The current canonical interpretation is:
+
+- `ASSOCIAZIONE CULTURALE GUSTARE SICILIA` = fiscal client
+- `Diego Caltabiano` = linked operational contact
+
 ## Current State
 
 The codebase now contains:
@@ -1260,11 +1274,12 @@ the past.
     existing `annual_operations_answer` function
 - Observed result:
   - chosen year in the smoke: `2026`
-  - drill-down contained:
-    - `2` pending payments
-    - `0` open quotes
-  - the answer cited the concrete client present in the drill-down:
-    - `Diego Caltabiano`
+- drill-down contained:
+  - `2` pending payments
+  - `0` open quotes
+- the answer cited the concrete client label present in the drill-down at that
+  time:
+  - `Diego Caltabiano` (pre-correction runtime label)
   - the answer also correctly stated that no open quotes were present in that
     perimetro
 - Outcome:
@@ -1288,7 +1303,7 @@ the past.
     - `Cosa raccontano pagamenti e preventivi del 2026?`
   - wait for the in-browser answer to render
 - Observed result:
-  - the answer cited `Diego Caltabiano`
+  - the answer cited `Diego Caltabiano` (pre-correction runtime label)
   - the answer stated correctly that no open quotes were present in the same
     `2026` perimetro
   - browser console errors observed during the path:

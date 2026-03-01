@@ -69,6 +69,20 @@ requires explicit confirmation before creating `payments` or `expenses`.
   - always use hash routing:
     - `http://127.0.0.1:4173/#/...`
 
+## Historical Naming Note
+
+Some older sections below still quote remote observations collected before the
+fiscal/customer correction introduced by
+`20260301193000_correct_diego_client_to_gustare_assoc.sql`.
+
+When those historical notes mention `Diego Caltabiano` as if it were the
+client label, read them as pre-correction runtime evidence only.
+
+The current canonical interpretation is:
+
+- `ASSOCIAZIONE CULTURALE GUSTARE SICILIA` = fiscal client
+- `Diego Caltabiano` = linked operational contact
+
 ## How To Resume In A New Chat
 
 Use a prompt like this:
@@ -1337,8 +1351,9 @@ Validation now completed on the real answer path too:
 - observed drill-down during the run:
   - `2` pending payments
   - `0` open quotes
-- the AI answer cited the concrete client present in the drill-down:
-  - `Diego Caltabiano`
+- the AI answer cited the concrete client label present in the drill-down at
+  that time:
+  - `Diego Caltabiano` (pre-correction runtime label)
 - and it correctly said that no open quotes were present in that same
   perimetro
 - no extra code change or edge-function deploy was needed after the context
@@ -1358,7 +1373,7 @@ Validation now completed on the real browser path too:
   - trigger the suggested payment/quote question
   - wait for the answer in browser
 - observed result:
-  - the answer cited `Diego Caltabiano`
+  - the answer cited `Diego Caltabiano` (pre-correction runtime label)
   - the answer correctly stated that no open quotes were present in the same
     `2026` perimetro
   - browser console errors:
@@ -1543,7 +1558,7 @@ Verified on `2026-02-28` against project `qvdmzhyzpyaveniirsmo`:
   - `produzione_tv`
   - `spot`
 - `analytics_client_lifetime_competence_revenue` returns:
-  - `Diego Caltabiano => €23,700`
+  - `Diego Caltabiano => €23,700` (pre-correction runtime label)
 
 Derived historical KPI check from the remote rows:
 
