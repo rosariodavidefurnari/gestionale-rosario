@@ -79,12 +79,43 @@ stability hardening sul launcher/payment path gia approvato. Anche questo passo
 successivo e' ora chiuso: il draft importato dal launcher resta valido solo
 finche il form `payments/create` rimane sullo stesso preventivo; se il
 preventivo cambia, il vecchio importo draft non continua a interferire con il
-nuovo suggerimento locale. Nota differita gia registrata da test reale utente:
+nuovo suggerimento locale. Anche il passo subito dopo e' ora chiuso: il form
+non si limita piu a comportarsi correttamente, ma segnala esplicitamente quando
+la bozza AI iniziale non vale piu perche' il preventivo corrente e' cambiato.
+Nota differita gia registrata da test reale utente:
 l'import fatture incontra anche clienti storici assenti dal CRM e in quel
 caso mancano ancora creazione assistita cliente e alcuni campi anagrafici da
 fatturazione; non e' il focus adesso, ma il backlog lo conserva.
 
 ## Last Session
+
+### Sessione 67 (2026-03-01, segnalazione esplicita quando la bozza non vale piu)
+
+- Completed:
+  - **Il form `payments/create` ora segnala esplicitamente quando la bozza AI
+    iniziale non e' piu valida**:
+    - se l'utente cambia preventivo rispetto a quello della bozza:
+      - il vecchio importo draft non resta attivo
+      - compare un messaggio chiaro che spiega che da quel punto vale solo il
+        contesto locale del preventivo selezionato
+  - **Il corridoio launcher -> form approvato diventa piu comprensibile oltre
+    che corretto**:
+    - prima il comportamento corretto c'era, ma era implicito
+    - ora la UI rende esplicita la fine del contesto draft
+  - **Registry e semantica allineati anche sul requisito di segnalazione**:
+    - `prepare_payment_write_draft` dichiara che la superficie approvata deve
+      segnalare quando il contesto draft non vale piu
+    - `unifiedAiWriteDraft` esplicita il ritorno alla semantica locale del form
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/payments/paymentLinking.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`
+
+- Decisions:
+  - in un workflow write-assisted non basta fare la cosa giusta: quando il
+    contesto AI decade, la UI deve anche dirlo chiaramente
+  - la continuita' forte richiede sia correttezza semantica sia feedback
+    esplicito all'utente
 
 ### Sessione 66 (2026-03-01, scope del draft solo sullo stesso preventivo)
 

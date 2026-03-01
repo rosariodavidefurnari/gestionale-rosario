@@ -90,6 +90,9 @@ describe("crmSemanticRegistry", () => {
     expect(registry.rules.unifiedAiWriteDraft.meaning).toContain(
       "stesso preventivo",
     );
+    expect(registry.rules.unifiedAiWriteDraft.meaning).toContain(
+      "segnalarlo esplicitamente",
+    );
   });
 
   it("uses km and taxable helpers consistently", () => {

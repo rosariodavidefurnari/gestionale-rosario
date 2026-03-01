@@ -378,12 +378,26 @@ The next open priority is now closed too:
   - no new write capability
   - validation closed with `npm run typecheck` plus targeted Vitest
 
+The next open priority is now closed too:
+
+- the payment draft hardening pass now also makes draft-context invalidation
+  explicit on the approved destination form
+- when the user changes quote after landing on `payments/create`:
+  - the old launcher draft is no longer applied
+  - the UI now states clearly that the AI draft belonged to another quote
+  - the surface reverts to the local semantics of the quote currently selected
+- this closes another ambiguity inside the already approved corridor without
+  widening the AI perimeter:
+  - no edge-function change
+  - no new write capability
+  - validation closed with `npm run typecheck` plus targeted Vitest
+
 The next open priority is:
 
-- keep future write-assisted work selective:
-  - either identify another equally deterministic commercial draft
-  - or spend one more short hardening pass on the existing launcher/payment
-    corridor before widening coverage
+- keep future work selective:
+  - either do one more short hardening pass if a meaningful ambiguity still
+    remains in the launcher/payment corridor
+  - or open a second write-assisted case only if it is equally deterministic
 - still do not give the general CRM chat direct write execution
 
 Deferred note from real usage, not current priority:

@@ -10,6 +10,13 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Quando il contesto di un draft AI decade, la UI deve
+  esplicitarlo e non solo cambiare comportamento sotto il cofano** — Nel
+  percorso `launcher -> payments/create` non basta smettere di applicare la
+  bozza quando cambia `quote_id`: serve anche un messaggio che dica che la
+  bozza iniziale apparteneva a un altro preventivo e che da quel punto vale
+  solo la semantica locale del form.
+
 - [2026-03-01] **Se il form finale cambia record chiave, il draft importato dal
   launcher smette di essere semanticamente valido** — Nel caso `payments/create`
   il draft amount portato dalla chat ha senso solo sullo stesso `quote_id` che

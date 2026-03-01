@@ -409,14 +409,30 @@ The next high-value step is now closed too:
   - no function redeploy
   - local validation closed with `npm run typecheck` and targeted Vitest
 
+The next high-value step is now closed too:
+
+- the approved `payments/create` surface now makes the end of draft continuity
+  explicit instead of only behaving correctly in silence
+- when the user changes quote away from the one that originated the launcher
+  draft:
+  - the old draft amount is no longer treated as active
+  - the form now also tells the user that the original AI draft belonged to a
+    different quote
+  - from that point onward only the local context of the currently selected
+    quote is considered valid
+- this keeps the strict path more understandable:
+  - preserve the draft while the business context is still the same
+  - explicitly signal when that context has ended
+- this slice stayed local:
+  - no function redeploy
+  - local validation closed with `npm run typecheck` and targeted Vitest
+
 The next high-value step is now:
 
-- keep resisting breadth for breadth's sake
-- before adding another write-assisted slice, decide whether the next best gain
-  is:
-  - another equally deterministic commercial draft
-  - or a short stability pass that adds more explicit UI/test coverage around
-    the launcher/payment corridor already approved
+- decide whether one more short hardening pass is still higher value than
+  opening a second write-assisted case
+- if not, only ship another commercial draft when it is as deterministic and as
+  tightly bounded as the quote-driven payment path
 - still no general write execution from the CRM Q&A shell
 
 Deferred note from real user trial:

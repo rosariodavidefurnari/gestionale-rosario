@@ -269,6 +269,8 @@ const QuotePaymentSuggestionCard = () => {
         : null,
     [draftContext, quoteId],
   );
+  const isDraftContextOutOfScope =
+    Boolean(draftContext?.quoteId) && Boolean(quoteId) && !activeDraftContext;
 
   const { data: quote } = useGetOne<Quote>(
     "quotes",
@@ -372,6 +374,13 @@ const QuotePaymentSuggestionCard = () => {
             {isDraftAmountPreserved
               ? " · il form mantiene la bozza finche non scegli tu un altro valore."
               : " · stai lavorando su un valore diverso dalla bozza iniziale."}
+          </p>
+        ) : null}
+        {isDraftContextOutOfScope ? (
+          <p className="text-xs text-amber-700">
+            La bozza AI iniziale era riferita a un altro preventivo. Da qui in
+            poi valgono solo il contesto e i suggerimenti locali del preventivo
+            attualmente selezionato.
           </p>
         ) : null}
       </div>
