@@ -25,6 +25,7 @@ import {
   Settings,
   Smartphone,
   Sun,
+  User,
   Users,
   Wrench,
 } from "lucide-react";
@@ -238,6 +239,12 @@ const SettingsButton = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="h-12 px-4 text-base">
+          <Link to="/profile">
+            <User className="size-5" />
+            Profilo
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild className="h-12 px-4 text-base">
           <Link to="/settings">
             <Wrench className="size-5" />

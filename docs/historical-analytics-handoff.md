@@ -60,8 +60,8 @@ requires explicit confirmation before creating `payments` or `expenses`.
 - internal high-priority notification direction:
   - `CallMeBot`
 - old inbound branch:
-  - `Postmark` removed from the repo and must stay removed unless product
-    direction changes explicitly
+  - `Postmark` non fa parte del runtime/config attivo e deve restare fuori dai
+    flussi supportati salvo cambio esplicito di direzione prodotto
 - communication safety rule:
   - if a flow includes services with `is_taxable = false`, automatic customer
     emails must never be sent
@@ -777,7 +777,7 @@ Outbound provider decision:
 
 Important note:
 
-- the old inbound `postmark` branch has now been removed from the repo
+- the old inbound `postmark` branch is not part of the active runtime/config
 - customer-facing outbound communication should go through `Gmail`
 - high-priority internal alerts should target `CallMeBot`
 

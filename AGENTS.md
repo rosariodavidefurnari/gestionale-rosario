@@ -1,5 +1,22 @@
 # AGENTS.md
 
+## AGENT ENTRYPOINTS
+
+- `AGENTS.md` e' la fonte canonica condivisa per istruzioni di progetto,
+  continuita' e workflow agentico.
+- `CLAUDE.md` deve essere solo complementare:
+  - importa `AGENTS.md`
+  - aggiunge solo delta specifici di Claude Code
+  - non deve diventare una seconda fonte completa di regole progetto
+- se cambia una regola condivisa, aggiornare prima `AGENTS.md`
+- se `AGENTS.md` e `CLAUDE.md` entrano in conflitto, vince `AGENTS.md`
+
+## COMMUNICATION CONVENTION
+
+- comunicare con l'utente in ITALIANO
+- scrivere codice, commenti, nomi variabili e commit in ENGLISH
+- non spiegare concetti base quando non servono
+
 ## DEPLOYMENT RULES - NON DIMENTICARE
 
 - `git push` su `main` aggiorna automaticamente il frontend su `Vercel`

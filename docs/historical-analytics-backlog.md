@@ -848,8 +848,8 @@ the past.
     transport are wired
   - internal urgent notifications target `CallMeBot`
 - Cleanup completed:
-  - the old inbound `postmark` function and related profile UI/config were
-    removed from the repo
+  - the old inbound `postmark` function is not part of the active
+    runtime/config and related UI/config must stay unused
 - Validation completed on `2026-02-28`:
   - `npm run typecheck`
   - `npm test -- --run src/lib/communications/quoteStatusEmailTemplates.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`

@@ -36,6 +36,19 @@ Questo hook verifica che le modifiche su codice prodotto, schema, AI,
 document-import e configurazione condivisa si portino dietro almeno i documenti
 o le superfici companion minime richieste.
 
+## Agent Orchestration Files
+
+Anche i file di orchestrazione agentica hanno una gerarchia esplicita:
+
+- `AGENTS.md`
+  - fonte canonica condivisa per workflow e regole di progetto
+- `CLAUDE.md`
+  - wrapper complementare per Claude Code
+  - deve importare `AGENTS.md`
+  - deve contenere solo delta minimi specifici di Claude
+
+Questo evita di mantenere due prompt completi che poi divergono nel tempo.
+
 ## Required Structure For New Docs
 
 Ogni nuovo documento importante dovrebbe dichiarare all'inizio, in forma breve:

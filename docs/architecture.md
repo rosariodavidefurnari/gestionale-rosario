@@ -67,18 +67,19 @@ Regola pratica:
 | Auth init bypass (single-user hardcoded) | Implementato | sessione 77 |
 | Navigazione per anno Dashboard | Implementata | sessione 18 |
 | Colori semantici Dashboard (success/warning badge + progress) | Implementati | sessione 18 |
-| Typecheck | 0 errori | sessione 18 |
-| Build produzione (`npm run build`) | OK | sessione 18 |
-| Test | 42/42 passati | sessione 18 |
-| Lint | 0 nuovi errori | sessione 11 |
+| Typecheck | Guardrail operativo, da rieseguire sulle modifiche rilevanti | workflow locale |
+| Build produzione (`npm run build`) | Verifica disponibile, da rieseguire prima di release significative | workflow locale |
+| Test | Suite presente + test mirati per slice | vitest |
+| Lint | Guardrail operativo via ESLint + pre-commit | workflow locale |
 | Deploy Vercel | gestionale-rosario.vercel.app | sessione 5 |
 
 ### Cose ancora da verificare manualmente
 
 - Signup disabilitato nel **Supabase Dashboard remoto** (non solo config.toml locale)
 - npm audit: 4 vulnerabilità (1 moderate, 3 high) — da valutare
-- Edge Function inbound `postmark` rimossa dal progetto: comunicazioni future su
-  `Gmail` outbound cliente e `CallMeBot` per alert interni prioritari
+- Il ramo `postmark` non fa parte del runtime/config attivo: le comunicazioni
+  supportate oggi restano `Gmail` outbound cliente e `CallMeBot` per alert
+  interni prioritari
 - 3 errori lint pre-esistenti (useGetOne condizionale in ExpenseShow/PaymentShow)
 
 ## Database Schema
@@ -87,18 +88,20 @@ Regola pratica:
 
 | Tabella | Scopo | RLS | Colonne |
 |---------|-------|-----|---------|
-| clients | Anagrafica clienti | auth.uid() IS NOT NULL | 12 col (incl. tags BIGINT[]), 2 CHECK |
-| projects | Progetti/programmi | auth.uid() IS NOT NULL | 13 col (+all_day), start_date/end_date TIMESTAMPTZ, 3 CHECK |
-| services | Registro lavori (cuore) | auth.uid() IS NOT NULL | 16 col (+service_end, +all_day, service_date TIMESTAMPTZ), no CHECK service_type (dinamico) |
-| quotes | Preventivi + pipeline Kanban | auth.uid() IS NOT NULL | 15 col (+event_start, +event_end, +all_day, -event_date), 1 CHECK (10 stati), no CHECK service_type (dinamico) |
-| payments | Tracking pagamenti | auth.uid() IS NOT NULL | 12 col, 3 CHECK + tipo rimborso |
-| expenses | Spese e km | auth.uid() IS NOT NULL | 11 col, 1 CHECK + tipo credito_ricevuto |
-| contacts | Referenti / persone collegate ai clienti | auth.uid() IS NOT NULL | nome, ruolo, email/telefoni JSONB, background, FK `client_id`, timestamps |
+| clients | Anagrafica clienti + profilo fiscale/fatturazione | auth.uid() IS NOT NULL | nome operativo, `billing_name`, contatti base, `P.IVA` / `CF`, indirizzo fiscale, `SDI` / `PEC`, note, tags, timestamps |
+| contacts | Referenti / persone collegate ai clienti | auth.uid() IS NOT NULL | nome/cognome, ruolo, email/telefoni JSONB, background, tags, FK `client_id`, timestamps |
 | project_contacts | Join referenti-progetti | auth.uid() IS NOT NULL | FK `project_id`, FK `contact_id`, `is_primary`, timestamps |
-| client_tasks | Promemoria (opzionalmente legati a un cliente) | auth.uid() IS NOT NULL | 9 col (+all_day), due_date TIMESTAMPTZ, FK opzionale |
-| client_notes | Note clienti (con allegati) | auth.uid() IS NOT NULL | 7 col, FK obbligatoria |
-| settings | Configurazione | auth.uid() IS NOT NULL | 3 col (key-value) |
-| keep_alive | Heartbeat free tier | SELECT public | 3 col |
+| projects | Progetti/programmi | auth.uid() IS NOT NULL | cliente, categoria, `tv_show`, stato, range date, budget, note, timestamps |
+| services | Registro lavori (cuore) | auth.uid() IS NOT NULL | FK progetto, date/range, tipo servizio, tassabilita', fee, km, `invoice_ref`, note |
+| quotes | Preventivi + pipeline Kanban | auth.uid() IS NOT NULL | cliente/progetto, tipo servizio, range evento, importo, stato, `quote_items`, note |
+| payments | Tracking pagamenti | auth.uid() IS NOT NULL | cliente/progetto/preventivo, data, tipo, importo, metodo, `invoice_ref`, stato, note |
+| expenses | Spese e km | auth.uid() IS NOT NULL | cliente/progetto, data, tipo spesa, km/importo, markup, descrizione, `invoice_ref` |
+| client_tasks | Promemoria (opzionalmente legati a un cliente) | auth.uid() IS NOT NULL | testo, tipo, data scadenza, `all_day`, completamento, FK cliente opzionale |
+| client_notes | Note clienti (con allegati) | auth.uid() IS NOT NULL | FK cliente obbligatoria, testo, data, allegati, timestamps |
+| settings | Configurazione | auth.uid() IS NOT NULL | record `config` persistito per branding, tipi, AI, fiscale, operativita' |
+| sales | Profilo utente e supporto auth single-user | auth.uid() IS NOT NULL | identita' utente, avatar, admin/disabled, FK `auth.users` |
+| tags | Catalogo etichette riusato da clienti e referenti | auth.uid() IS NOT NULL | nome, colore |
+| keep_alive | Heartbeat free tier | SELECT public | ping e timestamp |
 
 ### Quotes — 10 stati pipeline
 
@@ -107,13 +110,19 @@ primo_contatto → preventivo_inviato → in_trattativa → accettato →
 acconto_ricevuto → in_lavorazione → completato → saldato → rifiutato / perso
 ```
 
-### Settings (aggiornate Fase 2)
-- `default_km_rate`: 0.19
-- `default_fee_shooting`: **233** (tariffa 2025/2026)
-- `default_fee_editing_standard`: **311** (Montaggio GS)
-- `default_fee_spot`: **312** (tariffa flat, riprese+montaggio)
-- `default_fee_editing_short`: **156** (Montaggio VIV/BTF)
-- `currency`: EUR
+### Settings (struttura attiva)
+- `title`
+- `lightModeLogo`
+- `darkModeLogo`
+- `taskTypes`
+- `noteStatuses`
+- `quoteServiceTypes`
+- `serviceTypeChoices`
+- `operationalConfig.defaultKmRate`
+- `fiscalConfig.taxProfiles`
+- `fiscalConfig.aliquotaINPS`
+- `fiscalConfig.tettoFatturato`
+- `fiscalConfig.annoInizioAttivita`
 - `aiConfig.historicalAnalysisModel`: modello condiviso per Storico, Annuale e
   chat AI unificata read-only
 - `aiConfig.invoiceExtractionModel`: modello dedicato all'import documenti
@@ -179,19 +188,19 @@ PK esplicite nel dataProvider:
 
 ### Moduli IMPLEMENTATI
 
-| Modulo | Directory | File | Tipo | Stato |
-|--------|-----------|------|------|-------|
-| **Clienti** | `clients/` | 11 file | CRUD (Table) + Tags/Notes/Tasks | Completo |
-| **Referenti** | `contacts/` | risorsa riattivata + sezioni cliente/progetto | CRUD + relazioni | Completo |
-| **Progetti** | `projects/` | 8 file | CRUD (Table) | Completo |
-| **Registro Lavori** | `services/` | 9 file | CRUD (Table) | Completo |
-| **Preventivi** | `quotes/` | 13 file | Kanban drag-and-drop | Completo |
-| **Pagamenti** | `payments/` | 8 file | CRUD (Table) | Completo |
-| **Spese** | `expenses/` | 8 file | CRUD (Table) | Completo |
-| **Promemoria** | `tasks/` | 11 file | Lista con filtri temporali | Completo |
-| **Tags** | `tags/` | 4 file | CRUD + array su clients | Completo |
-| **Dashboard** | `dashboard/` | 19 file | Recharts + KPI + alert + fiscale | Completo |
-| **AI unificata** | `ai/` | launcher + snapshot + import + handoff | Shell cross-module | Completo |
+| Modulo | Directory | Tipo | Stato |
+|--------|-----------|------|-------|
+| **Clienti** | `clients/` | CRUD + billing profile + tags/notes/tasks | Completo |
+| **Referenti** | `contacts/` | CRUD + relazioni cliente/progetto | Completo |
+| **Progetti** | `projects/` | CRUD + quick flows collegati | Completo |
+| **Registro Lavori** | `services/` | CRUD (Table) | Completo |
+| **Preventivi** | `quotes/` | Kanban + dialog + PDF + mail cliente | Completo |
+| **Pagamenti** | `payments/` | CRUD + handoff commerciali | Completo |
+| **Spese** | `expenses/` | CRUD + km/travel flows | Completo |
+| **Promemoria** | `tasks/` | Lista con filtri temporali | Completo |
+| **Tags** | `tags/` | Gestione embedded + modali + array su clients/contacts | Completo |
+| **Dashboard** | `dashboard/` | Recharts + KPI + alert + fiscale + storico | Completo |
+| **AI unificata** | `ai/` | Launcher, snapshot, import, handoff, chat read-only | Completo |
 
 ### Struttura moduli CRUD
 
@@ -240,11 +249,18 @@ Risorsa: `client_notes` (UUID PK, FK obbligatoria a clients)
 
 ```
 src/components/atomic-crm/tags/
-├── ClientTagsList.tsx     # Display tags (ReferenceArrayField)
-├── ClientTagsListEdit.tsx # Gestione tags (add/remove/create)
-├── TagsList.tsx           # Lista tags base
+├── ClientTagsList.tsx     # Display tags nel cliente
+├── ClientTagsListEdit.tsx # Gestione tags su cliente
+├── TagCreateModal.tsx     # Creazione tag
+├── TagEditModal.tsx       # Modifica tag
+├── TagDialog.tsx          # Dialog condiviso create/edit
+├── TagChip.tsx            # Render badge/tag
+├── RoundButton.tsx        # Selettore colore
 └── colors.ts              # Palette colori
 ```
+
+Non esiste una pagina dedicata `tags`: la gestione avviene in scheda cliente e
+in `Impostazioni`.
 
 ### Dashboard (Recharts + Fiscale)
 
@@ -280,13 +296,29 @@ Menu utente (dropdown): Profilo | Impostazioni
 
 Mobile: Inizio | Clienti | [+] | Promemoria | Altro
 
+Nel menu `Altro` mobile:
+
+- Profilo
+- Progetti
+- Registro Lavori
+- Preventivi
+- Pagamenti
+- Spese
+- Impostazioni
+
 ## Risorse registrate in CRM.tsx
 
 ```
-clients, contacts, projects, services,     ← CRUD con pagine
-payments, expenses, quotes                 ← CRUD/Kanban con pagine
-client_tasks                               ← Lista con pagina desktop + mobile
-client_notes, project_contacts, sales, tags ← Headless (senza pagina dedicata)
+clients, contacts, projects, services, quotes, payments, expenses
+  ← CRUD/Kanban con pagine
+client_tasks
+  ← lista con pagina desktop + mobile
+client_notes, project_contacts
+  ← risorse headless consumate da sezioni embed
+sales
+  ← risorsa infrastrutturale consumata da auth e `/profile`
+tags
+  ← risorsa headless consumata da clienti, referenti e `Impostazioni`
 ```
 
 ### Utility condivise (misc/)
@@ -331,22 +363,37 @@ FiscalConfig, FiscalTaxProfile             ← Fiscale
 ## Pages Map
 
 ```
-/login          → Login (unica pagina pubblica)
-/               → Dashboard finanziaria (Recharts: KPI, grafici, pipeline, alert, navigazione anno)
-/clients        → Lista clienti
-/clients/:id    → Scheda cliente (dettagli + tags + note + promemoria)
-/contacts       → Lista referenti
-/contacts/:id   → Scheda referente
-/projects       → Lista progetti
-/projects/:id   → Dettaglio progetto
-/services       → Registro lavori
-/services/:id   → Dettaglio servizio
-/quotes         → Pipeline preventivi (Kanban 10 stati)
-/payments       → Lista pagamenti
-/payments/:id   → Dettaglio pagamento
-/expenses       → Spese e km
-/expenses/:id   → Dettaglio spesa
-/client_tasks   → Lista promemoria (filtri: scaduti, oggi, domani, settimana, più avanti)
-/settings       → Impostazioni (Marchio, Tipi preventivo, Tipi servizio, Note, Attività, AI, Fiscale)
-/profile        → Profilo utente
+/login               → Login (unica pagina pubblica)
+/                    → Dashboard finanziaria (Recharts: KPI, grafici, pipeline, alert, navigazione anno)
+/clients             → Lista clienti
+/clients/create      → Crea cliente
+/clients/:id         → Modifica cliente
+/clients/:id/show    → Scheda cliente (dettagli, fatturazione, tags, riepilogo finanziario, referenti, note, promemoria)
+/contacts            → Lista referenti
+/contacts/create     → Crea referente
+/contacts/:id        → Modifica referente
+/contacts/:id/show   → Scheda referente
+/projects            → Lista progetti
+/projects/create     → Crea progetto
+/projects/:id        → Modifica progetto
+/projects/:id/show   → Dettaglio progetto (dati base, referenti, quick flows, riepilogo finanziario)
+/services            → Registro lavori
+/services/create     → Crea lavoro
+/services/:id        → Modifica lavoro
+/services/:id/show   → Dettaglio servizio
+/quotes              → Pipeline preventivi (Kanban 10 stati)
+/quotes/create       → Crea preventivo in dialog
+/quotes/:id          → Modifica preventivo in dialog
+/quotes/:id/show     → Dettaglio preventivo in dialog
+/payments            → Lista pagamenti
+/payments/create     → Crea pagamento
+/payments/:id        → Modifica pagamento
+/payments/:id/show   → Dettaglio pagamento
+/expenses            → Spese e km
+/expenses/create     → Crea spesa
+/expenses/:id        → Modifica spesa
+/expenses/:id/show   → Dettaglio spesa
+/client_tasks        → Lista promemoria (filtri: scaduti, oggi, domani, settimana, più avanti)
+/settings            → Impostazioni (Marchio, Etichette, Tipi preventivo, Tipi servizio, Operatività, Note, Attività, AI, Fiscale)
+/profile             → Profilo utente
 ```

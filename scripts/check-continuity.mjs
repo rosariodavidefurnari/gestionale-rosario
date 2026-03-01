@@ -63,6 +63,15 @@ const isRealProductCode = (path) => {
 
 const rules = [
   {
+    id: "claude-agents-link",
+    description:
+      "CLAUDE.md non deve evolvere come prompt parallelo: ogni suo cambiamento va accompagnato da AGENTS.md.",
+    when: exact("CLAUDE.md"),
+    require: exact("AGENTS.md"),
+    requireLabel: "AGENTS.md",
+    help: "AGENTS.md e' la fonte condivisa canonica. CLAUDE.md deve restare solo un wrapper complementare e collegato.",
+  },
+  {
     id: "product-doc-sync",
     description:
       "Le modifiche a comportamento reale del prodotto devono sempre trascinarsi dietro almeno un aggiornamento nei docs di continuita'.",

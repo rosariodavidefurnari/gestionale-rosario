@@ -44,6 +44,12 @@ Il controllo legge i file staged e blocca il commit se:
 - cambia configurazione condivisa senza toccare `Settings` o senza lasciare
   traccia del motivo nei docs
 
+Per i file di orchestrazione agentica la regola e':
+
+- `AGENTS.md` e' la fonte condivisa canonica
+- `CLAUDE.md` deve restare solo complementare e collegato a `AGENTS.md`
+- non mantenere due versioni complete e concorrenti delle stesse regole
+
 Questo non sostituisce il giudizio tecnico, ma riduce il rischio di chiudere un
 commit lasciando il progetto semanticamente spezzato.
 

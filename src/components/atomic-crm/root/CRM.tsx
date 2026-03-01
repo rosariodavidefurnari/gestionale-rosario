@@ -242,6 +242,7 @@ const MobileAdmin = (props: CoreAdminProps) => {
           <Route path={OAuthConsentPage.path} element={<OAuthConsentPage />} />
         </CustomRoutes>
         <CustomRoutes>
+          <Route path={ProfilePage.path} element={<ProfilePage />} />
           <Route path={SettingsPage.path} element={<SettingsPage />} />
         </CustomRoutes>
         <Resource name="clients" {...clients} />

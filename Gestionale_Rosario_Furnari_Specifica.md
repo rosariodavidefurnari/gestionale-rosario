@@ -6,6 +6,10 @@
 incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 `canonical`.
 
+**Nota importante:** le sezioni SQL/schema qui sotto descrivono il bootstrap
+originario del progetto. Lo stato runtime attuale di route, risorse, settings e
+workflow va sempre verificato in `docs/architecture.md` e nel codice reale.
+
 **Versione:** 1.0  
 **Data:** 25 Febbraio 2026  
 **Destinatario:** Rosario Davide Furnari  
@@ -395,6 +399,11 @@ INSERT INTO settings (key, value) VALUES
   ('currency', 'EUR');
 ```
 
+**Nota di continuita':** questo seed rappresenta il bootstrap iniziale. Nel
+runtime attuale la configurazione utente e' evoluta in una struttura piu ricca
+letta dal `ConfigurationContext`, con sezioni per branding, tipi, AI,
+operativita' e fiscale.
+
 ### 4.2 Viste Utili (Views)
 
 ```sql
@@ -663,7 +672,9 @@ Funzionalità da considerare in futuro, non incluse nella prima versione:
 
 - **Generazione PDF preventivi** — Creare preventivi professionali da inviare ai clienti
 - **Integrazione Google Calendar** — Sincronizzare date lavori e eventi
-- **Notifiche email** — Reminder per pagamenti in scadenza (tramite Resend, gratuito)
+- **Notifiche e comunicazioni** — Reminder e comunicazioni coerenti con la
+  direzione prodotto corrente (`Gmail` per mail cliente, `CallMeBot` per alert
+  interni prioritari)
 - **App mobile PWA** — Rendere il gestionale installabile come app sul telefono
 - **Automazioni WhatsApp** — Link wa.me precompilati per follow-up
 - **Report per commercialista** — Export periodico di fatturato, spese, km per la dichiarazione

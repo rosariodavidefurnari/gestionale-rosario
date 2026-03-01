@@ -375,7 +375,12 @@ CHECK (tv_show IN ('bella_tra_i_fornelli', 'gustare_sicilia', 'vale_il_viaggio',
 
 ### Impatto sulle settings del DB
 
-Le settings vanno aggiornate con le nuove tariffe default:
+Questa nota appartiene al bootstrap originario delle settings.
+
+Nel runtime attuale la configurazione applicativa e' piu ricca e non va letta
+come semplice elenco stabile di chiavi `default_fee_*`.
+
+Questa sezione resta utile solo per capire il passaggio storico delle tariffe:
 
 ```sql
 -- Tariffe vecchie (gia presenti)
