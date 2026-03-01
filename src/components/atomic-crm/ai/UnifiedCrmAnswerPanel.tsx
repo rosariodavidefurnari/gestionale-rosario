@@ -132,7 +132,7 @@ export const UnifiedCrmAnswerPanel = ({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       {/* Content area — takes all available space */}
-      <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3">
+      <div className="flex-1 space-y-3 overflow-y-auto overflow-x-hidden px-3 py-3">
         {!hasConversation ? (
           <div className="flex h-full flex-col items-center justify-end gap-4 pb-2">
             <p className="text-center text-sm text-muted-foreground">
@@ -171,7 +171,7 @@ export const UnifiedCrmAnswerPanel = ({
             <div className="rounded-md bg-muted/50 px-3 py-2 text-sm">
               <span className="font-medium">Domanda:</span> {answer.question}
             </div>
-            <Markdown className="text-sm leading-6 [&_h2]:mt-4 [&_h2]:text-sm [&_h2]:font-semibold [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:font-semibold">
+            <Markdown className="overflow-hidden wrap-break-word text-sm leading-6 [&_h2]:mt-4 [&_h2]:text-sm [&_h2]:font-semibold [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:font-semibold">
               {answer.answerMarkdown}
             </Markdown>
 
@@ -200,10 +200,10 @@ export const UnifiedCrmAnswerPanel = ({
                       key={action.id}
                       asChild
                       variant="outline"
-                      className="h-auto justify-between px-3 py-2.5 text-left"
+                      className="h-auto w-full justify-between whitespace-normal px-3 py-2.5 text-left"
                     >
                       <a href={action.href} onClick={onNavigate}>
-                        <span className="min-w-0 space-y-1">
+                        <span className="min-w-0 flex-1 space-y-1 overflow-hidden">
                           <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
                             <span>{action.label}</span>
                             {action.recommended ? (

@@ -780,6 +780,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/clients/clientListFilters.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/clients/clientLinking.ts",
           "type": "registry:component"
         },
