@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCreate, useGetOne, useNotify, useRefresh } from "ra-core";
+import { useLocation } from "react-router";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Euro } from "lucide-react";
 import type { Project } from "../types";
+import { getUnifiedAiHandoffContextFromSearch } from "../payments/paymentLinking";
 
 const eur = (n: number) =>
   n.toLocaleString("it-IT", {
@@ -58,10 +60,15 @@ const getAmountHint = (type: string): string => {
 
 export const QuickPaymentDialog = ({ record }: { record: Project }) => {
   const [open, setOpen] = useState(false);
+  const [lastAutoOpenedSearch, setLastAutoOpenedSearch] = useState<string | null>(
+    null,
+  );
   const [create] = useCreate();
   const notify = useNotify();
   const refresh = useRefresh();
   const [saving, setSaving] = useState(false);
+  const location = useLocation();
+  const launcherHandoff = getUnifiedAiHandoffContextFromSearch(location.search);
 
   const { data: financials } = useGetOne("project_financials", {
     id: record.id,
@@ -74,6 +81,8 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
   const balanceDue = grandTotal - totalPaid;
 
   const totals = { fees: totalFees, expenses: totalExpenses, paid: totalPaid };
+
+  const getInitialPaymentType = () => launcherHandoff?.paymentType ?? "acconto";
 
   const [amount, setAmount] = useState(0);
   const [paymentType, setPaymentType] = useState("acconto");
@@ -89,15 +98,38 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
 
   const handleOpenChange = (v: boolean) => {
     if (v) {
-      setPaymentType("acconto");
+      const nextPaymentType = getInitialPaymentType();
+      setPaymentType(nextPaymentType);
       setPaymentDate("");
       setStatus("ricevuto");
       setMethod("bonifico");
       setNotes("");
-      setAmount(getSuggestedAmount("acconto", totals));
+      setAmount(getSuggestedAmount(nextPaymentType, totals));
     }
     setOpen(v);
   };
+
+  useEffect(() => {
+    if (
+      financials &&
+      !open &&
+      launcherHandoff?.action === "project_quick_payment" &&
+      launcherHandoff.openDialog === "quick_payment" &&
+      lastAutoOpenedSearch !== location.search
+    ) {
+      handleOpenChange(true);
+      setLastAutoOpenedSearch(location.search);
+    }
+  }, [
+    financials,
+    lastAutoOpenedSearch,
+    launcherHandoff,
+    location.search,
+    open,
+    totalFees,
+    totalExpenses,
+    totalPaid,
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,6 +176,13 @@ export const QuickPaymentDialog = ({ record }: { record: Project }) => {
         <DialogHeader>
           <DialogTitle>Registra Pagamento — {record.name}</DialogTitle>
         </DialogHeader>
+
+        {launcherHandoff?.action === "project_quick_payment" ? (
+          <div className="rounded-lg border border-dashed bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
+            Apertura guidata dalla chat AI unificata. Il dialog resta manuale:
+            controlla i dati prima di confermare.
+          </div>
+        ) : null}
 
         <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
           <div className="flex justify-between">

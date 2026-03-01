@@ -75,6 +75,30 @@ const buildCreateHref = (
     : `${routePrefix}${resource}/create`;
 };
 
+const buildShowHrefWithSearch = (
+  routePrefix: string,
+  resource: string,
+  recordId: string | null,
+  searchParams: Record<string, string | null | undefined>,
+) => {
+  const baseHref = buildShowHref(routePrefix, resource, recordId);
+
+  if (!baseHref) {
+    return null;
+  }
+
+  const query = new URLSearchParams();
+
+  Object.entries(searchParams).forEach(([key, value]) => {
+    if (value) {
+      query.set(key, value);
+    }
+  });
+
+  const search = query.toString();
+  return search ? `${baseHref}?${search}` : baseHref;
+};
+
 const buildShowHref = (
   routePrefix: string,
   resource: string,
@@ -91,6 +115,26 @@ const includesAny = (value: string, patterns: string[]) =>
 
 const canCreatePaymentFromQuoteStatus = (status: string | null) =>
   Boolean(status && quoteStatusesEligibleForPaymentCreation.has(status));
+
+const inferPreferredPaymentType = (normalizedQuestion: string) => {
+  if (includesAny(normalizedQuestion, ["rimborso spese", "rimborso", "spes"])) {
+    return "rimborso_spese";
+  }
+
+  if (includesAny(normalizedQuestion, ["acconto", "anticip"])) {
+    return "acconto";
+  }
+
+  if (includesAny(normalizedQuestion, ["saldo", "residu", "chiuder"])) {
+    return "saldo";
+  }
+
+  if (includesAny(normalizedQuestion, ["parzial"])) {
+    return "parziale";
+  }
+
+  return null;
+};
 
 const buildRecommendedReason = ({
   suggestion,
@@ -255,6 +299,8 @@ export const buildUnifiedCrmSuggestedActions = ({
       "incass",
       "precompilat",
     ]);
+  const preferProjectQuickPaymentLanding =
+    focusProjects && preferPaymentAction && Boolean(firstProject) && !firstPayment;
   const genericSummary =
     includesAny(normalizedQuestion, [
       "riepilog",
@@ -271,6 +317,11 @@ export const buildUnifiedCrmSuggestedActions = ({
       !focusProjects &&
       !focusExpenses &&
       !focusClients);
+  const inferredPaymentType = inferPreferredPaymentType(normalizedQuestion);
+  const launcherCreatePaymentContext = {
+    launcher_source: "unified_ai_launcher",
+    payment_type: inferredPaymentType,
+  };
 
   const paymentHref = buildShowHref(
     routePrefix,
@@ -287,10 +338,16 @@ export const buildUnifiedCrmSuggestedActions = ({
     "clients",
     getString(firstPayment?.clientId),
   );
-  const paymentProjectHref = buildShowHref(
+  const paymentProjectHref = buildShowHrefWithSearch(
     routePrefix,
     "projects",
     getString(firstPayment?.projectId),
+    {
+      launcher_source: "unified_ai_launcher",
+      launcher_action: "project_quick_payment",
+      open_dialog: "quick_payment",
+      payment_type: inferredPaymentType,
+    },
   );
   const quoteHref = buildShowHref(
     routePrefix,
@@ -304,6 +361,8 @@ export const buildUnifiedCrmSuggestedActions = ({
         quote_id: getString(firstQuote?.quoteId),
         client_id: getString(firstQuote?.clientId),
         project_id: getString(firstQuote?.projectId),
+        launcher_action: "quote_create_payment",
+        ...launcherCreatePaymentContext,
       })
     : null;
   const quoteClientHref = buildShowHref(
@@ -311,19 +370,33 @@ export const buildUnifiedCrmSuggestedActions = ({
     "clients",
     getString(firstQuote?.clientId),
   );
-  const quoteProjectHref = buildShowHref(
+  const quoteProjectHref = buildShowHrefWithSearch(
     routePrefix,
     "projects",
     getString(firstQuote?.projectId),
+    {
+      launcher_source: "unified_ai_launcher",
+      launcher_action: "project_quick_payment",
+      open_dialog: "quick_payment",
+      payment_type: inferredPaymentType,
+    },
   );
   const projectHref = buildShowHref(
     routePrefix,
     "projects",
     getString(firstProject?.projectId),
   );
-  const projectQuickPaymentHref = getString(firstProject?.projectId)
-    ? buildShowHref(routePrefix, "projects", getString(firstProject?.projectId))
-    : null;
+  const projectQuickPaymentHref = buildShowHrefWithSearch(
+    routePrefix,
+    "projects",
+    getString(firstProject?.projectId),
+    {
+      launcher_source: "unified_ai_launcher",
+      launcher_action: "project_quick_payment",
+      open_dialog: "quick_payment",
+      payment_type: inferredPaymentType,
+    },
+  );
   const projectClientHref = buildShowHref(
     routePrefix,
     "clients",
@@ -334,10 +407,16 @@ export const buildUnifiedCrmSuggestedActions = ({
     "expenses",
     getString(firstExpense?.expenseId),
   );
-  const expenseProjectHref = buildShowHref(
+  const expenseProjectHref = buildShowHrefWithSearch(
     routePrefix,
     "projects",
     getString(firstExpense?.projectId),
+    {
+      launcher_source: "unified_ai_launcher",
+      launcher_action: "project_quick_payment",
+      open_dialog: "quick_payment",
+      payment_type: inferredPaymentType,
+    },
   );
   const clientHref = buildShowHref(
     routePrefix,
@@ -347,11 +426,15 @@ export const buildUnifiedCrmSuggestedActions = ({
   const clientCreatePaymentHref = getString(firstClient?.clientId)
     ? buildCreateHref(routePrefix, "payments", {
         client_id: getString(firstClient?.clientId),
+        launcher_action: "client_create_payment",
+        ...launcherCreatePaymentContext,
       })
     : null;
   const paymentClientCreateHref = getString(firstPayment?.clientId)
     ? buildCreateHref(routePrefix, "payments", {
         client_id: getString(firstPayment?.clientId),
+        launcher_action: "client_create_payment",
+        ...launcherCreatePaymentContext,
       })
     : null;
 
@@ -403,6 +486,57 @@ export const buildUnifiedCrmSuggestedActions = ({
             description:
               "Usa la dashboard come quadro generale prima di aprire un record specifico.",
             href: routePrefix,
+          },
+    );
+  } else if (preferProjectQuickPaymentLanding) {
+    const projectShowSuggestion = projectHref
+      ? {
+          id: "open-first-active-project",
+          kind: "show" as const,
+          resource: "projects" as const,
+          capabilityActionId: "follow_unified_crm_handoff" as const,
+          label: "Apri il progetto attivo principale",
+          description:
+            "Vai al dettaglio del primo progetto attivo nello snapshot corrente.",
+          href: projectHref,
+        }
+      : null;
+    const projectApprovedSuggestion = projectQuickPaymentHref
+      ? {
+          id: "project-quick-payment-handoff",
+          kind: "approved_action" as const,
+          resource: "projects" as const,
+          capabilityActionId: "project_quick_payment" as const,
+          label: "Apri il progetto e usa Pagamento",
+          description:
+            "Apre il progetto attivo principale con contesto launcher e quick payment pronto da aprire.",
+          href: projectQuickPaymentHref,
+        }
+      : null;
+
+    pushSuggestion(projectApprovedSuggestion);
+    pushSuggestion(projectShowSuggestion);
+    pushSuggestion(
+      projectClientHref
+        ? {
+            id: "open-linked-client-from-project",
+            kind: "show",
+            resource: "clients",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri il cliente collegato",
+            description:
+              "Vai alla scheda cliente collegata al primo progetto attivo.",
+            href: projectClientHref,
+          }
+        : {
+            id: "open-projects-list",
+            kind: "list",
+            resource: "projects",
+            capabilityActionId: "follow_unified_crm_handoff",
+            label: "Apri tutti i progetti",
+            description:
+              "Controlla la lista completa dei progetti per approfondire stato e lavori attivi.",
+            href: buildListHref(routePrefix, "projects"),
           },
     );
   } else if (focusPayments) {
@@ -469,7 +603,7 @@ export const buildUnifiedCrmSuggestedActions = ({
             capabilityActionId: "project_quick_payment",
             label: "Apri il progetto e usa Pagamento",
             description:
-              "Apre il progetto collegato; da li puoi usare il quick payment gia approvato.",
+              "Apre il progetto collegato con contesto launcher e quick payment pronto da aprire.",
             href: paymentProjectHref,
           }
         : paymentClientHref
@@ -517,7 +651,7 @@ export const buildUnifiedCrmSuggestedActions = ({
             capabilityActionId: "project_quick_payment" as const,
             label: "Apri il progetto e usa Pagamento",
             description:
-              "Apre il progetto collegato; da li puoi usare il quick payment gia approvato.",
+              "Apre il progetto collegato con contesto launcher e quick payment pronto da aprire.",
             href: quoteProjectHref,
           }
         : null;
@@ -573,7 +707,7 @@ export const buildUnifiedCrmSuggestedActions = ({
           capabilityActionId: "project_quick_payment" as const,
           label: "Apri il progetto e usa Pagamento",
           description:
-            "Apre il progetto attivo principale; da li puoi usare il quick payment gia approvato.",
+            "Apre il progetto attivo principale con contesto launcher e quick payment pronto da aprire.",
           href: projectQuickPaymentHref,
         }
       : null;
@@ -641,7 +775,7 @@ export const buildUnifiedCrmSuggestedActions = ({
             capabilityActionId: "project_quick_payment",
             label: "Apri il progetto collegato",
             description:
-              "Apre il progetto collegato alla spesa; da li puoi usare le azioni progetto gia approvate.",
+              "Apre il progetto collegato alla spesa con contesto launcher e quick payment pronto da aprire.",
             href: expenseProjectHref,
           }
         : null,

@@ -266,6 +266,42 @@ The next open priority is:
   usable prefill/context, before any future chat-side write draft
 - still do not give the general CRM chat direct write execution
 
+That richer landing step is now closed too:
+
+- approved handoffs now carry deterministic launcher context into existing CRM
+  surfaces
+- `payments/create` handoffs can now transport:
+  - `quote_id`
+  - `client_id`
+  - `project_id`
+  - explicit `payment_type` when inferable from the question
+  - launcher metadata for UI copy
+- `project_quick_payment` handoffs now land on project show with:
+  - `open_dialog=quick_payment`
+  - optional `payment_type`
+  - launcher metadata for banner/copy
+- the landing surfaces stay inside already approved UI:
+  - `PaymentCreate` banner + supported prefills
+  - `ProjectShow` banner
+  - `QuickPaymentDialog` auto-open with supported defaults only
+- runtime verification is now closed too on `qvdmzhyzpyaveniirsmo`:
+  - `unified_crm_answer` redeployed
+  - authenticated smoke question
+    `Come posso registrare il saldo del progetto attivo?` returned HTTP `200`
+  - response included first action `project_quick_payment` with:
+    - `recommended = true`
+    - launcher search params
+    - `payment_type=saldo`
+  - smoke user cleaned after verification
+
+The next open priority is:
+
+- keep the launcher on approved commercial surfaces, but close the last manual
+  gaps that still appear after landing
+- prioritize missing prefills or missing approved destination variants before
+  any future general write-draft discussion
+- still do not give the general CRM chat direct write execution
+
 Deferred note from real usage, not current priority:
 
 - importing an older customer invoice can legitimately find a real client that
@@ -288,8 +324,10 @@ Why this comes next:
     surfaces
   - a first approved commercial handoff toward real payment-oriented surfaces
 - a first deterministic primary recommendation on top of those approved actions
-- the next Pareto gain is therefore not another raw Q&A surface, but a richer
-  landing on those approved commercial surfaces
+- a first richer landing on those approved commercial surfaces with supported
+  prefills and launcher context
+- the next Pareto gain is therefore not another raw Q&A surface, but closing
+  the last manual context gaps on top of those approved landings
 - the semantic/capability backbone is already strong enough for this next step
 
 Not the next step by default:

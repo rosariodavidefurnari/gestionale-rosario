@@ -9,6 +9,7 @@ import {
   buildQuoteSearchFilter,
   buildPaymentPatchFromQuote,
   getPaymentCreateDefaultsFromSearch,
+  getUnifiedAiHandoffContextFromSearch,
   shouldClearProjectForClient,
   shouldClearQuoteForClient,
 } from "./paymentLinking";
@@ -137,6 +138,32 @@ describe("paymentLinking", () => {
     expect(getPaymentCreateDefaultsFromSearch("?client_id=client-2")).toEqual({
       client_id: "client-2",
     });
+
+    expect(
+      getPaymentCreateDefaultsFromSearch(
+        "?quote_id=quote-7&client_id=client-2&project_id=project-9&payment_type=saldo&launcher_source=unified_ai_launcher&launcher_action=quote_create_payment",
+      ),
+    ).toEqual({
+      quote_id: "quote-7",
+      client_id: "client-2",
+      project_id: "project-9",
+      payment_type: "saldo",
+    });
+  });
+
+  it("parses unified AI handoff context from the search params", () => {
+    expect(
+      getUnifiedAiHandoffContextFromSearch(
+        "?launcher_source=unified_ai_launcher&launcher_action=project_quick_payment&open_dialog=quick_payment&payment_type=saldo",
+      ),
+    ).toEqual({
+      source: "unified_ai_launcher",
+      action: "project_quick_payment",
+      openDialog: "quick_payment",
+      paymentType: "saldo",
+    });
+
+    expect(getUnifiedAiHandoffContextFromSearch("?client_id=client-2")).toBeNull();
   });
 
   it("only shows quick payment for operational quote statuses that can still receive payments", () => {

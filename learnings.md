@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se un handoff AI atterra su una superficie CRM gia approvata,
+  conviene portare solo search params che quella superficie supporta gia** —
+  Il pattern corretto non e' inventare un nuovo payload di navigazione, ma
+  riusare i parametri che la UI sa gia consumare davvero, per esempio
+  `quote_id/client_id/project_id/payment_type` su `payments/create` o
+  `open_dialog=quick_payment` su `ProjectShow`. Cosi' l'atterraggio migliora
+  senza introdurre nuove scritture o stati fantasma.
+
 - [2026-03-01] **Se il launcher propone piu handoff commerciali, la
   recommendation primaria deve essere unica e costruita dal sistema** — Non
   basta ordinare le `suggestedActions`: quando l'intent della domanda e la

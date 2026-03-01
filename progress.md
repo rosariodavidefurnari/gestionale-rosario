@@ -56,15 +56,63 @@ handoff commerciale orientato ad azioni gia approvate, sempre senza
 esecuzione diretta dalla chat generale. Anche quel passo piu guidato e' ora
 chiuso: il launcher sa marcare una recommendation primaria deterministica
 sulle azioni gia approvate quando la domanda e il contesto commerciale lo
-consentono. Il prossimo lavoro ad alto valore non e' un'altra AI sparsa, ma
-far atterrare l'utente sulla superficie commerciale gia approvata con il
-miglior prefill e contesto disponibile, prima di discutere qualunque write
-execution generale. Nota differita gia registrata da test reale utente:
+consentono. Anche il passo successivo e' ora chiuso: i handoff approvati
+portano ora dentro le superfici CRM esistenti il contesto launcher e i
+prefill gia supportati, con `PaymentCreate` e `QuickPaymentDialog` che
+consumano quei search params senza aggiungere scritture automatiche. Il
+prossimo lavoro ad alto valore non e' un'altra AI sparsa, ma chiudere gli
+ultimi gap di contesto manuale che restano dopo l'atterraggio su quelle
+superfici approvate. Nota differita gia registrata da test reale utente:
 l'import fatture incontra anche clienti storici assenti dal CRM e in quel
 caso mancano ancora creazione assistita cliente e alcuni campi anagrafici da
 fatturazione; non e' il focus adesso, ma il backlog lo conserva.
 
 ## Last Session
+
+### Sessione 62 (2026-03-01, landing contestuale sulle superfici commerciali approvate)
+
+- Completed:
+  - **I handoff del launcher non si limitano piu a una route: ora atterrano
+    con contesto e prefills gia supportati dalla UI reale**:
+    - `payments/create` puo ricevere da launcher:
+      - `quote_id`
+      - `client_id`
+      - `project_id`
+      - `payment_type`
+      - metadata `launcher_*`
+    - `project_quick_payment` puo aprire:
+      - `ProjectShow`
+      - con `open_dialog=quick_payment`
+      - e `payment_type` quando esplicito nella domanda
+  - **Le superfici di arrivo consumano il contesto senza eseguire nulla in automatico**:
+    - `PaymentCreate` mostra un banner launcher e rispetta i prefills gia supportati
+    - `ProjectShow` mostra il banner launcher
+    - `QuickPaymentDialog` si autoapre solo dal deep-link approvato e solo
+      quando i financials sono disponibili
+  - **L'euristica di handoff evita di mandare al posto sbagliato quando la
+    domanda parla di saldo dal progetto**:
+    - se la domanda e' orientata a registrare un pagamento sul progetto e non
+      esiste un pending payment dominante:
+      - prevale `project_quick_payment`
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx src/components/atomic-crm/payments/paymentLinking.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts supabase/functions/_shared/unifiedCrmAnswer.test.ts`
+  - `npx supabase functions deploy unified_crm_answer --project-ref qvdmzhyzpyaveniirsmo --no-verify-jwt`
+  - smoke autenticato remoto riuscito su `unified_crm_answer` con domanda
+    `Come posso registrare il saldo del progetto attivo?` e ritorno reale di:
+    - `project_quick_payment` come prima action
+    - `recommended = true`
+    - href con `launcher_source`, `launcher_action`, `open_dialog=quick_payment`
+    - `payment_type=saldo`
+
+- Decisions:
+  - gli handoff del launcher possono trasportare solo prefills/search params
+    gia supportati dalle superfici approvate
+  - `project_quick_payment` puo autoaprire il dialog solo dal deep-link
+    approvato e senza eseguire la registrazione
+  - il caso `cliente mancante da fattura storica` resta differito rispetto a
+    questo percorso prioritario
 
 ### Sessione 61 (2026-03-01, recommendation primaria sui handoff commerciali)
 

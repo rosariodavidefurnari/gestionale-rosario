@@ -10,11 +10,46 @@ export const quoteStatusesEligibleForPaymentCreation = new Set([
 ]);
 
 type PaymentCreateDefaults = Partial<
-  Pick<Payment, "quote_id" | "client_id" | "project_id">
+  Pick<Payment, "quote_id" | "client_id" | "project_id" | "payment_type">
 >;
+
+export type UnifiedAiHandoffAction =
+  | "quote_create_payment"
+  | "client_create_payment"
+  | "project_quick_payment"
+  | "follow_unified_crm_handoff";
+
+type UnifiedAiHandoffSource = "unified_ai_launcher";
+
+export type UnifiedAiHandoffContext = {
+  source: UnifiedAiHandoffSource;
+  action: UnifiedAiHandoffAction | null;
+  openDialog: "quick_payment" | null;
+  paymentType: Payment["payment_type"] | null;
+};
 
 const toOptionalIdentifier = (value?: string | null) =>
   value == null || value === "" ? null : value;
+
+const unifiedAiHandoffActions = new Set<UnifiedAiHandoffAction>([
+  "quote_create_payment",
+  "client_create_payment",
+  "project_quick_payment",
+  "follow_unified_crm_handoff",
+]);
+
+const paymentTypes = new Set<Payment["payment_type"]>([
+  "acconto",
+  "saldo",
+  "parziale",
+  "rimborso_spese",
+  "rimborso",
+]);
+
+const getOptionalPaymentType = (value?: string | null) =>
+  value && paymentTypes.has(value as Payment["payment_type"])
+    ? (value as Payment["payment_type"])
+    : null;
 
 export const canCreatePaymentFromQuote = (
   quote: Pick<Quote, "status" | "client_id">,
@@ -86,7 +121,36 @@ export const getPaymentCreateDefaultsFromSearch = (
     defaults.project_id = projectId;
   }
 
+  const paymentType = getOptionalPaymentType(searchParams.get("payment_type"));
+  if (paymentType) {
+    defaults.payment_type = paymentType;
+  }
+
   return defaults;
+};
+
+export const getUnifiedAiHandoffContextFromSearch = (
+  search: string,
+): UnifiedAiHandoffContext | null => {
+  const searchParams = new URLSearchParams(search);
+  const source = searchParams.get("launcher_source");
+
+  if (source !== "unified_ai_launcher") {
+    return null;
+  }
+
+  const action = searchParams.get("launcher_action");
+  const openDialog = searchParams.get("open_dialog");
+
+  return {
+    source,
+    action:
+      action && unifiedAiHandoffActions.has(action as UnifiedAiHandoffAction)
+        ? (action as UnifiedAiHandoffAction)
+        : null,
+    openDialog: openDialog === "quick_payment" ? "quick_payment" : null,
+    paymentType: getOptionalPaymentType(searchParams.get("payment_type")),
+  };
 };
 
 export const buildPaymentPatchFromQuote = ({

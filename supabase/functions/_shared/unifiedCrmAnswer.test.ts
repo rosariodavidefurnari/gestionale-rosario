@@ -100,6 +100,9 @@ describe("unifiedCrmAnswer", () => {
     expect(actions.some((action) => action.capabilityActionId === "quote_create_payment")).toBe(
       true,
     );
+    expect(
+      actions.find((action) => action.capabilityActionId === "quote_create_payment")?.href,
+    ).toContain("launcher_source=unified_ai_launcher");
   });
 
   it("prioritizes the approved payment action when the question already asks to register it", () => {
@@ -143,10 +146,47 @@ describe("unifiedCrmAnswer", () => {
       expect.objectContaining({
         kind: "approved_action",
         capabilityActionId: "quote_create_payment",
-        href: "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1",
+        href:
+          "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&launcher_action=quote_create_payment&launcher_source=unified_ai_launcher",
         recommended: true,
       }),
     );
     expect(actions[0]?.recommendationReason).toContain("precompilato");
+  });
+
+  it("adds payment type and launcher context when the question implies a saldo", () => {
+    const actions = buildUnifiedCrmSuggestedActions({
+      question: "Come posso registrare il saldo del progetto attivo?",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          routePrefix: "/#/",
+        },
+        snapshot: {
+          recentClients: [],
+          openQuotes: [],
+          activeProjects: [
+            {
+              projectId: "project-1",
+              clientId: "client-1",
+            },
+          ],
+          pendingPayments: [],
+          recentExpenses: [],
+        },
+        registries: {
+          semantic: {},
+          capability: {},
+        },
+      },
+    });
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        capabilityActionId: "project_quick_payment",
+        href:
+          "/#/projects/project-1/show?launcher_source=unified_ai_launcher&launcher_action=project_quick_payment&open_dialog=quick_payment&payment_type=saldo",
+      }),
+    );
   });
 });

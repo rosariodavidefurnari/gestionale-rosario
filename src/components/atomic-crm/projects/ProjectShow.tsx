@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { EditButton } from "@/components/admin/edit-button";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { Calendar, Wallet, User, Euro, Car, Hash } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 import type { Project } from "../types";
 import { ProjectCategoryBadge, ProjectStatusBadge } from "./ProjectListContent";
@@ -13,6 +13,7 @@ import { QuickEpisodeDialog } from "./QuickEpisodeDialog";
 import { QuickPaymentDialog } from "./QuickPaymentDialog";
 import { ErrorMessage } from "../misc/ErrorMessage";
 import { formatDateRange } from "../misc/formatDateRange";
+import { getUnifiedAiHandoffContextFromSearch } from "../payments/paymentLinking";
 
 export const ProjectShow = () => (
   <ShowBase>
@@ -22,11 +23,19 @@ export const ProjectShow = () => (
 
 const ProjectShowContent = () => {
   const { record, isPending, error } = useShowContext<Project>();
+  const location = useLocation();
+  const launcherHandoff = getUnifiedAiHandoffContextFromSearch(location.search);
   if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
 
   return (
     <div className="mt-2 mb-2 flex flex-col gap-6">
+      {launcherHandoff?.action === "project_quick_payment" ? (
+        <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          Aperto dalla chat AI unificata: questo progetto e' stato indicato
+          come superficie giusta per il quick payment gia approvato.
+        </div>
+      ) : null}
       <Card>
         <CardContent>
           <ProjectHeader record={record} />

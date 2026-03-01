@@ -74,6 +74,9 @@ describe("crmSemanticRegistry", () => {
     expect(registry.rules.unifiedAiReadContext.meaning).toContain(
       "recommendation primaria",
     );
+    expect(registry.rules.unifiedAiReadContext.meaning).toContain(
+      "prefills/search params",
+    );
   });
 
   it("uses km and taxable helpers consistently", () => {

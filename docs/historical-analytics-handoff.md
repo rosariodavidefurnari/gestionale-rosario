@@ -277,6 +277,48 @@ The next high-value step is now:
   draft
 - still no general write execution from the CRM Q&A shell
 
+That next high-value step is now closed too:
+
+- approved launcher handoffs now land on CRM surfaces with richer context,
+  without inventing new write workflows
+- `payments/create` handoffs now carry deterministic launcher metadata plus the
+  strongest already-supported prefills:
+  - linked `quote_id`
+  - linked `client_id`
+  - linked `project_id`
+  - inferred `payment_type` when the question makes it explicit
+- `project_quick_payment` handoffs now land on project show with:
+  - deterministic launcher metadata
+  - `open_dialog=quick_payment`
+  - inferred `payment_type` when available
+- the destination surfaces now consume that context without executing anything:
+  - `PaymentCreate` shows a launcher banner and respects `payment_type`
+  - `ProjectShow` shows the launcher banner
+  - `QuickPaymentDialog` auto-opens only from the approved deep-link and only
+    after financial totals are available
+- runtime verification is now closed too on the linked remote project:
+  - `unified_crm_answer` redeployed remotely on `qvdmzhyzpyaveniirsmo`
+  - authenticated smoke question
+    `Come posso registrare il saldo del progetto attivo?` returned HTTP `200`
+  - the first `suggestedAction` was:
+    - `project_quick_payment`
+    - `recommended = true`
+    - href with:
+      - `launcher_source=unified_ai_launcher`
+      - `launcher_action=project_quick_payment`
+      - `open_dialog=quick_payment`
+      - `payment_type=saldo`
+  - smoke user cleaned after verification
+
+The next high-value step is now:
+
+- keep the launcher inside approved commercial surfaces, but start closing the
+  last context gaps that still require the user to fill fields manually after
+  landing
+- prioritize missing prefills or missing approved destination variants before
+  discussing any general chat-side write draft
+- still no general write execution from the CRM Q&A shell
+
 Deferred note from real user trial:
 
 - invoice import can already read a valid historical customer invoice even when

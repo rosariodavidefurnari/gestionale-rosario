@@ -295,7 +295,7 @@ describe("UnifiedAiLauncher", () => {
           recommended: true,
           recommendationReason:
             "Consigliata perche il preventivo rilevante e' in stato accettato e qui il pagamento si apre gia precompilato dal record corretto.",
-          href: "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1",
+          href: "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&launcher_action=quote_create_payment&launcher_source=unified_ai_launcher",
         },
         {
           id: "open-dashboard",
@@ -350,7 +350,7 @@ describe("UnifiedAiLauncher", () => {
         .closest("a"),
     ).toHaveAttribute(
       "href",
-      "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1",
+      "/#/payments/create?quote_id=quote-1&client_id=client-1&project_id=project-1&launcher_action=quote_create_payment&launcher_source=unified_ai_launcher",
     );
   });
 
