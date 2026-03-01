@@ -14,7 +14,7 @@ export const AiChatView = ({
   readContextError: unknown;
   onNavigate?: () => void;
 }) => (
-  <div className="space-y-4">
+  <div className="flex h-full min-h-0 flex-col gap-4">
     {readContextError ? (
       <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
         Impossibile leggere la snapshot CRM del launcher unificato.
@@ -27,10 +27,12 @@ export const AiChatView = ({
       </div>
     ) : null}
 
-    <UnifiedCrmAnswerPanel
-      context={context}
-      selectedModel={selectedModel}
-      onNavigate={onNavigate}
-    />
+    <div className="min-h-0 flex-1">
+      <UnifiedCrmAnswerPanel
+        context={context}
+        selectedModel={selectedModel}
+        onNavigate={onNavigate}
+      />
+    </div>
   </div>
 );

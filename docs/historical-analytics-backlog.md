@@ -420,6 +420,8 @@ Tactical UX slice closed out of sequence:
   - `Chat AI` now opens as the default view
   - `Snapshot CRM` and `Importa fatture e ricevute` moved behind a `+` menu
   - the chat view remains mounted while switching views, so state is preserved
+  - the chat panel now keeps answers above and the composer at the bottom
+  - the `+` control now sits under the title instead of next to the close `X`
 - this did not widen the AI capability perimeter:
   - no new routes
   - no new edge functions

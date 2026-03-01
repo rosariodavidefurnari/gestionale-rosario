@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se una shell AI vive dentro un drawer, il composer deve stare
+  in basso e la navigazione secondaria non va appoggiata alla `X` di
+  chiusura** — Nel launcher AI il layout con input in alto e risposta sotto
+  rompe l'aspettativa base di una chat. Anche il bottone `+` accanto al close
+  crea ambiguita' percettiva. Il pattern corretto e' conversazione scrollabile
+  sopra, composer stabile in basso, e controlli secondari spostati vicino al
+  titolo ma lontani dall'affordance di chiusura.
+
 - [2026-03-01] **Se una shell AI unificata ospita piu capability, la chat deve
   essere la vista primaria e le altre funzioni devono stare dietro navigazione
   esplicita** — Nel launcher unificato impilare snapshot CRM, Q&A e import

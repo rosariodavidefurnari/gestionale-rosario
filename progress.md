@@ -92,7 +92,9 @@ fatturazione; non e' il focus adesso, ma il backlog lo conserva.
 Fuori sequenza ma chiuso subito per sbloccare l'uso quotidiano: il launcher AI
 non impila piu tutto in un unico scroll. Ora apre su `Chat AI`, mentre
 `Snapshot CRM` e `Importa fatture e ricevute` stanno dietro un menu `+`; lo stato della
-chat resta preservato mentre si cambia vista nella stessa sessione.
+chat resta preservato mentre si cambia vista nella stessa sessione. La chat
+ora segue anche un layout standard: risposta sopra, composer in basso, `+`
+lontano dalla `X` di chiusura.
 
 ## Last Session
 
@@ -104,12 +106,17 @@ chat resta preservato mentre si cambia vista nella stessa sessione.
     - `Snapshot CRM` e `Importa fatture e ricevute` non stanno piu nello stesso scroll
       infinito
     - le viste secondarie si aprono dal bottone `+`
+    - il bottone `+` non e' piu accanto alla `X` di chiusura del drawer
   - **La shell e' stata separata in viste chiare senza rompere la logica
     esistente**:
     - nuovo header a viste
     - answer panel alleggerito e compattato
     - import fatture estratto in vista dedicata
     - `PaymentDraftCard` estratta dal pannello chat
+  - **La vista chat ora segue un layout conversazionale standard**:
+    - messaggi, draft e handoff stanno sopra
+    - il composer resta in basso nel pannello
+    - i suggerimenti rapidi vivono insieme al composer, non sopra tutta la chat
   - **La chat conserva il proprio stato mentre navighi nelle altre viste del
     launcher**:
     - il pannello chat resta montato

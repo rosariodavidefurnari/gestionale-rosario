@@ -29,26 +29,28 @@ export const AiLauncherHeader = ({
   onViewChange: (view: UnifiedAiLauncherView) => void;
 }) => (
   <SheetHeader className="border-b bg-background/95 pb-3 pr-14">
-    <SheetTitle className="flex items-center justify-between gap-3 text-left">
-      {activeView === "chat" ? (
-        <>
-          <span className="flex items-center gap-2">
-            <Bot className="size-4" />
-            <span>{viewTitles.chat}</span>
-          </span>
+    {activeView === "chat" ? (
+      <>
+        <div className="flex items-center gap-2 text-left">
+          <Bot className="size-4" />
+          <SheetTitle>{viewTitles.chat}</SheetTitle>
+        </div>
 
+        <div className="pt-3">
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
+                size="sm"
+                className="gap-2"
                 aria-label="Apri altre viste AI"
               >
                 <Plus className="size-4" />
+                Altre viste
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="start">
               <DropdownMenuItem onSelect={() => onViewChange("snapshot")}>
                 <Database className="size-4" />
                 Snapshot CRM
@@ -59,23 +61,23 @@ export const AiLauncherHeader = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </>
-      ) : (
-        <span className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="-ml-2"
-            onClick={() => onViewChange("chat")}
-            aria-label="Torna alla chat AI"
-          >
-            <ArrowLeft className="size-4" />
-          </Button>
-          <span>{viewTitles[activeView]}</span>
-        </span>
-      )}
-    </SheetTitle>
+        </div>
+      </>
+    ) : (
+      <div className="flex items-center gap-2 text-left">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="-ml-2"
+          onClick={() => onViewChange("chat")}
+          aria-label="Torna alla chat AI"
+        >
+          <ArrowLeft className="size-4" />
+        </Button>
+        <SheetTitle>{viewTitles[activeView]}</SheetTitle>
+      </div>
+    )}
     <SheetDescription className="sr-only">
       Chat AI unificata con viste per chat CRM, snapshot e import fatture.
     </SheetDescription>

@@ -268,6 +268,7 @@ describe("UnifiedAiLauncher", () => {
     fireEvent.click(launcherButton);
 
     expect(await screen.findByText("Chat AI")).toBeInTheDocument();
+    expect(screen.getByText("Altre viste")).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
         name: "Dammi un riepilogo operativo rapido del CRM.",
@@ -373,6 +374,12 @@ describe("UnifiedAiLauncher", () => {
     expect(
       await screen.findByText("Tutto sotto controllo."),
     ).toBeInTheDocument();
+    const answerPanel = await screen.findByTestId("unified-crm-answer");
+    const composer = screen.getByTestId("unified-crm-composer");
+    expect(
+      answerPanel.compareDocumentPosition(composer) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(
       await screen.findByText("Bozza pagamento proposta"),
     ).toBeInTheDocument();

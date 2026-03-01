@@ -242,8 +242,13 @@ export const UnifiedAiLauncher = () => {
         />
 
         <div className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto px-4 py-4">
-            <div className={cn(activeView !== "chat" && "hidden")}>
+          <div
+            className={cn(
+              "h-full px-4 py-4",
+              activeView === "chat" ? "overflow-hidden" : "overflow-y-auto",
+            )}
+          >
+            <div className={cn("h-full", activeView !== "chat" && "hidden")}>
               <AiChatView
                 context={readContext ?? null}
                 selectedModel={selectedAnswerModel}

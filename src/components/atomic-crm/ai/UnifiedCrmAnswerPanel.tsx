@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   unifiedCrmSuggestedQuestions,
   type UnifiedCrmAnswer,
+  type UnifiedCrmPaymentDraft,
 } from "@/lib/ai/unifiedCrmAssistant";
 import type { UnifiedCrmReadContext } from "@/lib/ai/unifiedCrmReadContext";
 
@@ -101,69 +102,17 @@ export const UnifiedCrmAnswerPanel = ({
   };
 
   return (
-    <div className="rounded-2xl border bg-background p-4 shadow-sm">
-      <div className="space-y-4">
-        <div className="flex flex-wrap gap-2">
-          {unifiedCrmSuggestedQuestions.map((suggestion) => (
-            <Button
-              key={suggestion}
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={!context || isPending}
-              onClick={() => submitQuestion(suggestion)}
-            >
-              {suggestion}
-            </Button>
-          ))}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="unified-crm-question" className="sr-only">
-            Fai una domanda sul CRM corrente
-          </Label>
-          <div className="flex items-end gap-2">
-            <div className="min-w-0 flex-1 space-y-2">
-              <Textarea
-                id="unified-crm-question"
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                onKeyDown={(event) => {
-                  if (
-                    event.key === "Enter" &&
-                    !event.shiftKey &&
-                    (event.metaKey || event.ctrlKey)
-                  ) {
-                    event.preventDefault();
-                    submitQuestion();
-                  }
-                }}
-                placeholder="Chiedi qualcosa sul CRM corrente..."
-                maxLength={300}
-                className="min-h-12 resize-none"
-                disabled={!context || isPending}
-              />
-              <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
-                <span>Invia con Cmd/Ctrl + Invio.</span>
-                <span>{trimmedQuestion.length}/300</span>
-              </div>
-            </div>
-
-            <Button
-              type="button"
-              onClick={() => submitQuestion()}
-              disabled={!context || isPending || !trimmedQuestion}
-              className="mb-5 gap-2 self-end"
-            >
-              {isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <SendHorizontal className="size-4" />
-              )}
-              Invia
-            </Button>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border bg-background shadow-sm">
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+        {!answer && !isPending && !error ? (
+          <div className="rounded-xl border border-dashed bg-muted/20 px-4 py-4 text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">Chatta con il CRM</p>
+            <p className="mt-1">
+              Fai una domanda operativa o usa un suggerimento rapido. Da qui la
+              chat legge il CRM, ma non scrive direttamente.
+            </p>
           </div>
-        </div>
+        ) : null}
 
         {isPending ? (
           <div className="rounded-xl border border-dashed px-4 py-4 text-sm text-muted-foreground">
@@ -172,7 +121,10 @@ export const UnifiedCrmAnswerPanel = ({
         ) : null}
 
         {answer ? (
-          <div className="space-y-3 rounded-xl border px-4 py-4">
+          <div
+            data-testid="unified-crm-answer"
+            className="space-y-3 rounded-xl border px-4 py-4"
+          >
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span>Risposta del {formatGeneratedAt(answer.generatedAt)}</span>
             </div>
@@ -247,6 +199,73 @@ export const UnifiedCrmAnswerPanel = ({
             {error.message}
           </div>
         ) : null}
+      </div>
+
+      <div
+        data-testid="unified-crm-composer"
+        className="border-t bg-background/95 px-4 py-4"
+      >
+        <div className="flex flex-wrap gap-2">
+          {unifiedCrmSuggestedQuestions.map((suggestion) => (
+            <Button
+              key={suggestion}
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={!context || isPending}
+              onClick={() => submitQuestion(suggestion)}
+            >
+              {suggestion}
+            </Button>
+          ))}
+        </div>
+
+        <div className="mt-4 space-y-2">
+          <Label htmlFor="unified-crm-question" className="sr-only">
+            Fai una domanda sul CRM corrente
+          </Label>
+          <div className="flex items-end gap-2">
+            <div className="min-w-0 flex-1 space-y-2">
+              <Textarea
+                id="unified-crm-question"
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" &&
+                    !event.shiftKey &&
+                    (event.metaKey || event.ctrlKey)
+                  ) {
+                    event.preventDefault();
+                    submitQuestion();
+                  }
+                }}
+                placeholder="Chiedi qualcosa sul CRM corrente..."
+                maxLength={300}
+                className="min-h-12 resize-none"
+                disabled={!context || isPending}
+              />
+              <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+                <span>Invia con Cmd/Ctrl + Invio.</span>
+                <span>{trimmedQuestion.length}/300</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              onClick={() => submitQuestion()}
+              disabled={!context || isPending || !trimmedQuestion}
+              className="mb-5 gap-2 self-end"
+            >
+              {isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <SendHorizontal className="size-4" />
+              )}
+              Invia
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
