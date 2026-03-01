@@ -199,7 +199,7 @@ export const UnifiedCrmAnswerPanel = ({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border bg-background shadow-sm">
-      <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3 md:space-y-4 md:px-4 md:py-4">
+      <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3">
         {!answer && !isPending && !error ? (
           <div className="rounded-xl border border-dashed bg-muted/20 px-4 py-4 text-sm text-muted-foreground">
             <p>
@@ -298,7 +298,7 @@ export const UnifiedCrmAnswerPanel = ({
 
       <div
         data-testid="unified-crm-composer"
-        className="border-t bg-background/95 px-3 py-3 md:px-4 md:py-4"
+        className="border-t bg-background/95 px-3 py-3"
       >
         <SuggestionChips
           suggestions={unifiedCrmSuggestedQuestions}
