@@ -69,7 +69,9 @@ const useTravelLocationSuggestions = ({
     const requestId = requestIdRef.current;
 
     if (!enabled || trimmedQuery.length < locationSuggestMinChars) {
-      setSuggestions([]);
+      setSuggestions((currentSuggestions) =>
+        currentSuggestions.length === 0 ? currentSuggestions : [],
+      );
       setIsPending(false);
       setErrorMessage(null);
       return;

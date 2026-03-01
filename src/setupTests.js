@@ -17,3 +17,7 @@ if (!globalThis.ResizeObserver) {
     disconnect() {}
   };
 }
+
+if (!globalThis.HTMLElement.prototype.scrollIntoView) {
+  globalThis.HTMLElement.prototype.scrollIntoView = () => {};
+}

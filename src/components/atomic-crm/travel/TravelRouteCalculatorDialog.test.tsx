@@ -1,21 +1,22 @@
 // @vitest-environment jsdom
 
 import "@/setupTests";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const estimateTravelRoute = vi.fn();
 const suggestTravelLocations = vi.fn();
 const notify = vi.fn();
+const dataProvider = {
+  estimateTravelRoute,
+  suggestTravelLocations,
+};
 
 vi.mock("ra-core", async () => {
   const actual = await vi.importActual<typeof import("ra-core")>("ra-core");
   return {
     ...actual,
-    useDataProvider: () => ({
-      estimateTravelRoute,
-      suggestTravelLocations,
-    }),
+    useDataProvider: () => dataProvider,
     useNotify: () => notify,
   };
 });
@@ -61,16 +62,17 @@ describe("TravelRouteCalculatorDialog", () => {
       target: { value: "Valg" },
     });
 
-    await vi.advanceTimersByTimeAsync(250);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
 
-    await waitFor(() =>
-      expect(suggestTravelLocations).toHaveBeenCalledWith({
-        query: "Valg",
-      }),
-    );
+    expect(suggestTravelLocations).toHaveBeenCalledWith({
+      query: "Valg",
+    });
 
     fireEvent.click(
-      await screen.findByRole("option", {
+      screen.getByRole("option", {
         name: "Valguarnera Caropepe, EN, Italia",
       }),
     );
