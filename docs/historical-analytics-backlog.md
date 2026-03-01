@@ -302,6 +302,35 @@ The next open priority is:
   any future general write-draft discussion
 - still do not give the general CRM chat direct write execution
 
+That landing-gap step is now closed too for the quote-driven payment path:
+
+- `payments/create` now reads the linked quote context more deeply on the
+  destination surface
+- the form now surfaces:
+  - quote amount
+  - already linked total
+  - remaining still-unlinked amount
+- for standard payment types, the form can suggest a deterministic amount equal
+  to the residual not yet linked to payments
+- the suggestion remains local to the destination surface:
+  - not model-generated
+  - not auto-confirmed
+  - always editable by the user
+- `rimborso` / `rimborso_spese` do not receive the same automatic amount
+  suggestion here
+- this slice did not require a function redeploy:
+  - local validation closed with `npm run typecheck`
+  - targeted Vitest passed on payment linking + registries
+
+The next open priority is:
+
+- close the last light landing gaps that still remain on other approved
+  commercial surfaces where deterministic help is weaker than quote/project
+- only after that, if no equally strong deterministic landing upgrade remains,
+  discuss the first narrow write-draft with explicit confirmation on an
+  approved surface
+- still do not give the general CRM chat direct write execution
+
 Deferred note from real usage, not current priority:
 
 - importing an older customer invoice can legitimately find a real client that
@@ -326,6 +355,8 @@ Why this comes next:
 - a first deterministic primary recommendation on top of those approved actions
 - a first richer landing on those approved commercial surfaces with supported
   prefills and launcher context
+- a first deterministic destination-side amount suggestion on the quote payment
+  path
 - the next Pareto gain is therefore not another raw Q&A surface, but closing
   the last manual context gaps on top of those approved landings
 - the semantic/capability backbone is already strong enough for this next step

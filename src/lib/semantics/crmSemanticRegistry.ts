@@ -267,7 +267,7 @@ export const buildCrmSemanticRegistry = (
         scope: "clients + quotes + projects + payments + expenses",
         freshnessField: "generatedAt",
         meaning:
-          "Il contesto CRM-wide del launcher unificato e' una snapshot read-only dei moduli core; sia la snapshot sia le risposte AI che la usano restano di sola lettura, gli handoff successivi possono solo puntare a route o azioni gia approvate, una recommendation primaria puo comparire solo se costruita deterministicamente dal sistema, e gli href di handoff possono trasportare solo prefills/search params gia supportati dalle superfici esistenti. Ogni futura scrittura deve passare da un workflow dedicato con conferma esplicita.",
+          "Il contesto CRM-wide del launcher unificato e' una snapshot read-only dei moduli core; sia la snapshot sia le risposte AI che la usano restano di sola lettura, gli handoff successivi possono solo puntare a route o azioni gia approvate, una recommendation primaria puo comparire solo se costruita deterministicamente dal sistema, e gli href di handoff possono trasportare solo prefills/search params gia supportati dalle superfici esistenti. Le superfici di arrivo possono poi calcolare solo suggerimenti deterministici locali, come il residuo ancora non collegato di un preventivo. Ogni futura scrittura deve passare da un workflow dedicato con conferma esplicita.",
       },
     },
   };

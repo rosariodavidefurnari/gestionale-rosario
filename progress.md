@@ -62,12 +62,53 @@ prefill gia supportati, con `PaymentCreate` e `QuickPaymentDialog` che
 consumano quei search params senza aggiungere scritture automatiche. Il
 prossimo lavoro ad alto valore non e' un'altra AI sparsa, ma chiudere gli
 ultimi gap di contesto manuale che restano dopo l'atterraggio su quelle
-superfici approvate. Nota differita gia registrata da test reale utente:
+superfici approvate. Anche il pezzo piu forte di quel gap e' ora chiuso sul
+ramo `quote_create_payment`: il form `payments/create` mostra il contesto del
+preventivo collegato e puo suggerire in modo deterministico il residuo ancora
+non collegato, sempre modificabile dall'utente. Il prossimo lavoro ad alto
+valore non e' un'altra AI sparsa, ma chiudere gli ultimi gap piu leggeri sulle
+altre superfici approvate e solo dopo valutare il primo write-draft stretto
+con conferma esplicita. Nota differita gia registrata da test reale utente:
 l'import fatture incontra anche clienti storici assenti dal CRM e in quel
 caso mancano ancora creazione assistita cliente e alcuni campi anagrafici da
 fatturazione; non e' il focus adesso, ma il backlog lo conserva.
 
 ## Last Session
+
+### Sessione 63 (2026-03-01, suggerimento importo sul landing quote -> payment)
+
+- Completed:
+  - **Il form `payments/create` ora usa davvero il contesto del preventivo
+    collegato**:
+    - mostra:
+      - importo preventivo
+      - totale gia collegato
+      - residuo ancora non collegato
+    - espone un CTA esplicito:
+      - `Usa <importo suggerito>`
+  - **Il suggerimento importo resta deterministicamente locale alla superficie
+    di arrivo**:
+    - per `acconto` / `saldo` / `parziale` suggerisce il residuo non ancora
+      collegato
+    - per `rimborso` / `rimborso_spese` non suggerisce importi automatici
+    - se l'utente ha gia toccato manualmente il campo importo, il sistema non
+      lo sovrascrive
+  - **Semantica e capability riallineate nello stesso passaggio**:
+    - `quote_create_payment` ora dichiara anche il suggerimento residuo
+    - il registry semantico esplicita che la superficie di arrivo puo
+      calcolare solo suggerimenti locali deterministici
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/payments/paymentLinking.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`
+
+- Decisions:
+  - i suggerimenti importo sul landing commerciale devono nascere dai dati gia
+    caricati dalla superficie di arrivo, non dal modello
+  - `rimborso` e `rimborso_spese` restano fuori da questo auto-suggest per non
+    confondere il significato del residuo preventivo
+  - il caso `cliente mancante da fattura storica` resta differito rispetto a
+    questo percorso prioritario
 
 ### Sessione 62 (2026-03-01, landing contestuale sulle superfici commerciali approvate)
 

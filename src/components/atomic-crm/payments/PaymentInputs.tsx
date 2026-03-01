@@ -1,7 +1,8 @@
-import { required, minValue, useGetOne } from "ra-core";
+import { required, minValue, useGetList, useGetOne } from "ra-core";
 import { useEffect } from "react";
-import { useFormContext, useWatch } from "react-hook-form";
+import { useFormContext, useFormState, useWatch } from "react-hook-form";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { TextInput } from "@/components/admin/text-input";
 import { SelectInput } from "@/components/admin/select-input";
@@ -15,15 +16,19 @@ import {
   paymentTypeChoices,
   paymentTypeDescriptions,
   paymentMethodChoices,
+  paymentTypeLabels,
   paymentStatusChoices,
 } from "./paymentTypes";
 import {
   buildQuoteSearchFilter,
   buildPaymentPatchFromQuote,
+  getSuggestedPaymentAmountFromQuote,
   shouldClearProjectForClient,
   shouldClearQuoteForClient,
 } from "./paymentLinking";
 import { toOptionalIdentifier } from "../quotes/quoteProjectLinking";
+import { buildQuotePaymentsSummary } from "../quotes/quotePaymentsSummary";
+import type { Payment } from "../types";
 
 export const PaymentInputs = () => (
   <div className="flex flex-col gap-2 p-1">
@@ -208,6 +213,7 @@ const PaymentDetailInputs = () => (
       validate={[required(), minValue(0)]}
       helperText={false}
     />
+    <QuotePaymentSuggestionCard />
     <SelectInput
       source="method"
       label="Metodo pagamento"
@@ -225,3 +231,135 @@ const PaymentDetailInputs = () => (
     <TextInput source="notes" label="Note" multiline helperText={false} />
   </div>
 );
+
+const formatCurrency = (value: number) =>
+  value.toLocaleString("it-IT", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 2,
+  });
+
+const QuotePaymentSuggestionCard = () => {
+  const quoteId = useWatch({ name: "quote_id" });
+  const paymentType = useWatch({ name: "payment_type" }) as
+    | Payment["payment_type"]
+    | undefined;
+  const amount = useWatch({ name: "amount" });
+  const { control, setValue } = useFormContext();
+  const { dirtyFields } = useFormState({
+    control,
+    name: "amount",
+  });
+
+  const { data: quote } = useGetOne<Quote>(
+    "quotes",
+    {
+      id: quoteId,
+    },
+    {
+      enabled: !!quoteId,
+    },
+  );
+  const { data: linkedPayments, isPending } = useGetList<Payment>(
+    "payments",
+    {
+      filter: { "quote_id@eq": String(quoteId) },
+      sort: { field: "payment_date", order: "DESC" },
+      pagination: { page: 1, perPage: 100 },
+    },
+    {
+      enabled: !!quoteId,
+    },
+  );
+
+  const suggestedAmount =
+    quote && linkedPayments
+      ? getSuggestedPaymentAmountFromQuote({
+          quoteAmount: quote.amount,
+          payments: linkedPayments,
+          paymentType,
+        })
+      : null;
+  const summary =
+    quote && linkedPayments
+      ? buildQuotePaymentsSummary({
+          quoteAmount: quote.amount,
+          payments: linkedPayments,
+        })
+      : null;
+
+  useEffect(() => {
+    if (!quoteId || suggestedAmount == null) {
+      return;
+    }
+
+    const numericAmount =
+      typeof amount === "number" ? amount : Number(amount ?? 0);
+    if (dirtyFields.amount && Number.isFinite(numericAmount) && numericAmount > 0) {
+      return;
+    }
+
+    if (!dirtyFields.amount && numericAmount === suggestedAmount) {
+      return;
+    }
+
+    setValue("amount", suggestedAmount, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: true,
+    });
+  }, [amount, paymentType, quoteId, setValue, suggestedAmount]);
+
+  if (!quoteId || !quote) {
+    return null;
+  }
+
+  if (isPending || !summary) {
+    return (
+      <div className="rounded-md border border-dashed px-3 py-3 text-xs text-muted-foreground">
+        Sto leggendo il riepilogo pagamenti del preventivo collegato...
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed bg-muted/20 px-3 py-3 text-sm space-y-3">
+      <div className="space-y-1">
+        <p className="font-medium">Contesto preventivo collegato</p>
+        <p className="text-xs text-muted-foreground">
+          Importo preventivo {formatCurrency(quote.amount)} · gia collegato{" "}
+          {formatCurrency(summary.linkedTotal)} · residuo{" "}
+          {formatCurrency(summary.remainingAmount)}
+        </p>
+      </div>
+
+      {suggestedAmount != null ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">
+            Suggerimento per{" "}
+            {paymentType ? paymentTypeLabels[paymentType] ?? paymentType : "questo pagamento"}
+            : usa il residuo non ancora collegato al preventivo.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setValue("amount", suggestedAmount, {
+                shouldDirty: true,
+                shouldTouch: true,
+                shouldValidate: true,
+              })
+            }
+          >
+            Usa {formatCurrency(suggestedAmount)}
+          </Button>
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Nessun importo suggerito automatico per questo tipo pagamento.
+        </p>
+      )}
+    </div>
+  );
+};

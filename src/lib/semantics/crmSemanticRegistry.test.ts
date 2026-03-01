@@ -77,6 +77,9 @@ describe("crmSemanticRegistry", () => {
     expect(registry.rules.unifiedAiReadContext.meaning).toContain(
       "prefills/search params",
     );
+    expect(registry.rules.unifiedAiReadContext.meaning).toContain(
+      "residuo ancora non collegato",
+    );
   });
 
   it("uses km and taxable helpers consistently", () => {

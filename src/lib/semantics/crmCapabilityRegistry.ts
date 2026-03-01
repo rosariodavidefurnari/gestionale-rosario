@@ -351,7 +351,8 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
     {
       id: "quote_create_payment",
       label: "Registra pagamento dal preventivo",
-      description: "Apre il form pagamenti gia' precompilato dal preventivo.",
+      description:
+        "Apre il form pagamenti gia' precompilato dal preventivo e puo suggerire l'importo residuo ancora non collegato.",
       sourceFile: "src/components/atomic-crm/quotes/QuoteShow.tsx",
       actsOn: ["quotes", "payments"],
       requiredFields: ["client_id", "amount", "status"],
@@ -389,7 +390,8 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
     {
       id: "project_quick_payment",
       label: "Registra pagamento rapido dal progetto",
-      description: "Crea un pagamento leggendo il saldo operativo dal progetto.",
+      description:
+        "Crea un pagamento leggendo il saldo operativo dal progetto e puo aprirsi da handoff guidato con tipo pagamento gia selezionato.",
       sourceFile: "src/components/atomic-crm/projects/QuickPaymentDialog.tsx",
       actsOn: ["projects", "payments"],
       requiredFields: ["project_id", "client_id", "amount", "payment_type"],

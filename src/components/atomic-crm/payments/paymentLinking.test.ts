@@ -9,6 +9,7 @@ import {
   buildQuoteSearchFilter,
   buildPaymentPatchFromQuote,
   getPaymentCreateDefaultsFromSearch,
+  getSuggestedPaymentAmountFromQuote,
   getUnifiedAiHandoffContextFromSearch,
   shouldClearProjectForClient,
   shouldClearQuoteForClient,
@@ -185,5 +186,37 @@ describe("paymentLinking", () => {
         client_id: "client-1",
       }),
     ).toBe(false);
+  });
+
+  it("suggests the still-unlinked quote amount for standard payment types", () => {
+    expect(
+      getSuggestedPaymentAmountFromQuote({
+        quoteAmount: 1000,
+        paymentType: "saldo",
+        payments: [
+          { amount: 200, payment_type: "acconto", status: "ricevuto" },
+          { amount: 300, payment_type: "parziale", status: "in_attesa" },
+        ],
+      }),
+    ).toBe(500);
+
+    expect(
+      getSuggestedPaymentAmountFromQuote({
+        quoteAmount: 1000,
+        paymentType: "rimborso_spese",
+        payments: [],
+      }),
+    ).toBeNull();
+
+    expect(
+      getSuggestedPaymentAmountFromQuote({
+        quoteAmount: 500,
+        paymentType: "saldo",
+        payments: [
+          { amount: 300, payment_type: "acconto", status: "ricevuto" },
+          { amount: 300, payment_type: "saldo", status: "in_attesa" },
+        ],
+      }),
+    ).toBeNull();
   });
 });

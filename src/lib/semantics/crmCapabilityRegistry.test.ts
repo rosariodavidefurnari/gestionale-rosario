@@ -59,6 +59,10 @@ describe("crmCapabilityRegistry", () => {
       )?.description,
     ).toContain("prefills/search params");
     expect(
+      registry.actions.find((action) => action.id === "quote_create_payment")
+        ?.description,
+    ).toContain("residuo");
+    expect(
       registry.actions.some((action) => action.id === "invoice_import_extract"),
     ).toBe(true);
     expect(

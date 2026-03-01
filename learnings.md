@@ -10,6 +10,14 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se una superficie commerciale di arrivo ha gia i dati giusti,
+  il suggerimento importo va calcolato li e non passato dall'AI** — Sul ramo
+  `quote_create_payment` il pattern corretto non e' mettere l'importo stimato
+  dentro l'handoff AI, ma far leggere al form il preventivo collegato e i
+  pagamenti gia linkati per derivare il residuo ancora non collegato. Cosi'
+  il suggerimento resta auditabile, modificabile e coerente con lo stato reale
+  al momento dell'apertura del form.
+
 - [2026-03-01] **Se un handoff AI atterra su una superficie CRM gia approvata,
   conviene portare solo search params che quella superficie supporta gia** —
   Il pattern corretto non e' inventare un nuovo payload di navigazione, ma

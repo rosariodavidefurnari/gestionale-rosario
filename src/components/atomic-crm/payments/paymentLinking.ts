@@ -1,6 +1,7 @@
 import type { Identifier } from "ra-core";
 
 import type { Payment, Project, Quote } from "../types";
+import { buildQuotePaymentsSummary } from "../quotes/quotePaymentsSummary";
 
 export const quoteStatusesEligibleForPaymentCreation = new Set([
   "accettato",
@@ -151,6 +152,35 @@ export const getUnifiedAiHandoffContextFromSearch = (
     openDialog: openDialog === "quick_payment" ? "quick_payment" : null,
     paymentType: getOptionalPaymentType(searchParams.get("payment_type")),
   };
+};
+
+export const getSuggestedPaymentAmountFromQuote = ({
+  quoteAmount,
+  payments,
+  paymentType,
+}: {
+  quoteAmount: number;
+  payments: Array<Pick<Payment, "amount" | "payment_type" | "status">>;
+  paymentType: Payment["payment_type"] | null | undefined;
+}) => {
+  if (
+    paymentType === "rimborso" ||
+    paymentType === "rimborso_spese" ||
+    paymentType == null
+  ) {
+    return null;
+  }
+
+  const summary = buildQuotePaymentsSummary({
+    quoteAmount,
+    payments,
+  });
+
+  if (summary.remainingAmount <= 0) {
+    return null;
+  }
+
+  return summary.remainingAmount;
 };
 
 export const buildPaymentPatchFromQuote = ({
