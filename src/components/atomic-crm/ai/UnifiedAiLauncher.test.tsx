@@ -10,6 +10,7 @@ import {
   within,
 } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { unifiedCrmQuestionMaxLength } from "@/lib/ai/unifiedCrmAssistant";
 
 const useIsMobile = vi.fn();
 const getUnifiedCrmReadContext = vi.fn();
@@ -463,6 +464,74 @@ describe("UnifiedAiLauncher", () => {
     expect(askUnifiedCrmQuestion).toHaveBeenCalledTimes(1);
   });
 
+  it("renders the km-expense handoff for a route-only travel question typed in chat", async () => {
+    askUnifiedCrmQuestion.mockResolvedValue({
+      question:
+        "Calcola i km andata e ritorno per la tratta Valguarnera Caropepe (EN) - Catania.",
+      model: "openrouteservice",
+      generatedAt: "2026-03-01T06:30:00.000Z",
+      answerMarkdown:
+        "## Risposta breve\nPer la tratta Valguarnera Caropepe (EN) - Catania A/R ho stimato 160,98 km complessivi.\n\n## Dati usati\n- Origine risolta tramite routing come Valguarnera Caropepe, EN, Italy.\n- Destinazione risolta tramite routing come Catania, CT, Italy.\n\n## Limiti o prossima azione\n- Se vuoi registrarla nel CRM, usa l'azione suggerita per aprire Spese gia precompilata: la scrittura non parte direttamente dalla chat.",
+      paymentDraft: null,
+      suggestedActions: [
+        {
+          id: "expense-create-km-handoff",
+          kind: "approved_action",
+          resource: "expenses",
+          capabilityActionId: "expense_create_km",
+          label: "Registra questa spesa km",
+          description:
+            "Apre il form spese gia precompilato con tipo spostamento km, data, chilometri, tariffa e descrizione della tratta.",
+          recommended: true,
+          recommendationReason:
+            "Consigliata perche la tratta e' gia stata risolta e i km possono essere corretti direttamente sulla superficie spese approvata prima del salvataggio.",
+          href: "/#/expenses/create?expense_type=spostamento_km&expense_date=2026-03-01&km_distance=160.98&km_rate=0.19&description=Trasferta+Valguarnera+Caropepe+%28EN%29+-+Catania+A%2FR&launcher_source=unified_ai_launcher&launcher_action=expense_create_km",
+        },
+      ],
+    });
+
+    renderLauncher();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri chat AI unificata" }),
+    );
+
+    const textarea = await screen.findByLabelText(
+      "Fai una domanda sul CRM corrente",
+    );
+    fireEvent.change(textarea, {
+      target: {
+        value:
+          "Calcola i km andata e ritorno per la tratta Valguarnera Caropepe (EN) - Catania.",
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Invia" }));
+
+    await waitFor(() => expect(askUnifiedCrmQuestion).toHaveBeenCalledTimes(1));
+
+    expect(askUnifiedCrmQuestion).toHaveBeenCalledWith(
+      "Calcola i km andata e ritorno per la tratta Valguarnera Caropepe (EN) - Catania.",
+      expect.objectContaining({
+        meta: expect.objectContaining({
+          scope: "crm_read_snapshot",
+        }),
+      }),
+      [],
+    );
+
+    expect(await screen.findByText(/160,98 km complessivi/)).toBeInTheDocument();
+    expect(
+      screen.getByText("Registra questa spesa km").closest("a"),
+    ).toHaveAttribute(
+      "href",
+      "/#/expenses/create?expense_type=spostamento_km&expense_date=2026-03-01&km_distance=160.98&km_rate=0.19&description=Trasferta+Valguarnera+Caropepe+%28EN%29+-+Catania+A%2FR&launcher_source=unified_ai_launcher&launcher_action=expense_create_km",
+    );
+    expect(screen.getByText("Consigliata ora")).toBeInTheDocument();
+    expect(screen.getByText("Azione approvata")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Bozza pagamento proposta"),
+    ).not.toBeInTheDocument();
+  });
+
   it("passes recent conversation turns back into the launcher AI and lets the user reset them", async () => {
     askUnifiedCrmQuestion
       .mockResolvedValueOnce({
@@ -666,6 +735,41 @@ describe("UnifiedAiLauncher", () => {
     expect(scrollArea.className).toContain("min-h-0");
     expect(scrollArea.className).toContain("[webkit-overflow-scrolling:touch]");
     expect(composer.className).toContain("shrink-0");
+  });
+
+  it("exposes the extended question length in both compact and expanded composers", async () => {
+    renderLauncher();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Apri chat AI unificata" }),
+    );
+
+    const compactTextarea = (await screen.findByLabelText(
+      "Fai una domanda sul CRM corrente",
+    )) as HTMLTextAreaElement;
+    expect(compactTextarea.maxLength).toBe(unifiedCrmQuestionMaxLength);
+
+    compactTextarea.style.lineHeight = "20px";
+    compactTextarea.style.paddingTop = "0px";
+    compactTextarea.style.paddingBottom = "0px";
+    Object.defineProperty(compactTextarea, "scrollHeight", {
+      configurable: true,
+      get: () => 60,
+    });
+
+    fireEvent.change(compactTextarea, {
+      target: { value: "riga 1\nriga 2\nriga 3" },
+    });
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Apri editor esteso per la domanda",
+      }),
+    );
+
+    const expandedTextarea = screen.getAllByPlaceholderText(
+      "Chiedi qualcosa sul CRM...",
+    )[1] as HTMLTextAreaElement;
+    expect(expandedTextarea.maxLength).toBe(unifiedCrmQuestionMaxLength);
   });
 
   it("shows the expanded-editor action from the third line and scrolls from the seventh", async () => {

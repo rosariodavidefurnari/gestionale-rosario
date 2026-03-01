@@ -3299,3 +3299,43 @@ invece separato e ancora aperto.
 - [x] Test verdi:
   - `npm run typecheck`
   - `vitest --run src/components/atomic-crm/travel/TravelRouteCalculatorDialog.test.tsx supabase/functions/_shared/travelRouteEstimate.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/semantics/crmSemanticRegistry.test.ts`
+
+## Sessione 83 (2026-03-01, launcher km route-only intent fix)
+
+- [x] Allargato il parser deterministico `spostamento_km` anche alle richieste
+  di sola stima tratta, senza obbligare la parola `spesa`
+  - esempio chiuso: `Calcola i km andata e ritorno per la tratta Valguarnera Caropepe (EN) - Catania`
+- [x] Copy della risposta km riallineato
+  - non assume piu' che l'utente voglia necessariamente salvare la spesa
+  - ma offre comunque il passaggio approvato verso `/#/expenses/create`
+- [x] Copertura test estesa
+  - helper backend `parseUnifiedCrmTravelExpenseQuestion`
+  - launcher UI sul handoff `expense_create_km`
+- [x] Continuita' aggiornata in `handoff`, `backlog`, `progress`, `learnings`
+- [x] Runtime remoto riallineato
+  - redeploy di `unified_crm_answer` sul progetto Supabase linkato
+
+- [x] Validation:
+  - `pnpm typecheck`
+  - `pnpm vitest run supabase/functions/_shared/unifiedCrmAnswer.test.ts src/components/atomic-crm/expenses/expenseLinking.test.ts src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx`
+  - `npx supabase functions deploy unified_crm_answer`
+
+## Sessione 84 (2026-03-01, launcher longer chat questions)
+
+- [x] Esteso il limite domanda della chat IA unificata da `300` a `1200`
+  caratteri
+  - composer compatto
+  - editor esteso full-screen
+  - validazione `unified_crm_answer`
+- [x] Evitato il mismatch UX/backend
+  - il launcher non lascia piu' credere di accettare testo piu' lungo di quanto
+    la Edge Function possa davvero processare
+- [x] Copertura test aggiunta
+  - validazione backend sul boundary `1200` / `1201`
+  - launcher UI sul nuovo `maxLength`
+- [x] Runtime remoto riallineato
+  - redeploy di `unified_crm_answer`
+
+- [x] Validation:
+  - `pnpm typecheck`
+  - `pnpm vitest run supabase/functions/_shared/unifiedCrmAnswer.test.ts src/components/atomic-crm/expenses/expenseLinking.test.ts src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx`

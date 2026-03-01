@@ -1,6 +1,7 @@
 import { defaultHistoricalAnalysisModel } from "@/lib/analytics/historicalAnalysis";
 
 export const defaultUnifiedCrmAnswerModel = defaultHistoricalAnalysisModel;
+export const unifiedCrmQuestionMaxLength = 1200;
 
 export const unifiedCrmSuggestedQuestions = [
   "Dammi un riepilogo operativo rapido del CRM.",

@@ -10,6 +10,16 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Nel launcher chat il limite testo va trattato come contratto
+  end-to-end, non come dettaglio UI** — Portare solo il `maxLength` del
+  textarea non basta: se la function continua a validare un limite piu' basso,
+  l'utente riesce a scrivere ma viene rifiutato al submit. Il pattern corretto
+  e' tenere allineati nello stesso slice:
+  - composer compatto
+  - editor esteso
+  - validazione Edge Function
+  - test di boundary sul limite condiviso
+
 - [2026-03-01] **Quando una domanda chat chiede chilometri o tratte, i km non
   vanno stimati dal modello ma da un servizio routing e poi portati sulla
   superficie spese approvata** — Nel launcher unificato il caso

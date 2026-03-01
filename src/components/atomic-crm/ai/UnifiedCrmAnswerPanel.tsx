@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   unifiedCrmSuggestedQuestions,
+  unifiedCrmQuestionMaxLength,
   type UnifiedCrmAnswer,
   type UnifiedCrmConversationTurn,
   type UnifiedCrmPaymentDraft,
@@ -437,7 +438,7 @@ export const UnifiedCrmAnswerPanel = ({
                     }
                   }}
                   placeholder="Chiedi qualcosa sul CRM..."
-                  maxLength={300}
+                  maxLength={unifiedCrmQuestionMaxLength}
                   rows={1}
                   className="min-h-0 flex-1 resize-none field-sizing-fixed border-0 bg-transparent py-2.5 pr-0 pl-3 text-sm leading-6 shadow-none focus-visible:ring-0"
                   disabled={!context || isPending}
@@ -491,7 +492,7 @@ export const UnifiedCrmAnswerPanel = ({
                   }
                 }}
                 placeholder="Chiedi qualcosa sul CRM..."
-                maxLength={300}
+                maxLength={unifiedCrmQuestionMaxLength}
                 rows={1}
                 className="h-full min-h-0 resize-none overflow-y-auto field-sizing-fixed border-0 bg-transparent px-0 py-0 text-base leading-7 shadow-none focus-visible:ring-0"
                 disabled={!context || isPending}

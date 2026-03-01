@@ -1,6 +1,6 @@
 const requiredScope = "crm_read_snapshot";
 
-export const unifiedCrmAnswerMaxQuestionLength = 300;
+export const unifiedCrmAnswerMaxQuestionLength = 1200;
 
 export type UnifiedCrmSuggestedAction = {
   id: string;
@@ -150,6 +150,19 @@ const hasExpenseCreationIntent = (normalizedQuestion: string) =>
     "bozza",
   ]);
 
+const hasTravelEstimationIntent = (normalizedQuestion: string) =>
+  includesAny(normalizedQuestion, [
+    "calcol",
+    "quanti km",
+    "quanto dista",
+    "distanz",
+    "andata e ritorno",
+    "andata ritorno",
+    "solo andata",
+    "a/r",
+    "a-r",
+  ]);
+
 const getRoutePrefix = (context: Record<string, unknown>) => {
   const meta = isObject(context.meta) ? context.meta : null;
   return getString(meta?.routePrefix) ?? "/#/";
@@ -286,9 +299,11 @@ export const parseUnifiedCrmTravelExpenseQuestion = ({
 }): ParsedUnifiedCrmTravelExpenseQuestion | null => {
   const normalizedQuestion = normalizeText(question);
   const travelIntent = hasTravelIntent(normalizedQuestion);
-  const expenseIntent = hasExpenseIntent(normalizedQuestion);
+  const canEstimateRoute =
+    hasExpenseIntent(normalizedQuestion) ||
+    hasTravelEstimationIntent(normalizedQuestion);
 
-  if (!travelIntent || !expenseIntent) {
+  if (!travelIntent || !canEstimateRoute) {
     return null;
   }
 
@@ -540,7 +555,7 @@ export const buildUnifiedCrmTravelExpenseAnswerMarkdown = ({
     "",
     "## Limiti o prossima azione",
     "- Se il punto preciso di partenza/arrivo o il percorso reale erano diversi, correggi i km nel form prima di salvare.",
-    "- La scrittura non parte dalla chat: usa l'azione suggerita per aprire Spese gia precompilata.",
+    "- Se vuoi registrarla nel CRM, usa l'azione suggerita per aprire Spese gia precompilata: la scrittura non parte direttamente dalla chat.",
   ].join("\n");
 };
 

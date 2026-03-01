@@ -1975,6 +1975,12 @@ Risks kept explicit:
   state from other launcher views such as half-edited invoice-import drafts
 - travel parsing remains heuristic for very free-form Italian phrasing, so new
   route phrasings should extend tests before further broadening the prompt layer
+- the unified launcher question-length boundary is now `1200` characters and
+  must stay aligned between:
+  - compact composer
+  - expanded composer
+  - `unified_crm_answer` validation
+  otherwise the launcher regresses into a false-accept / backend-reject flow
 
 ## Manual KM Calculator Surfaces
 

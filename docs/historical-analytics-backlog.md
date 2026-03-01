@@ -1462,6 +1462,8 @@ Only after the base is stable:
 
 - Travel-expense questions in the launcher must resolve to `expenses/create`
   and never fall back to payment drafts or payment handoff.
+- The unified launcher question-length limit is currently `1200` characters and
+  must remain aligned across both composer variants and the backend validator.
 - Natural-language route wording such as `da ... fino al ...` must stay covered
   by tests before broadening the parser further.
 - When the user references a project/service in free text, the launcher may

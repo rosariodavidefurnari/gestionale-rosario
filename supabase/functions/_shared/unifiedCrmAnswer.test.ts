@@ -50,6 +50,49 @@ describe("unifiedCrmAnswer", () => {
     expect(result.error).toContain("scope read-only atteso");
   });
 
+  it("accepts launcher questions up to the extended max length", () => {
+    const result = validateUnifiedCrmAnswerPayload({
+      model: "gpt-5.2",
+      question: "a".repeat(1200),
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+        },
+        snapshot: {
+          counts: {},
+        },
+        registries: {
+          semantic: {},
+          capability: {},
+        },
+      },
+    });
+
+    expect(result.error).toBeNull();
+    expect(result.data?.question).toHaveLength(1200);
+  });
+
+  it("rejects launcher questions beyond the extended max length", () => {
+    const result = validateUnifiedCrmAnswerPayload({
+      model: "gpt-5.2",
+      question: "a".repeat(1201),
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+        },
+        snapshot: {
+          counts: {},
+        },
+        registries: {
+          semantic: {},
+          capability: {},
+        },
+      },
+    });
+
+    expect(result.error).toContain("Limite: 1200 caratteri");
+  });
+
   it("builds deterministic handoff suggestions for payment questions", () => {
     const actions = buildUnifiedCrmSuggestedActions({
       question: "Chi mi deve ancora pagare?",
@@ -303,6 +346,41 @@ describe("unifiedCrmAnswer", () => {
       }),
     );
     expect(parsed?.expenseDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("parses a travel route estimate request even without explicit expense wording", () => {
+    const parsed = parseUnifiedCrmTravelExpenseQuestion({
+      question:
+        "Calcola i km andata e ritorno per la tratta Valguarnera Caropepe (EN) - Catania.",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          businessTimezone: "Europe/Rome",
+        },
+      },
+    });
+
+    expect(parsed).toEqual({
+      origin: "Valguarnera Caropepe (EN)",
+      destination: "Catania",
+      isRoundTrip: true,
+      expenseDate: null,
+    });
+  });
+
+  it("does not parse a travel mention when there is no expense or route-estimate intent", () => {
+    const parsed = parseUnifiedCrmTravelExpenseQuestion({
+      question:
+        "Ho fatto la tratta Valguarnera Caropepe (EN) - Catania per il progetto Vale.",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          businessTimezone: "Europe/Rome",
+        },
+      },
+    });
+
+    expect(parsed).toBeNull();
   });
 
   it("parses a natural-language travel expense with 'fino al' and explicit italian date", () => {
