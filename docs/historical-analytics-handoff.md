@@ -1755,6 +1755,22 @@ The next composer-UX continuity slice is now closed too:
   - mobile keyboard/browser chrome still need real-device smoke beyond local
     UI tests
 
+The next composer cleanup slice is now closed too:
+
+- the full-screen writer no longer shows explanatory copy that steals reading
+  and writing space
+- the expanded composer is now a plain vertical writing surface with only:
+  - editable text
+  - close
+  - send
+- the launcher composer textareas now opt out of generic
+  `field-sizing-content` so the explicit thresholds remain under product
+  control, including whitespace-heavy input cases
+- this slice stayed local too:
+  - no migration
+  - no function redeploy
+  - validation closed with `npm run typecheck` and targeted Vitest
+
 ## Environment Blockers
 
 ### Supabase migration state

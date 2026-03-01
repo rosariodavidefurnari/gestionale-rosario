@@ -17,7 +17,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -68,7 +67,7 @@ const syncTextareaHeight = (
     return getFallbackLineCount(value);
   }
 
-  if (!value.trim()) {
+  if (value.length === 0) {
     textarea.style.height = "auto";
     textarea.style.overflowY = "hidden";
     return 1;
@@ -185,8 +184,8 @@ export const UnifiedCrmAnswerPanel = ({
       textareaRef.current.style.overflowY = "hidden";
     }
     if (expandedTextareaRef.current) {
-      expandedTextareaRef.current.style.height = "auto";
-      expandedTextareaRef.current.style.overflowY = "hidden";
+      expandedTextareaRef.current.style.height = "";
+      expandedTextareaRef.current.style.overflowY = "";
     }
     setComposerLineCount(1);
   };
@@ -224,7 +223,6 @@ export const UnifiedCrmAnswerPanel = ({
         maxLines: composerScrollTriggerLine - 1,
       }),
     );
-    syncTextareaHeight(expandedTextareaRef.current, question);
   }, [question]);
 
   useEffect(() => {
@@ -233,8 +231,6 @@ export const UnifiedCrmAnswerPanel = ({
     }
 
     requestAnimationFrame(() => {
-      const nextLineCount = syncTextareaHeight(expandedTextareaRef.current, question);
-      setComposerLineCount(nextLineCount);
       expandedTextareaRef.current?.focus();
       expandedTextareaRef.current?.setSelectionRange(
         question.length,
@@ -429,7 +425,7 @@ export const UnifiedCrmAnswerPanel = ({
                   placeholder="Chiedi qualcosa sul CRM..."
                   maxLength={300}
                   rows={1}
-                  className="min-h-0 flex-1 resize-none border-0 bg-transparent py-2.5 pr-0 pl-3 text-sm leading-6 shadow-none focus-visible:ring-0"
+                  className="min-h-0 flex-1 resize-none field-sizing-fixed border-0 bg-transparent py-2.5 pr-0 pl-3 text-sm leading-6 shadow-none focus-visible:ring-0"
                   disabled={!context || isPending}
                 />
                 <Button
@@ -453,26 +449,22 @@ export const UnifiedCrmAnswerPanel = ({
       </div>
 
       <Dialog open={isExpandedComposerOpen} onOpenChange={setIsExpandedComposerOpen}>
-        <DialogContent className="flex h-dvh w-screen max-w-none translate-x-[-50%] translate-y-[-50%] gap-0 rounded-none border-0 p-0 sm:max-w-none">
-          <DialogHeader className="border-b px-4 py-4 pr-14">
-            <DialogTitle className="text-base">
-              Scrivi con piu spazio
-            </DialogTitle>
-            <DialogDescription>
-              Continua a scrivere senza comprimere il composer della chat.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="!flex h-dvh w-screen !max-w-none !flex-col !gap-0 rounded-none border-0 !p-0 sm:!max-w-none">
+          <DialogTitle className="sr-only">
+            Editor esteso della domanda
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            Scrivi e invia la stessa domanda del launcher in una superficie
+            estesa.
+          </DialogDescription>
 
-          <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-3">
-            <div className="flex-1 overflow-y-auto rounded-3xl border bg-muted/20 px-4 py-4">
+          <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-14">
+            <div className="min-h-0 flex-1 overflow-hidden rounded-3xl border bg-muted/20 px-4 py-4">
               <Textarea
                 ref={expandedTextareaRef}
                 value={question}
                 onChange={(event) => {
                   onQuestionChange(event.target.value);
-                  setComposerLineCount(
-                    syncTextareaHeight(event.target, event.target.value),
-                  );
                 }}
                 onKeyDown={(event) => {
                   if (
@@ -487,16 +479,12 @@ export const UnifiedCrmAnswerPanel = ({
                 placeholder="Chiedi qualcosa sul CRM..."
                 maxLength={300}
                 rows={1}
-                className="min-h-0 resize-none border-0 bg-transparent px-0 py-0 text-base leading-7 shadow-none focus-visible:ring-0"
+                className="h-full min-h-0 resize-none overflow-y-auto field-sizing-fixed border-0 bg-transparent px-0 py-0 text-base leading-7 shadow-none focus-visible:ring-0"
                 disabled={!context || isPending}
               />
             </div>
 
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <p className="text-xs text-muted-foreground">
-                Il testo continua a restare nella stessa conversazione del
-                launcher.
-              </p>
+            <div className="mt-3 flex justify-end">
               <Button
                 type="button"
                 onClick={() => submitQuestion()}

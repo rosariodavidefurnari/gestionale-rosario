@@ -10,6 +10,15 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se un composer usa soglie JS esplicite, va disattivato il
+  `field-sizing-content` generico del textarea** — Nel launcher AI il
+  `Textarea` shared continuava ad auto-crescere per conto suo, e questo
+  rendeva incoerenti i trigger di icona full-screen e scrollbar, soprattutto
+  con input composti quasi solo da spazi. Il pattern corretto e' lasciare
+  `field-sizing-content` al componente shared come default, ma forzare
+  `field-sizing-fixed` nei composer che hanno regole di altezza/progressione
+  proprie.
+
 - [2026-03-01] **Per un composer chat mobile conviene separare la soglia di
   "espansione" dalla soglia di "scroll locale"** — Far comparire troppo tardi
   l'azione full-screen costringe a scrivere in uno spazio compresso; far

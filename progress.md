@@ -125,6 +125,30 @@ invece separato e ancora aperto.
 
 ## Last Session
 
+### Sessione 75 (2026-03-01, cleanup editor esteso composer launcher)
+
+- Completed:
+  - **Tolto il copy inutile dall'editor esteso della chat**:
+    - nessun titolo descrittivo visibile
+    - nessun testo di supporto sotto il campo
+    - restano solo area di scrittura, chiusura e invio
+  - **Corretto il layout del full-screen writer**:
+    - il dialog usa davvero una colonna verticale pulita
+    - non ricade piu in una disposizione spezzata che ruba spazio al testo
+  - **Rimesso sotto controllo il sizing dei textarea del composer**:
+    - i campi della chat launcher ora usano `field-sizing-fixed`
+    - le soglie prodotto restano governate dalla logica esplicita del
+      composer, anche su input composti quasi solo da spazi
+
+- Risks / notes:
+  - il fine-tuning delle soglie resta comunque dipendente dal `line-height`
+    reale del browser
+  - non ho ancora chiuso smoke reale su device mobile
+
+- Validation:
+  - `npm run typecheck`
+  - `npm test -- --run src/components/atomic-crm/ai/UnifiedAiLauncher.test.tsx`
+
 ### Sessione 74 (2026-03-01, persistenza chat launcher e drawer mobile full-screen)
 
 - Completed:

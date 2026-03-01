@@ -568,6 +568,11 @@ The launcher composer continuity slice is now closed too:
 - the compact composer only starts its own scrollbar from the seventh line
 - the expanded writer stays inside the same launcher conversation instead of
   creating a separate draft flow
+- the expanded writer no longer wastes space on explanatory copy and now keeps
+  only the editable surface plus close/send actions
+- the launcher composer textareas now opt out of generic
+  `field-sizing-content`, so the product-owned thresholds stay coherent even
+  on whitespace-heavy input
 - known residual risk:
   - the line thresholds depend on runtime line-height measurement
   - mobile keyboard/browser-chrome overlap still deserves real-device smoke
