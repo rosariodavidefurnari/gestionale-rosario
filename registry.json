@@ -620,6 +620,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/expenses/expenseLinking.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/expenses/ExpenseShow.tsx",
           "type": "registry:component"
         },
