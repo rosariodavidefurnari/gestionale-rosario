@@ -3216,3 +3216,13 @@ invece separato e ancora aperto.
 | 2026-02-26 | client_tasks con FK opzionale | Promemoria possono essere generici o legati a un cliente |
 | 2026-02-26 | Import module rimosso | Era per formato Atomic CRM (contacts/companies), non compatibile |
 | 2026-02-26 | Sales headless (senza UI) | Tabella+trigger mantenuti per futuro multi-utente |
+
+## Sessione 79 (2026-03-01, edge function env hygiene)
+
+- [x] `supabase/functions/.env` rimosso dal perimetro versionato del repo
+- [x] Creato `supabase/functions/.env.example` con placeholder per tutte le
+  variabili Edge Functions attuali
+- [x] Eliminati i residui `POSTMARK_*` dal template committato, coerentemente con
+  la decisione di prodotto di non reintrodurre Postmark
+- [x] Regola di continuità documentata: secret reali solo in env locali / secret
+  remoti, mai in git

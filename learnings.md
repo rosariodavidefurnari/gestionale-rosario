@@ -1271,3 +1271,10 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
   alla dashboard, il pattern del progetto è: varianti CVA nei componenti UI (badge.tsx, progress.tsx), NON
   CSS custom properties in index.css. Badge: `success` (green-600) e `warning` (amber-600). Progress:
   prop `variant` con CVA. Usare amber-600 (non 500) per contrasto AA su testo bianco.
+
+- [2026-03-01] **`supabase/functions/.env` non va versionato; serve `.env.example`** —
+  Il repo aveva una eccezione in `.gitignore` che riammetteva
+  `supabase/functions/.env` e il file era già tracked. Regola corretta: il file
+  reale resta solo locale, il repository traccia `supabase/functions/.env.example`
+  con placeholder. Se una key reale è già finita in git, va considerata esposta e
+  ruotata: ignorare il file da oggi non sana la history.

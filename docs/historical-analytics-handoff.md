@@ -1918,3 +1918,13 @@ Stable rollback note:
   - deciding separately if/when to open the dedicated supplier slice
   - only later evaluating deeper launcher-side create/update assistance on top
     of this stronger base
+
+## Edge Function Secret Hygiene
+
+- `supabase/functions/.env` must remain local-only and must not be tracked by git.
+- Use `supabase/functions/.env.example` as the committed template for required
+  Edge Function variables.
+- `POSTMARK_*` does not belong in the example or future runtime setup because
+  Postmark has been removed from the product direction.
+- If any real secret has already been committed in repository history, rotate it;
+  ignoring the file now does not retroactively protect an exposed key.

@@ -1452,3 +1452,5 @@ These rules must remain true in all future work:
 - `YoY` means the last two closed years unless another comparison is explicitly named.
 - If a metric is not comparable, show `N/D` with a reason.
 - The AI must consume semantic context, not raw tables.
+- `supabase/functions/.env` must stay untracked; commit only
+  `supabase/functions/.env.example` with placeholders.
