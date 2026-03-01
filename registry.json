@@ -312,6 +312,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/providers/supabase/edgeFunctions.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/providers/supabase/dataProvider.ts",
           "type": "registry:component"
         },
