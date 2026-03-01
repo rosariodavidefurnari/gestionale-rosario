@@ -11,15 +11,21 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import {
+  Briefcase,
+  CreditCard,
+  FileText,
+  FolderOpen,
   Home,
   ListTodo,
   LogOut,
   Moon,
   Plus,
+  Receipt,
   Settings,
   Smartphone,
   Sun,
   Users,
+  Wrench,
 } from "lucide-react";
 import { Translate, useAuthProvider, useGetIdentity, useLogout } from "ra-core";
 import { Link, matchPath, useLocation, useMatch, useNavigate } from "react-router";
@@ -175,7 +181,7 @@ const SettingsButton = () => {
           <span className="text-[0.6rem] font-medium">Altro</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
+      <DropdownMenuContent align="end" side="top" className="w-56">
         <DropdownMenuLabel className="font-normal h-12 px-4">
           <div className="flex flex-col justify-center h-full">
             <p className="text-base font-medium leading-none">
@@ -184,6 +190,43 @@ const SettingsButton = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="h-12 px-4 text-base">
+          <Link to="/projects">
+            <FolderOpen className="size-5" />
+            Progetti
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="h-12 px-4 text-base">
+          <Link to="/services">
+            <Briefcase className="size-5" />
+            Registro Lavori
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="h-12 px-4 text-base">
+          <Link to="/quotes">
+            <FileText className="size-5" />
+            Preventivi
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="h-12 px-4 text-base">
+          <Link to="/payments">
+            <CreditCard className="size-5" />
+            Pagamenti
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="h-12 px-4 text-base">
+          <Link to="/expenses">
+            <Receipt className="size-5" />
+            Spese
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="h-12 px-4 text-base">
+          <Link to="/settings">
+            <Wrench className="size-5" />
+            Impostazioni
+          </Link>
+        </DropdownMenuItem>
         <ThemeMenu />
         <DropdownMenuSeparator />
         <DropdownMenuItem

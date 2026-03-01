@@ -2,6 +2,8 @@ import {
   BarChart3,
   CalendarClock,
   CalendarRange,
+  ChevronLeft,
+  ChevronRight,
   PiggyBank,
   Shield,
 } from "lucide-react";
@@ -97,8 +99,12 @@ export const MobileDashboard = () => {
   );
 };
 
+const currentYear = new Date().getFullYear();
+
 const MobileAnnualDashboard = () => {
-  const { data, isPending, error, refetch } = useDashboardData();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const { data, isPending, error, refetch } = useDashboardData(selectedYear);
+  const isCurrentYear = data?.isCurrentYear ?? selectedYear === currentYear;
   const showLoading = useTimeout(800);
 
   if ((isPending || !data) && !error) {
@@ -124,6 +130,28 @@ const MobileAnnualDashboard = () => {
   return (
     <div className="space-y-4">
       {import.meta.env.VITE_IS_DEMO === "true" ? <Welcome /> : null}
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => setSelectedYear((y) => y - 1)}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <span className="text-lg font-semibold tabular-nums min-w-[4ch] text-center">
+          {selectedYear}
+        </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => setSelectedYear((y) => Math.min(y + 1, currentYear))}
+          disabled={isCurrentYear}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
       <DashboardKpiCards
         kpis={data.kpis}
         meta={data.meta}

@@ -780,6 +780,14 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/clients/clientLinking.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/clients/clientBilling.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/clients/ClientTasksSection.tsx",
           "type": "registry:component"
         },
