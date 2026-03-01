@@ -175,6 +175,12 @@ Fonte primaria solo per:
 - storico dati reale
 - interpretazione del caso import/documenti
 
+Per il caso Diego/Gustare, la fonte dati di verita' suprema non e' una nota
+derivata ma la cartella repo-root `Fatture/`; al suo interno
+`Fatture/contabilità interna - diego caltabiano/` e' la fonte piu autorevole
+per attribuire correttamente Diego Caltabiano come referente operativo di
+`ASSOCIAZIONE CULTURALE GUSTARE SICILIA`.
+
 ### `Gestionale_Rosario_Furnari_Specifica.md`
 
 Visione prodotto e bootstrap originario del progetto.

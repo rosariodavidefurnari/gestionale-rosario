@@ -32,9 +32,13 @@ export const ClientContactsSection = () => {
     { enabled: contactIds.length > 0 },
   );
   const relevantProjectLinks = (projectLinks ?? []).filter((link) =>
-    contactIds.some((contactId) => String(contactId) === String(link.contact_id)),
+    contactIds.some(
+      (contactId) => String(contactId) === String(link.contact_id),
+    ),
   );
-  const projectIds = [...new Set(relevantProjectLinks.map((link) => link.project_id))];
+  const projectIds = [
+    ...new Set(relevantProjectLinks.map((link) => link.project_id)),
+  ];
   const { data: projects } = useGetMany<Project>(
     "projects",
     { ids: projectIds },
@@ -94,7 +98,10 @@ export const ClientContactsSection = () => {
                     {contact.title ? (
                       <p className="text-muted-foreground">{contact.title}</p>
                     ) : null}
-                    {[getContactPrimaryEmail(contact), getContactPrimaryPhone(contact)]
+                    {[
+                      getContactPrimaryEmail(contact),
+                      getContactPrimaryPhone(contact),
+                    ]
                       .filter(Boolean)
                       .map((value) => (
                         <p key={value} className="text-muted-foreground">

@@ -202,7 +202,22 @@ PK esplicite nel dataProvider:
 | **Tags** | `tags/` | Gestione embedded + modali attiva su clienti/impostazioni; supporto dati referenti parziale | Completo |
 | **Travel / KM** | `travel/` | Dialog cross-cutting per suggerimenti luogo e calcolo tratta | Completo |
 | **Dashboard** | `dashboard/` | Recharts + KPI + alert + fiscale + storico | Completo |
-| **AI unificata** | `ai/` | Launcher, snapshot, import, handoff, chat read-only | Completo |
+| **AI unificata** | `ai/` | Launcher, snapshot read-only CRM, import, handoff, chat read-only | Completo |
+
+### Snapshot AI unificata
+
+La snapshot letta dal launcher AI non e' testo libero ricostruito al volo.
+
+Espone in modo strutturato almeno:
+
+- clienti recenti con profilo fiscale essenziale e recapiti di fatturazione
+  principali gia presenti nel CRM
+- referenti recenti con recapiti e relazioni strutturate verso clienti e
+  progetti
+- progetti attivi con referenti associati
+
+Questa snapshot resta read-only e serve a far ragionare la chat AI interna del
+prodotto sul modello corretto del dominio, senza inferire tutto dalle note.
 
 ### Struttura moduli CRUD
 

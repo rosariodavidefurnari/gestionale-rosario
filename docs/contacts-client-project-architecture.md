@@ -99,6 +99,16 @@ Esempio corretto:
 
 Quindi il referente non sostituisce mai il cliente fiscale.
 
+Per questo caso reale, la verifica finale non va fatta su note sparse ma sulla
+fonte dati documentale piu autorevole:
+
+- `Fatture/`
+- `Fatture/contabilità interna - diego caltabiano/`
+
+Se emerge un conflitto tra appunti storici e queste cartelle, prevale sempre la
+relazione cliente `ASSOCIAZIONE CULTURALE GUSTARE SICILIA` -> referente
+`Diego Caltabiano`.
+
 ## Passi successivi raccomandati
 
 1. Introdurre nel read-context AI anche surface/action deterministiche dedicate ai referenti quando emergera' un bisogno operativo specifico oltre all'analisi read-only.

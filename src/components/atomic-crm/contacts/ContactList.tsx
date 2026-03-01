@@ -49,7 +49,9 @@ const ContactListLayout = () => {
   const { data, isPending, error } = useListContext<Contact>();
   const createPath = useCreatePath();
   const isMobile = useIsMobile();
-  const clientIds = [...new Set(data?.map((contact) => contact.client_id).filter(Boolean))];
+  const clientIds = [
+    ...new Set(data?.map((contact) => contact.client_id).filter(Boolean)),
+  ];
   const { data: clients } = useGetMany<Client>(
     "clients",
     { ids: clientIds as string[] },
@@ -111,7 +113,9 @@ const ContactListLayout = () => {
               key={contact.id}
               contact={contact}
               clientName={
-                contact.client_id ? clientById.get(String(contact.client_id)) : null
+                contact.client_id
+                  ? clientById.get(String(contact.client_id))
+                  : null
               }
               link={createPath({
                 resource: "contacts",
@@ -177,11 +181,10 @@ const ContactMobileCard = ({
   contact: Contact;
   link: string;
 }) => (
-  <Link
-    to={link}
-    className="flex flex-col gap-1 px-1 py-3 active:bg-muted/50"
-  >
-    <span className="text-sm font-medium">{getContactDisplayName(contact)}</span>
+  <Link to={link} className="flex flex-col gap-1 px-1 py-3 active:bg-muted/50">
+    <span className="text-sm font-medium">
+      {getContactDisplayName(contact)}
+    </span>
     {contact.title ? (
       <span className="text-xs text-muted-foreground">{contact.title}</span>
     ) : null}

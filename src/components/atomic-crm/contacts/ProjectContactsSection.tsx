@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import { useCreate, useDelete, useGetList, useGetMany, useNotify, useRefresh } from "ra-core";
+import {
+  useCreate,
+  useDelete,
+  useGetList,
+  useGetMany,
+  useNotify,
+  useRefresh,
+} from "ra-core";
 import { Link } from "react-router";
 import { Trash2 } from "lucide-react";
 
@@ -97,7 +104,10 @@ export const ProjectContactsSection = ({ project }: { project: Project }) => {
                     <p className="text-muted-foreground">{contact.title}</p>
                   ) : null}
                   <p className="text-muted-foreground">
-                    {[getContactPrimaryEmail(contact), getContactPrimaryPhone(contact)]
+                    {[
+                      getContactPrimaryEmail(contact),
+                      getContactPrimaryPhone(contact),
+                    ]
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
@@ -205,7 +215,8 @@ const AddExistingProjectContactDialog = ({
         <DialogHeader>
           <DialogTitle>Collega referente esistente</DialogTitle>
           <DialogDescription>
-            Seleziona un referente gia associato allo stesso cliente del progetto.
+            Seleziona un referente gia associato allo stesso cliente del
+            progetto.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">

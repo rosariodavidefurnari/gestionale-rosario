@@ -76,6 +76,12 @@ commit lasciando il progetto semanticamente spezzato.
   - `docs/contacts-client-project-architecture.md`
 - Import storico/fatture e casi reali:
   - `docs/data-import-analysis.md`
+  - la cartella repo-root `Fatture/`
+  - per il caso Diego/Gustare, la sotto-cartella
+    `Fatture/contabilità interna - diego caltabiano/` e' la fonte piu
+    autorevole per verificare che:
+    - `ASSOCIAZIONE CULTURALE GUSTARE SICILIA` e' il cliente fiscale
+    - `Diego Caltabiano` e' il referente operativo collegato
 
 ## Full Surface Sweep Rule
 

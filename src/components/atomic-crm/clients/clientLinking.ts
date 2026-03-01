@@ -14,7 +14,9 @@ const setOptional = (
 
 const normalizeComparable = (value?: string | null) => {
   const trimmed = value?.trim();
-  return trimmed ? trimmed.replace(/\s+/g, " ").toLocaleLowerCase("it-IT") : null;
+  return trimmed
+    ? trimmed.replace(/\s+/g, " ").toLocaleLowerCase("it-IT")
+    : null;
 };
 
 export const buildClientCreatePathFromInvoiceDraft = ({

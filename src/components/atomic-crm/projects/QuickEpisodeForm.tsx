@@ -328,14 +328,14 @@ export const QuickEpisodeForm = ({
                   }
                 >
                   <option value="altro">Altro</option>
-                  <option value="acquisto_materiale">
-                    Acquisto materiale
-                  </option>
+                  <option value="acquisto_materiale">Acquisto materiale</option>
                   <option value="noleggio">Noleggio</option>
                 </select>
               </div>
               <div>
-                <Label htmlFor={`ep-extra-amount-${index}`}>Importo (EUR)</Label>
+                <Label htmlFor={`ep-extra-amount-${index}`}>
+                  Importo (EUR)
+                </Label>
                 <Input
                   id={`ep-extra-amount-${index}`}
                   type="number"
@@ -417,7 +417,9 @@ export const QuickEpisodeForm = ({
         {extraExpensesTotal > 0 && (
           <div className="flex justify-between">
             <span>Spese extra</span>
-            <span className="font-medium">€{extraExpensesTotal.toFixed(2)}</span>
+            <span className="font-medium">
+              €{extraExpensesTotal.toFixed(2)}
+            </span>
           </div>
         )}
         <Separator className="my-1" />

@@ -129,7 +129,8 @@ export const normalizeInvoiceImportConfirmRecord = (
 
   return {
     id:
-      normalizeOptionalString(normalizedRecord.id) ?? `invoice-draft-${index + 1}`,
+      normalizeOptionalString(normalizedRecord.id) ??
+      `invoice-draft-${index + 1}`,
     sourceFileNames: Array.isArray(normalizedRecord.sourceFileNames)
       ? normalizedRecord.sourceFileNames.filter(
           (fileName): fileName is string => typeof fileName === "string",
@@ -154,7 +155,9 @@ export const normalizeInvoiceImportConfirmRecord = (
         | "unknown"
         | null) ?? "unknown",
     rationale: normalizeOptionalString(normalizedRecord.rationale),
-    counterpartyName: normalizeOptionalString(normalizedRecord.counterpartyName),
+    counterpartyName: normalizeOptionalString(
+      normalizedRecord.counterpartyName,
+    ),
     billingName: normalizeOptionalString(normalizedRecord.billingName),
     vatNumber: normalizeOptionalString(normalizedRecord.vatNumber),
     fiscalCode: normalizeOptionalString(normalizedRecord.fiscalCode),
@@ -196,11 +199,10 @@ export const normalizeInvoiceImportConfirmRecord = (
         | "altro"
         | null) ?? "bonifico",
     paymentStatus:
-      (normalizeOptionalEnum(normalizedRecord.paymentStatus, paymentStatuses) as
-        | "ricevuto"
-        | "in_attesa"
-        | "scaduto"
-        | null) ?? "in_attesa",
+      (normalizeOptionalEnum(
+        normalizedRecord.paymentStatus,
+        paymentStatuses,
+      ) as "ricevuto" | "in_attesa" | "scaduto" | null) ?? "in_attesa",
     expenseType:
       (normalizeOptionalEnum(normalizedRecord.expenseType, expenseTypes) as
         | "spostamento_km"
@@ -235,7 +237,8 @@ export const validateInvoiceImportConfirmPayload = (payload: unknown) => {
         model: normalizeOptionalString(rawDraft.model) ?? "unknown",
         generatedAt: normalizeOptionalString(rawDraft.generatedAt) ?? "",
         summary:
-          normalizeOptionalString(rawDraft.summary) ?? "Bozza fatture generata.",
+          normalizeOptionalString(rawDraft.summary) ??
+          "Bozza fatture generata.",
         warnings: Array.isArray(rawDraft.warnings)
           ? rawDraft.warnings.filter(
               (warning): warning is string => typeof warning === "string",
@@ -343,9 +346,7 @@ export const buildInvoiceImportConfirmNotes = ({
   return [
     record.notes,
     record.dueDate ? `Scadenza documento: ${record.dueDate}` : null,
-    record.billingName
-      ? `Denominazione fiscale: ${record.billingName}`
-      : null,
+    record.billingName ? `Denominazione fiscale: ${record.billingName}` : null,
     record.vatNumber ? `P.IVA: ${record.vatNumber}` : null,
     record.fiscalCode ? `CF: ${record.fiscalCode}` : null,
     billingAddress ? `Indirizzo fatturazione: ${billingAddress}` : null,

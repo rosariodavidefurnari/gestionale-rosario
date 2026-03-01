@@ -74,7 +74,9 @@ const ensureNoDuplicatePayment = async ({
     .where("amount", "=", Number(record.amount))
     .where("status", "=", record.paymentStatus ?? "in_attesa")
     .where("payment_type", "=", record.paymentType ?? "saldo")
-    .where(sql<boolean>`project_id is not distinct from ${record.projectId ?? null}`)
+    .where(
+      sql<boolean>`project_id is not distinct from ${record.projectId ?? null}`,
+    )
     .where(sql<boolean>`invoice_ref is not distinct from ${record.invoiceRef}`)
     .executeTakeFirst();
 
@@ -103,8 +105,12 @@ const ensureNoDuplicateExpense = async ({
     .where("expense_date", "=", record.documentDate!)
     .where("amount", "=", Number(record.amount))
     .where("expense_type", "=", record.expenseType ?? "acquisto_materiale")
-    .where(sql<boolean>`client_id is not distinct from ${record.clientId ?? null}`)
-    .where(sql<boolean>`project_id is not distinct from ${record.projectId ?? null}`)
+    .where(
+      sql<boolean>`client_id is not distinct from ${record.clientId ?? null}`,
+    )
+    .where(
+      sql<boolean>`project_id is not distinct from ${record.projectId ?? null}`,
+    )
     .where(sql<boolean>`invoice_ref is not distinct from ${record.invoiceRef}`)
     .executeTakeFirst();
 
@@ -131,7 +137,10 @@ const confirmInvoiceImportDraft = async ({
 
   const payloadResult = validateInvoiceImportConfirmPayload(await req.json());
   if (payloadResult.error || !payloadResult.data) {
-    return createErrorResponse(400, payloadResult.error ?? "Payload non valido");
+    return createErrorResponse(
+      400,
+      payloadResult.error ?? "Payload non valido",
+    );
   }
 
   try {
@@ -211,14 +220,14 @@ const confirmInvoiceImportDraft = async ({
             expense_type: record.expenseType ?? "acquisto_materiale",
             amount: Number(record.amount),
             invoice_ref: record.invoiceRef ?? null,
-            description: (
+            description:
               record.description ??
               record.counterpartyName ??
               buildInvoiceImportConfirmNotes({
                 record,
                 model: payloadResult.data.draft.model,
-              })
-            ) ?? null,
+              }) ??
+              null,
           })
           .returning(["id"])
           .executeTakeFirstOrThrow();

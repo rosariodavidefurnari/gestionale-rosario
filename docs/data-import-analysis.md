@@ -1,17 +1,51 @@
-# Analisi Dati Reali — File Numbers Diego Caltabiano
+# Analisi Dati Reali — Caso Diego Caltabiano / Gustare Sicilia
 
 **Stato del documento:** `reference`
 **Scopo:** caso reale di dominio/import e mapping operativo dei dati storici.
 **Quando NON usarlo da solo:** per dedurre architettura generale o stato
 completo del prodotto fuori dal perimetro import/documenti.
 
-**Fonte:** `Rosario Furnari - Servizi per Diego Caltabiano - DAL 27 10 24 AL 07 04 25.numbers`
+**Fonti verificate:** cartella `Fatture/`, sotto-cartella
+`Fatture/contabilità interna - diego caltabiano/`, file Numbers
+`Rosario Furnari - Servizi per Diego Caltabiano - DAL 27 10 24 AL 07 04 25.numbers`
 **Analizzato:** 2026-02-25
 **Stato:** Dati estratti e VALIDATI con Rosario
 
 **Aggiornato:** con risposte di Rosario + nuove tariffe 2025/2026
 
 ---
+
+## Gerarchia di verita' suprema
+
+Per questo caso reale la gerarchia di verita' non e' negoziabile:
+
+1. `Fatture/`
+2. `Fatture/contabilità interna - diego caltabiano/`
+3. file Numbers e note operative derivate
+
+Nel workspace corrente questi percorsi corrispondono a:
+
+- `/Users/rosariofurnari/Documents/gestionale-rosario/Fatture`
+- `/Users/rosariofurnari/Documents/gestionale-rosario/Fatture/contabilità interna - diego caltabiano`
+
+Regole operative:
+
+- `Fatture/` e' la fonte dati di verita' suprema per documenti fiscali,
+  intestazioni reali, controparti e storico fatture
+- per il caso Diego/Gustare, `Fatture/contabilità interna - diego caltabiano/`
+  e' la fonte piu autorevole per interpretare correttamente il rapporto tra
+  Diego Caltabiano e `ASSOCIAZIONE CULTURALE GUSTARE SICILIA`
+- se un appunto, una bozza di import o una nota storica entra in conflitto con
+  queste cartelle, prevalgono sempre i documenti presenti in queste cartelle
+
+Traduzione di dominio obbligatoria:
+
+- `ASSOCIAZIONE CULTURALE GUSTARE SICILIA` = cliente fiscale / controparte
+  principale
+- `Diego Caltabiano` = referente operativo/persona collegata al cliente
+
+Questa regola vale per import AI, anagrafica clienti, referenti, mapping DB,
+analisi storiche e correzione dati.
 
 ## Struttura del file
 
@@ -37,11 +71,11 @@ Un solo cliente fiscale in questo file:
 | fiscal_code | 05416820875 |
 | source | passaparola |
 
-**Nota importante:** il file operativo e i fogli contabili fanno riferimento a Diego
-Caltabiano come referente, ma lo storico fatture XML in `Fatture/`
-mostra come intestatario fiscale ricorrente `ASSOCIAZIONE CULTURALE GUSTARE SICILIA`.
-Nel CRM quindi Diego va trattato come referente operativo, non come cliente
-anagrafico principale.
+**Nota importante:** il file operativo e i fogli contabili fanno riferimento a
+Diego Caltabiano come referente, ma la gerarchia di verita' suprema definita
+sopra conferma che l'intestatario fiscale ricorrente e' `ASSOCIAZIONE
+CULTURALE GUSTARE SICILIA`. Nel CRM quindi Diego va trattato come referente
+operativo, non come cliente anagrafico principale.
 
 ---
 
@@ -261,29 +295,47 @@ La vendita iPhone NON va nel DB. Solo l'hard disk da €260 come spesa.
 ### clients (1 record)
 
 ```sql
-INSERT INTO clients (name, client_type, source, notes)
-VALUES ('Diego Caltabiano', 'produzione_tv', NULL, 'Collaboratore principale per produzioni TV e spot');
+INSERT INTO clients (name, client_type, source, fiscal_code, notes)
+VALUES (
+  'ASSOCIAZIONE CULTURALE GUSTARE SICILIA',
+  'produzione_tv',
+  'passaparola',
+  '05416820875',
+  'Cliente fiscale ricorrente confermato da Fatture/ e dalla contabilita interna di Diego'
+);
 ```
 
-### projects (8 records)
+### contacts (1 record consigliato)
+
+```sql
+INSERT INTO contacts (client_id, first_name, last_name, notes)
+VALUES (
+  :gustare_client_id,
+  'Diego',
+  'Caltabiano',
+  'Referente operativo storico per Gustare Sicilia e progetti collegati'
+);
+```
+
+### projects (9 records)
 
 ```sql
 -- Gustare Sicilia
 INSERT INTO projects (client_id, name, category, tv_show, status, start_date)
-VALUES (:diego_id, 'Gustare Sicilia', 'produzione_tv', 'gustare_sicilia', 'in_corso', '2024-10-27');
+VALUES (:gustare_client_id, 'Gustare Sicilia', 'produzione_tv', 'gustare_sicilia', 'in_corso', '2024-10-27');
 
 -- Bella tra i Fornelli
 INSERT INTO projects (client_id, name, category, tv_show, status, start_date)
-VALUES (:diego_id, 'Bella tra i Fornelli', 'produzione_tv', 'bella_tra_i_fornelli', 'in_corso', '2024-12-23');
+VALUES (:gustare_client_id, 'Bella tra i Fornelli', 'produzione_tv', 'bella_tra_i_fornelli', 'in_corso', '2024-12-23');
 
 -- Spot (uno per ciascuno)
 INSERT INTO projects (client_id, name, category, status, start_date) VALUES
-(:diego_id, 'Spot Colate Verdi Evo Etna', 'spot', 'completato', '2024-10-17'),
-(:diego_id, 'Spot Rosemary''s Pub', 'spot', 'completato', '2024-12-28'),
-(:diego_id, 'Spot Panino Mania', 'spot', 'completato', '2024-12-28'),
-(:diego_id, 'Spot HCLINIC', 'spot', 'completato', '2025-01-08'),
-(:diego_id, 'Spot Spritz & Co', 'spot', 'completato', '2025-01-23'),
-(:diego_id, 'Spot Il Castellaccio', 'spot', 'completato', '2025-03-04');
+(:gustare_client_id, 'Spot Colate Verdi Evo Etna', 'spot', 'completato', '2024-10-17'),
+(:gustare_client_id, 'Spot Rosemary''s Pub', 'spot', 'completato', '2024-12-28'),
+(:gustare_client_id, 'Spot Panino Mania', 'spot', 'completato', '2024-12-28'),
+(:gustare_client_id, 'Spot HCLINIC', 'spot', 'completato', '2025-01-08'),
+(:gustare_client_id, 'Spot Spritz & Co', 'spot', 'completato', '2025-01-23'),
+(:gustare_client_id, 'Spot Il Castellaccio', 'spot', 'completato', '2025-03-04');
 ```
 
 ### services (~50+ records)
@@ -315,18 +367,21 @@ I 6 acconti del foglio 1 + l'acconto del foglio 2.
 
 ## 9. Risposte di Rosario (confermate)
 
-1. **Fonte acquisizione Diego:** Passaparola
+1. **Fonte acquisizione cliente:** Passaparola
 2. **Bonus montaggio €249:** IGNORARE — considerato sconto
 3. **Vendita iPhone (-€500):** IGNORARE — considerato sconto
-4. **Spot:** Tutti commissionati da Diego in questo file. Rosario fa spot
-   anche per altri clienti (saranno progetti separati con clienti diversi).
+4. **Spot:** In questo storico Diego coordina operativamente gli spot per conto
+   dell'associazione. Rosario fa spot anche per altri clienti (saranno
+   progetti separati con clienti diversi).
 5. **Borghi Marinari:** Progetto GS SEPARATO — 16 puntate dedicate ai borghi
    marinari siciliani. Non fa parte della stagione GS principale.
 6. **Nuove tariffe 2025/2026:** Aumento ~25% applicato (vedi sezione 10)
 
 ### Domande ancora aperte
 
-- Contatti Diego? (telefono, email, indirizzo, P.IVA) — da inserire quando disponibili
+- Contatti referente Diego? (telefono, email) — da inserire quando disponibili
+- Dati anagrafici/fiscali aggiuntivi di `ASSOCIAZIONE CULTURALE GUSTARE
+  SICILIA` oltre al CF gia noto — da completare quando disponibili
 - ROW 32-33 foglio 2 (Cantina Tre Santi senza importi) — lavori da fatturare?
 - Metodo pagamento acconti — tutti bonifico?
 - Date "3 sett 25", "16 sett 25" — confermata interpretazione settembre 2025?

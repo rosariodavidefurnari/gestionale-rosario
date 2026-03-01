@@ -726,6 +726,13 @@ partenza, non come stato lavori corrente.
 
 Il file Numbers di Diego Caltabiano contiene dati dal 27/10/2024 al 07/04/2025+. Per importarli:
 
+**Regola di verita' suprema per questo caso:** la fonte finale da cui leggere
+correttamente intestatario fiscale e relazione cliente/referente e' la cartella
+repo-root `Fatture/`; al suo interno `Fatture/contabilità interna - diego
+caltabiano/` e' la fonte piu autorevole per confermare che Diego Caltabiano e'
+collegato a `ASSOCIAZIONE CULTURALE GUSTARE SICILIA` come referente operativo,
+non come cliente fiscale principale.
+
 1. Esportare da Numbers in CSV
 2. Creare uno script di importazione che:
    - Crea il cliente "ASSOCIAZIONE CULTURALE GUSTARE SICILIA"

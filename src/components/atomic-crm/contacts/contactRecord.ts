@@ -40,7 +40,9 @@ export const getContactDisplayName = (
   const firstName = normalizeSpaces(contact?.first_name);
   const lastName = normalizeSpaces(contact?.last_name);
 
-  return [firstName, lastName].filter(Boolean).join(" ") || "Contatto senza nome";
+  return (
+    [firstName, lastName].filter(Boolean).join(" ") || "Contatto senza nome"
+  );
 };
 
 export const getContactPrimaryEmail = (
@@ -57,7 +59,9 @@ export const getContactPrimaryPhone = (
   contact?.phone_jsonb?.[0]?.number ??
   null;
 
-export const normalizeContactForSave = <T extends Partial<Contact>>(contact: T) => {
+export const normalizeContactForSave = <T extends Partial<Contact>>(
+  contact: T,
+) => {
   const now = new Date().toISOString();
 
   return {

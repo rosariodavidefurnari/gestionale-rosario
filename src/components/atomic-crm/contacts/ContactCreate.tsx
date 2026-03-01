@@ -1,4 +1,10 @@
-import { CreateBase, Form, useDataProvider, useNotify, useRedirect } from "ra-core";
+import {
+  CreateBase,
+  Form,
+  useDataProvider,
+  useNotify,
+  useRedirect,
+} from "ra-core";
 import { useMemo } from "react";
 import { useLocation } from "react-router";
 import { Card, CardContent } from "@/components/ui/card";

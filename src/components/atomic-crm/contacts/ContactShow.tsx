@@ -47,7 +47,9 @@ const ContactShowContent = () => {
     },
     { enabled: !!record?.id },
   );
-  const projectIds = (projectLinksQuery.data ?? []).map((link) => link.project_id);
+  const projectIds = (projectLinksQuery.data ?? []).map(
+    (link) => link.project_id,
+  );
   const { data: projects } = useGetMany<Project>(
     "projects",
     { ids: projectIds },
@@ -69,7 +71,9 @@ const ContactShowContent = () => {
         <CardContent>
           <div className="flex flex-col gap-3">
             <div>
-              <h2 className="text-2xl font-bold">{getContactDisplayName(record)}</h2>
+              <h2 className="text-2xl font-bold">
+                {getContactDisplayName(record)}
+              </h2>
               {record.title ? (
                 <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
                   <Briefcase className="size-4" />
@@ -125,7 +129,9 @@ const ContactShowContent = () => {
               <div className="flex flex-wrap gap-2">
                 {(projects ?? []).map((project) => (
                   <Badge key={project.id} variant="outline" asChild>
-                    <Link to={`/projects/${project.id}/show`}>{project.name}</Link>
+                    <Link to={`/projects/${project.id}/show`}>
+                      {project.name}
+                    </Link>
                   </Badge>
                 ))}
               </div>
@@ -136,7 +142,9 @@ const ContactShowContent = () => {
                 <h6 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   Note
                 </h6>
-                <p className="text-sm whitespace-pre-wrap">{record.background}</p>
+                <p className="text-sm whitespace-pre-wrap">
+                  {record.background}
+                </p>
               </div>
             ) : null}
           </div>
@@ -148,7 +156,11 @@ const ContactShowContent = () => {
   );
 };
 
-const ContactProjectLinksCard = ({ contactId }: { contactId: Contact["id"] }) => {
+const ContactProjectLinksCard = ({
+  contactId,
+}: {
+  contactId: Contact["id"];
+}) => {
   const { data: links, isPending } = useGetList<ProjectContact>(
     "project_contacts",
     {
@@ -237,7 +249,9 @@ const InfoRow = ({
 }) => (
   <div className="flex items-center gap-2 text-sm">
     <span className="text-muted-foreground">{icon}</span>
-    {label ? <span className="font-medium text-muted-foreground">{label}:</span> : null}
+    {label ? (
+      <span className="font-medium text-muted-foreground">{label}:</span>
+    ) : null}
     {to ? (
       <Link to={to} className="text-primary hover:underline">
         {value}
