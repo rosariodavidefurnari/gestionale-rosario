@@ -221,7 +221,7 @@ export const UnifiedAiLauncher = () => {
             "fixed z-40 size-12 rounded-full shadow-lg",
             "border border-primary/20 bg-primary text-primary-foreground",
             "hover:bg-primary/90",
-            isMobile ? "bottom-20 right-4" : "bottom-6 right-6",
+            isMobile ? "bottom-20 left-4" : "bottom-6 right-6",
           )}
           aria-label="Apri chat AI unificata"
         >
