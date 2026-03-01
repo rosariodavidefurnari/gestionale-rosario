@@ -577,6 +577,14 @@ The launcher composer continuity slice is now closed too:
   - the line thresholds depend on runtime line-height measurement
   - mobile keyboard/browser-chrome overlap still deserves real-device smoke
     beyond local UI tests
+- that local smoke is now at least partially closed:
+  - the launcher chat fixes were rechecked in the real local browser and the
+    reported regressions are resolved
+
+The expenses list regression is now closed too:
+
+- `ExpenseListActions` now receives the same exporter passed to `List`
+- the `/#/expenses` screen no longer crashes with `exporter is not defined`
 
 Why this comes next:
 

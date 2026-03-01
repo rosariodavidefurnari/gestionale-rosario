@@ -125,6 +125,30 @@ invece separato e ancora aperto.
 
 ## Last Session
 
+### Sessione 76 (2026-03-01, verifica reale chat launcher e fix crash spese)
+
+- Completed:
+  - **Confermata in browser reale la chiusura dei regressi UX del composer
+    launcher**:
+    - il full-screen writer non mostra piu copy inutile
+    - il full-screen writer non cade piu nel layout spezzato visto negli
+      screenshot regressivi
+    - il comportamento del composer con spazi, soglie icona e scrollbar e'
+      rientrato nel comportamento atteso
+  - **Chiuso un crash reale sulla lista `Spese`**:
+    - `ExpenseListActions` usava `exporter` senza riceverlo come prop
+    - ora `List` e `ExportButton` condividono lo stesso exporter locale
+    - `/#/expenses` non va piu in errore con `exporter is not defined`
+
+- Risks / notes:
+  - la verifica chat ora e' chiusa sul browser locale che ha mostrato il bug
+  - resta comunque utile uno smoke piu ampio su altri device/browser quando
+    toccheremo ancora il composer
+
+- Validation:
+  - `npm run typecheck` sul fix `Spese`
+  - verifica manuale reale utente su chat launcher e `/#/expenses`
+
 ### Sessione 75 (2026-03-01, cleanup editor esteso composer launcher)
 
 - Completed:

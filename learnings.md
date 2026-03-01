@@ -10,6 +10,13 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Se una list action riusa un exporter custom, va cablato con
+  lo stesso exporter passato alla `List`** — Nel caso `Spese` il crash reale
+  non veniva da query o dati, ma da un wiring incompleto: `ExpenseListActions`
+  renderizzava `ExportButton exporter={exporter}` senza ricevere `exporter`
+  come prop. Il pattern corretto e' creare l'exporter una volta nella list
+  root e passarne la stessa istanza sia alla `List` sia alle action toolbar.
+
 - [2026-03-01] **Se un composer usa soglie JS esplicite, va disattivato il
   `field-sizing-content` generico del textarea** — Nel launcher AI il
   `Textarea` shared continuava ad auto-crescere per conto suo, e questo

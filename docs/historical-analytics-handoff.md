@@ -1770,6 +1770,21 @@ The next composer cleanup slice is now closed too:
   - no migration
   - no function redeploy
   - validation closed with `npm run typecheck` and targeted Vitest
+- real local browser verification is now closed too:
+  - the launcher composer thresholds behave correctly after the
+    `field-sizing-fixed` override
+  - the full-screen writer no longer shows the broken split layout seen in the
+    earlier regression screenshots
+
+The expenses-list continuity fix is now documented too:
+
+- `ExpenseListActions` was accidentally using `exporter` without receiving it
+  as a prop
+- the list now reuses one local exporter instance for both:
+  - `List`
+  - `ExportButton`
+- local browser verification is now closed too:
+  - `/#/expenses` no longer crashes with `exporter is not defined`
 
 ## Environment Blockers
 
