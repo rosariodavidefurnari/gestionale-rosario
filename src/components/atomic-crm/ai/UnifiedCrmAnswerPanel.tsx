@@ -1,13 +1,15 @@
 import { useMutation } from "@tanstack/react-query";
 import {
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   Database,
   FileUp,
   Loader2,
   Plus,
   SendHorizontal,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDataProvider, useNotify } from "ra-core";
 
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +43,85 @@ const formatGeneratedAt = (value: string) => {
     dateStyle: "short",
     timeStyle: "short",
   });
+};
+
+const SuggestionChips = ({
+  suggestions,
+  disabled,
+  onSelect,
+}: {
+  suggestions: readonly string[];
+  disabled: boolean;
+  onSelect: (suggestion: string) => void;
+}) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateArrows = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateArrows();
+    el.addEventListener("scroll", updateArrows, { passive: true });
+    return () => el.removeEventListener("scroll", updateArrows);
+  }, [updateArrows]);
+
+  const scroll = (direction: "left" | "right") => {
+    scrollRef.current?.scrollBy({
+      left: direction === "left" ? -160 : 160,
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <div className="relative">
+      {canScrollLeft ? (
+        <button
+          type="button"
+          onClick={() => scroll("left")}
+          className="absolute top-1/2 left-0 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 shadow-sm ring-1 ring-border"
+          aria-label="Scorri suggerimenti a sinistra"
+        >
+          <ChevronLeft className="size-3.5" />
+        </button>
+      ) : null}
+      <div
+        ref={scrollRef}
+        className="flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {suggestions.map((suggestion) => (
+          <Button
+            key={suggestion}
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="shrink-0 whitespace-nowrap"
+            disabled={disabled}
+            onClick={() => onSelect(suggestion)}
+          >
+            {suggestion}
+          </Button>
+        ))}
+      </div>
+      {canScrollRight ? (
+        <button
+          type="button"
+          onClick={() => scroll("right")}
+          className="absolute top-1/2 right-0 z-10 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 shadow-sm ring-1 ring-border"
+          aria-label="Scorri suggerimenti a destra"
+        >
+          <ChevronRight className="size-3.5" />
+        </button>
+      ) : null}
+    </div>
+  );
 };
 
 type UnifiedCrmAnswerPanelProps = {
@@ -118,7 +199,7 @@ export const UnifiedCrmAnswerPanel = ({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border bg-background shadow-sm">
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+      <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3 md:space-y-4 md:px-4 md:py-4">
         {!answer && !isPending && !error ? (
           <div className="rounded-xl border border-dashed bg-muted/20 px-4 py-4 text-sm text-muted-foreground">
             <p>
@@ -174,10 +255,10 @@ export const UnifiedCrmAnswerPanel = ({
                       key={action.id}
                       asChild
                       variant="outline"
-                      className="h-auto justify-between px-3 py-3 text-left"
+                      className="h-auto justify-between px-3 py-2.5 text-left"
                     >
                       <a href={action.href} onClick={onNavigate}>
-                        <span className="space-y-1">
+                        <span className="min-w-0 space-y-1">
                           <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
                             <span>{action.label}</span>
                             {action.recommended ? (
@@ -217,91 +298,91 @@ export const UnifiedCrmAnswerPanel = ({
 
       <div
         data-testid="unified-crm-composer"
-        className="border-t bg-background/95 px-4 py-4"
+        className="border-t bg-background/95 px-3 py-3 md:px-4 md:py-4"
       >
-        <div className="flex flex-wrap gap-2">
-          {unifiedCrmSuggestedQuestions.map((suggestion) => (
-            <Button
-              key={suggestion}
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={!context || isPending}
-              onClick={() => submitQuestion(suggestion)}
-            >
-              {suggestion}
-            </Button>
-          ))}
-        </div>
+        <SuggestionChips
+          suggestions={unifiedCrmSuggestedQuestions}
+          disabled={!context || isPending}
+          onSelect={submitQuestion}
+        />
 
-        <div className="mt-4 space-y-2">
+        <div className="mt-2">
           <Label htmlFor="unified-crm-question" className="sr-only">
             Fai una domanda sul CRM corrente
           </Label>
-          <div className="flex items-end gap-2">
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="mb-5 shrink-0"
-                  aria-label="Apri altre viste AI"
-                >
-                  <Plus className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" side="top">
-                <DropdownMenuItem onSelect={() => onOpenView?.("snapshot")}>
-                  <Database className="size-4" />
-                  Snapshot CRM
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => onOpenView?.("import")}>
-                  <FileUp className="size-4" />
-                  Importa fatture e ricevute
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <div className="min-w-0 flex-1 space-y-2">
-              <Textarea
-                id="unified-crm-question"
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                onKeyDown={(event) => {
-                  if (
-                    event.key === "Enter" &&
-                    !event.shiftKey &&
-                    (event.metaKey || event.ctrlKey)
-                  ) {
-                    event.preventDefault();
-                    submitQuestion();
-                  }
-                }}
-                placeholder="Chiedi qualcosa sul CRM corrente..."
-                maxLength={300}
-                className="min-h-12 resize-none"
-                disabled={!context || isPending}
-              />
-              <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
-                <span>Invia con Cmd/Ctrl + Invio.</span>
-                <span>{trimmedQuestion.length}/300</span>
+          <div className="rounded-2xl border bg-muted/30 ring-ring/20 transition-shadow focus-within:ring-2">
+            <Textarea
+              id="unified-crm-question"
+              value={question}
+              onChange={(event) => {
+                setQuestion(event.target.value);
+                const target = event.target;
+                target.style.height = "auto";
+                target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
+              }}
+              onKeyDown={(event) => {
+                if (
+                  event.key === "Enter" &&
+                  !event.shiftKey &&
+                  (event.metaKey || event.ctrlKey)
+                ) {
+                  event.preventDefault();
+                  submitQuestion();
+                }
+              }}
+              placeholder="Chiedi qualcosa sul CRM..."
+              maxLength={300}
+              className="min-h-10 resize-none border-0 bg-transparent px-3 pt-2.5 pb-0 shadow-none focus-visible:ring-0"
+              disabled={!context || isPending}
+            />
+            <div className="flex items-center justify-between gap-1 px-1.5 py-1.5">
+              <div className="flex items-center gap-1">
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 rounded-full"
+                      aria-label="Apri altre viste AI"
+                    >
+                      <Plus className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" side="top">
+                    <DropdownMenuItem
+                      onSelect={() => onOpenView?.("snapshot")}
+                    >
+                      <Database className="size-4" />
+                      Snapshot CRM
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => onOpenView?.("import")}
+                    >
+                      <FileUp className="size-4" />
+                      Importa fatture e ricevute
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <span className="text-[11px] text-muted-foreground">
+                  {trimmedQuestion.length}/300
+                </span>
               </div>
+              <Button
+                type="button"
+                size="icon"
+                onClick={() => submitQuestion()}
+                disabled={!context || isPending || !trimmedQuestion}
+                className="size-8 rounded-full"
+                aria-label="Invia"
+              >
+                {isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <SendHorizontal className="size-4" />
+                )}
+              </Button>
             </div>
-
-            <Button
-              type="button"
-              onClick={() => submitQuestion()}
-              disabled={!context || isPending || !trimmedQuestion}
-              className="mb-5 gap-2 self-end"
-            >
-              {isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <SendHorizontal className="size-4" />
-              )}
-              Invia
-            </Button>
           </div>
         </div>
       </div>

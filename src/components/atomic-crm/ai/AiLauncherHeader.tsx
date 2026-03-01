@@ -22,7 +22,7 @@ export const AiLauncherHeader = ({
   activeView: UnifiedAiLauncherView;
   onViewChange: (view: UnifiedAiLauncherView) => void;
 }) => (
-  <SheetHeader className="border-b bg-background/95 pb-3 pr-14">
+  <SheetHeader className="border-b bg-background/95 pb-2 pr-14 md:pb-3">
     {activeView === "chat" ? (
       <div className="flex items-center gap-2 text-left">
         <Bot className="size-4" />

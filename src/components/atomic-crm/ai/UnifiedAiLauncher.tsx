@@ -244,7 +244,7 @@ export const UnifiedAiLauncher = () => {
         <div className="flex-1 overflow-hidden">
           <div
             className={cn(
-              "h-full px-4 py-4",
+              "h-full px-3 py-3 md:px-4 md:py-4",
               activeView === "chat" ? "overflow-hidden" : "overflow-y-auto",
             )}
           >
