@@ -34,6 +34,8 @@ describe("unifiedCrmReadContext", () => {
           id: 101,
           first_name: "Diego",
           last_name: "Caltabiano",
+          contact_role: "operativo",
+          is_primary_for_client: true,
           title: "Referente operativo",
           client_id: "client-1",
           email_jsonb: [{ email: "diego@gustare.it", type: "Work" }],
@@ -167,12 +169,19 @@ describe("unifiedCrmReadContext", () => {
     expect(context.snapshot.recentClients[0]?.contacts[0]?.displayName).toBe(
       "Diego Caltabiano",
     );
+    expect(context.snapshot.recentClients[0]?.contacts[0]?.roleLabel).toBe(
+      "Operativo",
+    );
+    expect(
+      context.snapshot.recentClients[0]?.contacts[0]?.isPrimaryForClient,
+    ).toBe(true);
     expect(context.snapshot.recentClients[0]?.activeProjects[0]?.projectName).toBe(
       "Wedding Mario",
     );
     expect(context.snapshot.recentContacts[0]?.clientName).toBe(
       "MARIO ROSSI STUDIO",
     );
+    expect(context.snapshot.recentContacts[0]?.roleLabel).toBe("Operativo");
     expect(context.snapshot.recentContacts[0]?.linkedProjects[0]?.projectName).toBe(
       "Wedding Mario",
     );
@@ -195,6 +204,8 @@ describe("unifiedCrmReadContext", () => {
       expect.objectContaining({
         displayName: "Diego Caltabiano",
         email: "diego@gustare.it",
+        roleLabel: "Operativo",
+        isPrimaryForClient: true,
         isPrimary: true,
       }),
     );

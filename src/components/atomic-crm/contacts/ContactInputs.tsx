@@ -1,10 +1,13 @@
 import { ArrayInput } from "@/components/admin/array-input";
+import { BooleanInput } from "@/components/admin/boolean-input";
 import { ReferenceInput } from "@/components/admin/reference-input";
 import { SelectInput } from "@/components/admin/select-input";
 import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
 import { TextInput } from "@/components/admin/text-input";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { Separator } from "@/components/ui/separator";
+
+import { contactRoleChoices } from "./contactRecord";
 
 const personalInfoTypeChoices = [
   { id: "Work", name: "Lavoro" },
@@ -19,7 +22,19 @@ export const ContactInputs = () => (
         <h3 className="text-lg font-semibold">Identità</h3>
         <TextInput source="first_name" label="Nome" helperText={false} />
         <TextInput source="last_name" label="Cognome" helperText={false} />
-        <TextInput source="title" label="Ruolo" helperText={false} />
+        <SelectInput
+          source="contact_role"
+          label="Ruolo strutturato"
+          helperText="Serve a distinguere operativo, amministrazione, fatturazione e altri ruoli chiave."
+          choices={contactRoleChoices}
+          emptyText="Seleziona ruolo"
+          parse={(value) => (value ? value : null)}
+        />
+        <TextInput
+          source="title"
+          label="Qualifica libera"
+          helperText="Compila solo se ti serve una qualifica specifica oltre al ruolo strutturato."
+        />
         <ReferenceInput
           source="client_id"
           reference="clients"
@@ -27,6 +42,11 @@ export const ContactInputs = () => (
         >
           <AutocompleteInput label="Cliente collegato" optionText="name" />
         </ReferenceInput>
+        <BooleanInput
+          source="is_primary_for_client"
+          label="Referente principale per il cliente"
+          helperText="Usalo quando questa è la persona di riferimento principale per quel cliente."
+        />
       </div>
 
       <div className="space-y-4">

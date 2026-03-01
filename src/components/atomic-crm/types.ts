@@ -39,6 +39,14 @@ export type ContactPhone = {
   type: "Work" | "Home" | "Other";
 };
 
+export type ContactRole =
+  | "operativo"
+  | "amministrativo"
+  | "fatturazione"
+  | "decisionale"
+  | "legale"
+  | "altro";
+
 export type Client = {
   name: string;
   // Fiscal/billing display name only when it differs from the main client name.
@@ -95,6 +103,8 @@ export type Contact = {
   first_name?: string | null;
   last_name?: string | null;
   title?: string | null;
+  contact_role?: ContactRole | null;
+  is_primary_for_client?: boolean | null;
   client_id?: Identifier | null;
   email_jsonb: ContactEmail[];
   phone_jsonb: ContactPhone[];

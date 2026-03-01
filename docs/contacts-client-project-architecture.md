@@ -18,7 +18,13 @@ Abbiamo invece scelto un approccio Pareto e scalabile:
 - `clients` resta l'anagrafica azienda/controparte principale del gestionale
 - `contacts` torna a essere la risorsa per le persone/referenti
 - `contacts.client_id` collega ogni referente al cliente attuale
+- `contacts.contact_role` rende esplicito il ruolo operativo/amministrativo/
+  fatturazione senza affidarsi solo al testo libero
+- `contacts.is_primary_for_client` identifica un solo referente principale per
+  cliente
 - `project_contacts` e' la join table che collega i referenti ai progetti
+- `project_contacts.is_primary` identifica un solo referente primario per
+  progetto
 
 ## Perche' questa scelta
 
@@ -40,6 +46,7 @@ La scelta adottata mantiene:
 ## Scope implementato
 
 - migration DB `20260301213000_reactivate_contacts_for_clients_projects.sql`
+- migration DB `20260301234500_harden_contacts_roles_and_primary.sql`
 - riattivazione resource `contacts` nel CRM
 - nuove schermate contatti: lista, create, edit, show
 - sezione referenti nel dettaglio cliente
@@ -47,9 +54,11 @@ La scelta adottata mantiene:
 - collegamento automatico al progetto quando un referente viene creato da un
   progetto
 - dialog per collegare un referente cliente gia esistente a un progetto
+- toggle coerente del referente primario progetto
 - normalizzazione dati lato provider per `contacts` e `project_contacts`
 - estensione del read-context AI del launcher unificato con:
   - referenti recenti
+  - ruolo strutturato e priorita' esplicita del referente
   - relazioni strutturate cliente -> referenti
   - relazioni strutturate progetto -> referenti
   - relazioni strutturate referente -> progetti
@@ -63,6 +72,7 @@ Le superfici da considerare correlate sono almeno:
 
 - schema e migration Supabase
 - `src/components/atomic-crm/types.ts`
+- helper dominio `contacts/contactRecord.ts`
 - provider Supabase e FakeRest
 - `src/components/atomic-crm/root/CRM.tsx`
 - `src/components/atomic-crm/root/i18nProvider.tsx`
@@ -98,6 +108,15 @@ Esempio corretto:
 - progetti collegati: `Gustare Sicilia`, `Bella tra i Fornelli`
 
 Quindi il referente non sostituisce mai il cliente fiscale.
+
+Da ora in poi il referente va modellato con questa gerarchia:
+
+- cliente fiscale / controparte: `clients`
+- persona: `contacts`
+- ruolo strutturato della persona: `contact_role`
+- qualifica libera eventuale: `title`
+- referente principale del cliente: `is_primary_for_client`
+- referente primario di uno specifico progetto: `project_contacts.is_primary`
 
 Per questo caso reale, la verifica finale non va fatta su note sparse ma sulla
 fonte dati documentale piu autorevole:

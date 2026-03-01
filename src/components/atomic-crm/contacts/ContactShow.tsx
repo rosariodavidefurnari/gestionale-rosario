@@ -23,6 +23,9 @@ import {
   getContactDisplayName,
   getContactPrimaryEmail,
   getContactPrimaryPhone,
+  getContactResolvedRole,
+  getContactRoleLabel,
+  isContactPrimaryForClient,
 } from "./contactRecord";
 
 export const ContactShow = () => (
@@ -60,6 +63,8 @@ const ContactShowContent = () => {
   if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
 
+  const roleLabel = getContactRoleLabel(getContactResolvedRole(record));
+
   return (
     <div className="mt-4 mb-28 md:mb-2 flex flex-col gap-6 px-4 md:px-0">
       {isMobile && (
@@ -74,8 +79,18 @@ const ContactShowContent = () => {
               <h2 className="text-2xl font-bold">
                 {getContactDisplayName(record)}
               </h2>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {isContactPrimaryForClient(record) ? (
+                  <Badge variant="secondary">
+                    Referente principale cliente
+                  </Badge>
+                ) : null}
+                {roleLabel ? (
+                  <Badge variant="outline">{roleLabel}</Badge>
+                ) : null}
+              </div>
               {record.title ? (
-                <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                   <Briefcase className="size-4" />
                   <span>{record.title}</span>
                 </div>
@@ -126,6 +141,13 @@ const ContactShowContent = () => {
                   to={`/clients/${record.client_id}/show`}
                 />
               ) : null}
+              {roleLabel ? (
+                <InfoRow
+                  icon={<Briefcase className="size-4" />}
+                  label="Ruolo strutturato"
+                  value={roleLabel}
+                />
+              ) : null}
               <div className="flex flex-wrap gap-2">
                 {(projects ?? []).map((project) => (
                   <Badge key={project.id} variant="outline" asChild>
@@ -166,7 +188,7 @@ const ContactProjectLinksCard = ({
     {
       filter: { "contact_id@eq": String(contactId) },
       pagination: { page: 1, perPage: 100 },
-      sort: { field: "created_at", order: "ASC" },
+      sort: { field: "updated_at", order: "DESC" },
     },
     { enabled: !!contactId },
   );
@@ -182,6 +204,14 @@ const ContactProjectLinksCard = ({
     return null;
   }
 
+  const orderedLinks = [...(links ?? [])].sort((left, right) => {
+    if (left.is_primary !== right.is_primary) {
+      return left.is_primary ? -1 : 1;
+    }
+
+    return 0;
+  });
+
   return (
     <Card>
       <CardContent>
@@ -194,7 +224,7 @@ const ContactProjectLinksCard = ({
           </p>
         ) : (
           <div className="space-y-2">
-            {links.map((link) => {
+            {orderedLinks.map((link) => {
               const project = projects?.find(
                 (item) => String(item.id) === String(link.project_id),
               );
@@ -210,6 +240,9 @@ const ContactProjectLinksCard = ({
                   >
                     {project?.name ?? "Progetto"}
                   </Link>
+                  {link.is_primary ? (
+                    <Badge variant="secondary">Primario progetto</Badge>
+                  ) : null}
                   <Button
                     type="button"
                     size="icon"

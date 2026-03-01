@@ -1,4 +1,3 @@
-import { mergeTranslations } from "ra-core";
 import polyglotI18nProvider from "ra-i18n-polyglot";
 
 // Italian translations for ra-core (inlined from @christianascone/ra-language-italian
@@ -366,7 +365,9 @@ const gestionaleMessages = {
       fields: {
         first_name: "Nome",
         last_name: "Cognome",
-        title: "Ruolo",
+        title: "Qualifica libera",
+        contact_role: "Ruolo strutturato",
+        is_primary_for_client: "Referente principale cliente",
         client_id: "Cliente",
         email_jsonb: "Email",
         phone_jsonb: "Telefoni",

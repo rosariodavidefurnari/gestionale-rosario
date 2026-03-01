@@ -284,6 +284,9 @@ Motivo:
 
 - la chat AI non deve inferire referenti dalle note
 - deve leggere relazioni strutturate cliente -> referente -> progetto
+- se introduci `contact_role`, `is_primary_for_client` o `project_contacts.is_primary`,
+  devi rifletterli in schema, helper dominio, create/edit/show/list, sezioni
+  cliente/progetto e snapshot AI
 
 ### 3. Se cambia una regola configurabile o un default modificabile da utente
 

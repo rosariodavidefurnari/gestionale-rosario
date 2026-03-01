@@ -8,9 +8,13 @@ import {
   getClientBillingDisplayName,
 } from "@/components/atomic-crm/clients/clientBilling";
 import {
+  compareContactsForClientContext,
   getContactDisplayName,
   getContactPrimaryEmail,
   getContactPrimaryPhone,
+  getContactResolvedRole,
+  getContactRoleLabel,
+  isContactPrimaryForClient,
 } from "@/components/atomic-crm/contacts/contactRecord";
 import type {
   Client,
@@ -169,7 +173,10 @@ const getProjectName = (
 type SnapshotContactReference = {
   contactId: string;
   displayName: string;
+  role: string | null;
+  roleLabel: string | null;
   title: string | null;
+  isPrimaryForClient: boolean;
   email: string | null;
   phone: string | null;
 };
@@ -181,13 +188,22 @@ type SnapshotProjectReference = {
   statusLabel: string;
 };
 
-const buildSnapshotContactReference = (contact: Contact): SnapshotContactReference => ({
-  contactId: String(contact.id),
-  displayName: getContactDisplayName(contact),
-  title: contact.title ?? null,
-  email: getContactPrimaryEmail(contact),
-  phone: getContactPrimaryPhone(contact),
-});
+const buildSnapshotContactReference = (
+  contact: Contact,
+): SnapshotContactReference => {
+  const role = getContactResolvedRole(contact);
+
+  return {
+    contactId: String(contact.id),
+    displayName: getContactDisplayName(contact),
+    role,
+    roleLabel: getContactRoleLabel(role),
+    title: contact.title ?? null,
+    isPrimaryForClient: isContactPrimaryForClient(contact),
+    email: getContactPrimaryEmail(contact),
+    phone: getContactPrimaryPhone(contact),
+  };
+};
 
 export type UnifiedCrmReadContext = {
   meta: {
@@ -235,7 +251,10 @@ export type UnifiedCrmReadContext = {
     recentContacts: Array<{
       contactId: string;
       displayName: string;
+      role: string | null;
+      roleLabel: string | null;
       title: string | null;
+      isPrimaryForClient: boolean;
       email: string | null;
       phone: string | null;
       clientId: string | null;
@@ -430,11 +449,20 @@ export const buildUnifiedCrmReadContext = ({
   const recentClients = [...clients].sort(
     (left, right) => toDateValue(right.created_at) - toDateValue(left.created_at),
   );
-  const recentContacts = [...contacts].sort(
-    (left, right) =>
+  const recentContacts = [...contacts].sort((left, right) => {
+    const primaryDelta =
+      Number(isContactPrimaryForClient(right)) -
+      Number(isContactPrimaryForClient(left));
+
+    if (primaryDelta !== 0) {
+      return primaryDelta;
+    }
+
+    return (
       toDateValue(right.updated_at ?? right.created_at) -
-      toDateValue(left.updated_at ?? left.created_at),
-  );
+      toDateValue(left.updated_at ?? left.created_at)
+    );
+  });
 
   const openQuotesAmount = openQuotes.reduce(
     (sum, quote) => sum + Number(quote.amount ?? 0),
@@ -451,11 +479,7 @@ export const buildUnifiedCrmReadContext = ({
 
   const getClientContacts = (clientId: string) =>
     [...(contactsByClientId.get(clientId) ?? [])]
-      .sort(
-        (left, right) =>
-          toDateValue(right.updated_at ?? right.created_at) -
-          toDateValue(left.updated_at ?? left.created_at),
-      )
+      .sort(compareContactsForClientContext)
       .map((contact) => buildSnapshotContactReference(contact))
       .slice(0, 3);
 
@@ -477,11 +501,18 @@ export const buildUnifiedCrmReadContext = ({
   const getProjectContacts = (projectId: string) =>
     [...(projectContactsByProjectId.get(projectId) ?? [])]
       .sort((left, right) => {
-        if (left.is_primary === right.is_primary) {
+        if (left.is_primary !== right.is_primary) {
+          return left.is_primary ? -1 : 1;
+        }
+
+        const leftContact = contactById.get(String(left.contact_id));
+        const rightContact = contactById.get(String(right.contact_id));
+
+        if (!leftContact || !rightContact) {
           return 0;
         }
 
-        return left.is_primary ? -1 : 1;
+        return compareContactsForClientContext(leftContact, rightContact);
       })
       .flatMap((projectContact) => {
         const contact = contactById.get(String(projectContact.contact_id));

@@ -1,13 +1,18 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useGetList, useGetMany, useShowContext } from "ra-core";
 import { Link } from "react-router";
 
 import type { Client, Project, ProjectContact, Contact } from "../types";
 import { buildContactCreatePath } from "./contactLinking";
 import {
+  compareContactsForClientContext,
   getContactDisplayName,
   getContactPrimaryEmail,
   getContactPrimaryPhone,
+  getContactResolvedRole,
+  getContactRoleLabel,
+  isContactPrimaryForClient,
 } from "./contactRecord";
 
 export const ClientContactsSection = () => {
@@ -44,6 +49,9 @@ export const ClientContactsSection = () => {
     { ids: projectIds },
     { enabled: projectIds.length > 0 },
   );
+  const sortedContacts = [...(contacts ?? [])].sort(
+    compareContactsForClientContext,
+  );
 
   if (!record) {
     return null;
@@ -72,7 +80,7 @@ export const ClientContactsSection = () => {
         </p>
       ) : (
         <div className="space-y-2">
-          {contacts.map((contact) => {
+          {sortedContacts.map((contact) => {
             const linkedProjectNames = relevantProjectLinks
               .filter((link) => String(link.contact_id) === String(contact.id))
               .map(
@@ -81,6 +89,10 @@ export const ClientContactsSection = () => {
                     (project) => String(project.id) === String(link.project_id),
                   )?.name ?? "Progetto",
               );
+
+            const roleLabel = getContactRoleLabel(
+              getContactResolvedRole(contact),
+            );
 
             return (
               <div
@@ -95,6 +107,18 @@ export const ClientContactsSection = () => {
                     >
                       {getContactDisplayName(contact)}
                     </Link>
+                    <div className="flex flex-wrap gap-1">
+                      {isContactPrimaryForClient(contact) ? (
+                        <Badge variant="secondary" className="text-[11px]">
+                          Principale cliente
+                        </Badge>
+                      ) : null}
+                      {roleLabel ? (
+                        <Badge variant="outline" className="text-[11px]">
+                          {roleLabel}
+                        </Badge>
+                      ) : null}
+                    </div>
                     {contact.title ? (
                       <p className="text-muted-foreground">{contact.title}</p>
                     ) : null}

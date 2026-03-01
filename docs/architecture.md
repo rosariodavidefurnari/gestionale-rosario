@@ -89,8 +89,8 @@ Regola pratica:
 | Tabella | Scopo | RLS | Colonne |
 |---------|-------|-----|---------|
 | clients | Anagrafica clienti + profilo fiscale/fatturazione | auth.uid() IS NOT NULL | nome operativo, `billing_name`, contatti base, `P.IVA` / `CF`, indirizzo fiscale, `SDI` / `PEC`, note, tags, timestamps |
-| contacts | Referenti / persone collegate ai clienti | auth.uid() IS NOT NULL | nome/cognome, ruolo, email/telefoni JSONB, background, tags, FK `client_id`, timestamps |
-| project_contacts | Join referenti-progetti | auth.uid() IS NOT NULL | FK `project_id`, FK `contact_id`, `is_primary`, timestamps |
+| contacts | Referenti / persone collegate ai clienti | auth.uid() IS NOT NULL | nome/cognome, `contact_role` strutturato, `title` libero, `is_primary_for_client`, email/telefoni JSONB, background, tags, FK `client_id`, timestamps |
+| project_contacts | Join referenti-progetti | auth.uid() IS NOT NULL | FK `project_id`, FK `contact_id`, `is_primary` con unicita' per progetto, timestamps |
 | projects | Progetti/programmi | auth.uid() IS NOT NULL | cliente, categoria, `tv_show`, stato, range date, budget, note, timestamps |
 | services | Registro lavori (cuore) | auth.uid() IS NOT NULL | FK progetto, date/range, tipo servizio, tassabilita', fee, km, `invoice_ref`, note |
 | quotes | Preventivi + pipeline Kanban | auth.uid() IS NOT NULL | cliente/progetto, tipo servizio, range evento, importo, stato, `quote_items`, note |
@@ -184,6 +184,7 @@ PK esplicite nel dataProvider:
 | `20260301183000_normalize_client_fiscal_fields.sql` | Bonifica campi fiscali cliente e normalizzazione `billing_name`/`tax_id` |
 | `20260301193000_correct_diego_client_to_gustare_assoc.sql` | Correzione anagrafica fiscale Diego -> Associazione Culturale Gustare Sicilia |
 | `20260301213000_reactivate_contacts_for_clients_projects.sql` | Riattiva `contacts` per i referenti e aggiunge `project_contacts` |
+| `20260301234500_harden_contacts_roles_and_primary.sql` | Ruoli strutturati referenti + referente principale cliente + primario progetto deterministico |
 
 ## Moduli Frontend
 
@@ -192,7 +193,7 @@ PK esplicite nel dataProvider:
 | Modulo | Directory | Tipo | Stato |
 |--------|-----------|------|-------|
 | **Clienti** | `clients/` | CRUD + billing profile + tags/notes/tasks | Completo |
-| **Referenti** | `contacts/` | CRUD + relazioni cliente/progetto | Completo |
+| **Referenti** | `contacts/` | CRUD + ruoli strutturati + relazioni cliente/progetto + primary flags | Completo |
 | **Progetti** | `projects/` | CRUD + quick flows collegati | Completo |
 | **Registro Lavori** | `services/` | CRUD (Table) | Completo |
 | **Preventivi** | `quotes/` | Kanban + dialog + PDF + mail cliente | Completo |
@@ -212,9 +213,10 @@ Espone in modo strutturato almeno:
 
 - clienti recenti con profilo fiscale essenziale e recapiti di fatturazione
   principali gia presenti nel CRM
-- referenti recenti con recapiti e relazioni strutturate verso clienti e
-  progetti
-- progetti attivi con referenti associati
+- referenti recenti con recapiti, ruolo strutturato, flag `principale cliente`
+  e relazioni strutturate verso clienti e progetti
+- progetti attivi con referenti associati, inclusa l'informazione
+  `primario progetto`
 
 Questa snapshot resta read-only e serve a far ragionare la chat AI interna del
 prodotto sul modello corretto del dominio, senza inferire tutto dalle note.
@@ -225,6 +227,12 @@ Il workspace dell'import documenti non usa piu solo `clients + projects`.
 
 Per ridurre i falsi match persona -> cliente, il resolver runtime legge anche i
 `contacts` e puo risalire dal referente noto al cliente fiscale collegato.
+
+Il dominio referenti e' ora piu robusto anche a monte:
+
+- ogni contact puo avere un `contact_role` strutturato
+- ogni cliente puo avere un solo `is_primary_for_client = true`
+- ogni progetto puo avere un solo `project_contacts.is_primary = true`
 
 L'ordine corretto resta:
 

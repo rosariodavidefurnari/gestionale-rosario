@@ -184,7 +184,15 @@ export const UnifiedCrmReadSnapshot = ({
               <p className="mt-2 text-xs text-muted-foreground">
                 Referenti:{" "}
                 {formatInlineList(
-                  (client.contacts ?? []).map((contact) => contact.displayName),
+                  (client.contacts ?? []).map((contact) => {
+                    const labels = [
+                      contact.displayName,
+                      contact.isPrimaryForClient ? "principale cliente" : null,
+                      contact.roleLabel,
+                    ].filter(Boolean);
+
+                    return labels.join(" · ");
+                  }),
                   "Nessun referente associato",
                 )}
               </p>
@@ -215,6 +223,8 @@ export const UnifiedCrmReadSnapshot = ({
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
                 {[
+                  contact.isPrimaryForClient ? "Principale cliente" : null,
+                  contact.roleLabel,
                   contact.title,
                   contact.clientName ?? "Cliente non associato",
                   contact.email,
@@ -311,9 +321,14 @@ export const UnifiedCrmReadSnapshot = ({
                 Referenti:{" "}
                 {formatInlineList(
                   (project.contacts ?? []).map((contact) =>
-                    contact.isPrimary
-                      ? `${contact.displayName} (primario)`
-                      : contact.displayName,
+                    [
+                      contact.displayName,
+                      contact.isPrimary ? "primario progetto" : null,
+                      contact.isPrimaryForClient ? "principale cliente" : null,
+                      contact.roleLabel,
+                    ]
+                      .filter(Boolean)
+                      .join(" · "),
                   ),
                   "Nessun referente collegato",
                 )}

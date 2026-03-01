@@ -62,7 +62,7 @@ export const ContactCreate = () => {
               data: {
                 project_id: linkContext.projectId,
                 contact_id: data.id,
-                is_primary: false,
+                is_primary: data.is_primary_for_client === true,
               },
             });
           }

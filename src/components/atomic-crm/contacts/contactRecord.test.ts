@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  compareContactsForClientContext,
   getContactDisplayName,
   getContactPrimaryEmail,
   getContactPrimaryPhone,
+  getContactResolvedRole,
+  getContactRoleLabel,
+  isContactPrimaryForClient,
   normalizeContactForSave,
   normalizeProjectContactForSave,
 } from "./contactRecord";
@@ -40,11 +44,54 @@ describe("contactRecord", () => {
     ).toBe("333 2222222");
   });
 
+  it("resolves and labels structured contact roles", () => {
+    expect(
+      getContactResolvedRole({
+        contact_role: "fatturazione",
+        title: "Referente amministrativo",
+      }),
+    ).toBe("fatturazione");
+    expect(
+      getContactResolvedRole({
+        title: "Responsabile amministrazione",
+      }),
+    ).toBe("amministrativo");
+    expect(getContactRoleLabel("operativo")).toBe("Operativo");
+  });
+
+  it("detects primary contacts and sorts them ahead of generic contacts", () => {
+    const sorted = [
+      {
+        id: 2,
+        client_id: "client-1",
+        title: "Contatto fatture",
+        contact_role: "fatturazione" as const,
+        is_primary_for_client: false,
+        created_at: "2026-03-01T09:00:00.000Z",
+        updated_at: "2026-03-01T09:00:00.000Z",
+      },
+      {
+        id: 1,
+        client_id: "client-1",
+        title: "Referente operativo",
+        contact_role: "operativo" as const,
+        is_primary_for_client: true,
+        created_at: "2026-03-01T08:00:00.000Z",
+        updated_at: "2026-03-01T08:00:00.000Z",
+      },
+    ].sort(compareContactsForClientContext);
+
+    expect(isContactPrimaryForClient(sorted[0])).toBe(true);
+    expect(sorted[0]?.id).toBe(1);
+  });
+
   it("normalizes contact payloads before save", () => {
     const normalized = normalizeContactForSave({
       first_name: " Diego ",
       last_name: " Caltabiano ",
       title: "  Produzione  ",
+      contact_role: null,
+      is_primary_for_client: true,
       client_id: "client-1",
       email_jsonb: [
         { email: " DIEGO@EXAMPLE.COM ", type: "Work" },
@@ -62,6 +109,8 @@ describe("contactRecord", () => {
     expect(normalized.first_name).toBe("Diego");
     expect(normalized.last_name).toBe("Caltabiano");
     expect(normalized.title).toBe("Produzione");
+    expect(normalized.contact_role).toBe("operativo");
+    expect(normalized.is_primary_for_client).toBe(true);
     expect(normalized.email_jsonb).toEqual([
       { email: "diego@example.com", type: "Work" },
     ]);

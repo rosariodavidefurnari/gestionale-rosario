@@ -18,9 +18,13 @@ import type { Client, Contact } from "../types";
 import { TopToolbar } from "../layout/TopToolbar";
 import { ErrorMessage } from "../misc/ErrorMessage";
 import {
+  compareContactsForClientContext,
   getContactDisplayName,
   getContactPrimaryEmail,
   getContactPrimaryPhone,
+  getContactResolvedRole,
+  getContactRoleLabel,
+  isContactPrimaryForClient,
 } from "./contactRecord";
 
 export const ContactList = () => (
@@ -60,6 +64,7 @@ const ContactListLayout = () => {
   const clientById = new Map(
     (clients ?? []).map((client) => [String(client.id), client.name]),
   );
+  const sortedContacts = [...data].sort(compareContactsForClientContext);
 
   if (error) {
     return <ErrorMessage />;
@@ -81,7 +86,7 @@ const ContactListLayout = () => {
   if (isMobile) {
     return (
       <div className="mt-4 flex flex-col divide-y px-4">
-        {data.map((contact) => (
+        {sortedContacts.map((contact) => (
           <ContactMobileCard
             key={contact.id}
             contact={contact}
@@ -108,7 +113,7 @@ const ContactListLayout = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((contact) => (
+          {sortedContacts.map((contact) => (
             <ContactRow
               key={contact.id}
               contact={contact}
@@ -141,6 +146,7 @@ const ContactRow = ({
 }) => {
   const primaryEmail = getContactPrimaryEmail(contact);
   const primaryPhone = getContactPrimaryPhone(contact);
+  const roleLabel = getContactRoleLabel(getContactResolvedRole(contact));
 
   return (
     <TableRow className="cursor-pointer hover:bg-muted/50">
@@ -150,6 +156,16 @@ const ContactRow = ({
             {getContactDisplayName(contact)}
           </Link>
           <div className="flex flex-wrap gap-1">
+            {isContactPrimaryForClient(contact) ? (
+              <Badge variant="secondary" className="text-[11px]">
+                Principale
+              </Badge>
+            ) : null}
+            {roleLabel ? (
+              <Badge variant="outline" className="text-[11px]">
+                {roleLabel}
+              </Badge>
+            ) : null}
             {primaryEmail ? (
               <Badge variant="outline" className="text-[11px]">
                 {primaryEmail}
@@ -163,7 +179,9 @@ const ContactRow = ({
           </div>
         </div>
       </TableCell>
-      <TableCell className="text-muted-foreground">{contact.title}</TableCell>
+      <TableCell className="text-muted-foreground">
+        {[roleLabel, contact.title].filter(Boolean).join(" · ")}
+      </TableCell>
       <TableCell className="hidden md:table-cell text-muted-foreground">
         {[primaryEmail, primaryPhone].filter(Boolean).join(" · ")}
       </TableCell>
@@ -180,20 +198,44 @@ const ContactMobileCard = ({
 }: {
   contact: Contact;
   link: string;
-}) => (
-  <Link to={link} className="flex flex-col gap-1 px-1 py-3 active:bg-muted/50">
-    <span className="text-sm font-medium">
-      {getContactDisplayName(contact)}
-    </span>
-    {contact.title ? (
-      <span className="text-xs text-muted-foreground">{contact.title}</span>
-    ) : null}
-    {(getContactPrimaryEmail(contact) || getContactPrimaryPhone(contact)) && (
-      <span className="text-xs text-muted-foreground">
-        {[getContactPrimaryEmail(contact), getContactPrimaryPhone(contact)]
-          .filter(Boolean)
-          .join(" · ")}
+}) => {
+  const roleLabel = getContactRoleLabel(getContactResolvedRole(contact));
+
+  return (
+    <Link
+      to={link}
+      className="flex flex-col gap-1 px-1 py-3 active:bg-muted/50"
+    >
+      <span className="text-sm font-medium">
+        {getContactDisplayName(contact)}
       </span>
-    )}
-  </Link>
-);
+      <div className="flex flex-wrap gap-1">
+        {isContactPrimaryForClient(contact) ? (
+          <Badge variant="secondary" className="text-[11px]">
+            Principale
+          </Badge>
+        ) : null}
+        {roleLabel ? (
+          <Badge variant="outline" className="text-[11px]">
+            {roleLabel}
+          </Badge>
+        ) : null}
+      </div>
+      {[
+        contact.title,
+        getContactPrimaryEmail(contact),
+        getContactPrimaryPhone(contact),
+      ].filter(Boolean).length > 0 ? (
+        <span className="text-xs text-muted-foreground">
+          {[
+            contact.title,
+            getContactPrimaryEmail(contact),
+            getContactPrimaryPhone(contact),
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </span>
+      ) : null}
+    </Link>
+  );
+};

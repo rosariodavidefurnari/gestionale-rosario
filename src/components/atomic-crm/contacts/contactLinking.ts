@@ -32,9 +32,12 @@ export const getContactCreateDefaultsFromSearch = (
 ): Partial<Contact> => {
   const searchParams = new URLSearchParams(search);
   const clientId = searchParams.get("client_id");
+  const projectId = searchParams.get("project_id");
 
   return {
     client_id: clientId?.trim() ? clientId : undefined,
+    contact_role: projectId?.trim() ? "operativo" : undefined,
+    is_primary_for_client: false,
     email_jsonb: [],
     phone_jsonb: [],
     tags: [],

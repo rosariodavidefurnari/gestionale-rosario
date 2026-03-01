@@ -6,11 +6,14 @@ import {
   useGetMany,
   useNotify,
   useRefresh,
+  useUpdate,
 } from "ra-core";
 import { Link } from "react-router";
 import { Trash2 } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -24,9 +27,13 @@ import { Label } from "@/components/ui/label";
 import type { Contact, Project, ProjectContact } from "../types";
 import { buildContactCreatePath } from "./contactLinking";
 import {
+  compareContactsForClientContext,
   getContactDisplayName,
   getContactPrimaryEmail,
   getContactPrimaryPhone,
+  getContactResolvedRole,
+  getContactRoleLabel,
+  isContactPrimaryForClient,
 } from "./contactRecord";
 
 export const ProjectContactsSection = ({ project }: { project: Project }) => {
@@ -46,8 +53,31 @@ export const ProjectContactsSection = ({ project }: { project: Project }) => {
     { enabled: contactIds.length > 0 },
   );
   const [deleteOne, { isPending: isDeleting }] = useDelete();
+  const [update, { isPending: isUpdating }] = useUpdate();
   const notify = useNotify();
   const refresh = useRefresh();
+  const orderedLinks = useMemo(
+    () =>
+      [...(links ?? [])].sort((left, right) => {
+        if (left.is_primary !== right.is_primary) {
+          return left.is_primary ? -1 : 1;
+        }
+
+        const leftContact = linkedContacts?.find(
+          (item) => String(item.id) === String(left.contact_id),
+        );
+        const rightContact = linkedContacts?.find(
+          (item) => String(item.id) === String(right.contact_id),
+        );
+
+        if (!leftContact || !rightContact) {
+          return 0;
+        }
+
+        return compareContactsForClientContext(leftContact, rightContact);
+      }),
+    [linkedContacts, links],
+  );
 
   return (
     <div>
@@ -79,7 +109,7 @@ export const ProjectContactsSection = ({ project }: { project: Project }) => {
         </p>
       ) : (
         <div className="space-y-2">
-          {links?.map((link) => {
+          {orderedLinks.map((link) => {
             const contact = linkedContacts.find(
               (item) => String(item.id) === String(link.contact_id),
             );
@@ -87,6 +117,10 @@ export const ProjectContactsSection = ({ project }: { project: Project }) => {
             if (!contact) {
               return null;
             }
+
+            const roleLabel = getContactRoleLabel(
+              getContactResolvedRole(contact),
+            );
 
             return (
               <div
@@ -100,6 +134,23 @@ export const ProjectContactsSection = ({ project }: { project: Project }) => {
                   >
                     {getContactDisplayName(contact)}
                   </Link>
+                  <div className="flex flex-wrap gap-1">
+                    {link.is_primary ? (
+                      <Badge variant="secondary" className="text-[11px]">
+                        Primario progetto
+                      </Badge>
+                    ) : null}
+                    {isContactPrimaryForClient(contact) ? (
+                      <Badge variant="outline" className="text-[11px]">
+                        Principale cliente
+                      </Badge>
+                    ) : null}
+                    {roleLabel ? (
+                      <Badge variant="outline" className="text-[11px]">
+                        {roleLabel}
+                      </Badge>
+                    ) : null}
+                  </div>
                   {contact.title ? (
                     <p className="text-muted-foreground">{contact.title}</p>
                   ) : null}
@@ -112,30 +163,67 @@ export const ProjectContactsSection = ({ project }: { project: Project }) => {
                       .join(" · ")}
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  disabled={isDeleting}
-                  onClick={() =>
-                    deleteOne(
-                      "project_contacts",
-                      { id: link.id, previousData: link },
-                      {
-                        mutationMode: "pessimistic",
-                        onSuccess: () => {
-                          notify("Collegamento progetto rimosso", {
-                            type: "success",
-                          });
-                          refresh();
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={link.is_primary ? "secondary" : "outline"}
+                    disabled={isUpdating}
+                    onClick={() =>
+                      update(
+                        "project_contacts",
+                        {
+                          id: link.id,
+                          data: {
+                            ...link,
+                            is_primary: !link.is_primary,
+                          },
+                          previousData: link,
                         },
-                      },
-                    )
-                  }
-                  aria-label="Rimuovi referente dal progetto"
-                >
-                  <Trash2 className="size-4" />
-                </Button>
+                        {
+                          mutationMode: "pessimistic",
+                          onSuccess: () => {
+                            notify(
+                              link.is_primary
+                                ? "Referente primario progetto rimosso"
+                                : "Referente primario progetto aggiornato",
+                              {
+                                type: "success",
+                              },
+                            );
+                            refresh();
+                          },
+                        },
+                      )
+                    }
+                  >
+                    {link.is_primary ? "Primario" : "Rendi primario"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    disabled={isDeleting}
+                    onClick={() =>
+                      deleteOne(
+                        "project_contacts",
+                        { id: link.id, previousData: link },
+                        {
+                          mutationMode: "pessimistic",
+                          onSuccess: () => {
+                            notify("Collegamento progetto rimosso", {
+                              type: "success",
+                            });
+                            refresh();
+                          },
+                        },
+                      )
+                    }
+                    aria-label="Rimuovi referente dal progetto"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
               </div>
             );
           })}
@@ -154,6 +242,7 @@ const AddExistingProjectContactDialog = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [selectedContactId, setSelectedContactId] = useState("");
+  const [markAsPrimary, setMarkAsPrimary] = useState(false);
   const { data: clientContacts } = useGetList<Contact>(
     "contacts",
     {
@@ -169,12 +258,15 @@ const AddExistingProjectContactDialog = ({
 
   const availableContacts = useMemo(
     () =>
-      (clientContacts ?? []).filter(
-        (contact) =>
-          !linkedContacts.some(
-            (linkedContact) => String(linkedContact.id) === String(contact.id),
-          ),
-      ),
+      (clientContacts ?? [])
+        .filter(
+          (contact) =>
+            !linkedContacts.some(
+              (linkedContact) =>
+                String(linkedContact.id) === String(contact.id),
+            ),
+        )
+        .sort(compareContactsForClientContext),
     [clientContacts, linkedContacts],
   );
 
@@ -189,7 +281,7 @@ const AddExistingProjectContactDialog = ({
         data: {
           project_id: project.id,
           contact_id: selectedContactId,
-          is_primary: false,
+          is_primary: markAsPrimary,
         },
       },
       {
@@ -198,6 +290,7 @@ const AddExistingProjectContactDialog = ({
           notify("Referente collegato al progetto", { type: "success" });
           refresh();
           setSelectedContactId("");
+          setMarkAsPrimary(false);
           setOpen(false);
         },
       },
@@ -205,7 +298,16 @@ const AddExistingProjectContactDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (!nextOpen) {
+          setSelectedContactId("");
+          setMarkAsPrimary(false);
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
           Collega esistente
@@ -230,10 +332,28 @@ const AddExistingProjectContactDialog = ({
             <option value="">Seleziona un referente</option>
             {availableContacts.map((contact) => (
               <option key={contact.id} value={String(contact.id)}>
-                {getContactDisplayName(contact)}
+                {[
+                  getContactDisplayName(contact),
+                  isContactPrimaryForClient(contact)
+                    ? "principale cliente"
+                    : null,
+                  getContactRoleLabel(getContactResolvedRole(contact)),
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </option>
             ))}
           </select>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="project-contact-primary"
+              checked={markAsPrimary}
+              onCheckedChange={(value) => setMarkAsPrimary(value === true)}
+            />
+            <Label htmlFor="project-contact-primary">
+              Segna come referente principale del progetto
+            </Label>
+          </div>
           {availableContacts.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Nessun referente cliente disponibile da collegare.
