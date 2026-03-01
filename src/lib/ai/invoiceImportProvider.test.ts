@@ -25,6 +25,7 @@ describe("invoiceImportProvider", () => {
             documentType: "customer_invoice",
             amount: 1200,
             documentDate: "2026-02-20",
+            dueDate: "2026-03-05",
             clientId: "client-1",
             paymentType: "saldo",
             paymentMethod: "bonifico",
@@ -62,5 +63,14 @@ describe("invoiceImportProvider", () => {
         amount: 300,
       },
     ]);
+    expect(create).toHaveBeenNthCalledWith(
+      1,
+      "payments",
+      expect.objectContaining({
+        data: expect.objectContaining({
+          payment_date: "2026-03-05",
+        }),
+      }),
+    );
   });
 });

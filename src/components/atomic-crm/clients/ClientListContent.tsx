@@ -13,7 +13,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Client } from "../types";
 import {
-  getClientBillingDisplayName,
+  getClientDistinctBillingName,
   getClientBillingIdentityLines,
 } from "./clientBilling";
 import { clientTypeLabels, clientSourceLabels } from "./clientTypes";
@@ -74,10 +74,9 @@ export const ClientListContent = () => {
                 >
                   {client.name}
                 </Link>
-                {getClientBillingDisplayName(client) &&
-                getClientBillingDisplayName(client) !== client.name ? (
+                {getClientDistinctBillingName(client) ? (
                   <p className="text-xs text-muted-foreground">
-                    Fatturazione: {getClientBillingDisplayName(client)}
+                    Fatturazione: {getClientDistinctBillingName(client)}
                   </p>
                 ) : null}
                 <div className="flex flex-wrap gap-1">

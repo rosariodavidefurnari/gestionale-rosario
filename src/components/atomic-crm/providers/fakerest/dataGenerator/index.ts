@@ -4,6 +4,8 @@ import type { Db } from "./types";
 
 export default (): Db => {
   const db = {} as Db;
+  db.contacts = [];
+  db.project_contacts = [];
   db.sales = generateSales(db);
   db.tags = generateTags(db);
   db.configuration = [

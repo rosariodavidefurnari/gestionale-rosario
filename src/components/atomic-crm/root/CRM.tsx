@@ -16,6 +16,7 @@ import { SetPasswordPage } from "@/components/supabase/set-password-page";
 import { OAuthConsentPage } from "@/components/supabase/oauth-consent-page";
 
 import clients from "../clients";
+import contacts from "../contacts";
 import projects from "../projects";
 import services from "../services";
 import payments from "../payments";
@@ -185,6 +186,7 @@ const DesktopAdmin = (props: CoreAdminProps) => {
         <Route path={SettingsPage.path} element={<SettingsPage />} />
       </CustomRoutes>
       <Resource name="clients" {...clients} />
+      <Resource name="contacts" {...contacts} />
       <Resource name="projects" {...projects} />
       <Resource name="services" {...services} />
       <Resource name="payments" {...payments} />
@@ -192,6 +194,7 @@ const DesktopAdmin = (props: CoreAdminProps) => {
       <Resource name="quotes" {...quotes} />
       <Resource name="client_tasks" list={TasksList} />
       <Resource name="client_notes" />
+      <Resource name="project_contacts" />
       <Resource name="sales" />
       <Resource name="tags" />
     </Admin>
@@ -242,6 +245,7 @@ const MobileAdmin = (props: CoreAdminProps) => {
           <Route path={SettingsPage.path} element={<SettingsPage />} />
         </CustomRoutes>
         <Resource name="clients" {...clients} />
+        <Resource name="contacts" {...contacts} />
         <Resource name="projects" {...projects} />
         <Resource name="services" {...services} />
         <Resource name="quotes" {...quotes} />
@@ -249,6 +253,7 @@ const MobileAdmin = (props: CoreAdminProps) => {
         <Resource name="expenses" {...expenses} />
         <Resource name="client_tasks" list={MobileTasksList} />
         <Resource name="client_notes" />
+        <Resource name="project_contacts" />
         <Resource name="sales" />
         <Resource name="tags" />
       </Admin>

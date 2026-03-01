@@ -74,11 +74,56 @@ interface DealsTable {
   index: number | null;
 }
 
+interface ClientsTable {
+  id: Generated<string>;
+  name: string;
+  billing_name: string | null;
+  vat_number: string | null;
+  fiscal_code: string | null;
+}
+
+interface ProjectsTable {
+  id: Generated<string>;
+  client_id: string | null;
+  name: string;
+}
+
+interface PaymentsTable {
+  id: Generated<string>;
+  client_id: string;
+  project_id: string | null;
+  quote_id: string | null;
+  payment_date: string;
+  payment_type: string | null;
+  amount: number;
+  method: string | null;
+  invoice_ref: string | null;
+  status: string;
+  notes: string | null;
+  created_at: Date;
+}
+
+interface ExpensesTable {
+  id: Generated<string>;
+  project_id: string | null;
+  client_id: string | null;
+  expense_date: string;
+  expense_type: string | null;
+  amount: number | null;
+  description: string | null;
+  invoice_ref: string | null;
+  created_at: Date;
+}
+
 interface Database {
   contacts: ContactsTable;
   tasks: TasksTable;
   contact_notes: ContactNotesTable;
   deals: DealsTable;
+  clients: ClientsTable;
+  projects: ProjectsTable;
+  payments: PaymentsTable;
+  expenses: ExpensesTable;
 }
 
 // Deno Postgres Driver for Kysely

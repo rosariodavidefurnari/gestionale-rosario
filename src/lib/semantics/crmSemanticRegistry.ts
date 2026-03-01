@@ -174,7 +174,7 @@ export const buildCrmSemanticRegistry = (
         {
           resource: "clients",
           field: "billing_name",
-          label: "Denominazione fatturazione",
+          label: "Denominazione fiscale",
           meaning:
             "Nome fiscale o ragione sociale che compare nei documenti di fatturazione, distinto dal nome operativo se serve.",
         },
@@ -315,7 +315,7 @@ export const buildCrmSemanticRegistry = (
         confirmationRule:
           "nessuna scrittura nel CRM prima della conferma esplicita utente",
         meaning:
-          "L'import fatture nella chat AI unificata deve proporre record strutturati, trasportare anche l'anagrafica fiscale letta dal documento e poi mappare le fatture cliente su payments e le fatture/costi fornitore su expenses solo dopo conferma utente. Se manca il cliente, il passo corretto e' aprire il form cliente gia precompilato con quei campi, non creare automaticamente il record.",
+          "L'import fatture nella chat AI unificata deve proporre record strutturati, trasportare anche l'anagrafica fiscale letta dal documento e poi mappare le fatture cliente su payments e le fatture/costi fornitore su expenses solo dopo conferma utente. La conferma reale deve passare da validazioni server-side, coerenza cliente/progetto, controllo duplicati stretti per invoice_ref quando disponibile e rollback completo del batch se un record non e' confermabile. Se manca il cliente, il passo corretto e' aprire il form cliente gia precompilato con quei campi, non creare automaticamente il record.",
       },
       unifiedAiReadContext: {
         scope: "clients + quotes + projects + payments + expenses",

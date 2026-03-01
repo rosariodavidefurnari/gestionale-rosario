@@ -90,6 +90,28 @@ export type InvoiceImportConfirmation = {
   }>;
 };
 
+const normalizeNameComparable = (value?: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed.replace(/\s+/g, " ").toLocaleLowerCase("it-IT") : null;
+};
+
+const normalizeIdentifierComparable = (value?: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed.replace(/[^a-zA-Z0-9]/g, "").toUpperCase() : null;
+};
+
+const normalizeVatComparable = (value?: string | null) => {
+  const compact = normalizeIdentifierComparable(value);
+
+  if (!compact) {
+    return null;
+  }
+
+  return compact.startsWith("IT") && /^\d{11}$/.test(compact.slice(2))
+    ? compact.slice(2)
+    : compact;
+};
+
 const defaultPaymentDraft: Pick<
   InvoiceImportRecordDraft,
   "paymentType" | "paymentMethod" | "paymentStatus"
@@ -176,7 +198,20 @@ export const getInvoiceImportRecordValidationErrors = (
     errors.push("tipo spesa");
   }
 
+  if (workspace) {
+    const matchedClient = normalized.clientId
+      ? workspace.clients.find((client) => client.id === normalized.clientId)
+      : null;
+
+    if (normalized.clientId && !matchedClient) {
+      errors.push("cliente valido");
+    }
+  }
+
   if (workspace && normalized.projectId) {
+    const matchedClient = normalized.clientId
+      ? workspace.clients.find((client) => client.id === normalized.clientId)
+      : null;
     const matchedProject = workspace.projects.find(
       (project) => project.id === normalized.projectId,
     );
@@ -184,7 +219,7 @@ export const getInvoiceImportRecordValidationErrors = (
     if (!matchedProject) {
       errors.push("progetto valido");
     } else if (
-      normalized.clientId &&
+      matchedClient &&
       matchedProject.client_id !== normalized.clientId
     ) {
       errors.push("cliente/progetto coerenti");
@@ -212,7 +247,7 @@ export const buildInvoiceImportRecordNotes = (
     record.notes?.trim(),
     record.dueDate ? `Scadenza documento: ${record.dueDate}` : null,
     record.billingName
-      ? `Denominazione fatturazione: ${record.billingName}`
+      ? `Denominazione fiscale: ${record.billingName}`
       : null,
     record.vatNumber ? `P.IVA: ${record.vatNumber}` : null,
     record.fiscalCode ? `CF: ${record.fiscalCode}` : null,
@@ -221,10 +256,139 @@ export const buildInvoiceImportRecordNotes = (
       ? `Codice destinatario: ${record.billingSdiCode}`
       : null,
     record.billingPec ? `PEC: ${record.billingPec}` : null,
+    record.sourceFileNames.length > 0
+      ? `File sorgente: ${record.sourceFileNames.join(", ")}`
+      : null,
+    `Tipo documento: ${record.documentType}`,
+    `Confidenza AI: ${record.confidence}`,
     "Importato dalla chat AI fatture",
   ]
     .filter(Boolean)
     .join("\n");
+};
+
+export const getInvoiceImportPaymentDate = (
+  record: Pick<
+    InvoiceImportRecordDraft,
+    "documentDate" | "dueDate" | "paymentStatus"
+  >,
+) => {
+  const status = record.paymentStatus ?? "in_attesa";
+
+  if (status === "ricevuto") {
+    return record.documentDate ?? null;
+  }
+
+  return record.dueDate ?? record.documentDate ?? null;
+};
+
+const resolveClientIdFromIdentifiers = (
+  record: InvoiceImportRecordDraft,
+  workspace: InvoiceImportWorkspace,
+) => {
+  const comparableFiscalCode = normalizeIdentifierComparable(record.fiscalCode);
+  if (comparableFiscalCode) {
+    const matches = workspace.clients.filter(
+      (client) =>
+        normalizeIdentifierComparable(client.fiscal_code) ===
+        comparableFiscalCode,
+    );
+
+    if (matches.length === 1) {
+      return matches[0]?.id ?? null;
+    }
+  }
+
+  const comparableVatNumber = normalizeVatComparable(record.vatNumber);
+  if (comparableVatNumber) {
+    const matches = workspace.clients.filter(
+      (client) =>
+        normalizeVatComparable(client.vat_number) === comparableVatNumber,
+    );
+
+    if (matches.length === 1) {
+      return matches[0]?.id ?? null;
+    }
+  }
+
+  return null;
+};
+
+const resolveClientIdFromNames = (
+  record: InvoiceImportRecordDraft,
+  workspace: InvoiceImportWorkspace,
+) => {
+  for (const candidateName of [record.billingName, record.counterpartyName]) {
+    const comparableCandidate = normalizeNameComparable(candidateName);
+    if (!comparableCandidate) {
+      continue;
+    }
+
+    const matches = workspace.clients.filter((client) => {
+      const comparableName = normalizeNameComparable(client.name);
+      const comparableBillingName = normalizeNameComparable(client.billing_name);
+
+      return (
+        comparableName === comparableCandidate ||
+        comparableBillingName === comparableCandidate
+      );
+    });
+
+    if (matches.length === 1) {
+      return matches[0]?.id ?? null;
+    }
+  }
+
+  return null;
+};
+
+export const applyInvoiceImportWorkspaceHints = (
+  draft: InvoiceImportDraft,
+  workspace?: InvoiceImportWorkspace,
+) => {
+  if (!workspace) {
+    return draft;
+  }
+
+  let hasChanges = false;
+  const nextRecords = draft.records.map((record) => {
+    const hasValidClient =
+      record.clientId != null &&
+      workspace.clients.some((client) => String(client.id) === String(record.clientId));
+    const matchedProject =
+      record.projectId != null
+        ? workspace.projects.find(
+            (project) => String(project.id) === String(record.projectId),
+          ) ?? null
+        : null;
+
+    const nextClientId =
+      (hasValidClient ? record.clientId : null) ??
+      (matchedProject && !hasValidClient ? matchedProject.client_id : null) ??
+      resolveClientIdFromIdentifiers(record, workspace) ??
+      resolveClientIdFromNames(record, workspace) ??
+      (hasValidClient ? record.clientId : null);
+
+    if (String(nextClientId ?? "") === String(record.clientId ?? "")) {
+      return record;
+    }
+
+    hasChanges = true;
+
+    return {
+      ...record,
+      clientId: nextClientId,
+    };
+  });
+
+  if (!hasChanges) {
+    return draft;
+  }
+
+  return {
+    ...draft,
+    records: nextRecords,
+  };
 };
 
 export const getClientLabel = (

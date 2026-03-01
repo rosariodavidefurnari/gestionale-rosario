@@ -174,7 +174,7 @@ export const InvoiceImportDraftEditor = ({
                 />
               </Field>
 
-              <Field label="Denominazione fatturazione">
+              <Field label="Denominazione fiscale">
                 <Input
                   value={record.billingName ?? ""}
                   onChange={(event) =>

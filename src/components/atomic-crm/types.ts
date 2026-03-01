@@ -29,8 +29,19 @@ export type Sale = {
   password?: string;
 } & Pick<RaRecord, "id">;
 
+export type ContactEmail = {
+  email: string;
+  type: "Work" | "Home" | "Other";
+};
+
+export type ContactPhone = {
+  number: string;
+  type: "Work" | "Home" | "Other";
+};
+
 export type Client = {
   name: string;
+  // Fiscal/billing display name only when it differs from the main client name.
   billing_name?: string;
   client_type:
     | "produzione_tv"
@@ -41,6 +52,7 @@ export type Client = {
   phone?: string;
   email?: string;
   address?: string;
+  /** @deprecated Legacy ambiguous fiscal identifier. Use vat_number or fiscal_code. */
   tax_id?: string;
   vat_number?: string;
   fiscal_code?: string;
@@ -75,6 +87,28 @@ export type ClientNote = {
   text: string;
   date: string;
   attachments?: AttachmentNote[];
+  created_at: string;
+  updated_at: string;
+} & Pick<RaRecord, "id">;
+
+export type Contact = {
+  first_name?: string | null;
+  last_name?: string | null;
+  title?: string | null;
+  client_id?: Identifier | null;
+  email_jsonb: ContactEmail[];
+  phone_jsonb: ContactPhone[];
+  linkedin_url?: string | null;
+  background?: string | null;
+  tags: Identifier[];
+  created_at: string;
+  updated_at: string;
+} & Pick<RaRecord, "id">;
+
+export type ProjectContact = {
+  project_id: Identifier;
+  contact_id: Identifier;
+  is_primary: boolean;
   created_at: string;
   updated_at: string;
 } & Pick<RaRecord, "id">;

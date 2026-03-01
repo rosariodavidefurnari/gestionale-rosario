@@ -258,12 +258,11 @@ const gestionaleMessages = {
       name: "Cliente |||| Clienti",
       fields: {
         name: "Nome / Ragione sociale",
-        billing_name: "Denominazione fatturazione",
+        billing_name: "Denominazione fiscale",
         client_type: "Tipo cliente",
         phone: "Telefono",
         email: "Email",
         address: "Indirizzo operativo / recapito",
-        tax_id: "Identificativo fiscale legacy",
         vat_number: "Partita IVA",
         fiscal_code: "Codice fiscale",
         billing_address_street: "Via / Piazza",
@@ -364,9 +363,29 @@ const gestionaleMessages = {
     },
     contacts: {
       name: "Contatto |||| Contatti",
+      fields: {
+        first_name: "Nome",
+        last_name: "Cognome",
+        title: "Ruolo",
+        client_id: "Cliente",
+        email_jsonb: "Email",
+        phone_jsonb: "Telefoni",
+        linkedin_url: "LinkedIn",
+        background: "Note",
+        created_at: "Creato il",
+        updated_at: "Aggiornato il",
+      },
     },
     companies: {
       name: "Azienda |||| Aziende",
+    },
+    project_contacts: {
+      name: "Referente progetto |||| Referenti progetto",
+      fields: {
+        project_id: "Progetto",
+        contact_id: "Referente",
+        is_primary: "Principale",
+      },
     },
     deals: {
       name: "Trattativa |||| Trattative",

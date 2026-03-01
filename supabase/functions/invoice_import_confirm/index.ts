@@ -1,0 +1,275 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { sql } from "https://esm.sh/kysely@0.27.2";
+
+import { AuthMiddleware, UserMiddleware } from "../_shared/authentication.ts";
+import { corsHeaders, OptionsMiddleware } from "../_shared/cors.ts";
+import { db, CompiledQuery } from "../_shared/db.ts";
+import { getUserSale } from "../_shared/getUserSale.ts";
+import {
+  buildInvoiceImportConfirmNotes,
+  getInvoiceImportConfirmPaymentDate,
+  getInvoiceImportConfirmValidationErrors,
+  validateInvoiceImportConfirmPayload,
+  type InvoiceImportConfirmRecord,
+  type InvoiceImportConfirmWorkspace,
+} from "../_shared/invoiceImportConfirm.ts";
+import { createErrorResponse } from "../_shared/utils.ts";
+
+class InvoiceImportConfirmError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "InvoiceImportConfirmError";
+    this.status = status;
+  }
+}
+
+const getWorkspace = async (
+  trx: any,
+): Promise<InvoiceImportConfirmWorkspace> => {
+  const [clients, projects] = await Promise.all([
+    trx.selectFrom("clients").select(["id"]).execute(),
+    trx.selectFrom("projects").select(["id", "client_id"]).execute(),
+  ]);
+
+  return { clients, projects };
+};
+
+const ensureRecordIsConfirmable = ({
+  record,
+  workspace,
+}: {
+  record: InvoiceImportConfirmRecord;
+  workspace: InvoiceImportConfirmWorkspace;
+}) => {
+  const errors = getInvoiceImportConfirmValidationErrors(record, workspace);
+
+  if (errors.length > 0) {
+    throw new InvoiceImportConfirmError(
+      400,
+      `Il record ${record.invoiceRef ?? record.id} non e' confermabile: manca ${errors.join(", ")}.`,
+    );
+  }
+};
+
+const ensureNoDuplicatePayment = async ({
+  trx,
+  record,
+  paymentDate,
+}: {
+  trx: any;
+  record: InvoiceImportConfirmRecord;
+  paymentDate: string;
+}) => {
+  if (!record.invoiceRef || !record.clientId) {
+    return;
+  }
+
+  const existing = await trx
+    .selectFrom("payments")
+    .select(["id"])
+    .where("client_id", "=", record.clientId)
+    .where("payment_date", "=", paymentDate)
+    .where("amount", "=", Number(record.amount))
+    .where("status", "=", record.paymentStatus ?? "in_attesa")
+    .where("payment_type", "=", record.paymentType ?? "saldo")
+    .where(sql<boolean>`project_id is not distinct from ${record.projectId ?? null}`)
+    .where(sql<boolean>`invoice_ref is not distinct from ${record.invoiceRef}`)
+    .executeTakeFirst();
+
+  if (existing) {
+    throw new InvoiceImportConfirmError(
+      409,
+      `Esiste gia un pagamento identico per il riferimento ${record.invoiceRef}.`,
+    );
+  }
+};
+
+const ensureNoDuplicateExpense = async ({
+  trx,
+  record,
+}: {
+  trx: any;
+  record: InvoiceImportConfirmRecord;
+}) => {
+  if (!record.invoiceRef) {
+    return;
+  }
+
+  const existing = await trx
+    .selectFrom("expenses")
+    .select(["id"])
+    .where("expense_date", "=", record.documentDate!)
+    .where("amount", "=", Number(record.amount))
+    .where("expense_type", "=", record.expenseType ?? "acquisto_materiale")
+    .where(sql<boolean>`client_id is not distinct from ${record.clientId ?? null}`)
+    .where(sql<boolean>`project_id is not distinct from ${record.projectId ?? null}`)
+    .where(sql<boolean>`invoice_ref is not distinct from ${record.invoiceRef}`)
+    .executeTakeFirst();
+
+  if (existing) {
+    throw new InvoiceImportConfirmError(
+      409,
+      `Esiste gia una spesa identica per il riferimento ${record.invoiceRef}.`,
+    );
+  }
+};
+
+const confirmInvoiceImportDraft = async ({
+  req,
+  userId,
+  currentUserSale,
+}: {
+  req: Request;
+  userId: string;
+  currentUserSale: unknown;
+}) => {
+  if (!currentUserSale) {
+    return createErrorResponse(401, "Unauthorized");
+  }
+
+  const payloadResult = validateInvoiceImportConfirmPayload(await req.json());
+  if (payloadResult.error || !payloadResult.data) {
+    return createErrorResponse(400, payloadResult.error ?? "Payload non valido");
+  }
+
+  try {
+    const result = await db.transaction().execute(async (trx) => {
+      await trx.executeQuery(CompiledQuery.raw("SET LOCAL ROLE authenticated"));
+      await trx.executeQuery(
+        CompiledQuery.raw(
+          `SELECT set_config('request.jwt.claim.sub', '${userId}', true)`,
+        ),
+      );
+
+      const workspace = await getWorkspace(trx);
+      const created: Array<{
+        resource: "payments" | "expenses";
+        id: string;
+        invoiceRef?: string | null;
+        amount?: number | null;
+      }> = [];
+
+      for (const record of payloadResult.data.draft.records) {
+        ensureRecordIsConfirmable({ record, workspace });
+
+        if (record.resource === "payments") {
+          const paymentDate = getInvoiceImportConfirmPaymentDate(record);
+
+          if (!paymentDate) {
+            throw new InvoiceImportConfirmError(
+              400,
+              `Il record ${record.invoiceRef ?? record.id} non ha una data pagamento valida.`,
+            );
+          }
+
+          await ensureNoDuplicatePayment({
+            trx,
+            record,
+            paymentDate,
+          });
+
+          const insertedPayment = await trx
+            .insertInto("payments")
+            .values({
+              client_id: record.clientId!,
+              project_id: record.projectId ?? null,
+              quote_id: null,
+              payment_date: paymentDate,
+              payment_type: record.paymentType ?? "saldo",
+              amount: Number(record.amount),
+              method: record.paymentMethod ?? null,
+              invoice_ref: record.invoiceRef ?? null,
+              status: record.paymentStatus ?? "in_attesa",
+              notes:
+                buildInvoiceImportConfirmNotes({
+                  record,
+                  model: payloadResult.data.draft.model,
+                }) || null,
+            })
+            .returning(["id"])
+            .executeTakeFirstOrThrow();
+
+          created.push({
+            resource: "payments",
+            id: insertedPayment.id,
+            invoiceRef: record.invoiceRef ?? null,
+            amount: record.amount,
+          });
+          continue;
+        }
+
+        await ensureNoDuplicateExpense({ trx, record });
+
+        const insertedExpense = await trx
+          .insertInto("expenses")
+          .values({
+            client_id: record.clientId ?? null,
+            project_id: record.projectId ?? null,
+            expense_date: record.documentDate!,
+            expense_type: record.expenseType ?? "acquisto_materiale",
+            amount: Number(record.amount),
+            invoice_ref: record.invoiceRef ?? null,
+            description: (
+              record.description ??
+              record.counterpartyName ??
+              buildInvoiceImportConfirmNotes({
+                record,
+                model: payloadResult.data.draft.model,
+              })
+            ) ?? null,
+          })
+          .returning(["id"])
+          .executeTakeFirstOrThrow();
+
+        created.push({
+          resource: "expenses",
+          id: insertedExpense.id,
+          invoiceRef: record.invoiceRef ?? null,
+          amount: record.amount,
+        });
+      }
+
+      return { created };
+    });
+
+    return new Response(JSON.stringify({ data: result }), {
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  } catch (error) {
+    console.error("invoice_import_confirm.error", error);
+
+    if (error instanceof InvoiceImportConfirmError) {
+      return createErrorResponse(error.status, error.message);
+    }
+
+    return createErrorResponse(
+      500,
+      "Impossibile confermare l'import fatture nel CRM",
+    );
+  }
+};
+
+Deno.serve(async (req: Request) =>
+  OptionsMiddleware(req, async (request) =>
+    AuthMiddleware(request, async (authedRequest) =>
+      UserMiddleware(authedRequest, async (_, user) => {
+        const currentUserSale = user ? await getUserSale(user) : null;
+        if (!currentUserSale) {
+          return createErrorResponse(401, "Unauthorized");
+        }
+
+        if (authedRequest.method === "POST") {
+          return confirmInvoiceImportDraft({
+            req: authedRequest,
+            userId: user.id,
+            currentUserSale,
+          });
+        }
+
+        return createErrorResponse(405, "Method Not Allowed");
+      }),
+    ),
+  ),
+);

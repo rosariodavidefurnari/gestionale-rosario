@@ -53,11 +53,6 @@ const ClientIdentityInputs = () => {
         validate={[required(), validateUniqueName]}
         helperText={false}
       />
-      <TextInput
-        source="billing_name"
-        label="Denominazione fatturazione"
-        helperText={false}
-      />
       <SelectInput
         source="client_type"
         label="Tipo cliente"
@@ -86,6 +81,12 @@ const ClientBillingInputs = () => (
   <div className="flex flex-col gap-4">
     <h6 className="text-lg font-semibold">Fatturazione</h6>
     <div className="grid gap-4 md:grid-cols-2">
+      <TextInput
+        source="billing_name"
+        label="Denominazione fiscale"
+        helperText="Compila solo se il nome in fattura differisce dal nome principale."
+        className="md:col-span-2"
+      />
       <TextInput source="vat_number" label="Partita IVA" helperText={false} />
       <TextInput
         source="fiscal_code"
@@ -123,11 +124,6 @@ const ClientBillingInputs = () => (
 const ClientDetailInputs = () => (
   <div className="flex flex-col gap-4">
     <h6 className="text-lg font-semibold">Dettagli</h6>
-    <TextInput
-      source="tax_id"
-      label="Identificativo fiscale legacy"
-      helperText={false}
-    />
     <SelectInput
       source="source"
       label="Fonte acquisizione"

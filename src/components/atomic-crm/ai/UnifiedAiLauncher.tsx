@@ -1,12 +1,13 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Bot } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDataProvider, useNotify } from "ra-core";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
+  applyInvoiceImportWorkspaceHints,
   getInvoiceImportRecordValidationErrors,
   normalizeInvoiceImportDraft,
   type InvoiceImportConfirmation,
@@ -93,7 +94,8 @@ export const UnifiedAiLauncher = () => {
       });
     },
     onSuccess: (nextDraft) => {
-      setDraft(normalizeInvoiceImportDraft(nextDraft));
+      const normalizedDraft = normalizeInvoiceImportDraft(nextDraft);
+      setDraft(applyInvoiceImportWorkspaceHints(normalizedDraft, workspace));
       setSubmittedFiles(selectedFiles.map((file) => file.name));
       setConfirmation(null);
       notify(
@@ -202,10 +204,12 @@ export const UnifiedAiLauncher = () => {
         ...patch,
       };
 
-      return {
+      const nextDraft = {
         ...current,
         records: nextRecords,
       };
+
+      return applyInvoiceImportWorkspaceHints(nextDraft, workspace);
     });
     setConfirmation(null);
   };
@@ -225,6 +229,16 @@ export const UnifiedAiLauncher = () => {
     });
     setConfirmation(null);
   };
+
+  useEffect(() => {
+    if (!workspace) {
+      return;
+    }
+
+    setDraft((current) =>
+      current ? applyInvoiceImportWorkspaceHints(current, workspace) : current,
+    );
+  }, [workspace]);
 
   return (
     <Sheet

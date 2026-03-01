@@ -624,7 +624,8 @@ Il file Numbers di Diego Caltabiano contiene dati dal 27/10/2024 al 07/04/2025+.
 
 1. Esportare da Numbers in CSV
 2. Creare uno script di importazione che:
-   - Crea il cliente "Diego Caltabiano"
+   - Crea il cliente "ASSOCIAZIONE CULTURALE GUSTARE SICILIA"
+   - Salva Diego Caltabiano come referente operativo, non come intestatario cliente
    - Crea i progetti ("Gustare Sicilia", "Bella tra i Fornelli", ecc.)
    - Importa ogni riga come servizio nel registro lavori
    - Associa i riferimenti fattura

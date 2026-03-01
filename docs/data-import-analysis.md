@@ -23,13 +23,20 @@ Le colonne BTF / GS / SPOT indicano a quale progetto appartiene il servizio
 
 ## 1. Cliente
 
-Un solo cliente in questo file:
+Un solo cliente fiscale in questo file:
 
 | Campo | Valore |
 |-------|--------|
-| name | Diego Caltabiano |
+| name | ASSOCIAZIONE CULTURALE GUSTARE SICILIA |
 | client_type | produzione_tv |
+| fiscal_code | 05416820875 |
 | source | passaparola |
+
+**Nota importante:** il file operativo e i fogli contabili fanno riferimento a Diego
+Caltabiano come referente, ma lo storico fatture XML in `Fatture/`
+mostra come intestatario fiscale ricorrente `ASSOCIAZIONE CULTURALE GUSTARE SICILIA`.
+Nel CRM quindi Diego va trattato come referente operativo, non come cliente
+anagrafico principale.
 
 ---
 
@@ -49,8 +56,9 @@ Un solo cliente in questo file:
 
 **Note:**
 
-- Gli spot sono tutti commissionati da Diego (in questo file). Rosario fa spot
-  anche per altri clienti, che saranno progetti separati con clienti diversi.
+- Gli spot in questo file sono coordinati operativamente da Diego per conto
+  dell'associazione. Rosario fa spot anche per altri clienti, che saranno
+  progetti separati con clienti diversi.
 - **Borghi Marinari** e un progetto GS separato (16 puntate dedicate
   ai borghi marinari siciliani), non fa parte della stagione GS principale.
 

@@ -81,6 +81,9 @@ Regole di mapping obbligatorie:
   \`billingName\` come denominazione fiscale quando disponibile
 - il match cliente e' piu affidabile se coincidono denominazione, partita IVA
   o codice fiscale con un cliente CRM esistente
+- se nel documento compare una persona referente ma l'intestazione fiscale
+  appartiene a un'azienda o associazione, considera cliente la controparte
+  fiscale e non il referente
 
 CRM clients disponibili:
 ${JSON.stringify(clients, null, 2)}

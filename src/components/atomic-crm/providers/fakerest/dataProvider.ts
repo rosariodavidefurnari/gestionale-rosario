@@ -6,9 +6,11 @@ import {
 import fakeRestDataProvider from "ra-data-fakerest";
 
 import type {
+  Contact,
   Client,
   Expense,
   Payment,
+  ProjectContact,
   Project,
   Quote,
   Sale,
@@ -16,6 +18,11 @@ import type {
   Service,
   SignUpData,
 } from "../../types";
+import { normalizeClientForSave } from "../../clients/clientBilling";
+import {
+  normalizeContactForSave,
+  normalizeProjectContactForSave,
+} from "../../contacts/contactRecord";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import type { CrmDataProvider } from "../types";
 import { authProvider, USER_STORAGE_KEY } from "./authProvider";
@@ -445,6 +452,19 @@ export const dataProvider = withLifecycleCallbacks(
         }
         return params;
       },
+    },
+    {
+      resource: "clients",
+      beforeSave: async (data: any) => normalizeClientForSave(data),
+    },
+    {
+      resource: "contacts",
+      beforeSave: async (data: Contact) => normalizeContactForSave(data),
+    },
+    {
+      resource: "project_contacts",
+      beforeSave: async (data: ProjectContact) =>
+        normalizeProjectContactForSave(data),
     },
     {
       resource: "sales",

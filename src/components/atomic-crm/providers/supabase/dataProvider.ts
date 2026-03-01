@@ -7,9 +7,11 @@ import {
   type ResourceCallbacks,
 } from "ra-core";
 import type {
+  Contact,
   Client,
   Expense,
   Payment,
+  ProjectContact,
   Project,
   Quote,
   RAFile,
@@ -18,6 +20,11 @@ import type {
   Service,
   SignUpData,
 } from "../../types";
+import { normalizeClientForSave } from "../../clients/clientBilling";
+import {
+  normalizeContactForSave,
+  normalizeProjectContactForSave,
+} from "../../contacts/contactRecord";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import { getIsInitialized } from "./authProvider";
 import { getEdgeFunctionAuthorizationHeaders } from "./edgeFunctions";
@@ -62,7 +69,6 @@ import type {
 } from "@/lib/ai/invoiceImport";
 import {
   buildInvoiceImportWorkspace,
-  confirmInvoiceImportDraftWithCreate,
 } from "@/lib/ai/invoiceImportProvider";
 import {
   buildUnifiedCrmReadContext,
@@ -675,11 +681,31 @@ const dataProviderWithCustomMethods = {
   async confirmInvoiceImportDraft(
     draft: InvoiceImportDraft,
   ): Promise<InvoiceImportConfirmation> {
-    return confirmInvoiceImportDraftWithCreate({
-      draft,
-      create: (resource, params) =>
-        baseDataProvider.create(resource, params as never),
+    const { data, error } = await invokeAuthenticatedEdgeFunction<{
+      data: InvoiceImportConfirmation;
+    }>("invoice_import_confirm", {
+      method: "POST",
+      body: {
+        draft,
+      },
     });
+
+    if (!data || error) {
+      console.error("confirmInvoiceImportDraft.error", error);
+      const errorDetails = await (async () => {
+        try {
+          return (await error?.context?.json()) ?? {};
+        } catch {
+          return {};
+        }
+      })();
+      throw new Error(
+        errorDetails?.message ||
+          "Impossibile confermare l'import fatture nel CRM.",
+      );
+    }
+
+    return data.data;
   },
   async getQuoteStatusEmailContext(
     quoteId: Identifier,
@@ -982,6 +1008,19 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
       }
       return params;
     },
+  },
+  {
+    resource: "clients",
+    beforeSave: async (data: any) => normalizeClientForSave(data),
+  },
+  {
+    resource: "contacts",
+    beforeSave: async (data: Contact) => normalizeContactForSave(data),
+  },
+  {
+    resource: "project_contacts",
+    beforeSave: async (data: ProjectContact) =>
+      normalizeProjectContactForSave(data),
   },
   {
     resource: "client_notes",

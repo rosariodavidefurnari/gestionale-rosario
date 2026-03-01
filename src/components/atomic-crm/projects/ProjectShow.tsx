@@ -16,6 +16,7 @@ import { ErrorMessage } from "../misc/ErrorMessage";
 import { MobileBackButton } from "../misc/MobileBackButton";
 import { formatDateRange } from "../misc/formatDateRange";
 import { getUnifiedAiHandoffContextFromSearch } from "../payments/paymentLinking";
+import { ProjectContactsSection } from "../contacts/ProjectContactsSection";
 
 export const ProjectShow = () => (
   <ShowBase>
@@ -56,6 +57,11 @@ const ProjectShowContent = () => {
           <ProjectHeader record={record} />
           <Separator className="my-4" />
           <ProjectDetails record={record} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent>
+          <ProjectContactsSection project={record} />
         </CardContent>
       </Card>
       <Card>

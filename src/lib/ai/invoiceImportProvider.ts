@@ -8,6 +8,7 @@ import type {
 
 import {
   buildInvoiceImportRecordNotes,
+  getInvoiceImportPaymentDate,
   getInvoiceImportRecordValidationErrors,
   normalizeInvoiceImportDraft,
   type InvoiceImportConfirmation,
@@ -57,7 +58,7 @@ export const confirmInvoiceImportDraftWithCreate = async ({
         data: {
           client_id: record.clientId as Identifier,
           project_id: record.projectId ?? null,
-          payment_date: record.documentDate,
+          payment_date: getInvoiceImportPaymentDate(record),
           payment_type: record.paymentType ?? "saldo",
           amount: Number(record.amount),
           method: record.paymentMethod ?? null,

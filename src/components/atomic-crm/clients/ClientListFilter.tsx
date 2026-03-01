@@ -123,7 +123,7 @@ const ClientFilterContent = () => {
             onChange={handleTextFilterChange("name")}
           />
           <Input
-            placeholder="Denominazione fatturazione"
+            placeholder="Denominazione fiscale"
             value={getClientTextFilterValue(filterValues, "billing_name")}
             onChange={handleTextFilterChange("billing_name")}
           />

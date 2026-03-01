@@ -420,11 +420,11 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "invoice_import_confirm",
       label: "Conferma import fatture nel CRM",
       description:
-        "Conferma la proposta corretta in chat e crea record reali su payments o expenses.",
+        "Conferma la proposta corretta in chat e crea record reali su payments o expenses solo dopo validazioni server-side, controllo duplicati stretti e salvataggio atomico del batch.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
       actsOn: ["payments", "expenses", "clients", "projects"],
       requiredFields: ["draft.records", "conferma utente"],
-      sideEffects: ["crea record CRM"],
+      sideEffects: ["valida batch lato server", "crea record CRM", "rollback completo se un record fallisce"],
     },
     {
       id: "quote_drag_change_status",

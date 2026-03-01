@@ -7,6 +7,7 @@ import { SortButton } from "@/components/admin/sort-button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Client } from "../types";
+import { getClientDistinctBillingName } from "./clientBilling";
 import { ClientListContent } from "./ClientListContent";
 import { ClientListFilter, ClientMobileFilter } from "./ClientListFilter";
 import { TopToolbar } from "../layout/TopToolbar";
@@ -62,7 +63,7 @@ const ClientListActions = () => {
 const exporter: Exporter<Client> = async (records) => {
   const clients = records.map((client) => ({
     nome: client.name,
-    denominazione_fatturazione: client.billing_name ?? "",
+    denominazione_fatturazione: getClientDistinctBillingName(client) ?? "",
     tipo: client.client_type,
     telefono: client.phone ?? "",
     email: client.email ?? "",
@@ -77,7 +78,6 @@ const exporter: Exporter<Client> = async (records) => {
     nazione_fatturazione: client.billing_country ?? "",
     codice_destinatario: client.billing_sdi_code ?? "",
     pec: client.billing_pec ?? "",
-    identificativo_fiscale_legacy: client.tax_id ?? "",
     fonte: client.source ?? "",
     note: client.notes ?? "",
   }));

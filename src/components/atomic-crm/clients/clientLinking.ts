@@ -12,6 +12,11 @@ const setOptional = (
   }
 };
 
+const normalizeComparable = (value?: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed.replace(/\s+/g, " ").toLocaleLowerCase("it-IT") : null;
+};
+
 export const buildClientCreatePathFromInvoiceDraft = ({
   record,
 }: {
@@ -34,7 +39,13 @@ export const buildClientCreatePathFromInvoiceDraft = ({
   const searchParams = new URLSearchParams();
   const billingName =
     record.billingName?.trim() || record.counterpartyName?.trim() || "";
-  const displayName = record.counterpartyName?.trim() || billingName;
+  const displayName = billingName || record.counterpartyName?.trim() || "";
+  const comparableCounterparty = normalizeComparable(record.counterpartyName);
+  const comparableBillingName = normalizeComparable(record.billingName);
+  const hasDistinctCounterpartyAndBillingName =
+    comparableCounterparty != null &&
+    comparableBillingName != null &&
+    comparableCounterparty !== comparableBillingName;
 
   setOptional(searchParams, "name", displayName);
   setOptional(searchParams, "billing_name", billingName);
@@ -56,6 +67,13 @@ export const buildClientCreatePathFromInvoiceDraft = ({
   setOptional(searchParams, "billing_country", record.billingCountry);
   setOptional(searchParams, "billing_sdi_code", record.billingSdiCode);
   setOptional(searchParams, "billing_pec", record.billingPec);
+  setOptional(
+    searchParams,
+    "notes",
+    hasDistinctCounterpartyAndBillingName
+      ? `Referente operativo indicato nel documento: ${record.counterpartyName?.trim()}`
+      : null,
+  );
   searchParams.set("launcher_source", "invoice_import");
   searchParams.set("launcher_action", "client_create_from_invoice");
 
@@ -85,6 +103,7 @@ export const getClientCreateDefaultsFromSearch = (
     billing_country: getOptional("billing_country"),
     billing_sdi_code: getOptional("billing_sdi_code"),
     billing_pec: getOptional("billing_pec"),
+    notes: getOptional("notes"),
   };
 };
 

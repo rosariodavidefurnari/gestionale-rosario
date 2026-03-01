@@ -13,8 +13,8 @@ import { ClientTypeBadge } from "./ClientListContent";
 import { clientSourceLabels } from "./clientTypes";
 import {
   formatClientBillingAddress,
-  getClientBillingDisplayName,
   getClientBillingIdentityLines,
+  getClientDistinctBillingName,
 } from "./clientBilling";
 import { ClientTagsListEdit } from "../tags/ClientTagsListEdit";
 import { ClientNotesSection } from "./ClientNotesSection";
@@ -23,6 +23,7 @@ import { ClientFinancialSummary } from "./ClientFinancialSummary";
 import { ErrorMessage } from "../misc/ErrorMessage";
 import { MobileBackButton } from "../misc/MobileBackButton";
 import { buildPaymentCreatePathFromClient } from "../payments/paymentLinking";
+import { ClientContactsSection } from "../contacts/ClientContactsSection";
 
 export const ClientShow = () => (
   <ShowBase>
@@ -65,6 +66,12 @@ const ClientShowContent = () => {
             Riepilogo finanziario
           </h3>
           <ClientFinancialSummary record={record} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent>
+          <ClientContactsSection />
         </CardContent>
       </Card>
 
@@ -133,11 +140,11 @@ const ClientDetails = ({ record }: { record: Client }) => (
       <h6 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
         Fatturazione
       </h6>
-      {getClientBillingDisplayName(record) && (
+      {getClientDistinctBillingName(record) && (
         <InfoRow
           icon={<FileText className="size-4" />}
           label="Denominazione"
-          value={getClientBillingDisplayName(record) ?? ""}
+          value={getClientDistinctBillingName(record) ?? ""}
         />
       )}
       {formatClientBillingAddress(record) && (
