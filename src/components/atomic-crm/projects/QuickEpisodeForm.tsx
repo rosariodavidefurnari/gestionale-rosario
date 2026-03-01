@@ -64,7 +64,25 @@ export interface EpisodeFormData {
   km_rate: number;
   location: string;
   notes: string;
+  extra_expenses: EpisodeExtraExpenseFormData[];
 }
+
+export interface EpisodeExtraExpenseFormData {
+  expense_type: "acquisto_materiale" | "noleggio" | "altro";
+  amount: number;
+  markup_percent: number;
+  description: string;
+}
+
+const createExtraExpense = (
+  overrides?: Partial<EpisodeExtraExpenseFormData>,
+): EpisodeExtraExpenseFormData => ({
+  expense_type: "altro",
+  amount: 0,
+  markup_percent: 0,
+  description: "",
+  ...overrides,
+});
 
 interface Props {
   defaults: EpisodeFormDefaults;
@@ -87,10 +105,44 @@ export const QuickEpisodeForm = ({
   const [kmRate, setKmRate] = useState(defaults.km_rate);
   const [location, setLocation] = useState(defaults.location);
   const [notes, setNotes] = useState(defaults.notes);
+  const [extraExpenses, setExtraExpenses] = useState<
+    EpisodeExtraExpenseFormData[]
+  >([]);
 
   const totalFees = feeShooting + feeEditing + feeOther;
   const kmCost = kmDistance * kmRate;
-  const grandTotal = totalFees + kmCost;
+  const extraExpensesTotal = extraExpenses.reduce(
+    (sum, expense) =>
+      sum + Number(expense.amount) * (1 + Number(expense.markup_percent) / 100),
+    0,
+  );
+  const grandTotal = totalFees + kmCost + extraExpensesTotal;
+
+  const addExtraExpense = (
+    overrides?: Partial<EpisodeExtraExpenseFormData>,
+  ) => {
+    setExtraExpenses((currentExpenses) => [
+      ...currentExpenses,
+      createExtraExpense(overrides),
+    ]);
+  };
+
+  const updateExtraExpense = (
+    index: number,
+    patch: Partial<EpisodeExtraExpenseFormData>,
+  ) => {
+    setExtraExpenses((currentExpenses) =>
+      currentExpenses.map((expense, expenseIndex) =>
+        expenseIndex === index ? { ...expense, ...patch } : expense,
+      ),
+    );
+  };
+
+  const removeExtraExpense = (index: number) => {
+    setExtraExpenses((currentExpenses) =>
+      currentExpenses.filter((_, expenseIndex) => expenseIndex !== index),
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +157,7 @@ export const QuickEpisodeForm = ({
       km_rate: kmRate,
       location,
       notes,
+      extra_expenses: extraExpenses,
     });
   };
 
@@ -203,6 +256,149 @@ export const QuickEpisodeForm = ({
             onChange={(e) => setNotes(e.target.value)}
           />
         </div>
+        <div className="sm:col-span-2 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="space-y-1">
+              <Label>Spese extra</Label>
+              <p className="text-xs text-muted-foreground">
+                Per casello, pranzo o altre uscite usa una voce extra nello
+                stesso salvataggio.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  addExtraExpense({
+                    expense_type: "altro",
+                    description: "Casello autostradale",
+                  })
+                }
+              >
+                Casello
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  addExtraExpense({
+                    expense_type: "altro",
+                    description: "Pranzo",
+                  })
+                }
+              >
+                Pranzo
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addExtraExpense()}
+              >
+                Altra spesa
+              </Button>
+            </div>
+          </div>
+
+          {extraExpenses.length === 0 ? (
+            <div className="rounded-lg border border-dashed px-3 py-3 text-sm text-muted-foreground">
+              Nessuna spesa extra aggiunta.
+            </div>
+          ) : null}
+
+          {extraExpenses.map((expense, index) => (
+            <div
+              key={`${expense.description}-${index}`}
+              className="grid grid-cols-1 gap-3 rounded-lg border p-3 sm:grid-cols-2"
+            >
+              <div>
+                <Label htmlFor={`ep-extra-type-${index}`}>Tipo spesa</Label>
+                <select
+                  id={`ep-extra-type-${index}`}
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                  value={expense.expense_type}
+                  onChange={(event) =>
+                    updateExtraExpense(index, {
+                      expense_type: event.target
+                        .value as EpisodeExtraExpenseFormData["expense_type"],
+                    })
+                  }
+                >
+                  <option value="altro">Altro</option>
+                  <option value="acquisto_materiale">
+                    Acquisto materiale
+                  </option>
+                  <option value="noleggio">Noleggio</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor={`ep-extra-amount-${index}`}>Importo (EUR)</Label>
+                <Input
+                  id={`ep-extra-amount-${index}`}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={expense.amount}
+                  onChange={(event) =>
+                    updateExtraExpense(index, {
+                      amount: Number(event.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor={`ep-extra-markup-${index}`}>Ricarico %</Label>
+                <Input
+                  id={`ep-extra-markup-${index}`}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={expense.markup_percent}
+                  onChange={(event) =>
+                    updateExtraExpense(index, {
+                      markup_percent: Number(event.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor={`ep-extra-description-${index}`}>
+                  Descrizione
+                </Label>
+                <Input
+                  id={`ep-extra-description-${index}`}
+                  value={expense.description}
+                  onChange={(event) =>
+                    updateExtraExpense(index, {
+                      description: event.target.value,
+                    })
+                  }
+                  placeholder="es. Casello autostradale, pranzo troupe"
+                />
+              </div>
+              <div className="sm:col-span-2 flex justify-between gap-2">
+                <div className="text-sm text-muted-foreground">
+                  Totale spesa: EUR{" "}
+                  {(
+                    Number(expense.amount) *
+                    (1 + Number(expense.markup_percent) / 100)
+                  ).toFixed(2)}
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeExtraExpense(index)}
+                >
+                  Rimuovi
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="rounded-lg bg-muted p-3 text-sm">
@@ -216,6 +412,12 @@ export const QuickEpisodeForm = ({
               Km ({kmDistance} × €{kmRate})
             </span>
             <span className="font-medium">€{kmCost.toFixed(2)}</span>
+          </div>
+        )}
+        {extraExpensesTotal > 0 && (
+          <div className="flex justify-between">
+            <span>Spese extra</span>
+            <span className="font-medium">€{extraExpensesTotal.toFixed(2)}</span>
           </div>
         )}
         <Separator className="my-1" />

@@ -10,6 +10,7 @@ export type UnifiedCrmSuggestedAction = {
     | "clients"
     | "quotes"
     | "projects"
+    | "services"
     | "payments"
     | "expenses";
   label: string;
@@ -21,7 +22,9 @@ export type UnifiedCrmSuggestedAction = {
     | "quote_create_payment"
     | "client_create_payment"
     | "project_quick_episode"
+    | "service_create"
     | "project_quick_payment"
+    | "expense_create"
     | "expense_create_km"
     | "follow_unified_crm_handoff";
 };
@@ -83,6 +86,8 @@ export type ParsedUnifiedCrmProjectQuickEpisodeQuestion = {
   projectId: string;
   clientId: string | null;
   projectName: string;
+  projectCategory: string | null;
+  projectTvShow: string | null;
   requestedLabel: "servizio" | "puntata" | "lavoro";
   serviceDate: string | null;
   serviceType:
@@ -97,6 +102,18 @@ export type ParsedUnifiedCrmProjectQuickEpisodeQuestion = {
   isRoundTrip: boolean;
   travelRoute: UnifiedCrmTravelRouteCandidate | null;
   travelRouteCandidates: UnifiedCrmTravelRouteCandidate[];
+};
+
+export type ParsedUnifiedCrmExpenseCreateQuestion = {
+  clientId: string;
+  projectId: string | null;
+  clientName: string | null;
+  projectName: string | null;
+  expenseDate: string | null;
+  expenseType: "acquisto_materiale" | "noleggio" | "altro";
+  description: string | null;
+  amount: number | null;
+  markupPercent: number | null;
 };
 
 const italianMonthNumbers: Record<string, number> = {
@@ -475,6 +492,8 @@ const tokenizeProjectName = (value: string) =>
     .split(/[^a-z0-9]+/i)
     .filter((token) => token.length >= 3 && !projectNameStopwords.has(token));
 
+const tokenizeClientName = tokenizeProjectName;
+
 const pickProjectFromQuestion = ({
   normalizedQuestion,
   context,
@@ -541,6 +560,82 @@ const pickProjectFromQuestion = ({
     (!secondProject || firstProject.score > secondProject.score)
   ) {
     return firstProject.project;
+  }
+
+  return null;
+};
+
+const scoreEntityNames = ({
+  normalizedQuestion,
+  names,
+}: {
+  normalizedQuestion: string;
+  names: string[];
+}) => {
+  const normalizedNames = names
+    .map((name) => name.trim())
+    .filter(Boolean)
+    .map((name) => normalizeText(name));
+  const uniqueNames = Array.from(new Set(normalizedNames));
+
+  if (uniqueNames.length === 0) {
+    return 0;
+  }
+
+  return uniqueNames.reduce((bestScore, name) => {
+    const tokenScore = tokenizeClientName(name).filter((token) =>
+      normalizedQuestion.includes(token),
+    ).length;
+    const score = tokenScore + (normalizedQuestion.includes(name) ? 10 : 0);
+    return Math.max(bestScore, score);
+  }, 0);
+};
+
+const pickClientFromQuestion = ({
+  normalizedQuestion,
+  context,
+}: {
+  normalizedQuestion: string;
+  context: Record<string, unknown>;
+}) => {
+  const snapshot = isObject(context.snapshot) ? context.snapshot : null;
+  const recentClients = getObjectArray(snapshot?.recentClients);
+
+  if (recentClients.length === 0) {
+    return null;
+  }
+
+  const rankedClients = recentClients
+    .map((client) => {
+      const clientName = getString(client.clientName);
+      const billingName = getString(client.billingName);
+      const operationalName = getString(client.operationalName);
+      const score = scoreEntityNames({
+        normalizedQuestion,
+        names: [clientName, billingName, operationalName].filter(
+          (value): value is string => Boolean(value),
+        ),
+      });
+
+      return {
+        client,
+        score,
+      };
+    })
+    .sort((left, right) => right.score - left.score);
+
+  const firstClient = rankedClients[0];
+  const secondClient = rankedClients[1];
+
+  if (!firstClient) {
+    return null;
+  }
+
+  if (
+    firstClient.score > 0 &&
+    (!secondClient || firstClient.score > secondClient.score)
+  ) {
+    return firstClient.client;
   }
 
   return null;
@@ -702,6 +797,8 @@ export const parseUnifiedCrmProjectQuickEpisodeQuestion = ({
     projectId,
     clientId: getString(matchedProject?.clientId),
     projectName,
+    projectCategory: getString(matchedProject?.projectCategory),
+    projectTvShow: getString(matchedProject?.projectTvShow),
     requestedLabel: inferProjectQuickEpisodeRequestedLabel(normalizedQuestion),
     serviceDate: inferDateFromQuestion(
       question,
@@ -734,6 +831,152 @@ export const parseUnifiedCrmProjectQuickEpisodeQuestion = ({
         : hasTravelIntent(normalizedQuestion) && routeSource
           ? buildImplicitTravelRouteCandidates(routeSource)
           : [],
+  };
+};
+
+const inferExpenseTypeFromQuestion = (
+  normalizedQuestion: string,
+): ParsedUnifiedCrmExpenseCreateQuestion["expenseType"] => {
+  if (includesAny(normalizedQuestion, ["nolegg"])) {
+    return "noleggio";
+  }
+
+  if (
+    includesAny(normalizedQuestion, [
+      "material",
+      "attrezz",
+      "acquist",
+      "comprat",
+    ])
+  ) {
+    return "acquisto_materiale";
+  }
+
+  return "altro";
+};
+
+const inferExpenseDescriptionFromQuestion = (
+  question: string,
+  normalizedQuestion: string,
+) => {
+  if (includesAny(normalizedQuestion, ["casell"])) {
+    return "Casello autostradale";
+  }
+
+  if (includesAny(normalizedQuestion, ["pranz"])) {
+    return "Pranzo";
+  }
+
+  if (includesAny(normalizedQuestion, ["cena"])) {
+    return "Cena";
+  }
+
+  if (includesAny(normalizedQuestion, ["carbur", "benzin", "diesel"])) {
+    return "Carburante";
+  }
+
+  if (includesAny(normalizedQuestion, ["nolegg"])) {
+    return "Noleggio";
+  }
+
+  if (includesAny(normalizedQuestion, ["material", "attrezz", "acquist"])) {
+    return "Acquisto materiale";
+  }
+
+  const compactQuestion = question.replace(/\s+/g, " ").trim();
+  const explicitDescription =
+    compactQuestion.match(
+      /\b(?:spesa|costo|uscita)\s+(?:di|per)\s+(.+?)(?=\s+(?:da|di)?\s*(?:€|\d+(?:[.,]\d{1,2})?\s*(?:euro|eur))|[.;,]|$)/i,
+    )?.[1] ??
+    compactQuestion.match(
+      /\b(?:pagamento|pagato)\s+(?:del|di|per)\s+(.+?)(?=\s+(?:€|\d+(?:[.,]\d{1,2})?\s*(?:euro|eur))|[.;,]|$)/i,
+    )?.[1] ??
+    null;
+
+  return explicitDescription?.trim() ?? null;
+};
+
+const inferAmountFromQuestion = (question: string) => {
+  const compactQuestion = question.replace(/\s+/g, " ").trim();
+  const amountMatch =
+    compactQuestion.match(/(?:€|eur(?:o)?)\s*(\d+(?:[.,]\d{1,2})?)/i)?.[1] ??
+    compactQuestion.match(/(\d+(?:[.,]\d{1,2})?)\s*(?:€|eur(?:o)?)/i)?.[1] ??
+    compactQuestion.match(
+      /\b(?:importo|totale|costo|spesa)\s+(?:di\s+)?(\d+(?:[.,]\d{1,2})?)/i,
+    )?.[1] ??
+    null;
+
+  if (!amountMatch) {
+    return null;
+  }
+
+  const normalizedAmount = Number(amountMatch.replace(",", "."));
+  return Number.isFinite(normalizedAmount) ? normalizedAmount : null;
+};
+
+export const parseUnifiedCrmExpenseCreateQuestion = ({
+  question,
+  context,
+}: {
+  question: string;
+  context: Record<string, unknown>;
+}): ParsedUnifiedCrmExpenseCreateQuestion | null => {
+  const normalizedQuestion = normalizeText(question);
+  const mentionsNonKmExpense = includesAny(normalizedQuestion, [
+    "casell",
+    "pranz",
+    "cena",
+    "carbur",
+    "benzin",
+    "diesel",
+    "nolegg",
+    "material",
+    "attrezz",
+    "acquist",
+  ]);
+
+  if (
+    !hasExpenseCreationIntent(normalizedQuestion) ||
+    (hasTravelIntent(normalizedQuestion) && !mentionsNonKmExpense)
+  ) {
+    return null;
+  }
+
+  const matchedProject = pickProjectFromQuestion({
+    normalizedQuestion,
+    context,
+  });
+  const matchedClient =
+    matchedProject == null
+      ? pickClientFromQuestion({
+          normalizedQuestion,
+          context,
+        })
+      : null;
+
+  const clientId =
+    getString(matchedProject?.clientId) ?? getString(matchedClient?.clientId);
+
+  if (!clientId) {
+    return null;
+  }
+
+  return {
+    clientId,
+    projectId: getString(matchedProject?.projectId),
+    clientName:
+      getString(matchedProject?.clientName) ??
+      getString(matchedClient?.clientName),
+    projectName: getString(matchedProject?.projectName),
+    expenseDate: inferDateFromQuestion(
+      question,
+      normalizedQuestion,
+      getBusinessTimezone(context),
+    ),
+    expenseType: inferExpenseTypeFromQuestion(normalizedQuestion),
+    description: inferExpenseDescriptionFromQuestion(question, normalizedQuestion),
+    amount: inferAmountFromQuestion(question),
+    markupPercent: 0,
   };
 };
 
@@ -1112,8 +1355,8 @@ export const buildUnifiedCrmProjectQuickEpisodeAnswerMarkdown = ({
     "## Limiti o prossima azione",
     "- La chat resta read-only: la scrittura reale parte solo dal dialog del progetto con conferma esplicita.",
     estimate != null
-      ? "- Prima di salvare puoi ancora correggere km, tariffa, localita' e note nel dialog."
-      : "- Se i km non sono gia precompilati, usa il calcolatore tratta dentro il dialog prima di confermare.",
+      ? "- Prima di salvare puoi ancora correggere km, tariffa, localita', note e aggiungere spese extra non km come casello o pranzo."
+      : "- Se i km non sono gia precompilati, usa il calcolatore tratta dentro il dialog prima di confermare; nello stesso dialog puoi anche aggiungere spese extra non km.",
   ].join("\n");
 };
 
@@ -1159,8 +1402,8 @@ export const buildUnifiedCrmProjectQuickEpisodeSuggestedActions = ({
       label: `Apri il progetto e registra ${requestedLabelArticle}`,
       description:
         estimate != null
-          ? `Apre il progetto con il dialog ${dialogLabel} gia pronto, precompilato con data, note, localita', chilometri e tariffa km.`
-          : `Apre il progetto con il dialog ${dialogLabel} gia pronto, precompilato con i dettagli letti dalla richiesta.`,
+          ? `Apre il progetto con il dialog ${dialogLabel} gia pronto, precompilato con data, note, localita', chilometri e tariffa km; dentro puoi aggiungere anche spese extra non km.`
+          : `Apre il progetto con il dialog ${dialogLabel} gia pronto, precompilato con i dettagli letti dalla richiesta e con supporto a spese extra non km.`,
       href:
         quickEpisodeHref ?? buildListHref(getRoutePrefix(context), "projects"),
       recommended: true,
@@ -1181,6 +1424,275 @@ export const buildUnifiedCrmProjectQuickEpisodeSuggestedActions = ({
           },
         ]
       : []),
+  ];
+};
+
+export const buildServiceCreateHref = ({
+  context,
+  parsedQuestion,
+  estimate,
+}: {
+  context: Record<string, unknown>;
+  parsedQuestion: ParsedUnifiedCrmProjectQuickEpisodeQuestion;
+  estimate?: UnifiedCrmTravelExpenseEstimate | null;
+}) =>
+  buildCreateHref(getRoutePrefix(context), "services", {
+    project_id: parsedQuestion.projectId,
+    service_date: parsedQuestion.serviceDate,
+    service_type: parsedQuestion.serviceType,
+    km_distance: estimate != null ? String(estimate.totalDistanceKm) : null,
+    km_rate: estimate?.kmRate != null ? String(estimate.kmRate) : null,
+    location:
+      estimate?.destinationQuery ??
+      parsedQuestion.travelRoute?.destination ??
+      undefined,
+    notes: parsedQuestion.notes,
+    launcher_source: "unified_ai_launcher",
+    launcher_action: "service_create",
+  });
+
+export const buildExpenseCreateHref = ({
+  context,
+  parsedQuestion,
+}: {
+  context: Record<string, unknown>;
+  parsedQuestion: ParsedUnifiedCrmExpenseCreateQuestion;
+}) =>
+  buildCreateHref(getRoutePrefix(context), "expenses", {
+    client_id: parsedQuestion.clientId,
+    project_id: parsedQuestion.projectId,
+    expense_date: parsedQuestion.expenseDate,
+    expense_type: parsedQuestion.expenseType,
+    amount:
+      parsedQuestion.amount != null ? String(parsedQuestion.amount) : undefined,
+    markup_percent:
+      parsedQuestion.markupPercent != null
+        ? String(parsedQuestion.markupPercent)
+        : undefined,
+    description: parsedQuestion.description,
+    launcher_source: "unified_ai_launcher",
+    launcher_action: "expense_create",
+  });
+
+export const buildUnifiedCrmServiceCreateAnswerMarkdown = ({
+  parsedQuestion,
+  estimate,
+  linkedExpenseDraft,
+}: {
+  parsedQuestion: ParsedUnifiedCrmProjectQuickEpisodeQuestion;
+  estimate?: UnifiedCrmTravelExpenseEstimate | null;
+  linkedExpenseDraft?: ParsedUnifiedCrmExpenseCreateQuestion | null;
+}) => {
+  const requestedLabel =
+    parsedQuestion.requestedLabel === "puntata"
+      ? "questa puntata"
+      : parsedQuestion.requestedLabel === "servizio"
+        ? "questo servizio"
+        : "questo lavoro";
+  const dateLabel = formatIsoDateForHumans(parsedQuestion.serviceDate);
+  const serviceTypeLabel = getProjectQuickEpisodeServiceTypeLabel(
+    parsedQuestion.serviceType,
+  );
+
+  return [
+    "## Risposta breve",
+    estimate != null
+      ? `Da qui non salvo direttamente, ma ti apro Servizi gia collegato al progetto ${parsedQuestion.projectName} per registrare ${requestedLabel}${dateLabel ? ` del ${dateLabel}` : ""}${serviceTypeLabel ? ` come ${serviceTypeLabel}` : ""}, con ${formatNumber(estimate.totalDistanceKm)} km gia stimati.`
+      : `Da qui non salvo direttamente, ma ti apro Servizi gia collegato al progetto ${parsedQuestion.projectName} per registrare ${requestedLabel}${dateLabel ? ` del ${dateLabel}` : ""}${serviceTypeLabel ? ` come ${serviceTypeLabel}` : ""}.`,
+    "",
+    "## Dati usati",
+    `- Nello snapshot c'e' un progetto attivo compatibile: ${parsedQuestion.projectName}.`,
+    ...(parsedQuestion.notes
+      ? [
+          `- Dalla richiesta ho estratto la nota operativa "${parsedQuestion.notes}".`,
+        ]
+      : []),
+    ...(estimate != null
+      ? [
+          `- Tratta risolta via routing: ${estimate.originLabel} -> ${estimate.destinationLabel}, quindi ${formatNumber(estimate.totalDistanceKm)} km totali.`,
+        ]
+      : []),
+    ...(linkedExpenseDraft?.description
+      ? [
+          `- Ho rilevato anche una spesa extra non km: ${linkedExpenseDraft.description}${linkedExpenseDraft.amount != null ? ` (${formatNumber(linkedExpenseDraft.amount)} EUR)` : ""}.`,
+        ]
+      : []),
+    "",
+    "## Limiti o prossima azione",
+    "- La chat resta read-only: la scrittura reale parte solo dal form Servizi con conferma esplicita.",
+    linkedExpenseDraft
+      ? "- Per la spesa extra non km ti propongo anche Spese gia collegata a cliente/progetto, perche' fuori dal TV non conviene forzare un mega-form unico."
+      : "- Se oltre al servizio devi registrare costi non km, usa la superficie Spese collegata a cliente/progetto.",
+  ].join("\n");
+};
+
+export const buildUnifiedCrmServiceCreateSuggestedActions = ({
+  context,
+  parsedQuestion,
+  estimate,
+  linkedExpenseDraft,
+}: {
+  context: Record<string, unknown>;
+  parsedQuestion: ParsedUnifiedCrmProjectQuickEpisodeQuestion;
+  estimate?: UnifiedCrmTravelExpenseEstimate | null;
+  linkedExpenseDraft?: ParsedUnifiedCrmExpenseCreateQuestion | null;
+}): UnifiedCrmSuggestedAction[] => {
+  const routePrefix = getRoutePrefix(context);
+  const serviceCreateHref = buildServiceCreateHref({
+    context,
+    parsedQuestion,
+    estimate,
+  });
+  const projectHref = buildShowHref(routePrefix, "projects", parsedQuestion.projectId);
+  const linkedExpenseHref = linkedExpenseDraft
+    ? buildExpenseCreateHref({
+        context,
+        parsedQuestion: linkedExpenseDraft,
+      })
+    : null;
+
+  return [
+    {
+      id: "service-create-handoff",
+      kind: "approved_action",
+      resource: "services",
+      capabilityActionId: "service_create",
+      label: "Apri Servizi e registra questo servizio",
+      description:
+        estimate != null
+          ? "Apre il form servizi gia collegato al progetto, precompilato con data, tipo servizio, chilometri, tariffa e note lette dalla richiesta."
+          : "Apre il form servizi gia collegato al progetto, precompilato con i dettagli letti dalla richiesta.",
+      href: serviceCreateHref,
+      recommended: true,
+      recommendationReason:
+        "Consigliata perche fuori dai progetti TV il punto Pareto corretto e' riusare il form Servizi gia approvato, non creare un nuovo workflow dedicato.",
+    },
+    ...(linkedExpenseHref
+      ? [
+          {
+            id: "expense-create-linked-from-service-context",
+            kind: "approved_action" as const,
+            resource: "expenses" as const,
+            capabilityActionId: "expense_create" as const,
+            label: "Registra anche la spesa collegata",
+            description:
+              "Apre il form spese gia precompilato con cliente, progetto e dati base della spesa extra non km emersa dalla richiesta.",
+            href: linkedExpenseHref,
+          },
+        ]
+      : []),
+    ...(projectHref
+      ? [
+          {
+            id: "open-project-from-service-context",
+            kind: "show" as const,
+            resource: "projects" as const,
+            capabilityActionId: "follow_unified_crm_handoff" as const,
+            label: "Apri il progetto senza form",
+            description:
+              "Vai alla scheda progetto se vuoi controllare prima il contesto operativo e finanziario.",
+            href: projectHref,
+          },
+        ]
+      : []),
+  ];
+};
+
+export const buildUnifiedCrmExpenseCreateAnswerMarkdown = ({
+  parsedQuestion,
+}: {
+  parsedQuestion: ParsedUnifiedCrmExpenseCreateQuestion;
+}) => {
+  const targetLabel = parsedQuestion.projectName
+    ? `cliente ${parsedQuestion.clientName ?? "collegato"} e progetto ${parsedQuestion.projectName}`
+    : `cliente ${parsedQuestion.clientName ?? "collegato"}`;
+  const dateLabel = formatIsoDateForHumans(parsedQuestion.expenseDate);
+  const amountLabel =
+    parsedQuestion.amount != null
+      ? ` da ${formatNumber(parsedQuestion.amount)} EUR`
+      : "";
+
+  return [
+    "## Risposta breve",
+    `Da qui non salvo direttamente, ma ti apro Spese gia collegata a ${targetLabel}${parsedQuestion.description ? ` per registrare ${parsedQuestion.description.toLowerCase()}` : " per registrare la spesa"}${amountLabel}${dateLabel ? ` del ${dateLabel}` : ""}.`,
+    "",
+    "## Dati usati",
+    ...(parsedQuestion.projectName
+      ? [
+          `- Ho collegato la spesa al progetto ${parsedQuestion.projectName}, quindi nel form arriveranno sia progetto sia cliente.`,
+        ]
+      : [
+          "- Ho collegato la spesa direttamente al cliente, senza forzare un progetto che non emerge con certezza dalla snapshot.",
+        ]),
+    ...(parsedQuestion.description
+      ? [`- Dalla richiesta ho estratto la descrizione operativa "${parsedQuestion.description}".`]
+      : []),
+    ...(parsedQuestion.amount != null
+      ? [`- Importo letto dalla richiesta: ${formatNumber(parsedQuestion.amount)} EUR.`]
+      : []),
+    "",
+    "## Limiti o prossima azione",
+    "- La chat resta read-only: la scrittura reale parte solo dal form Spese con conferma esplicita.",
+    "- Prima di salvare puoi ancora correggere tipo spesa, importo, data e collegamenti.",
+  ].join("\n");
+};
+
+export const buildUnifiedCrmExpenseCreateSuggestedActions = ({
+  context,
+  parsedQuestion,
+}: {
+  context: Record<string, unknown>;
+  parsedQuestion: ParsedUnifiedCrmExpenseCreateQuestion;
+}): UnifiedCrmSuggestedAction[] => {
+  const routePrefix = getRoutePrefix(context);
+  const expenseCreateHref = buildExpenseCreateHref({
+    context,
+    parsedQuestion,
+  });
+  const projectHref = buildShowHref(routePrefix, "projects", parsedQuestion.projectId);
+  const clientHref = buildShowHref(routePrefix, "clients", parsedQuestion.clientId);
+
+  return [
+    {
+      id: "expense-create-generic-handoff",
+      kind: "approved_action",
+      resource: "expenses",
+      capabilityActionId: "expense_create",
+      label: "Apri Spese e registra questa uscita",
+      description:
+        "Apre il form spese gia precompilato con cliente, progetto se presente, data, tipo, importo e descrizione letti dalla richiesta.",
+      href: expenseCreateHref,
+      recommended: true,
+      recommendationReason:
+        "Consigliata perche usa la superficie Spese gia approvata e mantiene il legame corretto con cliente o cliente+progetto senza inventare nuovi form.",
+    },
+    ...(projectHref
+      ? [
+          {
+            id: "open-project-from-expense-create-context",
+            kind: "show" as const,
+            resource: "projects" as const,
+            capabilityActionId: "follow_unified_crm_handoff" as const,
+            label: "Apri il progetto collegato",
+            description:
+              "Vai alla scheda progetto se vuoi controllare prima il contesto operativo.",
+            href: projectHref,
+          },
+        ]
+      : clientHref
+        ? [
+            {
+              id: "open-client-from-expense-create-context",
+              kind: "show" as const,
+              resource: "clients" as const,
+              capabilityActionId: "follow_unified_crm_handoff" as const,
+              label: "Apri il cliente collegato",
+              description:
+                "Vai alla scheda cliente se vuoi verificare il contesto prima del salvataggio.",
+              href: clientHref,
+            },
+          ]
+        : []),
   ];
 };
 
@@ -1217,6 +1729,14 @@ const buildRecommendedReason = ({
 
   if (suggestion.capabilityActionId === "project_quick_episode") {
     return "Consigliata perche apre il workflow puntata gia approvato sul progetto corretto e lascia all'utente l'ultima conferma prima della scrittura.";
+  }
+
+  if (suggestion.capabilityActionId === "service_create") {
+    return "Consigliata perche riusa il form Servizi gia approvato sul progetto corretto senza introdurre un nuovo workflow separato.";
+  }
+
+  if (suggestion.capabilityActionId === "expense_create") {
+    return "Consigliata perche riusa il form Spese gia approvato con il collegamento corretto a cliente o cliente+progetto.";
   }
 
   if (suggestion.capabilityActionId === "expense_create_km") {

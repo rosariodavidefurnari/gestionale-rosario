@@ -149,6 +149,8 @@ describe("unifiedCrmReadContext", () => {
     expect(context.snapshot.activeProjects[0]?.totalFees).toBe(2200);
     expect(context.snapshot.activeProjects[0]?.totalExpenses).toBe(300);
     expect(context.snapshot.activeProjects[0]?.balanceDue).toBe(2500);
+    expect(context.snapshot.activeProjects[0]?.projectCategory).toBe("wedding");
+    expect(context.snapshot.activeProjects[0]?.projectTvShow).toBeNull();
     expect(context.registries.capability.routing.mode).toBe("hash");
     expect(context.registries.semantic.rules.invoiceImport.customerInvoiceResource).toBe(
       "payments",

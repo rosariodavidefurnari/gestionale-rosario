@@ -48,6 +48,12 @@ describe("crmCapabilityRegistry", () => {
       registry.actions.some((action) => action.id === "client_create_payment"),
     ).toBe(true);
     expect(
+      registry.actions.some((action) => action.id === "service_create"),
+    ).toBe(true);
+    expect(
+      registry.actions.some((action) => action.id === "expense_create"),
+    ).toBe(true);
+    expect(
       registry.actions.some(
         (action) => action.id === "open_unified_ai_launcher",
       ),
@@ -144,6 +150,18 @@ describe("crmCapabilityRegistry", () => {
       registry.actions.find((action) => action.id === "project_quick_payment")
         ?.description,
     ).toContain("importo e stato");
+    expect(
+      registry.actions.find((action) => action.id === "service_create")
+        ?.description,
+    ).toContain("services/create");
+    expect(
+      registry.actions.find((action) => action.id === "expense_create")
+        ?.description,
+    ).toContain("cliente, progetto se presente");
+    expect(
+      registry.actions.find((action) => action.id === "project_quick_episode")
+        ?.sideEffects,
+    ).toContain("crea spese extra se aggiunte nel dialog");
     expect(
       registry.actions.some((action) => action.id === "estimate_travel_route"),
     ).toBe(true);

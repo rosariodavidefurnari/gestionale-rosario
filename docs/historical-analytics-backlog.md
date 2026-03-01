@@ -1465,6 +1465,12 @@ Only after the base is stable:
 - TV work-item creation requests grounded on a real active project may now hand
   off to the approved `project quick episode` flow, but only as a project-level
   destination with explicit confirmation still required there.
+- Non-TV work-item creation requests grounded on a real active project must now
+  hand off to `services/create`, not to the TV quick-episode dialog.
+- Generic non-km expense requests must prefer `expenses/create` with the
+  strongest grounded association available:
+  - `client_id + project_id` when a project is grounded
+  - `client_id` only when no project can be grounded safely
 - The unified launcher question-length limit is currently `1200` characters and
   must remain aligned across both composer variants and the backend validator.
 - Natural-language route wording such as `da ... fino al ...` must stay covered
@@ -1473,9 +1479,9 @@ Only after the base is stable:
   ground itself on the project found in snapshot, but it must not claim that
   the specific service/work item already exists unless that granularity is
   really present in the read context.
-- The generic non-TV `nuovo servizio` case is still open: do not silently route
-  those requests through the TV quick-episode dialog once the project boundary
-  becomes explicit.
+- Outside TV, do not invent a new combined service+expense workflow unless the
+  two-surface Pareto path (`services/create` + `expenses/create`) proves
+  insufficient in real usage.
 
 ## Current Travel-UI Guardrails
 

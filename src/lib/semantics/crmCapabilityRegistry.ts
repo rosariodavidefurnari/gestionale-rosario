@@ -132,7 +132,8 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
     {
       resource: "expenses",
       label: "Spese",
-      description: "Spese operative e rimborsi km collegati ai progetti.",
+      description:
+        "Spese operative e rimborsi km collegati a clienti o progetti.",
       routePatterns: [
         "/#/expenses",
         "/#/expenses/create",
@@ -294,7 +295,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "ask_unified_crm_question",
       label: "Chiedi al CRM nella chat unificata",
       description:
-        "Invia una domanda sul CRM core usando la stessa snapshot mostrata nel launcher e restituisce una risposta grounded con possibili handoff verso route o azioni gia approvate e, in casi stretti, una bozza pagamento modificabile o un calcolo deterministico di trasferta km con handoff precompilato verso `expenses/create`, senza scrivere direttamente nel CRM.",
+        "Invia una domanda sul CRM core usando la stessa snapshot mostrata nel launcher e restituisce una risposta grounded con possibili handoff verso route o azioni gia approvate e, in casi stretti, una bozza pagamento modificabile oppure corridoi deterministici verso `projects/:id/show` per puntate TV, `services/create` per servizi generici e `expenses/create` per spese collegate o trasferta km, senza scrivere direttamente nel CRM.",
       sourceFile: "src/components/atomic-crm/ai/UnifiedAiLauncher.tsx",
       actsOn: ["clients", "quotes", "projects", "payments", "expenses"],
       requiredFields: [
@@ -350,6 +351,26 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
         "description",
       ],
       sideEffects: ["precompila il form spese via search params supportati"],
+    },
+    {
+      id: "expense_create",
+      label: "Registra spesa generica dalla chat unificata",
+      description:
+        "Dalla chat AI unificata apre `expenses/create` gia precompilato con cliente, progetto se presente, data, tipo, importo e descrizione della spesa non km, lasciando comunque la conferma finale all'utente.",
+      sourceFile: "src/components/atomic-crm/expenses/ExpenseCreate.tsx",
+      actsOn: ["expenses", "clients", "projects"],
+      requiredFields: ["client_id", "expense_date", "expense_type"],
+      sideEffects: ["precompila il form spese via search params supportati"],
+    },
+    {
+      id: "service_create",
+      label: "Registra servizio generico dalla chat unificata",
+      description:
+        "Dalla chat AI unificata apre `services/create` gia precompilato sul progetto corretto con data, tipo servizio, chilometri, localita' e note emerse dalla richiesta, senza creare un workflow separato.",
+      sourceFile: "src/components/atomic-crm/services/ServiceCreate.tsx",
+      actsOn: ["services", "projects"],
+      requiredFields: ["project_id", "service_date"],
+      sideEffects: ["precompila il form servizi via search params supportati"],
     },
     {
       id: "suggest_travel_locations",
@@ -466,11 +487,15 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "project_quick_episode",
       label: "Registra puntata TV",
       description:
-        "Crea un servizio e, se necessario, una spesa km dal progetto TV con valori predefiniti.",
+        "Crea un servizio e, se necessario, una spesa km o altre spese operative dal progetto TV con valori predefiniti.",
       sourceFile: "src/components/atomic-crm/projects/QuickEpisodeDialog.tsx",
       actsOn: ["projects", "services", "expenses"],
       requiredFields: ["project_id", "client_id", "service_date"],
-      sideEffects: ["crea servizio", "crea spesa km se km_distance > 0"],
+      sideEffects: [
+        "crea servizio",
+        "crea spesa km se km_distance > 0",
+        "crea spese extra se aggiunte nel dialog",
+      ],
     },
     {
       id: "project_quick_payment",

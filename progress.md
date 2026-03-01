@@ -3419,3 +3419,51 @@ Rischio esplicito lasciato aperto:
 - il caso generico `nuovo servizio` per progetti non TV non passa ancora da
   `services/create`; questa estensione va trattata come slice successiva,
   separata dal handoff TV gia chiuso.
+
+## Sessione 88 (2026-03-01, launcher Pareto per servizi/spese fuori dal TV)
+
+- [x] Chiuso il rischio lasciato aperto nella sessione 87
+  - il caso generico `nuovo servizio` su progetto non TV ora atterra su
+    `services/create`
+  - il launcher non forza piu' il dialog TV quando il progetto attivo e'
+    `wedding`, `spot`, `sviluppo_web` o comunque non TV
+- [x] Handoff generico `service_create`
+  - `unified_crm_answer` distingue ora i progetti TV dai non TV usando anche
+    `projectCategory` e `projectTvShow` nello snapshot read-only
+  - il form `ServiceCreate` legge prefills/search params launcher e mostra un
+    banner contestuale
+  - l'handoff puo' portare `project_id`, `service_date`, `service_type`,
+    `km_distance`, `km_rate`, `location`, `notes`
+- [x] Handoff generico `expense_create`
+  - la chat puo' ora aprire `expenses/create` anche per spese non km
+  - l'associazione segue la regola Pareto richiesta:
+    - se trova un progetto, porta `cliente + progetto`
+    - altrimenti, se trova solo il cliente, porta almeno `cliente`
+  - parsing minimo coperto per casi come:
+    - `casello autostradale`
+    - `pranzo`
+    - `noleggio`
+    - `acquisto materiale`
+    - importi tipo `12,50 euro`
+- [x] TV quick-episode riallineato al nuovo requisito spese
+  - `QuickEpisodeForm` espone ora anche spese extra non km nello stesso
+    salvataggio
+  - `QuickEpisodeDialog` salva davvero:
+    - servizio
+    - spesa km se presente
+    - spese extra aggiunte nel dialog
+  - tutte le spese create dal quick-episode restano collegate a
+    `client_id + project_id`
+- [x] Capability/docs/test riallineati
+  - aggiornati registry capability e tipi AI condivisi
+  - aggiornati `progress.md`, `docs/historical-analytics-handoff.md`,
+    `docs/historical-analytics-backlog.md`, `learnings.md`
+- [x] Validation:
+  - `npm run typecheck`
+  - `npx vitest --run supabase/functions/_shared/unifiedCrmAnswer.test.ts src/components/atomic-crm/expenses/expenseLinking.test.ts src/components/atomic-crm/projects/projectQuickEpisodeLinking.test.ts src/components/atomic-crm/projects/quickEpisodePersistence.test.ts src/components/atomic-crm/services/serviceLinking.test.ts src/lib/semantics/crmCapabilityRegistry.test.ts src/lib/ai/unifiedCrmReadContext.test.ts`
+
+Rischio residuo esplicito:
+
+- fuori dal TV non esiste ancora una superficie unica che salvi servizio e
+  spese insieme; per scelta Pareto restano due handoff approvati separati:
+  `services/create` e `expenses/create`

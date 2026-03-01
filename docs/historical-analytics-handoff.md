@@ -2051,10 +2051,68 @@ Risks kept explicit:
 
 Explicit boundary kept in place:
 
-- the generic non-TV `nuovo servizio` path to `services/create` is still a
-  separate next slice and was not folded into this TV-focused handoff
 - the launcher must not pretend the service already exists in CRM; it only
   prepares the right destination workflow with prefills
+
+## Pareto Service/Expense Handoff Outside TV
+
+- The follow-up Pareto slice is now closed too:
+  - when the launcher matches a real active project but that project is not TV,
+    `nuovo servizio` no longer falls back to the TV quick-episode dialog
+  - the approved destination is now `/#/services/create`
+- The read snapshot now carries the minimum extra project semantics needed for
+  this branch:
+  - `projectCategory`
+  - `projectTvShow`
+- The launcher uses those fields only to choose the already approved surface:
+  - TV project:
+    - `project_quick_episode`
+  - non-TV project:
+    - `service_create`
+- `ServiceCreate` now consumes launcher prefills/search params and shows a
+  banner when the handoff comes from the unified chat.
+- Supported service prefills now include:
+  - `project_id`
+  - `service_date`
+  - `service_type`
+  - optional `km_distance`
+  - optional `km_rate`
+  - optional `location`
+  - optional `notes`
+
+- A second Pareto branch is now closed too for non-km costs:
+  - the launcher can open `/#/expenses/create` as an approved action
+  - capability id:
+    - `expense_create`
+  - the handoff prefers keeping the business link correct over inventing new UI:
+    - if a project is grounded, it carries `client_id + project_id`
+    - otherwise, if only a client is grounded, it carries `client_id`
+- Generic expense parsing stays intentionally narrow and deterministic:
+  - common descriptions such as `casello autostradale`, `pranzo`, `noleggio`,
+    `acquisto materiale`
+  - simple amount extraction such as `12,50 euro`
+  - explicit date extraction when present
+- `ExpenseCreate` already supported those prefills; it now also recognizes the
+  launcher action `expense_create` for banner copy.
+
+- The TV quick-episode flow was hardened in the same pass instead of opening a
+  second TV expense workflow:
+  - `QuickEpisodeForm` now lets the user add extra non-km expenses in the same
+    dialog
+  - `QuickEpisodeDialog` now saves:
+    - the service
+    - the km expense when present
+    - any extra expenses added there
+  - those extra expenses stay linked to the same `client_id + project_id`
+
+Explicit boundary still kept in place:
+
+- outside TV there is still no single surface that saves service + expenses in
+  one confirmation
+- this is intentional Pareto scope control:
+  - reuse approved `services/create`
+  - reuse approved `expenses/create`
+  - do not invent a new mega-form while the business value is already covered
 
 ## Travel Route Auth Stabilization
 

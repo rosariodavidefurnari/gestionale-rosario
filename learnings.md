@@ -10,6 +10,21 @@ Quando supera ~30 voci — consolidare (vedi .claude/rules/session-workflow.md).
 
 ## Learnings
 
+- [2026-03-01] **Quando la chat unificata deve aiutare su lavori e spese, la
+  regola Pareto corretta e' riusare le superfici gia approvate invece di
+  inventare un mega-form trasversale** — Nel CRM Rosario il taglio giusto e':
+  progetti TV sul `quick episode` per salvare insieme servizio + km + spese
+  extra, mentre fuori dal TV la chat deve atterrare su `services/create` e
+  `expenses/create` mantenendo il legame corretto con cliente o
+  cliente+progetto. Contesto: estensione del launcher dopo il primo handoff TV.
+
+- [2026-03-01] **Per gli handoff AI su progetti reali non basta il nome
+  progetto: serve anche la minima semantica che distingua TV da non-TV** — Il
+  launcher non poteva scegliere in modo affidabile tra `project quick episode`
+  e `services/create` finche' lo snapshot read-only non portava anche
+  `projectCategory` e `projectTvShow`. Contesto: chiusura del caso generico
+  `nuovo servizio` senza riaprire ambiguita' sui workflow.
+
 - [2026-03-01] **Nel launcher chat il limite testo va trattato come contratto
   end-to-end, non come dettaglio UI** — Portare solo il `maxLength` del
   textarea non basta: se la function continua a validare un limite piu' basso,

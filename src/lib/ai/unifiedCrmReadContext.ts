@@ -217,6 +217,8 @@ export type UnifiedCrmReadContext = {
       clientId: string | null;
       projectName: string;
       clientName: string | null;
+      projectCategory?: string | null;
+      projectTvShow?: string | null;
       status: string;
       statusLabel: string;
       startDate: string | null;
@@ -410,6 +412,8 @@ export const buildUnifiedCrmReadContext = ({
           clientId: project.client_id ? String(project.client_id) : null,
           projectName: project.name,
           clientName: getClientName(clientById, project.client_id),
+          projectCategory: project.category ?? null,
+          projectTvShow: project.tv_show ?? null,
           status: project.status,
           statusLabel: projectStatusLabels[project.status] ?? project.status,
           startDate: project.start_date ?? null,

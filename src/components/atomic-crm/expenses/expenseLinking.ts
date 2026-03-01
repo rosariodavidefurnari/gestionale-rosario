@@ -19,6 +19,7 @@ type ExpenseCreateDefaults = Partial<
 >;
 
 type UnifiedAiExpenseHandoffAction =
+  | "expense_create"
   | "expense_create_km"
   | "follow_unified_crm_handoff";
 
@@ -55,6 +56,7 @@ const getOptionalExpenseType = (value?: string | null) =>
     : null;
 
 const unifiedAiExpenseHandoffActions = new Set<UnifiedAiExpenseHandoffAction>([
+  "expense_create",
   "expense_create_km",
   "follow_unified_crm_handoff",
 ]);
@@ -151,6 +153,10 @@ export const getUnifiedAiExpenseBannerCopy = (search: string) => {
 
   if (handoff.action === "expense_create_km") {
     return "Aperto dalla chat AI unificata con una trasferta km gia calcolata. Controlla data, chilometri, tariffa e collegamenti prima di salvare; se il punto reale di partenza o arrivo era diverso, correggi qui i km.";
+  }
+
+  if (handoff.action === "expense_create") {
+    return "Aperto dalla chat AI unificata con una spesa gia collegata a cliente o progetto. Controlla tipo, importo, data e collegamenti prima di salvare.";
   }
 
   return "Aperto dalla chat AI unificata: il form e' stato indirizzato qui come superficie spese gia approvata. Verifica i dati prima di salvare.";

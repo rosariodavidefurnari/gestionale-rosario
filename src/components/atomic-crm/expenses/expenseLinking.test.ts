@@ -43,6 +43,14 @@ describe("expenseLinking", () => {
     ).toContain("trasferta km gia calcolata");
   });
 
+  it("builds a launcher banner for generic expense handoff", () => {
+    expect(
+      getUnifiedAiExpenseBannerCopy(
+        "?launcher_source=unified_ai_launcher&launcher_action=expense_create",
+      ),
+    ).toContain("spesa gia collegata");
+  });
+
   it("builds a create path for km travel expenses", () => {
     expect(
       buildExpenseCreatePathFromTravel({

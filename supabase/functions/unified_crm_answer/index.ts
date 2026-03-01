@@ -9,14 +9,19 @@ import {
   getOpenRouteDrivingSummary,
 } from "../_shared/openRouteService.ts";
 import {
+  buildUnifiedCrmExpenseCreateAnswerMarkdown,
+  buildUnifiedCrmExpenseCreateSuggestedActions,
   buildUnifiedCrmProjectQuickEpisodeAnswerMarkdown,
   buildUnifiedCrmProjectQuickEpisodeSuggestedActions,
   buildUnifiedCrmPaymentDraftFromContext,
+  buildUnifiedCrmServiceCreateAnswerMarkdown,
+  buildUnifiedCrmServiceCreateSuggestedActions,
   buildUnifiedCrmTravelExpenseQuestionCandidates,
   buildUnifiedCrmTravelExpenseAnswerMarkdown,
   buildUnifiedCrmTravelExpenseEstimate,
   buildUnifiedCrmTravelExpenseSuggestedActions,
   buildUnifiedCrmSuggestedActions,
+  parseUnifiedCrmExpenseCreateQuestion,
   parseUnifiedCrmProjectQuickEpisodeQuestion,
   type ParsedUnifiedCrmTravelExpenseQuestion,
   validateUnifiedCrmAnswerPayload,
@@ -150,6 +155,10 @@ async function answerUnifiedCrmQuestion(
       question,
       context,
     });
+    const genericExpenseQuestion = parseUnifiedCrmExpenseCreateQuestion({
+      question,
+      context,
+    });
 
     if (quickEpisodeQuestion) {
       const quickEpisodeTravelQuestions = (
@@ -170,6 +179,39 @@ async function answerUnifiedCrmQuestion(
               travelQuestions: quickEpisodeTravelQuestions,
             })
           : null;
+
+      const isTvProject =
+        quickEpisodeQuestion.projectCategory === "produzione_tv" ||
+        quickEpisodeQuestion.projectTvShow !== null;
+
+      if (!isTvProject) {
+        return new Response(
+          JSON.stringify({
+            data: {
+              question,
+              model: travelEstimateResult
+                ? "openrouteservice"
+                : "crm_rule_engine",
+              generatedAt: new Date().toISOString(),
+              answerMarkdown: buildUnifiedCrmServiceCreateAnswerMarkdown({
+                parsedQuestion: quickEpisodeQuestion,
+                estimate: travelEstimateResult?.estimate ?? null,
+                linkedExpenseDraft: genericExpenseQuestion,
+              }),
+              suggestedActions: buildUnifiedCrmServiceCreateSuggestedActions({
+                context,
+                parsedQuestion: quickEpisodeQuestion,
+                estimate: travelEstimateResult?.estimate ?? null,
+                linkedExpenseDraft: genericExpenseQuestion,
+              }),
+              paymentDraft: null,
+            },
+          }),
+          {
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          },
+        );
+      }
 
       return new Response(
         JSON.stringify({
@@ -239,6 +281,29 @@ async function answerUnifiedCrmQuestion(
           },
         );
       }
+    }
+
+    if (genericExpenseQuestion) {
+      return new Response(
+        JSON.stringify({
+          data: {
+            question,
+            model: "crm_rule_engine",
+            generatedAt: new Date().toISOString(),
+            answerMarkdown: buildUnifiedCrmExpenseCreateAnswerMarkdown({
+              parsedQuestion: genericExpenseQuestion,
+            }),
+            suggestedActions: buildUnifiedCrmExpenseCreateSuggestedActions({
+              context,
+              parsedQuestion: genericExpenseQuestion,
+            }),
+            paymentDraft: null,
+          },
+        }),
+        {
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
+      );
     }
 
     if (!openaiApiKey) {

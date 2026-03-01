@@ -25,6 +25,7 @@ export type UnifiedCrmSuggestedAction = {
     | "clients"
     | "quotes"
     | "projects"
+    | "services"
     | "payments"
     | "expenses";
   label: string;
@@ -36,7 +37,9 @@ export type UnifiedCrmSuggestedAction = {
     | "quote_create_payment"
     | "client_create_payment"
     | "project_quick_episode"
+    | "service_create"
     | "project_quick_payment"
+    | "expense_create"
     | "expense_create_km"
     | "follow_unified_crm_handoff";
 };

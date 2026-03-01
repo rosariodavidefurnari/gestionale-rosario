@@ -1,16 +1,23 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildExpenseCreateHref,
   buildProjectQuickEpisodeHref,
+  buildServiceCreateHref,
+  buildUnifiedCrmExpenseCreateAnswerMarkdown,
+  buildUnifiedCrmExpenseCreateSuggestedActions,
   buildUnifiedCrmTravelExpenseQuestionCandidates,
   buildUnifiedCrmProjectQuickEpisodeAnswerMarkdown,
   buildUnifiedCrmProjectQuickEpisodeSuggestedActions,
+  buildUnifiedCrmServiceCreateAnswerMarkdown,
+  buildUnifiedCrmServiceCreateSuggestedActions,
   buildTravelExpenseCreateHref,
   buildUnifiedCrmPaymentDraftFromContext,
   buildUnifiedCrmTravelExpenseAnswerMarkdown,
   buildUnifiedCrmTravelExpenseEstimate,
   buildUnifiedCrmTravelExpenseSuggestedActions,
   buildUnifiedCrmSuggestedActions,
+  parseUnifiedCrmExpenseCreateQuestion,
   parseUnifiedCrmProjectQuickEpisodeQuestion,
   parseUnifiedCrmTravelExpenseQuestion,
   validateUnifiedCrmAnswerPayload,
@@ -509,11 +516,15 @@ describe("unifiedCrmAnswer", () => {
               projectId: "project-viv",
               clientId: "client-1",
               projectName: "Vale il Viaggio",
+              projectCategory: "produzione_tv",
+              projectTvShow: "vale_il_viaggio",
             },
             {
               projectId: "project-other",
               clientId: "client-2",
               projectName: "Wedding Mario",
+              projectCategory: "wedding",
+              projectTvShow: null,
             },
           ],
         },
@@ -529,6 +540,8 @@ describe("unifiedCrmAnswer", () => {
         projectId: "project-viv",
         clientId: "client-1",
         projectName: "Vale il Viaggio",
+        projectCategory: "produzione_tv",
+        projectTvShow: "vale_il_viaggio",
         requestedLabel: "servizio",
         serviceDate: "2026-02-22",
         serviceType: "riprese_montaggio",
@@ -552,6 +565,8 @@ describe("unifiedCrmAnswer", () => {
       projectId: "project-viv",
       clientId: "client-1",
       projectName: "Vale il Viaggio",
+      projectCategory: "produzione_tv",
+      projectTvShow: "vale_il_viaggio",
       requestedLabel: "servizio" as const,
       serviceDate: "2026-02-22",
       serviceType: "riprese_montaggio" as const,
@@ -641,6 +656,164 @@ describe("unifiedCrmAnswer", () => {
         estimate,
       }),
     ).toContain("22/02/2026");
+    expect(
+      buildUnifiedCrmProjectQuickEpisodeAnswerMarkdown({
+        parsedQuestion,
+        estimate,
+      }),
+    ).toContain("spese extra non km");
+  });
+
+  it("builds a generic service handoff for non-tv projects", () => {
+    const parsedQuestion = {
+      projectId: "project-web-1",
+      clientId: "client-9",
+      projectName: "Sito Studio Costa",
+      projectCategory: "sviluppo_web",
+      projectTvShow: null,
+      requestedLabel: "servizio" as const,
+      serviceDate: "2026-03-01",
+      serviceType: "sviluppo_web" as const,
+      notes: "Landing page e aggiornamento form",
+      isRoundTrip: false,
+      travelRoute: null,
+      travelRouteCandidates: [],
+    };
+    const linkedExpenseDraft = {
+      clientId: "client-9",
+      projectId: "project-web-1",
+      clientName: "Studio Costa",
+      projectName: "Sito Studio Costa",
+      expenseDate: "2026-03-01",
+      expenseType: "altro" as const,
+      description: "Pranzo",
+      amount: 18,
+      markupPercent: 0,
+    };
+
+    expect(
+      buildServiceCreateHref({
+        context: {
+          meta: {
+            scope: "crm_read_snapshot",
+            routePrefix: "/#/",
+          },
+        },
+        parsedQuestion,
+      }),
+    ).toBe(
+      "/#/services/create?project_id=project-web-1&service_date=2026-03-01&service_type=sviluppo_web&notes=Landing+page+e+aggiornamento+form&launcher_source=unified_ai_launcher&launcher_action=service_create",
+    );
+
+    const actions = buildUnifiedCrmServiceCreateSuggestedActions({
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          routePrefix: "/#/",
+        },
+      },
+      parsedQuestion,
+      linkedExpenseDraft,
+    });
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        capabilityActionId: "service_create",
+        resource: "services",
+        recommended: true,
+      }),
+    );
+    expect(actions[1]).toEqual(
+      expect.objectContaining({
+        capabilityActionId: "expense_create",
+        resource: "expenses",
+      }),
+    );
+    expect(
+      buildUnifiedCrmServiceCreateAnswerMarkdown({
+        parsedQuestion,
+        linkedExpenseDraft,
+      }),
+    ).toContain("fuori dal TV");
+  });
+
+  it("builds a generic expense handoff linked to client and project", () => {
+    const parsedQuestion = parseUnifiedCrmExpenseCreateQuestion({
+      question:
+        "Mi serve inserire la spesa del casello autostradale da 12,50 euro del 22 febbraio 2026 nel progetto Vale il Viaggio",
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          businessTimezone: "Europe/Rome",
+        },
+        snapshot: {
+          activeProjects: [
+            {
+              projectId: "project-viv",
+              clientId: "client-1",
+              clientName: "Diego Caltabiano",
+              projectName: "Vale il Viaggio",
+              projectCategory: "produzione_tv",
+              projectTvShow: "vale_il_viaggio",
+            },
+          ],
+          recentClients: [],
+        },
+        registries: {
+          semantic: {},
+          capability: {},
+        },
+      },
+    });
+
+    expect(parsedQuestion).toEqual(
+      expect.objectContaining({
+        clientId: "client-1",
+        projectId: "project-viv",
+        projectName: "Vale il Viaggio",
+        expenseDate: "2026-02-22",
+        expenseType: "altro",
+        description: "Casello autostradale",
+        amount: 12.5,
+      }),
+    );
+
+    expect(
+      buildExpenseCreateHref({
+        context: {
+          meta: {
+            scope: "crm_read_snapshot",
+            routePrefix: "/#/",
+          },
+        },
+        parsedQuestion: parsedQuestion!,
+      }),
+    ).toContain(
+      "/#/expenses/create?client_id=client-1&project_id=project-viv&expense_date=2026-02-22&expense_type=altro",
+    );
+
+    const actions = buildUnifiedCrmExpenseCreateSuggestedActions({
+      context: {
+        meta: {
+          scope: "crm_read_snapshot",
+          routePrefix: "/#/",
+        },
+      },
+      parsedQuestion: parsedQuestion!,
+    });
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        capabilityActionId: "expense_create",
+        resource: "expenses",
+        recommended: true,
+      }),
+    );
+    expect(
+      buildUnifiedCrmExpenseCreateAnswerMarkdown({
+        parsedQuestion: parsedQuestion!,
+      }),
+    ).toContain("cliente Diego Caltabiano e progetto Vale il Viaggio");
   });
 
   it("builds a travel-expense handoff and answer grounded on routing data", () => {

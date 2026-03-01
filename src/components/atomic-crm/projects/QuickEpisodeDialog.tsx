@@ -20,6 +20,10 @@ import {
 } from "./QuickEpisodeForm";
 import { getUnifiedAiHandoffContextFromSearch } from "../payments/paymentLinking";
 import { getProjectQuickEpisodeDefaultsFromSearch } from "./projectQuickEpisodeLinking";
+import {
+  buildQuickEpisodeExpenseCreateData,
+  buildQuickEpisodeServiceCreateData,
+} from "./quickEpisodePersistence";
 
 interface QuickEpisodeDialogProps {
   record: Project;
@@ -105,39 +109,24 @@ export const QuickEpisodeDialog = ({ record }: QuickEpisodeDialogProps) => {
       await create(
         "services",
         {
-          data: {
-            project_id: record.id,
-            service_date: data.service_date,
-            is_taxable: true,
-            service_type: data.service_type,
-            fee_shooting: data.fee_shooting,
-            fee_editing: data.fee_editing,
-            fee_other: data.fee_other,
-            discount: 0,
-            km_distance: data.km_distance,
-            km_rate: data.km_rate,
-            location: data.location || null,
-            notes: data.notes || null,
-          },
+          data: buildQuickEpisodeServiceCreateData({
+            record,
+            data,
+          }),
         },
         { returnPromise: true },
       );
 
-      if (data.km_distance > 0) {
+      const expensePayloads = buildQuickEpisodeExpenseCreateData({
+        record,
+        data,
+      });
+
+      for (const expensePayload of expensePayloads) {
         await create(
           "expenses",
           {
-            data: {
-              project_id: record.id,
-              client_id: record.client_id,
-              expense_date: data.service_date,
-              expense_type: "spostamento_km",
-              km_distance: data.km_distance,
-              km_rate: data.km_rate,
-              description: data.location
-                ? `Spostamento — ${data.location}`
-                : "Spostamento",
-            },
+            data: expensePayload,
           },
           { returnPromise: true },
         );
