@@ -125,13 +125,15 @@ async function createMissingTasks(
 
 async function notifyImminent(
   upcomingDeadlines: FiscalDeadline[],
+  hasRealData: boolean,
 ): Promise<boolean> {
   const imminent = upcomingDeadlines.filter((d) => d.daysUntil <= NOTIFY_DAYS);
   if (imminent.length === 0) return false;
 
   const message = buildDeadlineNotificationMessage(imminent);
   const n = imminent.length;
-  const subject = `⏰ ${n} scadenz${n === 1 ? "a" : "e"} fiscali stimate entro ${NOTIFY_DAYS} giorni`;
+  const qualifier = hasRealData ? "" : " stimate";
+  const subject = `⏰ ${n} scadenz${n === 1 ? "a" : "e"} fiscal${n === 1 ? "e" : "i"}${qualifier} entro ${NOTIFY_DAYS} giorni`;
 
   const result = await notifyOwner(subject, message);
   console.warn("fiscal_deadline_check.notification", {
@@ -154,6 +156,65 @@ const logFiscalWarnings = (warnings: FiscalWarning[]) => {
     });
   }
 };
+
+// ── Phase 2: overlay real obligations ─────────────────────────────────
+
+async function applyRealObligations(
+  deadlines: FiscalDeadline[],
+  paymentYear: number,
+): Promise<{ patched: FiscalDeadline[]; hasRealData: boolean }> {
+  // 1. Load obligations for payment year
+  const { data: obligations } = await supabaseAdmin
+    .from("fiscal_obligations")
+    .select("*")
+    .eq("payment_year", paymentYear);
+
+  if (!obligations || obligations.length === 0) {
+    return { patched: deadlines, hasRealData: false };
+  }
+
+  // 2. Load payment lines for those obligations
+  const obligationIds = obligations.map((o: any) => o.id);
+  const { data: paymentLines } = await supabaseAdmin
+    .from("fiscal_f24_payment_lines_enriched")
+    .select("*")
+    .in("obligation_id", obligationIds);
+
+  // 3. Build paid amounts map by obligation_id
+  const paidByObligation = new Map<string, number>();
+  for (const line of paymentLines ?? []) {
+    const current = paidByObligation.get(line.obligation_id) ?? 0;
+    paidByObligation.set(line.obligation_id, current + Number(line.amount));
+  }
+
+  // 4. Build merge map: key → remaining amount
+  const realAmounts = new Map<string, number>();
+  for (const obl of obligations) {
+    const key = `${obl.component}::${obl.competence_year}::${obl.due_date}`;
+    const paid = paidByObligation.get(obl.id) ?? 0;
+    const remaining = Math.max(0, Number(obl.amount) - paid);
+    realAmounts.set(key, remaining);
+  }
+
+  // 5. Patch deadlines with real remaining amounts
+  const patched = deadlines.map((deadline) => {
+    const patchedItems = deadline.items.map((item) => {
+      if (item.competenceYear == null) return item;
+      const key = `${item.component}::${item.competenceYear}::${deadline.date}`;
+      const realRemaining = realAmounts.get(key);
+      if (realRemaining != null) {
+        return { ...item, amount: realRemaining };
+      }
+      return item;
+    });
+    const totalAmount = patchedItems.reduce((sum, item) => sum + item.amount, 0);
+    const roundedTotal =
+      Math.round((totalAmount + Number.EPSILON) * 100) / 100;
+    return { ...deadline, items: patchedItems, totalAmount: roundedTotal };
+  });
+
+  return { patched, hasRealData: true };
+}
 
 // ── Orchestrator ──────────────────────────────────────────────────────
 
@@ -184,26 +245,31 @@ async function runFiscalDeadlineCheck(): Promise<CheckResult> {
   const deadlines = computation.schedule.deadlines;
   logFiscalWarnings(computation.warnings);
 
-  const upcoming = deadlines.filter(
-    (d) => !d.isPast && d.daysUntil <= TASK_REMINDER_DAYS,
+  // Phase 2: overlay real obligations on estimated deadlines
+  const { patched: realityAwareDeadlines, hasRealData } =
+    await applyRealObligations(deadlines, currentYear);
+
+  // Exclude fully-paid deadlines (totalAmount === 0 with real data)
+  const upcoming = realityAwareDeadlines.filter(
+    (d) => !d.isPast && d.daysUntil <= TASK_REMINDER_DAYS && d.totalAmount > 0,
   );
   if (upcoming.length === 0) {
     return {
       deadlinesFound: deadlines.length,
       tasksCreated: 0,
       notificationSent: false,
-      details: `${deadlines.length} deadlines found, none within ${TASK_REMINDER_DAYS} days${computation.warnings.length > 0 ? `, ${computation.warnings.length} warning(s)` : ""}`,
+      details: `${deadlines.length} deadlines found, none within ${TASK_REMINDER_DAYS} days${hasRealData ? " (real obligations applied)" : ""}${computation.warnings.length > 0 ? `, ${computation.warnings.length} warning(s)` : ""}`,
     };
   }
 
   const { created, needed } = await createMissingTasks(upcoming, currentYear);
-  const notificationSent = await notifyImminent(upcoming);
+  const notificationSent = await notifyImminent(upcoming, hasRealData);
 
   return {
     deadlinesFound: deadlines.length,
     tasksCreated: created,
     notificationSent,
-    details: `${upcoming.length} upcoming, ${needed} new tasks needed, ${created} created${notificationSent ? ", notification sent" : ""}${computation.warnings.length > 0 ? `, ${computation.warnings.length} warning(s)` : ""}`,
+    details: `${upcoming.length} upcoming, ${needed} new tasks needed, ${created} created${hasRealData ? " (real obligations applied)" : ""}${notificationSent ? ", notification sent" : ""}${computation.warnings.length > 0 ? `, ${computation.warnings.length} warning(s)` : ""}`,
   };
 }
 
