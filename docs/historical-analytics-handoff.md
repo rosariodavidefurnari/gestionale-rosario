@@ -8,6 +8,36 @@ prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
 Last updated: 2026-04-02 (fiscal reality layer Phase 2 complete)
 
+## Update 2026-04-02 — Fiscal deadlines: weekend -> next business day
+
+Reconciling real fiscal dates from Fabio Capizzi surfaced a domain bug:
+estimated deadlines and declaration-generated obligations kept raw `30/11` and
+`31/05` even when those dates fell on Saturday/Sunday. The system now applies a
+shared `shiftWeekendToNextBusinessDay()` helper in both runtimes:
+
+- `src/lib/dateTimezone.ts`
+- `supabase/functions/_shared/dateTimezone.ts`
+
+Consumers updated:
+
+- `src/components/atomic-crm/dashboard/fiscalDeadlines.ts`
+- `src/components/atomic-crm/dashboard/buildObligationsFromDeclaration.ts`
+- `supabase/functions/_shared/fiscalDeadlineCalculation.ts`
+
+Behavioral effect:
+
+- `2024-11-30` -> `2024-12-02`
+- `2025-11-30` -> `2025-12-01`
+- `2026-05-31` -> `2026-06-01`
+
+Coverage:
+
+- client `dateTimezone.test.ts`
+- `_shared/dateTimezone.test.ts`
+- `buildObligationsFromDeclaration.test.ts`
+- `fiscalModel.test.ts`
+- `_shared/fiscalDeadlineCalculation.test.ts`
+
 ## Phase 2 — DONE
 
 `fiscal_deadline_check` now reads real obligations from `fiscal_obligations`

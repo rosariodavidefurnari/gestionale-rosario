@@ -2,6 +2,7 @@ import {
   diffBusinessDays,
   formatBusinessDate,
   getBusinessYear,
+  shiftWeekendToNextBusinessDay,
   startOfBusinessDayISOString,
 } from "./dateTimezone.ts";
 
@@ -566,10 +567,19 @@ const buildLowPriorityDeadlines = (
   const deadlines: FiscalDeadline[] = [];
 
   const bolloQuarters = [
-    { date: isoDate(paymentYear, 5, 31), label: "Bollo Q1 (gen-mar)" },
+    {
+      date: shiftWeekendToNextBusinessDay(isoDate(paymentYear, 5, 31)),
+      label: "Bollo Q1 (gen-mar)",
+    },
     { date: isoDate(paymentYear, 9, 30), label: "Bollo Q2 (apr-giu)" },
-    { date: isoDate(paymentYear, 11, 30), label: "Bollo Q3 (lug-set)" },
-    { date: isoDate(paymentYear + 1, 2, 28), label: "Bollo Q4 (ott-dic)" },
+    {
+      date: shiftWeekendToNextBusinessDay(isoDate(paymentYear, 11, 30)),
+      label: "Bollo Q3 (lug-set)",
+    },
+    {
+      date: shiftWeekendToNextBusinessDay(isoDate(paymentYear + 1, 2, 28)),
+      label: "Bollo Q4 (ott-dic)",
+    },
   ];
 
   for (const bollo of bolloQuarters) {
@@ -755,7 +765,7 @@ export const buildFiscalPaymentSchedule = ({
       highPriorityDeadlines.push(
         makeDeadline({
           paymentYear,
-          date: isoDate(paymentYear, 6, 30),
+          date: shiftWeekendToNextBusinessDay(isoDate(paymentYear, 6, 30)),
           label: "Saldo + 1° Acconto",
           items: juneItems,
           priority: "high",
@@ -768,7 +778,7 @@ export const buildFiscalPaymentSchedule = ({
       highPriorityDeadlines.push(
         makeDeadline({
           paymentYear,
-          date: isoDate(paymentYear, 11, 30),
+          date: shiftWeekendToNextBusinessDay(isoDate(paymentYear, 11, 30)),
           label: "2° Acconto",
           items: currentAdvancePlan.novemberItems,
           priority: "high",

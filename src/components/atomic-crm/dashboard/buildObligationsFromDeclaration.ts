@@ -1,6 +1,7 @@
 import type { FiscalDeadlineComponent } from "./fiscalModelTypes";
 import type { FiscalDeclaration, FiscalObligationSource } from "./fiscalRealityTypes";
 import { roundFiscalOutput } from "./roundFiscalOutput";
+import { shiftWeekendToNextBusinessDay } from "@/lib/dateTimezone";
 
 // ── Threshold constants (same as fiscalDeadlines.ts) ─────────────────────────
 
@@ -42,8 +43,8 @@ export const buildObligationsFromDeclaration = (
 ): ObligationDraft[] => {
   const T = declaration.tax_year;
   const paymentYear = T + 1;
-  const june30 = `${paymentYear}-06-30`;
-  const november30 = `${paymentYear}-11-30`;
+  const june30 = shiftWeekendToNextBusinessDay(`${paymentYear}-06-30`);
+  const november30 = shiftWeekendToNextBusinessDay(`${paymentYear}-11-30`);
 
   const { id: declarationId } = declaration;
   const {

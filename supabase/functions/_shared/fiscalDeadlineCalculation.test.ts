@@ -292,10 +292,10 @@ describe("buildFiscalReminderComputation", () => {
     });
 
     const juneDeadline = computation.schedule.deadlines.find(
-      (deadline) => deadline.date === "2024-06-30",
+      (deadline) => deadline.date === "2024-07-01",
     );
     const novemberDeadline = computation.schedule.deadlines.find(
-      (deadline) => deadline.date === "2024-11-30",
+      (deadline) => deadline.date === "2024-12-02",
     );
 
     expect(computation.schedule.isFirstYear).toBe(false);
@@ -361,6 +361,22 @@ describe("buildFiscalReminderComputation", () => {
       "imposta_acconto_2",
       "inps_acconto_2",
     ]);
+  });
+
+  it("shifts weekend-only fiscal deadlines to the next business day", () => {
+    const computation = buildFiscalReminderComputation({
+      config: fiscalConfig,
+      payments: [],
+      projects: [],
+      paymentYear: 2026,
+      todayIso: "2026-01-15",
+    });
+
+    expect(
+      computation.schedule.deadlines.find(
+        (deadline) => deadline.label === "Bollo Q1 (gen-mar)",
+      )?.date,
+    ).toBe("2026-06-01");
   });
 
   it("zero-clamps residual saldo when prior advances exceed the annual estimate", () => {
@@ -436,11 +452,11 @@ describe("reminder outputs", () => {
     });
 
     const juneDeadline = computation.schedule.deadlines.find(
-      (deadline) => deadline.date === "2024-06-30",
+      (deadline) => deadline.date === "2024-07-01",
     );
     const payloads = buildTaskPayloads(juneDeadline ? [juneDeadline] : []);
 
-    expect(payloads[0]?.due_date).toBe("2024-06-29T22:00:00.000Z");
+    expect(payloads[0]?.due_date).toBe("2024-06-30T22:00:00.000Z");
     expect(payloads[0]?.type).toBe("f24");
     expect(payloads[0]?.text).toContain("(stimato)");
   });
@@ -460,14 +476,14 @@ describe("reminder outputs", () => {
     });
 
     const juneDeadline = computation.schedule.deadlines.find(
-      (deadline) => deadline.date === "2024-06-30",
+      (deadline) => deadline.date === "2024-07-01",
     );
     const message = buildDeadlineNotificationMessage(
       juneDeadline ? [juneDeadline] : [],
     );
 
     expect(message).toContain("Scadenze fiscali stimate in arrivo:");
-    expect(message).toContain("30 giugno 2024");
+    expect(message).toContain("1 luglio 2024");
     expect(message).toContain("Saldo + 1° Acconto");
   });
 

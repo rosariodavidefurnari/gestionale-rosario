@@ -876,4 +876,29 @@ describe("fiscal payment schedule", () => {
 
     expect(reorderedKey).toBe(buildFiscalDeadlineKey(juneDeadline));
   });
+
+  it("shifts fiscal deadlines that fall on weekends to the next business day", () => {
+    const schedule = buildFiscalPaymentSchedule({
+      paymentYear: 2025,
+      basisEstimate: {
+        taxYear: 2024,
+        annualInpsEstimate: 500,
+        annualSubstituteTaxEstimate: 100,
+      },
+      priorAdvancePlan: buildAdvancePlanFromEstimate({
+        estimate: {
+          taxYear: 2023,
+          annualInpsEstimate: 300,
+          annualSubstituteTaxEstimate: 80,
+        },
+      }),
+      annoInizioAttivita: 2023,
+      todayIso: "2025-01-15",
+    });
+
+    expect(
+      schedule.deadlines.find((deadline) => deadline.label === "2° Acconto")
+        ?.date,
+    ).toBe("2025-12-01");
+  });
 });

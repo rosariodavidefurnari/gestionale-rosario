@@ -8,6 +8,7 @@ import {
   getBusinessMonthIndex,
   getBusinessMonthKey,
   getBusinessYear,
+  shiftWeekendToNextBusinessDay,
   startOfBusinessDayISOString,
   todayISODate,
   toBusinessISODate,
@@ -100,6 +101,20 @@ describe("business date parts", () => {
 describe("addDaysToISODate", () => {
   it("adds calendar days without leaking timezone", () => {
     expect(addDaysToISODate("2026-03-05", 7)).toBe("2026-03-12");
+  });
+});
+
+describe("shiftWeekendToNextBusinessDay", () => {
+  it("moves Saturday deadlines to Monday", () => {
+    expect(shiftWeekendToNextBusinessDay("2024-11-30")).toBe("2024-12-02");
+  });
+
+  it("moves Sunday deadlines to Monday", () => {
+    expect(shiftWeekendToNextBusinessDay("2025-11-30")).toBe("2025-12-01");
+  });
+
+  it("keeps weekday deadlines unchanged", () => {
+    expect(shiftWeekendToNextBusinessDay("2024-02-29")).toBe("2024-02-29");
   });
 });
 

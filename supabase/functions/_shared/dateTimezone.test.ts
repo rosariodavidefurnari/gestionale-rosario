@@ -3,6 +3,7 @@ import {
   addDaysToISODate,
   BUSINESS_TIMEZONE,
   diffBusinessDays,
+  shiftWeekendToNextBusinessDay,
   toISODate,
   formatDateInTimezone,
   getBusinessYear,
@@ -75,6 +76,20 @@ describe("getBusinessYear", () => {
 describe("addDaysToISODate", () => {
   it("adds days to ISO date strings without runtime timezone drift", () => {
     expect(addDaysToISODate("2026-05-31", 1)).toBe("2026-06-01");
+  });
+});
+
+describe("shiftWeekendToNextBusinessDay", () => {
+  it("moves Saturday deadlines to Monday", () => {
+    expect(shiftWeekendToNextBusinessDay("2024-11-30")).toBe("2024-12-02");
+  });
+
+  it("moves Sunday deadlines to Monday", () => {
+    expect(shiftWeekendToNextBusinessDay("2025-11-30")).toBe("2025-12-01");
+  });
+
+  it("keeps weekdays unchanged", () => {
+    expect(shiftWeekendToNextBusinessDay("2024-02-29")).toBe("2024-02-29");
   });
 });
 

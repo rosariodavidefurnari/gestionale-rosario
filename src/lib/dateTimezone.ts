@@ -20,6 +20,8 @@ const isoDateToUtcProbe = (isoDate: string): Date => {
   return new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
 };
 
+const getIsoWeekday = (isoDate: string): number => isoDateToUtcProbe(isoDate).getUTCDay();
+
 const toUtcDayNumber = (isoDate: string): number => {
   const [year, month, day] = isoDate.split("-").map(Number);
   return Date.UTC(year, month - 1, day) / (1000 * 60 * 60 * 24);
@@ -108,6 +110,14 @@ export const addDaysToISODate = (isoDate: string, days: number): string => {
   const probe = isoDateToUtcProbe(isoDate);
   probe.setUTCDate(probe.getUTCDate() + days);
   return toUtcISODate(probe);
+};
+
+/** Move Saturday/Sunday deadlines to the next Monday. */
+export const shiftWeekendToNextBusinessDay = (isoDate: string): string => {
+  const weekday = getIsoWeekday(isoDate);
+  if (weekday === 6) return addDaysToISODate(isoDate, 2);
+  if (weekday === 0) return addDaysToISODate(isoDate, 1);
+  return isoDate;
 };
 
 /** Date-like value → business year in Europe/Rome. */

@@ -8,6 +8,28 @@ incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 
 Last updated: 2026-04-02 (fiscal truth / Gestione Separata parity)
 
+## Update 2026-04-02 — Fiscal weekend date parity
+
+Slice completata: `weekend -> next business day parity for fiscal deadlines`.
+
+Deliverable chiusi:
+
+- helper condiviso `shiftWeekendToNextBusinessDay()` aggiunto nei moduli
+  `dateTimezone` client + Edge Function
+- scadenze fiscali stimate allineate al primo giorno lavorativo successivo
+  quando `31/05`, `30/11` o `28/02` cadono nel weekend
+- obligations auto-generate da dichiarazione riallineate alla stessa regola
+- casi reali coperti nei test:
+  - `2024-12-02`
+  - `2025-12-01`
+  - `2026-06-01`
+
+Motivazione:
+
+- la riconciliazione con le scadenze reali inviate dal commercialista mostrava
+  drift tra modello e realtà: il CRM teneva la data “nominale” del calendario
+  fiscale, mentre l’F24 reale slitta al primo giorno lavorativo successivo.
+
 ## Update 2026-04-02 — Fiscal truth / Gestione Separata
 
 Slice completata: `dashboard + Edge Function fiscal truth parity`.

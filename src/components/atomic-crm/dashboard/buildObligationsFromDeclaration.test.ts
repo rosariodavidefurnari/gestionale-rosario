@@ -70,13 +70,13 @@ describe("buildObligationsFromDeclaration", () => {
       expect(acc1!.competence_year).toBe(2025);
     });
 
-    it("generates imposta_acconto_2 (50%) on November 30 when tax > 257.52", () => {
+    it("generates imposta_acconto_2 (50%) on the next business day when November 30 falls on a weekend", () => {
       const decl = makeDeclaration({ total_substitute_tax: 400 });
       const obligations = buildObligationsFromDeclaration(decl);
       const acc2 = obligations.find((o) => o.component === "imposta_acconto_2");
 
       expect(acc2).toBeDefined();
-      expect(acc2!.due_date).toBe("2025-11-30");
+      expect(acc2!.due_date).toBe("2025-12-01");
       expect(acc2!.amount).toBe(200);
       expect(acc2!.competence_year).toBe(2025);
     });
@@ -105,7 +105,7 @@ describe("buildObligationsFromDeclaration", () => {
   });
 
   describe("single acconto — €51.65 <= tax <= €257.52", () => {
-    it("generates imposta_acconto_unico (100%) on November 30 when 51.65 <= tax <= 257.52", () => {
+    it("generates imposta_acconto_unico (100%) on the next business day when November 30 falls on a weekend", () => {
       const decl = makeDeclaration({ total_substitute_tax: 100 });
       const obligations = buildObligationsFromDeclaration(decl);
       const accUnico = obligations.find(
@@ -113,7 +113,7 @@ describe("buildObligationsFromDeclaration", () => {
       );
 
       expect(accUnico).toBeDefined();
-      expect(accUnico!.due_date).toBe("2025-11-30");
+      expect(accUnico!.due_date).toBe("2025-12-01");
       expect(accUnico!.amount).toBe(100);
       expect(accUnico!.competence_year).toBe(2025);
     });
@@ -184,13 +184,13 @@ describe("buildObligationsFromDeclaration", () => {
       expect(acc1!.competence_year).toBe(2025);
     });
 
-    it("generates inps_acconto_2 (40%) on November 30 when INPS > 0", () => {
+    it("generates inps_acconto_2 (40%) on the next business day when November 30 falls on a weekend", () => {
       const decl = makeDeclaration({ total_inps: 500 });
       const obligations = buildObligationsFromDeclaration(decl);
       const acc2 = obligations.find((o) => o.component === "inps_acconto_2");
 
       expect(acc2).toBeDefined();
-      expect(acc2!.due_date).toBe("2025-11-30");
+      expect(acc2!.due_date).toBe("2025-12-01");
       expect(acc2!.amount).toBe(200);
       expect(acc2!.competence_year).toBe(2025);
     });

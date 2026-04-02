@@ -59,6 +59,7 @@
 | **Workflow** | WF-10 | Fix timezone → sweep consumer date-only   |
 | **Workflow** | WF-11 | Full E2E rossa → triage prima, patch dopo |
 | **Workflow** | WF-12 | Guardrail shell → non mangiare failure    |
+| **Workflow** | WF-13 | Scadenze fiscali weekend → shift business |
 | **Dominio**  | DOM-5 | Fiscale due layer → check entrambi        |
 
 ---
@@ -352,6 +353,19 @@ chiudere con `|| true` che assorbe anche il failure del controllo reale
 **Perché**: `.husky/pre-commit` sembrava validare `check-learning-integrity`,
 ma il pattern `grep -q ... && node ... || true` lasciava passare comunque i
 failure veri dello script
+
+### WF-13: Scadenze fiscali nel weekend -> shift al primo business day
+
+**Quando**: tocco calendarizzazione fiscale, `fiscalDeadlines`,
+`buildObligationsFromDeclaration`, `_shared/fiscalDeadlineCalculation` o
+inserisco dati reali F24/dichiarazioni
+**Fare**: verificare se la data nominale cade di sabato/domenica e usare il
+helper condiviso `shiftWeekendToNextBusinessDay()` (client +
+`supabase/functions/_shared`). Aggiungere test espliciti sui casi reali.
+**Perché**: il calendario fiscale reale non resta al `30/11`/`31/05` se il
+giorno e' nel weekend. Dai dati del commercialista: `30/11/2024 -> 02/12/2024`,
+`30/11/2025 -> 01/12/2025`, `31/05/2026 -> 01/06/2026`. Senza shift il CRM
+mostra scadenze false e disallinea dashboard, F24 registrati e reminder.
 
 ### WF-9: Business date UI -> smoke cross-timezone reale
 
