@@ -15,6 +15,13 @@ Stato del documento:
 
 ## Changelog
 
+- 2026-04-02: Fiscal reality layer Phase 1 step 8 — UI entry dialogs: `DichiarazioneEntryDialog` (upsert + regenerate obligations, divergence warning), `F24RegistrationDialog` (checklist of deadline obligations, resolve IDs at submit), `ObligationEntryDialog` (manual source, no declaration). Trigger buttons in `DashboardAnnual` fiscal header; `DashboardDeadlinesCard` shows Phase 1 inconsistency note when `hasRealFiscalData` is true.
+- 2026-04-02: Fiscal reality layer Phase 1 step 7 — All dashboard consumers (`DashboardAnnual`, `MobileDashboard`) now call `useFiscalReality` and pass `deadlineViews` + `totalOpenObligations` to children. `DashboardDeadlinesCard` renders reality-aware view with source-aware status badges and F24 registration callback when `deadlineViews` is provided, legacy `schedule` path preserved for backward compat. `DashboardNetAvailabilityCard` uses `totalOpenObligations` for tax reserve when available. `DashboardKpiCards` threads the new prop. `MobileFiscalKpis` shows remaining amount and paid info from deadline views.
+- 2026-04-02: Fiscal reality layer Phase 1 step 6 — `useFiscalReality` hook added in `dashboard/`; single fetch+merge entrypoint for fiscal reality consumers; fetches obligations and enriched payment lines via year-scoped `useQuery` keys, calls `buildFiscalRealityAwareSchedule` via `useMemo`, returns `deadlineViews: null` while loading so consumers can gate on readiness; derives `totalOpenObligations` (sum of `remainingAmount` across all deadline view items) and `hasRealFiscalData` (`obligations.length > 0`).
+- 2026-04-02: Fiscal reality layer Phase 1 step 5 — `fiscalRealityProvider.ts` adds 10 closure-based provider methods for fiscal CRUD (declarations, obligations, F24 submissions/payment lines, regeneration, declaration delete). All reads are year-scoped via DB-side filters. `getEnrichedPaymentLinesForYear` uses two-step query (obligation IDs by payment_year, then lines by obligation_id). `regenerateDeclarationObligations` and `deleteFiscalDeclaration` return structured `BlockedObligation[]` results. Merged into `dataProvider.ts` via `buildFiscalRealityProviderMethods()`. Dead code in `updateFiscalObligation` removed post-review.
+- 2026-04-02: Fiscal reality layer Phase 1 step 4 — `buildFiscalRealityAwareSchedule` read model merges estimated deadlines with real obligations via UNION+merge by canonical key (`component::competenceYear::dueDate`). Handles estimate-only, obligation-only (manual/standalone), mixed sources, partial/full/over payments, deterministic component sort order, and priority-then-date deadline sort. 11 unit tests cover all status derivations, real-only deadlines, `estimateComparison`, and totals.
+- 2026-04-02: Fiscal reality layer Phase 1 step 2 — `buildObligationsFromDeclaration` pure function converts a `FiscalDeclaration` into `ObligationDraft[]` (omits server fields `id`, `created_at`, `updated_at`, `user_id`). Rules: saldo clamped ≥0, imposta double/single/no acconto based on thresholds (€257.52/€51.65), INPS 40%×2 when >0, zero-amount obligations not emitted, all rounded via `roundFiscalOutput`; 25 unit tests; no DB write or UI wiring in this step.
+- 2026-04-02: Fiscal reality layer — TypeScript types for 4 DB tables (`fiscal_declarations`, `fiscal_obligations`, `fiscal_f24_submissions`, `fiscal_f24_payment_lines`) and read model types (`FiscalDeadlineView`, `FiscalDeadlineViewItem`) added in `fiscalRealityTypes.ts`; no runtime change, type-only foundation for Phase 1.
 - 2026-04-02: Fiscal truth refactor (Gestione Separata) — the fiscal dashboard and `fiscal_deadline_check` now use a two-lane contract: `FiscalYearEstimate` for selected tax year `Y` and `FiscalPaymentSchedule` for payment year `Y`, built from estimate `Y-1` plus advance plan `Y-2`. Added explicit fallback config `fiscalConfig.defaultTaxProfileAtecoCode` (default `731102`, ATECO `73.11.02`), `UNMAPPED_TAX_PROFILE` warnings on dashboard and Edge Function, canonical rounding via pure helpers, and safe-first net availability: device-local "segnato come pagato" stays reminder-only and no longer alters reserve math. Desktop/mobile and client/server parity are covered by dedicated fiscal tests.
 - 2026-04-02: unified_crm_answer create-flow split — the old monolithic `_shared/unifiedCrmAnswerCreateFlows.ts` is now a thin barrel that re-exports per-intent modules (`TravelExpense`, `ProjectQuickEpisode`, `ServiceCreate`, `ExpenseCreate`, `InvoiceDraft`) plus a small shared helper file; this is a structural hardening only, meant to keep ESLint `max-lines` / `complexity` guardrails enforceable without changing AI handoff behavior.
 - 2026-04-01: AI snapshot expense detail fix — `unifiedCrmReadContext` now serializes per-project `expenses` alongside `services` inside `activeProjects`, and `recentExpenses` / `totals.expensesAmount` use the operational expense amount (km reimbursement, markup, credits) instead of raw `expenses.amount`; this closes the AI mismatch where project totals included expenses but the detail list showed `0,00` km rows.
@@ -784,6 +791,10 @@ Nota di continuita':
 | sales | Profilo utente e supporto auth single-user | auth.uid() IS NOT NULL | identita' utente, avatar, admin/disabled, FK `auth.users` |
 | tags | Catalogo etichette riusato dai clienti e disponibile anche nel modello dati dei referenti | auth.uid() IS NOT NULL | nome, colore |
 | keep_alive | Heartbeat free tier | SELECT public | ping e timestamp |
+| fiscal_declarations | Dichiarazione annuale dal commercialista (tasse sostitutive + INPS totali e acconti già versati) | auth.uid() = user_id | `tax_year` (UNIQUE per user), totali imposta sostitutiva, INPS, acconti pregressi, note, timestamps |
+| fiscal_obligations | Singole rate/scadenze da pagare derivate dalla dichiarazione o create manualmente | auth.uid() = user_id | FK `declaration_id` (bare, no cascade), `source` (auto_generated/manual), `component` (enum 8 valori), `competence_year`, `payment_year`, `due_date`, `amount`, `installment_number/total`, `is_overridden`, note, timestamps |
+| fiscal_f24_submissions | Un evento di versamento F24 | auth.uid() = user_id | `submission_date`, note, timestamps |
+| fiscal_f24_payment_lines | Allocazione importo da un F24 a un'obbligazione specifica | auth.uid() = user_id | FK `submission_id` (ON DELETE CASCADE), FK `obligation_id` (restrictive), `amount > 0`, `user_id` auto-sync dal trigger |
 
 ### Quotes — 10 stati pipeline
 
@@ -827,6 +838,7 @@ acconto_ricevuto → in_lavorazione → completato → saldato → rifiutato / p
 | project_financials | Riepilogo finanziario per progetto: fees, km, expenses, total_owed (fees + expenses), total_paid (da payments con status=ricevuto), balance_due. Single source: sempre tabella `payments`, nessun dual-path. Include `client_id` e `client_name`. `security_invoker = on`. Tipo TypeScript: `ProjectFinancialRow` in `types.ts`. |
 | client_commercial_position | Posizione commerciale aggregata per cliente: total_fees, total_expenses, total_owed, total_paid, balance_due, projects_count. Applica Record Precedence Rules (project's client_id prevails). Include servizi/spese/pagamenti senza progetto. `security_invoker = on`. Tipo TypeScript: `ClientCommercialPosition` in `types.ts`. |
 | monthly_revenue | Fatturato mensile per categoria (fees - discount) |
+| fiscal_f24_payment_lines_enriched | JOIN di payment lines con submission_date per evitare fetch broad + join in-memory lato client. `security_invoker = on`. |
 | analytics_* | Base storica/AI per Storico e consumer analytics (`analytics_business_clock`, `analytics_history_meta`, `analytics_yearly_competence_revenue`, `analytics_yearly_competence_revenue_by_category`, `analytics_client_lifetime_competence_revenue`, `analytics_yearly_cash_inflow`) |
 
 PK esplicite nel dataProvider:
@@ -847,6 +859,7 @@ Il provider Supabase e' organizzato in moduli feature nel path
 | `dataProviderInvoiceImport.ts` | Workspace, upload file, genera/conferma draft import (payments, expenses, services) |
 | `dataProviderCommunications.ts` | Email context preventivo, invio email |
 | `dataProviderTravel.ts` | Stima tratta, suggerisci luoghi |
+| `fiscalRealityProvider.ts` | CRUD fiscale: declarations, obligations, F24 submissions/payment lines, regeneration |
 | `dataProviderTypes.ts` | Tipi condivisi: InvokeEdgeFunction, BaseProvider, LARGE_PAGE |
 | `storageBucket.ts` | Upload attachments, logo config, file import fatture |
 | `edgeFunctionError.ts` | Helper estrazione errore da Edge Function |
@@ -1110,6 +1123,7 @@ src/components/atomic-crm/dashboard/
 ├── dashboardHistoryModel.ts            # Aggregazioni storiche e quality flags
 ├── fiscalModel.ts                      # Logica pura calcoli fiscali regime forfettario (principio di cassa)
 ├── fiscalModelTypes.ts                 # Tipi fiscali estratti (FiscalModel, FiscalKpis, deadlines, health)
+├── fiscalRealityTypes.ts               # Tipi DB (FiscalDeclaration, FiscalObligation, F24) + read model (FiscalDeadlineView)
 ├── fiscalDeadlines.ts                  # buildDeadlines (F24/INPS high-priority + bolli/dichiarazione low-priority)
 ├── useGenerateFiscalTasks.ts           # Hook: genera client_tasks dai deadline fiscali calcolati
 ├── DashboardAnnual.tsx                 # Vista Annuale con guida lettura, AI card e simulazione fiscale

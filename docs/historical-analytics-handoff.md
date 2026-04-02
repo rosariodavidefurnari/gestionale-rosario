@@ -6,7 +6,84 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-04-02 (fiscal truth / Gestione Separata parity)
+Last updated: 2026-04-02 (fiscal reality layer Phase 1 complete)
+
+## Phase 1 known inconsistency — IMPORTANT
+
+**Dashboard** uses real obligations from `fiscal_obligations` (when available),
+falling back to estimates. **Automated reminders** (`fiscal_deadline_check` Edge
+Function) still read estimates only. This means the user may see different amounts
+on the dashboard vs in automated reminder tasks until Phase 2 ships.
+
+**Phase 2 follow-up (immediately after Phase 1 ships):**
+
+- `fiscal_deadline_check` must read from `fiscal_obligations` when available
+- Priority: first task after Phase 1 is verified in production
+- UI note visible in DashboardDeadlinesCard footer: "I promemoria automatici
+  usano ancora le stime, non le obbligazioni reali." — remove when Phase 2 ships.
+
+## Update 2026-04-02 — Fiscal reality layer: mobile parity (step 9)
+
+All 3 fiscal entry dialogs (`DichiarazioneEntryDialog`, `F24RegistrationDialog`,
+`ObligationEntryDialog`) are now responsive: Sheet on mobile, Dialog on desktop.
+`MobileAnnualDashboard` holds fiscal dialog states and renders all 3 dialogs,
+with action buttons visible when `isCurrentYear && data.fiscal`.
+
+## Update 2026-04-02 — Fiscal reality layer: useFiscalReality hook
+
+- `useFiscalReality` hook added in `dashboard/` — single fetch+merge entrypoint
+  for all fiscal reality consumers.
+- Fetches `getFiscalObligations(paymentYear)` and
+  `getEnrichedPaymentLinesForYear(paymentYear)` via `useQuery` with year-scoped
+  query keys (`["fiscal-obligations", year]`, `["fiscal-enriched-payment-lines", year]`).
+- Calls `buildFiscalRealityAwareSchedule` via `useMemo`; returns `null` while
+  either query is pending so consumers can gate on `deadlineViews !== null`.
+- Derives `totalOpenObligations` as sum of `remainingAmount` across all items in
+  all deadline views (total fiscal reserve needed).
+- `hasRealFiscalData` = `obligations.length > 0`.
+- No DB write, no UI wiring, no Edge Function change in this step.
+
+## Update 2026-04-02 — Fiscal reality layer: reality-aware schedule read model
+
+- `buildFiscalRealityAwareSchedule` added in `dashboard/` — the single semantic
+  merge point between estimated deadlines and real obligations.
+- Algorithm: UNION of estimated items + real obligations, merged by canonical key
+  `component::competenceYear::dueDate`. Phase A processes estimated deadlines
+  (replacing matched items with real data); Phase B adds unconsumed real-only
+  obligations as new deadline entries.
+- Status derivation: `estimated` → `due` → `partial` → `paid` → `overpaid`
+  based on obligation existence and payment coverage.
+- `estimateComparison` = aggregate original estimated amount when real data
+  exists for a deadline, null otherwise.
+- Real-only deadlines get `priority: "low"` if all bollo, `"high"` otherwise.
+- Deterministic sort: items by canonical component order, deadlines by
+  priority (high first) then date.
+- 11 unit tests cover all status paths, real-only deadlines, mixed sources,
+  overpayment, paidDate from submission_date, and totalRemaining.
+- No DB write, no UI wiring, no Edge Function change in this step.
+
+## Update 2026-04-02 — Fiscal reality layer: canonical obligation merge key
+
+- `buildFiscalObligationMergeKey` added to `buildFiscalDeadlineKey.ts`.
+- Key format: `component::competenceYear::dueDate` — Phase 1 matching, no
+  installment number in the key.
+- Existing `buildFiscalDeadlineKey` kept for backward compatibility until
+  `useFiscalPaymentTracking` is fully deprecated.
+- 2 unit tests verify key construction and uniqueness by component.
+- No DB write, no UI wiring, no Edge Function change in this step.
+
+## Update 2026-04-02 — Fiscal reality layer: obligation auto-generation
+
+- `buildObligationsFromDeclaration` added in `dashboard/` — pure function,
+  takes `FiscalDeclaration`, returns `ObligationDraft[]`.
+- Logic: saldo = `total - prior_advances`, clamped ≥0; imposta acconti follow
+  thresholds (> €257.52 → double 50%, €51.65–€257.52 → single 100%, below →
+  none); INPS acconti = 40% ×2 when `total_inps > 0`; zero-amount entries
+  skipped; `source = 'auto_generated'`, `declaration_id` always set; Phase 1
+  = non-rateized only (installment fields are null).
+- 25 unit tests cover all branches and boundary conditions.
+- No DB write, no UI wiring, no Edge Function change in this step.
+- Next step: provider save + UI form.
 
 ## Update 2026-04-02 — Fiscal truth / Gestione Separata parity
 
@@ -2865,3 +2942,5 @@ funzionale all'AI o al flusso analytics.
 - 2026-04-01: `DashboardDeadlineTracker` — added `onSuccess`/`onError` callbacks to `useUpdate` calls for `markPaymentAsReceived` and `markTaskAsDone`. User-facing toast notifications added via `useNotify`. No change to data model, analytics, or AI flow.
 
 - 2026-04-01: AI snapshot reads from canonical views — `buildUnifiedCrmReadContext` now receives pre-computed `projectFinancialRows` and `clientCommercialPositions` from DB views instead of calculating from raw tables. Invoice draft markdown shows expenses when present. No change to AI model, analytics aggregation, or historical flow.
+
+- 2026-04-02: fiscal-reality-layer branch opened — TypeScript types for the 4 fiscal reality DB tables (`fiscal_declarations`, `fiscal_obligations`, `fiscal_f24_submissions`, `fiscal_f24_payment_lines`) and the read model types (`FiscalDeadlineView`, `FiscalDeadlineViewItem`) added in `fiscalRealityTypes.ts`. No runtime change; this is the type-only foundation for Phase 1 of the fiscal reality layer.

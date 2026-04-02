@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-02 (fiscal truth / Gestione Separata parity)
+Last updated: 2026-04-02 (fiscal reality layer — mobile parity)
 
 ---
 
@@ -14,6 +14,11 @@ Last updated: 2026-04-02 (fiscal truth / Gestione Separata parity)
 
 ### Recent Updates (cronologico, più recente in alto)
 
+- [2026-04-02 (f)](#update-2026-04-02-f--fiscal-reality-layer-mobile-parity) — Fiscal reality layer mobile parity: responsive dialogs (Sheet on mobile), fiscal buttons + dialogs wired in MobileAnnualDashboard
+- [2026-04-02 (e)](#update-2026-04-02-e--fiscal-reality-layer-ui-entry-dialogs) — Fiscal reality layer UI entry dialogs: DichiarazioneEntryDialog, F24RegistrationDialog, ObligationEntryDialog; trigger buttons in DashboardAnnual; Phase 1 inconsistency note in DeadlinesCard
+- [2026-04-02 (d)](#update-2026-04-02-d--fiscal-reality-layer-dashboard-consumers) — Fiscal reality layer dashboard consumers: DashboardAnnual + MobileDashboard wired to useFiscalReality, reality-aware DeadlinesCard + NetAvailability
+- [2026-04-02 (c)](#update-2026-04-02-c--fiscal-reality-layer-provider-methods) — Fiscal reality layer provider methods: 10 closure-based CRUD methods for fiscal tables + enriched view
+- [2026-04-02 (b)](#update-2026-04-02-b--fiscal-reality-layer-db-migration) — Fiscal reality layer DB migration: 4 nuove tabelle (declarations, obligations, F24 submissions, payment lines) + enriched view
 - [2026-04-02](#update-2026-04-02--fiscal-truth--gestione-separata-parity) — Fiscal truth / Gestione Separata: estimate vs schedule split, explicit ATECO fallback, dashboard/EF parity
 - [2026-04-01](#update-2026-04-01--km-duplicate-audit-after-trigger-transition) — KM duplicate audit after trigger transition: root cause identified, audit/cleanup scripts added
 - [2026-04-01](#update-2026-04-01--single-source-financials) — Single source financials: project_financials rewritten (no dual-path), client_commercial_position view created
@@ -100,6 +105,140 @@ Last updated: 2026-04-02 (fiscal truth / Gestione Separata parity)
 - [Nota manutenzione 2026-03-02](#nota-manutenzione-2026-03-02-fix-ci)
 - [Testing Session Log 2026-03-04](#testing-session-log-2026-03-04--e2e-complete-validation)
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
+
+---
+
+## Update 2026-04-02 (f) — Fiscal reality layer mobile parity
+
+All 3 fiscal entry dialogs are now responsive. Fiscal action buttons and dialog
+states are wired in `MobileAnnualDashboard`.
+
+**Files modified:**
+
+- `DichiarazioneEntryDialog.tsx` — responsive: uses `Sheet` (bottom drawer) on
+  mobile, `Dialog` on desktop; form body extracted to avoid duplication
+- `F24RegistrationDialog.tsx` — same responsive pattern
+- `ObligationEntryDialog.tsx` — same responsive pattern
+- `MobileDashboard.tsx` — `MobileAnnualDashboard` now holds fiscal dialog states
+  (`showDichiarazione`, `showObligation`, `f24Target`), queries
+  `getFiscalDeclaration` for button label, renders all 3 dialogs; fiscal action
+  buttons visible when `isCurrentYear && data.fiscal`
+
+**Parity note:** mobile fiscal section is now on par with desktop for data entry.
+`F24RegistrationDialog` is triggered via `f24Target` state — on mobile the
+`DashboardDeadlinesCard` is not rendered (no calendar view), so the F24 button
+in `MobileAnnualDashboard` is present for future wiring but currently unreachable
+from mobile UI unless the user uses the obligation flow.
+
+---
+
+## Update 2026-04-02 (e) — Fiscal reality layer UI entry dialogs
+
+Three new dialog components for fiscal data entry, triggered from the
+DashboardAnnual fiscal section header.
+
+**Files created:**
+
+- `DichiarazioneEntryDialog.tsx` — upsert dialog for fiscal declarations
+  (tax year pre-filled Y-1); on submit calls `saveFiscalDeclaration` then
+  `regenerateDeclarationObligations`; shows blocked-obligation warning if
+  regeneration was partial; divergence warning >30% from CRM estimate
+- `F24RegistrationDialog.tsx` — checklist of obligations for a selected
+  deadline date (from `FiscalDeadlineView`); user can uncheck/adjust amounts;
+  on submit resolves obligation IDs then calls `registerF24`
+- `ObligationEntryDialog.tsx` — standalone manual obligation entry (bollo etc);
+  sets `source = 'manual'`, `declaration_id = null`
+
+**Files modified:**
+
+- `DashboardAnnual.tsx` — adds dialog states, declaration query for button
+  label ("Inserisci" vs "Modifica"), trigger buttons in fiscal section header,
+  renders all 3 dialogs; `_f24Target` renamed to `f24Target`
+- `DashboardDeadlinesCard.tsx` — new prop `hasRealFiscalData?`; when true,
+  shows Phase 1 inconsistency note in card footer: "I promemoria automatici
+  usano ancora le stime, non le obbligazioni reali."
+
+**Query invalidation:** all mutations invalidate `fiscal-obligations` and
+`fiscal-enriched-payment-lines` query keys.
+
+**Desktop/mobile parity:** DeadlinesCard is shared — Phase 1 note shows on
+both desktop and mobile when `hasRealFiscalData` is passed. Dialog buttons
+only appear on desktop (`isCurrentYear` guard in DashboardAnnual).
+
+---
+
+## Update 2026-04-02 (d) — Fiscal reality layer dashboard consumers
+
+All dashboard consumers now read from the canonical `useFiscalReality` merged
+schedule instead of local reinterpretation.
+
+**Files changed:**
+
+- `DashboardAnnual.tsx` — calls `useFiscalReality`, passes `deadlineViews` and
+  `totalOpenObligations` to children, holds F24 registration state placeholder
+- `MobileDashboard.tsx` — same wiring; `MobileFiscalKpis` prefers
+  `deadlineViews` for next deadline info (shows remaining + paid)
+- `DashboardDeadlinesCard.tsx` — new props `deadlineViews?` and
+  `onRegisterF24?`; when `deadlineViews` provided, renders reality-aware view
+  with per-item status badges (estimated/due/partial/paid/overpaid), estimate
+  comparison text, and "Registra F24" button for obligation deadlines; legacy
+  `schedule` path untouched for backward compat
+- `DashboardNetAvailabilityCard.tsx` — new prop `totalOpenObligations?`; when
+  provided, uses it as `taxReserve` instead of estimated INPS+imposta sum
+- `DashboardKpiCards.tsx` — threads `totalOpenObligations` to
+  `DashboardNetAvailabilityCard`
+
+**Desktop/mobile parity:** both `DashboardAnnual` and `MobileDashboard` call
+`useFiscalReality` with the same input shape and pass `totalOpenObligations` to
+`DashboardKpiCards`.
+
+---
+
+## Update 2026-04-02 (c) — Fiscal reality layer provider methods
+
+`fiscalRealityProvider.ts` aggiunge 10 metodi closure-based al dataProvider
+per CRUD sulle tabelle fiscali reali.
+
+Metodi: `getFiscalDeclaration`, `saveFiscalDeclaration` (upsert),
+`getFiscalObligations`, `createFiscalObligation`, `updateFiscalObligation`
+(auto-sets `is_overridden` per auto_generated), `registerF24` (1 submission +
+N payment lines), `getEnrichedPaymentLinesForYear` (two-step: obligation IDs
+by payment_year → enriched lines by obligation_id), `deleteF24Submission`
+(cascade), `regenerateDeclarationObligations` (returns `RegenerateResult`
+with `blockedObligations`), `deleteFiscalDeclaration` (returns
+`DeleteDeclarationResult` with `blockedObligations`).
+
+File toccati:
+
+- `src/components/atomic-crm/providers/supabase/fiscalRealityProvider.ts` (nuovo)
+- `src/components/atomic-crm/providers/supabase/dataProvider.ts` (import + merge)
+
+Constraints rispettati:
+
+- No `this` — tutto closure-based con `supabase` client dal modulo
+- Year filter DB-side — `getEnrichedPaymentLinesForYear` filtra prima obligations per `payment_year`, poi fetcha lines per obligation_id
+- Regeneration/delete restituiscono risultato strutturato con `BlockedObligation[]`
+
+---
+
+## Update 2026-04-02 (b) — Fiscal reality layer DB migration
+
+Migration `20260402020254_fiscal_reality_layer.sql`: 4 nuove tabelle e 1 view
+per la gestione della realtà fiscale reale (dichiarazioni del commercialista,
+obbligazioni di pagamento, F24 submissions e payment lines).
+
+- Catena FK: `fiscal_declarations` → `fiscal_obligations` → `fiscal_f24_submissions` → `fiscal_f24_payment_lines`
+- FK semantics: bare (NO ACTION) su `declaration_id`; CASCADE su `submission_id`; restrictive su `obligation_id`
+- Trigger di guardia: blocco delete su declarations con pagamenti allocati; blocco delete su obligations con payment lines; auto-sync `user_id` su payment lines dal submission; cross-user validation
+- View `fiscal_f24_payment_lines_enriched` (`security_invoker = on`) evita fetch broad + join in-memory client-side
+
+File toccati: `supabase/migrations/20260402020254_fiscal_reality_layer.sql` (nuovo)
+
+Sweep per task successivi:
+
+- `src/components/atomic-crm/types.ts` — aggiungere tipi TypeScript per le nuove tabelle/view
+- dataProvider Supabase — esporre metodi per declarations, obligations, submissions, payment lines
+- UI surfaces da definire nei task successivi del Fiscal Reality Layer
 
 ---
 

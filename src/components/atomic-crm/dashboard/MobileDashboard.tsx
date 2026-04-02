@@ -4,12 +4,16 @@ import {
   CalendarRange,
   ChevronLeft,
   ChevronRight,
+  FilePlus,
+  PenLine,
   PiggyBank,
+  Plus,
   Shield,
 } from "lucide-react";
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
-import { useTimeout } from "ra-core";
+import { useDataProvider, useTimeout } from "ra-core";
+import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,14 +24,20 @@ import { useRealtimeInvalidation } from "@/hooks/useRealtimeInvalidation";
 import { formatBusinessDate, todayISODate } from "@/lib/dateTimezone";
 
 import { MobileContent } from "../layout/MobileContent";
+import type { CrmDataProvider } from "../providers/types";
 import { DashboardHistorical } from "./DashboardHistorical";
 import { DashboardAnnualAiSummaryCard } from "./DashboardAnnualAiSummaryCard";
 import { DashboardFiscalWarnings } from "./DashboardFiscalWarnings";
+import { DichiarazioneEntryDialog } from "./DichiarazioneEntryDialog";
+import { F24RegistrationDialog } from "./F24RegistrationDialog";
+import { ObligationEntryDialog } from "./ObligationEntryDialog";
 import { formatCurrency, formatCurrencyPrecise } from "./dashboardModel";
 import type { FiscalModel } from "./fiscalModel";
+import type { FiscalDeadlineView } from "./fiscalRealityTypes";
 import { DashboardKpiCards } from "./DashboardKpiCards";
 import { MobileDashboardLoading } from "./DashboardLoading";
 import { useDashboardData } from "./useDashboardData";
+import { useFiscalReality } from "./useFiscalReality";
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => {
   return <MobileContent>{children}</MobileContent>;
@@ -93,6 +103,26 @@ const MobileAnnualDashboard = () => {
   const { data, isPending, error, refetch } = useDashboardData(selectedYear);
   const isCurrentYear = data?.isCurrentYear ?? selectedYear === currentYear;
   const showLoading = useTimeout(800);
+  const dataProvider = useDataProvider<CrmDataProvider>();
+
+  const { deadlineViews, totalOpenObligations } = useFiscalReality({
+    estimatedDeadlines: data?.fiscal?.schedule.deadlines ?? [],
+    paymentYear: selectedYear,
+    todayIso: todayISODate(),
+  });
+
+  // Fiscal dialog states
+  const [showDichiarazione, setShowDichiarazione] = useState(false);
+  const [showObligation, setShowObligation] = useState(false);
+  const [f24Target, setF24Target] = useState<FiscalDeadlineView | null>(null);
+
+  // Check if declaration exists for fiscal year (selectedYear - 1)
+  const declarationTaxYear = selectedYear - 1;
+  const { data: existingDeclaration } = useQuery({
+    queryKey: ["fiscal-declaration", declarationTaxYear],
+    queryFn: () => dataProvider.getFiscalDeclaration(declarationTaxYear),
+    enabled: data?.fiscal != null,
+  });
 
   if ((isPending || !data) && !error) {
     return showLoading ? <MobileDashboardLoading /> : null;
@@ -144,14 +174,75 @@ const MobileAnnualDashboard = () => {
         meta={data.meta}
         year={data.selectedYear}
         fiscalKpis={data.fiscal?.fiscalKpis ?? null}
+        totalOpenObligations={
+          deadlineViews != null ? totalOpenObligations : undefined
+        }
         compact
       />
       {data.fiscal && (
         <>
+          {isCurrentYear && (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setShowDichiarazione(true)}
+              >
+                {existingDeclaration ? (
+                  <>
+                    <PenLine className="h-3.5 w-3.5" />
+                    Modifica dichiarazione {declarationTaxYear}
+                  </>
+                ) : (
+                  <>
+                    <FilePlus className="h-3.5 w-3.5" />
+                    Inserisci dichiarazione {declarationTaxYear}
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setShowObligation(true)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Aggiungi obbligazione
+              </Button>
+            </div>
+          )}
           <DashboardFiscalWarnings warnings={data.fiscal.warnings} />
-          <MobileFiscalKpis fiscal={data.fiscal} />
+          <MobileFiscalKpis
+            fiscal={data.fiscal}
+            deadlineViews={deadlineViews ?? undefined}
+          />
         </>
       )}
+
+      {/* Fiscal entry dialogs */}
+      <DichiarazioneEntryDialog
+        open={showDichiarazione}
+        onOpenChange={setShowDichiarazione}
+        taxYear={declarationTaxYear}
+        estimatedSubstituteTax={
+          data?.fiscal?.fiscalKpis.stimaImpostaAnnuale
+        }
+        estimatedInps={data?.fiscal?.fiscalKpis.stimaInpsAnnuale}
+      />
+      <F24RegistrationDialog
+        open={f24Target != null}
+        onOpenChange={(open) => {
+          if (!open) setF24Target(null);
+        }}
+        deadlineView={f24Target}
+      />
+      <ObligationEntryDialog
+        open={showObligation}
+        onOpenChange={setShowObligation}
+        defaultCompetenceYear={selectedYear}
+        defaultPaymentYear={selectedYear}
+      />
     </div>
   );
 };
@@ -162,11 +253,24 @@ const getCeilingVariant = (pct: number) => {
   return "success" as const;
 };
 
-const MobileFiscalKpis = ({ fiscal }: { fiscal: FiscalModel }) => {
+const MobileFiscalKpis = ({
+  fiscal,
+  deadlineViews,
+}: {
+  fiscal: FiscalModel;
+  deadlineViews?: FiscalDeadlineView[];
+}) => {
   const { fiscalKpis, schedule } = fiscal;
-  const nextHighPriorityDeadline = schedule.deadlines.find(
-    (deadline) => deadline.priority === "high" && !deadline.isPast,
+
+  // Prefer reality-aware view for next deadline
+  const nextDeadlineView = deadlineViews?.find(
+    (d) => d.priority === "high" && !d.isPast && d.totalRemaining > 0,
   );
+  const nextHighPriorityDeadline = nextDeadlineView
+    ? null
+    : schedule.deadlines.find(
+        (deadline) => deadline.priority === "high" && !deadline.isPast,
+      );
 
   return (
     <div className="grid grid-cols-1 gap-3">
@@ -199,6 +303,24 @@ const MobileFiscalKpis = ({ fiscal }: { fiscal: FiscalModel }) => {
               Primo anno: nessun saldo o acconto stimato in questo anno di
               pagamento.
             </p>
+          ) : nextDeadlineView ? (
+            <>
+              <div className="text-xl font-semibold">
+                {formatCurrency(nextDeadlineView.totalRemaining)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {formatBusinessDate(nextDeadlineView.date, {
+                  day: "2-digit",
+                  month: "long",
+                })}{" "}
+                — {nextDeadlineView.label} ({nextDeadlineView.daysUntil}g)
+              </p>
+              {nextDeadlineView.totalPaid > 0 && (
+                <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                  {formatCurrencyPrecise(nextDeadlineView.totalPaid)} già versati
+                </p>
+              )}
+            </>
           ) : nextHighPriorityDeadline ? (
             <>
               <div className="text-xl font-semibold">
