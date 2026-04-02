@@ -70,7 +70,7 @@ export const DashboardAnnual = () => {
   const { markAsPaid, clearPayment, getPayment } =
     useFiscalPaymentTracking(selectedYear);
 
-  const { deadlineViews, totalOpenObligations, hasRealFiscalData } =
+  const { deadlineViews, totalOpenObligations } =
     useFiscalReality({
       estimatedDeadlines: data?.fiscal?.schedule.deadlines ?? [],
       paymentYear: selectedYear,
@@ -225,7 +225,6 @@ export const DashboardAnnual = () => {
                 onClearPayment={clearPayment}
                 deadlineViews={deadlineViews ?? undefined}
                 onRegisterF24={setF24Target}
-                hasRealFiscalData={hasRealFiscalData}
               />
             )}
           </div>
