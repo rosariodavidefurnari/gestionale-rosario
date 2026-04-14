@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useCreate, useNotify, useRefresh } from "ra-core";
+import { useCreate, useDataProvider, useNotify, useRefresh } from "ra-core";
 import { useLocation } from "react-router";
 import {
   Dialog,
@@ -21,8 +21,10 @@ import {
 import { getUnifiedAiHandoffContextFromSearch } from "../payments/paymentLinking";
 import { getProjectQuickEpisodeDefaultsFromSearch } from "./projectQuickEpisodeLinking";
 import {
+  buildQuickEpisodeDuplicateConfirmMessage,
   buildQuickEpisodeExpenseCreateData,
   buildQuickEpisodeServiceCreateData,
+  findExistingQuickEpisodeServices,
 } from "./quickEpisodePersistence";
 
 interface QuickEpisodeDialogProps {
@@ -56,6 +58,7 @@ export const QuickEpisodeDialog = ({ record }: QuickEpisodeDialogProps) => {
     string | null
   >(null);
   const [create] = useCreate();
+  const dataProvider = useDataProvider();
   const notify = useNotify();
   const refresh = useRefresh();
   const [saving, setSaving] = useState(false);
@@ -106,6 +109,23 @@ export const QuickEpisodeDialog = ({ record }: QuickEpisodeDialogProps) => {
   const handleSubmit = async (data: EpisodeFormData) => {
     setSaving(true);
     try {
+      // Dedup guard: block silent duplicates when the user already registered
+      // a service on the same project/day. Ask for explicit confirmation
+      // before creating a second record.
+      const existing = await findExistingQuickEpisodeServices({
+        dataProvider,
+        projectId: record.id,
+        serviceDate: data.service_date,
+      });
+      const duplicateWarning = buildQuickEpisodeDuplicateConfirmMessage(
+        existing,
+        data.service_date,
+      );
+      if (duplicateWarning && !window.confirm(duplicateWarning)) {
+        setSaving(false);
+        return;
+      }
+
       await create(
         "services",
         {

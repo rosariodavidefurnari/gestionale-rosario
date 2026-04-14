@@ -108,6 +108,74 @@ Last updated: 2026-04-02 (fiscal reality layer — mobile parity)
 
 ---
 
+## Update 2026-04-14 — Quick Episode client_id inheritance + dedup guard
+
+Two related regressions in the Quick Episode flow are fixed in a single pass:
+
+1. **Bug A — orphaned services**:
+   `buildQuickEpisodeServiceCreateData` in
+   `src/components/atomic-crm/projects/quickEpisodePersistence.ts` was not
+   forwarding `client_id` from the selected project. Every service created
+   from `QuickEpisodeDialog` landed in `public.services` with `project_id`
+   set but `client_id` NULL, breaking client filters in `ServiceList`, the
+   `client_commercial_position` view roll-up, and anything that joins
+   services back to the client without going through `projects`.
+   Fix: the builder now always passes `client_id: record.client_id`.
+   The peer builder `buildQuickEpisodeExpenseCreateData` was already doing
+   the right thing — the asymmetry is the review signal to watch for on
+   other "quick-create" surfaces.
+
+2. **Bug B — silent duplication**:
+   `QuickEpisodeDialog.handleSubmit` had no dedup guard, so a user who had
+   already created a service from `ServiceCreate` for a given project/date
+   could silently double-register the same work via the "Puntata" shortcut
+   on `ProjectShow`. Fix: `handleSubmit` now calls
+   `findExistingQuickEpisodeServices({ dataProvider, projectId, serviceDate })`
+   before `create`; if any services exist on the same project during the
+   same Europe/Rome business day (window built with
+   `startOfBusinessDayISOString`/`endOfBusinessDayISOString`), the user is
+   shown a `window.confirm` prompt built by
+   `buildQuickEpisodeDuplicateConfirmMessage`. Both helpers live in
+   `quickEpisodePersistence.ts` and are unit-tested next to the payload
+   builders.
+
+**Touched files**
+
+- `src/components/atomic-crm/projects/quickEpisodePersistence.ts` — adds
+  `client_id` to the service payload, exports
+  `findExistingQuickEpisodeServices` and
+  `buildQuickEpisodeDuplicateConfirmMessage`.
+- `src/components/atomic-crm/projects/quickEpisodePersistence.test.ts` —
+  updated existing expectation, added 7 new cases covering both helpers.
+- `src/components/atomic-crm/projects/QuickEpisodeDialog.tsx` — consumes
+  the new helpers, uses `useDataProvider` for the dedup query, asks
+  `window.confirm` before proceeding.
+- `supabase/migrations/20260414162444_remove_quick_episode_duplicate_savoca_2026_04_11.sql` —
+  cleans the single pre-existing orphan (`acc079b0-...`) from production
+  with a scoped, idempotent DELETE. `expenses.source_service_id ON DELETE
+  CASCADE` takes care of the linked km expense (`99be088c-...`).
+  The canonical service (`ed62a7bc-...`) and its expense (`e6078918-...`)
+  are untouched. Applied to remote before commit.
+- `docs/architecture.md`, `.claude/rules/learning.md` — changelog +
+  new learning triggers (DB-6 "payload builder inherits client_id",
+  WF-14 "quick-create flow needs dedup guard").
+
+**Not touched by the migration**: the duplicate's Google Calendar event
+`5po1iql332gi8g3c8u8u3vtdtg` still exists on Google Calendar. The
+`google_calendar_sync` Edge Function is unidirectional (CRM → Calendar)
+and has no reverse path from a DB delete. It must be removed manually
+from the calendar, or via a one-off
+`functions invoke google_calendar_sync` with
+`{ action: "delete", service_id: "acc079b0-..." }` run BEFORE the DB
+delete if the same situation arises again. The canonical event
+`gm5n0oboqj91lpack33k4l11c0` remains the authoritative one.
+
+**How to detect the same class of bug elsewhere**: grep for payload
+builders in "quick-create" flows that destructure
+`record: Pick<Project, "id" | "client_id">` (or equivalent) and only
+use `record.id`. See `.claude/rules/learning.md#DB-6` for the
+generalised trigger.
+
 ## Update 2026-04-02 (f) — Fiscal reality layer mobile parity
 
 All 3 fiscal entry dialogs are now responsive. Fiscal action buttons and dialog

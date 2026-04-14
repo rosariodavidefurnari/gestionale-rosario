@@ -1,3 +1,10 @@
+import type { DataProvider } from "ra-core";
+
+import {
+  endOfBusinessDayISOString,
+  formatBusinessDate,
+  startOfBusinessDayISOString,
+} from "@/lib/dateTimezone";
 import type { Expense, Project, Service } from "../types";
 import type { EpisodeFormData } from "./QuickEpisodeForm";
 
@@ -35,6 +42,10 @@ export const buildQuickEpisodeServiceCreateData = ({
   data: EpisodeFormData;
 }): Omit<Service, "id" | "created_at"> => ({
   project_id: record.id,
+  // Project.client_id is non-null by schema: always inherit it so the service
+  // is never orphaned from its client (orphans break client filters, fiscal
+  // reporting and the Quick Episode dedup guard).
+  client_id: record.client_id,
   service_date: data.service_date,
   all_day: true,
   is_taxable: true,
@@ -48,6 +59,71 @@ export const buildQuickEpisodeServiceCreateData = ({
   location: trimOptionalText(data.location),
   notes: trimOptionalText(data.notes),
 });
+
+/**
+ * Look up services already attached to the given project that fall on the
+ * same business day (Europe/Rome) as the incoming quick-episode date.
+ *
+ * Used by QuickEpisodeDialog as a dedup guard before creating a new service,
+ * so the user gets an explicit confirmation when a duplicate episode is about
+ * to be registered on a day that already has one.
+ */
+export const findExistingQuickEpisodeServices = async ({
+  dataProvider,
+  projectId,
+  serviceDate,
+}: {
+  dataProvider: DataProvider;
+  projectId: string;
+  serviceDate: string;
+}): Promise<Service[]> => {
+  if (!projectId || !serviceDate) return [];
+
+  const gte = startOfBusinessDayISOString(serviceDate);
+  const lte = endOfBusinessDayISOString(serviceDate);
+  if (!gte || !lte) return [];
+
+  const { data } = await dataProvider.getList<Service>("services", {
+    filter: {
+      project_id: projectId,
+      "service_date@gte": gte,
+      "service_date@lte": lte,
+    },
+    pagination: { page: 1, perPage: 10 },
+    sort: { field: "created_at", order: "DESC" },
+  });
+
+  return data ?? [];
+};
+
+/**
+ * Build the confirm message shown to the user when a quick-episode save would
+ * create a duplicate service on the same project + business day. Returns null
+ * when there are no duplicates (caller should just proceed with the save).
+ *
+ * Kept as a pure function so it's covered by unit tests and the dialog stays
+ * thin.
+ */
+export const buildQuickEpisodeDuplicateConfirmMessage = (
+  existing: Pick<Service, "description">[],
+  serviceDate: string,
+): string | null => {
+  if (existing.length === 0) return null;
+
+  const humanDate =
+    formatBusinessDate(serviceDate, {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }) ?? serviceDate;
+
+  const sampleDescription = existing[0]?.description?.trim();
+  const sampleLabel = sampleDescription ? ` («${sampleDescription}»)` : "";
+  const countLabel =
+    existing.length === 1 ? "un servizio" : `${existing.length} servizi`;
+
+  return `Esiste gia' ${countLabel} per questo progetto in data ${humanDate}${sampleLabel}.\n\nVuoi comunque registrare un'altra puntata?`;
+};
 
 export const buildQuickEpisodeExpenseCreateData = ({
   record,

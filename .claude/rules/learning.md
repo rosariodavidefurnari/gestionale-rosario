@@ -61,6 +61,8 @@
 | **Workflow** | WF-12 | Guardrail shell → non mangiare failure    |
 | **Workflow** | WF-13 | Scadenze fiscali weekend → shift business |
 | **Dominio**  | DOM-5 | Fiscale due layer → check entrambi        |
+| **DB**       | DB-6  | Payload servizi figli → eredita client_id |
+| **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
 
 ---
 
@@ -162,6 +164,12 @@
 **Quando**: una logica che prima creava record dal client viene spostata in un trigger DB (es. `services` -> `expenses.spostamento_km`)
 **Fare**: auditare subito le righe create durante la finestra di transizione cercando gruppi con stessa chiave naturale ma mix di record linked/unlinked (`source_service_id` presente + assente). Pulire gli orfani prima di fidarsi dei nuovi totali.
 **Perché**: il 2026-03-06 `QuickEpisode` creava ancora manualmente la spesa km mentre il trigger `sync_service_km_expense` la creava gia' dal `service`. Risultato: doppio conteggio, progetto/cliente gonfiati di `€ 40,54` finche' non e' stato rimosso l'orfano.
+
+### DB-6: Payload builder di record figli -> eredita SEMPRE client_id dal progetto
+
+**Quando**: scrivo un builder che costruisce un `create` payload per una entita' figlia del progetto (services, expenses, payments, quotes, tasks, ...) e il tipo del record figlio ha una FK diretta a `clients` oltre a quella a `projects`
+**Fare**: popolare ENTRAMBI gli FK. Se il builder riceve `record: Pick<Project, "id" | "client_id">` (o tipo equivalente), passare sia `project_id: record.id` sia `client_id: record.client_id`. Il test unitario del builder DEVE asserire entrambe le FK nel payload atteso.
+**Perché**: il 2026-04-14 `buildQuickEpisodeServiceCreateData` passava solo `project_id`, creando un servizio orfano (`client_id` NULL). Risultato: duplicato visibile in `Registro Lavori`, client filter rotto, rischio su dashboard fiscali/commerciali. Il peer builder `buildQuickEpisodeExpenseCreateData` lo faceva correttamente — l'asimmetria e' il segnale d'allarme da cercare durante code review.
 
 ---
 
@@ -393,6 +401,24 @@ o deadline fiscali
 **Perché**: sistemare solo il modello non basta. Wrapper UI, card di dettaglio
 e Edge Functions possono continuare a slittare su boundary anno/giorno o
 scrivere timestamp sbagliati pur usando dati gia' bonificati a monte.
+
+### WF-14: Flow rapidi (quick-create) -> dedup guard project+day PRIMA del save
+
+**Quando**: aggiungo o tocco un flow di creazione rapida che bypassa la
+ServiceCreate/ExpenseCreate standard (es. `QuickEpisodeDialog`, dialog bulk,
+launcher AI, azione Pareto) e insertsce un record figlio su un progetto
+**Fare**: prima del `create`, interrogare il dataProvider con un filtro
+`project_id + service_date@gte/@lte` (business day Europe/Rome via
+`startOfBusinessDayISOString`/`endOfBusinessDayISOString`). Se ci sono match,
+chiedere `window.confirm()` con descrizione del record gia' esistente. Il
+builder del messaggio deve essere una funzione pura testata a parte, il check
+e' async e testato contro un mock `dataProvider.getList`.
+**Perché**: il 2026-04-14 un `QuickEpisodeDialog` senza dedup guard ha creato
+silenziosamente il duplicato `acc079b0` sullo stesso progetto/data del service
+`ed62a7bc`. La ServiceList non aveva segnali visibili in fase di creazione, il
+rilevamento e' arrivato solo dopo che l'utente lo ha visto in lista. I flow
+rapidi saltano la review lunga del ServiceCreate e quindi hanno bisogno di un
+guard esplicito server-side.
 
 ---
 
