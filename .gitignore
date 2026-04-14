@@ -6,7 +6,9 @@
 # editors
 .idea/
 *.iml
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 
 # dependencies
 /node_modules

@@ -52,6 +52,7 @@
 | **Dominio**  | DOM-4 | Stato semantico ≠ `array.length`          |
 | **Config**   | CFG-2 | BusinessProfile → merge defaults safe     |
 | **Config**   | CFG-3 | Flag/prop root → verificare consumo reale |
+| **Config**   | CFG-4 | Edge Functions in repo misto → scope Deno |
 | **Backend**  | BE-7  | OpenAI reasoning → effort "low" per CRM  |
 | **Backend**  | BE-8  | Supabase ref → NON dfrrigmjsvcsdhgqtikz   |
 | **Workflow** | WF-8  | Business date → dateTimezone helper       |
@@ -305,6 +306,19 @@ UTC midnight — giorno sbagliato in `Europe/Rome` nella stessa finestra.
 **Quando**: modifico `businessProfile` in `defaultConfiguration.ts` o nel merge logic di Settings
 **Fare**: verificare che il merge config→defaults non sovrascriva campi utente con valori vuoti. Il pattern corretto e' deep merge con fallback: ogni campo usa il valore salvato se presente, altrimenti il default. MAI sostituire l'intero oggetto.
 **Perché**: un merge naive ha cancellato i dati emittente (P.IVA, IBAN) salvati dall'utente, facendo generare PDF preventivo/bozza fattura senza dati fiscali.
+
+### CFG-4: Edge Functions in repo misto -> scope Deno
+
+**Quando**: in un repo React/Vite apro o aggiungo file in `supabase/functions/**`
+e l'editor segnala errori falsi su `jsr:` o `Deno`
+**Fare**: configurare il workspace per Deno SOLO su quel path:
+`supabase/functions/deno.json` + `.vscode/settings.json` con
+`deno.enablePaths: ["supabase/functions"]` + `deno.config`. Se manca,
+raccomandare anche `denoland.vscode-deno`.
+**Perché**: le Edge Functions Supabase sono Deno-native. Senza scope dedicato,
+VS Code le tratta come TS frontend standard e mostra errori inesistenti
+(`Cannot find module 'jsr:...'`, `Cannot find name 'Deno'`). La correzione
+giusta è di tooling, non un workaround con tipi finti o import riscritti.
 
 ### CFG-3: Flag/prop root -> verificare consumo reale
 
