@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-02 (fiscal reality layer — mobile parity)
+Last updated: 2026-04-14 (fiscal reality layer — interest + compensation support)
 
 ---
 
@@ -14,6 +14,7 @@ Last updated: 2026-04-02 (fiscal reality layer — mobile parity)
 
 ### Recent Updates (cronologico, più recente in alto)
 
+- [2026-04-14](#update-2026-04-14--fiscal-reality-layer-interest--compensation-support) — Fiscal reality layer: explicit F24 interests (`1668` / `DPPI`) + submission `compensation_credit`
 - [2026-04-02 (f)](#update-2026-04-02-f--fiscal-reality-layer-mobile-parity) — Fiscal reality layer mobile parity: responsive dialogs (Sheet on mobile), fiscal buttons + dialogs wired in MobileAnnualDashboard
 - [2026-04-02 (e)](#update-2026-04-02-e--fiscal-reality-layer-ui-entry-dialogs) — Fiscal reality layer UI entry dialogs: DichiarazioneEntryDialog, F24RegistrationDialog, ObligationEntryDialog; trigger buttons in DashboardAnnual; Phase 1 inconsistency note in DeadlinesCard
 - [2026-04-02 (d)](#update-2026-04-02-d--fiscal-reality-layer-dashboard-consumers) — Fiscal reality layer dashboard consumers: DashboardAnnual + MobileDashboard wired to useFiscalReality, reality-aware DeadlinesCard + NetAvailability
@@ -105,6 +106,57 @@ Last updated: 2026-04-02 (fiscal reality layer — mobile parity)
 - [Nota manutenzione 2026-03-02](#nota-manutenzione-2026-03-02-fix-ci)
 - [Testing Session Log 2026-03-04](#testing-session-log-2026-03-04--e2e-complete-validation)
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
+
+---
+
+## Update 2026-04-14 — Fiscal reality layer: interest + compensation support
+
+The first version of the fiscal reality layer could represent only positive
+F24 allocations to principal obligations (`imposta_*`, `inps_*`, `bollo`).
+Real AdE quietanze exposed two missing real-world cases:
+
+- rateazione interests as explicit F24 rows:
+  - `1668` for Erario
+  - `DPPI` for INPS
+- deleghe that use an existing credit in compensation, where the bank outflow
+  is lower than the sum of the positive line items.
+
+Changes introduced:
+
+- DB migration `20260414211500_fiscal_interests_and_compensation.sql`
+  extends `fiscal_obligations.component` with `interessi_erario` and
+  `interessi_inps`
+- `fiscal_f24_submissions` gains `compensation_credit numeric(10,2) not null default 0`
+- `fiscal_f24_payment_lines_enriched` now exposes `compensation_credit`
+- frontend sweep completed on:
+  - `fiscalModelTypes.ts`
+  - `fiscalRealityTypes.ts`
+  - `buildFiscalRealityAwareSchedule.ts`
+  - `ObligationEntryDialog.tsx`
+  - `F24RegistrationDialog.tsx`
+  - `fiscalRealityProvider.ts`
+
+Operational note:
+
+- `F24RegistrationDialog` now exposes a dedicated "Credito in compensazione"
+  input and shows `saldo delega = sum(righe) - compensation_credit`
+- checked F24 rows are validated as strictly `> 0`, matching the DB CHECK on
+  `fiscal_f24_payment_lines.amount`
+- compensation lives at submission level; it is NOT a negative payment line
+
+Why this shape:
+
+- the existing DB model forbids zero/negative `payment_lines.amount`
+- compensation is a property of the F24 delega, not of a principal obligation
+  row
+- declaration-derived saldo obligations already net out prior advances via
+  `buildObligationsFromDeclaration`, so compensation is needed only when the
+  quietanza bank outflow is lower than the sum of positive rows
+
+Required sweep reminder for future edits:
+
+- if `fiscal_obligations.component` changes again, repeat the DB-1 sweep:
+  migration CHECK, TS unions, UI labels, views, provider, tests, docs
 
 ---
 

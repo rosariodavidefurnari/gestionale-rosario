@@ -71,6 +71,8 @@ export type FiscalDeadlineComponent =
   | "inps_acconto_1"
   | "inps_acconto_2"
   | "bollo"
+  | "interessi_erario"
+  | "interessi_inps"
   | "dichiarazione";
 
 export type FiscalScheduleItem = {

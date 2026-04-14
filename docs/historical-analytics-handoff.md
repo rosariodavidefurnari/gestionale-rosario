@@ -6,7 +6,48 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-04-02 (fiscal reality layer Phase 2 complete)
+Last updated: 2026-04-14 (fiscal reality layer interest + compensation support)
+
+## Update 2026-04-14 — Fiscal reality layer: AdE reconciliation gaps closed
+
+Real AdE quietanze for 2024-2026 revealed two gaps in the first fiscal reality
+schema:
+
+- F24 interests on rateized deleghe (`1668` Erario, `DPPI` INPS) had no
+  allowed `component` in `fiscal_obligations`
+- deleghe that consume an existing credit in compensation could not be
+  represented faithfully because `fiscal_f24_payment_lines.amount` is strictly
+  positive
+
+The layer is now extended as follows:
+
+- migration `20260414211500_fiscal_interests_and_compensation.sql`
+- new obligation components:
+  - `interessi_erario`
+  - `interessi_inps`
+- new submission field:
+  - `compensation_credit`
+
+Frontend follow-up:
+
+- `F24RegistrationDialog` now lets the user enter the compensation credit and
+  shows the derived `saldo delega`
+- `ObligationEntryDialog` exposes the two new interest components for manual
+  entry
+- `buildFiscalRealityAwareSchedule` canonical ordering/labels now include the
+  new components
+- provider `registerF24()` accepts `compensationCredit`
+
+Invariant introduced:
+
+- real quietanza net outflow = `sum(payment_lines.amount) - compensation_credit`
+
+Important modeling note:
+
+- compensation is stored at submission level on purpose
+- saldo obligations derived from declarations still net prior advances via
+  `buildObligationsFromDeclaration`, so no fake negative payment line is needed
+  to “pay” an already-covered saldo
 
 ## Update 2026-04-02 — Fiscal deadlines: weekend -> next business day
 

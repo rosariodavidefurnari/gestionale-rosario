@@ -63,6 +63,7 @@
 | **Workflow** | WF-13 | Scadenze fiscali weekend → shift business |
 | **Dominio**  | DOM-5 | Fiscale due layer → check entrambi        |
 | **DB**       | DB-6  | Payload servizi figli → eredita client_id |
+| **DB**       | DB-7  | F24 reali → interessi e compensazioni     |
 | **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
 | **Backend**  | BE-9  | EF Calendar timed → usa timestamp service |
 
@@ -172,6 +173,24 @@
 **Quando**: scrivo un builder che costruisce un `create` payload per una entita' figlia del progetto (services, expenses, payments, quotes, tasks, ...) e il tipo del record figlio ha una FK diretta a `clients` oltre a quella a `projects`
 **Fare**: popolare ENTRAMBI gli FK. Se il builder riceve `record: Pick<Project, "id" | "client_id">` (o tipo equivalente), passare sia `project_id: record.id` sia `client_id: record.client_id`. Il test unitario del builder DEVE asserire entrambe le FK nel payload atteso.
 **Perché**: il 2026-04-14 `buildQuickEpisodeServiceCreateData` passava solo `project_id`, creando un servizio orfano (`client_id` NULL). Risultato: duplicato visibile in `Registro Lavori`, client filter rotto, rischio su dashboard fiscali/commerciali. Il peer builder `buildQuickEpisodeExpenseCreateData` lo faceva correttamente — l'asimmetria e' il segnale d'allarme da cercare durante code review.
+
+### DB-7: F24 reali con interessi o credito compensato -> non forzare il modello vecchio
+
+**Quando**: riconcilio quietanze AdE/F24 reali e vedo righe di interessi
+rateazione (`1668`, `DPPI`) oppure un saldo delega piu' basso della somma delle
+righe positive per via di un credito in compensazione
+**Fare**:
+- estendere il modello, non piegare i dati reali dentro campi sbagliati
+- gli interessi vanno in componenti dedicate (`interessi_erario`,
+  `interessi_inps`)
+- il credito compensato vive sulla submission F24 (`compensation_credit`), non
+  come payment line negativa
+- in UI la formula canonica della quietanza e': `sum(payment_lines.amount) -
+  compensation_credit`
+**Perché**: il modello v1 del fiscal reality layer ammetteva solo capitale
+positivo su obligations/payment_lines. Senza estensione schema si finisce a
+gonfiare importi INPS/Erario o a inventare righe negative impossibili, e il
+gestionale smette di rappresentare i quietanze AdE 1:1.
 
 ---
 

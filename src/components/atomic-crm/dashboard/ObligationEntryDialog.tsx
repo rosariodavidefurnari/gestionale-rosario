@@ -51,6 +51,8 @@ const COMPONENT_OPTIONS: Array<{
   { value: "inps_saldo", label: "Saldo INPS Gestione Separata" },
   { value: "inps_acconto_1", label: "1° Acconto INPS" },
   { value: "inps_acconto_2", label: "2° Acconto INPS" },
+  { value: "interessi_erario", label: "Interessi Rateazione Erario" },
+  { value: "interessi_inps", label: "Interessi Rateazione INPS" },
   { value: "bollo", label: "Imposta di Bollo" },
 ];
 

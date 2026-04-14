@@ -24,6 +24,13 @@ type RegisterF24Input = {
   submissionDate: string;
   notes: string | null;
   lines: Array<{ obligation_id: string; amount: number }>;
+  /**
+   * Credit used in compensation inside this F24 delega (e.g. saldo
+   * sostitutiva in eccesso applicato contro debito INPS). Defaults to 0.
+   * The real saldo delega printed on the F24 quietanza is:
+   *   sum(lines.amount) - compensationCredit
+   */
+  compensationCredit?: number;
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -207,6 +214,7 @@ export const buildFiscalRealityProviderMethods = () => ({
         .insert({
           submission_date: input.submissionDate,
           notes: input.notes,
+          compensation_credit: input.compensationCredit ?? 0,
         })
         .select("id, submission_date")
         .single(),

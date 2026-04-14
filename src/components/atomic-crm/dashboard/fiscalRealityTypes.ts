@@ -40,6 +40,14 @@ export type FiscalF24Submission = {
   id: string;
   submission_date: string;
   notes: string | null;
+  /**
+   * Credit used in compensation inside this F24 delega (e.g. saldo
+   * sostitutiva in eccesso applicato contro debito INPS). Stored
+   * separately because F24 payment lines cannot hold a zero/negative
+   * amount. The real "saldo delega" printed on the AdE quietanza is:
+   *   sum(payment_lines.amount) - compensation_credit
+   */
+  compensation_credit: number;
   created_at: string;
   user_id: string;
 };
@@ -55,6 +63,7 @@ export type FiscalF24PaymentLine = {
 
 export type FiscalF24PaymentLineEnriched = FiscalF24PaymentLine & {
   submission_date: string;
+  compensation_credit?: number;
 };
 
 // --- Read model types ---

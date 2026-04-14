@@ -24,6 +24,8 @@ const COMPONENT_ORDER: FiscalDeadlineComponent[] = [
   "imposta_acconto_2",
   "imposta_acconto_unico",
   "inps_acconto_2",
+  "interessi_erario",
+  "interessi_inps",
   "bollo",
   "dichiarazione",
 ];
@@ -43,6 +45,8 @@ const COMPONENT_LABELS: Record<FiscalDeadlineComponent, string> = {
   imposta_acconto_2: "2° Acconto Imposta",
   imposta_acconto_unico: "Acconto Unico Imposta",
   inps_acconto_2: "2° Acconto INPS",
+  interessi_erario: "Interessi Rateazione Erario",
+  interessi_inps: "Interessi Rateazione INPS",
   bollo: "Bollo",
   dichiarazione: "Dichiarazione",
 };

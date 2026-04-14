@@ -41,6 +41,8 @@ const COMPONENT_LABELS: Record<string, string> = {
   inps_saldo: "Saldo INPS Gestione Separata",
   inps_acconto_1: "1° Acconto INPS",
   inps_acconto_2: "2° Acconto INPS",
+  interessi_erario: "Interessi Rateazione Erario (cod. 1668)",
+  interessi_inps: "Interessi Rateazione INPS (cod. DPPI)",
   bollo: "Imposta di Bollo",
 };
 
@@ -93,6 +95,7 @@ export const F24RegistrationDialog = ({
 
   const [lines, setLines] = useState<LineState[]>(initialLines);
   const [submissionDate, setSubmissionDate] = useState(todayISODate());
+  const [compensationCredit, setCompensationCredit] = useState("0");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,6 +110,7 @@ export const F24RegistrationDialog = ({
     setLastDeadlineKey(currentKey);
     setLines(initialLines);
     setSubmissionDate(todayISODate());
+    setCompensationCredit("0");
     setNotes("");
     setError(null);
   }
@@ -118,12 +122,26 @@ export const F24RegistrationDialog = ({
   };
 
   const checkedLines = lines.filter((l) => l.checked);
+  const grossSelectedAmount = checkedLines.reduce(
+    (sum, line) => sum + Number(line.amount || 0),
+    0,
+  );
+  const compensationCreditValue =
+    compensationCredit.trim() === "" ? 0 : Number(compensationCredit);
+  const netDelegaAmount = grossSelectedAmount - compensationCreditValue;
   const allAmountsValid = checkedLines.every((l) => {
     const n = Number(l.amount);
-    return l.amount !== "" && !isNaN(n) && n >= 0;
+    return l.amount !== "" && !isNaN(n) && n > 0;
   });
+  const compensationCreditValid =
+    !isNaN(compensationCreditValue) &&
+    compensationCreditValue >= 0 &&
+    compensationCreditValue <= grossSelectedAmount;
   const isValid =
-    checkedLines.length > 0 && allAmountsValid && submissionDate !== "";
+    checkedLines.length > 0 &&
+    allAmountsValid &&
+    compensationCreditValid &&
+    submissionDate !== "";
 
   const handleSubmit = async () => {
     if (!isValid || !deadlineView) return;
@@ -169,6 +187,8 @@ export const F24RegistrationDialog = ({
         submissionDate,
         notes: notes.trim() || null,
         lines: resolvedLines,
+        compensationCredit:
+          compensationCreditValue > 0 ? compensationCreditValue : undefined,
       });
 
       // Invalidate fiscal queries
@@ -212,48 +232,92 @@ export const F24RegistrationDialog = ({
           Nessuna obbligazione aperta per questa scadenza.
         </p>
       ) : (
-        <div className="space-y-3">
-          <Label>Voci da versare</Label>
-          {lines.map((line, index) => (
-            <div
-              key={line.obligationId}
-              className="flex items-center gap-3 rounded-md border p-3"
-            >
-              <Checkbox
-                checked={line.checked}
-                onCheckedChange={(checked) =>
-                  updateLine(index, { checked: checked === true })
-                }
-              />
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium">
-                  {COMPONENT_LABELS[line.component] ?? line.component}
-                </p>
-                <Input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={line.amount}
-                  onChange={(e) =>
-                    updateLine(index, { amount: e.target.value })
+        <>
+          <div className="space-y-3">
+            <Label>Voci da versare</Label>
+            {lines.map((line, index) => (
+              <div
+                key={line.obligationId}
+                className="flex items-center gap-3 rounded-md border p-3"
+              >
+                <Checkbox
+                  checked={line.checked}
+                  onCheckedChange={(checked) =>
+                    updateLine(index, { checked: checked === true })
                   }
-                  className="h-8 text-sm"
-                  disabled={!line.checked}
                 />
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm font-medium">
+                    {COMPONENT_LABELS[line.component] ?? line.component}
+                  </p>
+                  <Input
+                    type="number"
+                    min={0.01}
+                    step="0.01"
+                    value={line.amount}
+                    onChange={(e) =>
+                      updateLine(index, { amount: e.target.value })
+                    }
+                    className="h-8 text-sm"
+                    disabled={!line.checked}
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  residuo{" "}
+                  {formatCurrencyPrecise(
+                    deadlineView.items.find(
+                      (i) =>
+                        `${i.component}:${i.competenceYear}` ===
+                        line.obligationId,
+                    )?.remainingAmount ?? 0,
+                  )}
+                </span>
               </div>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                residuo{" "}
-                {formatCurrencyPrecise(
-                  deadlineView.items.find(
-                    (i) =>
-                      `${i.component}:${i.competenceYear}` ===
-                      line.obligationId,
-                  )?.remainingAmount ?? 0,
-                )}
-              </span>
+            ))}
+          </div>
+
+          <div className="space-y-2 rounded-md border p-3">
+            <div className="space-y-2">
+              <Label htmlFor="f24-compensation-credit">
+                Credito in compensazione
+              </Label>
+              <Input
+                id="f24-compensation-credit"
+                type="number"
+                min={0}
+                step="0.01"
+                value={compensationCredit}
+                onChange={(e) => setCompensationCredit(e.target.value)}
+                placeholder="0.00"
+              />
+              <p className="text-xs text-muted-foreground">
+                Se l&apos;F24 usa un credito in compensazione, inseriscilo qui.
+                Il saldo delega reale sara&apos;: righe selezionate meno credito.
+              </p>
+              {!compensationCreditValid && (
+                <p className="text-xs text-destructive">
+                  Il credito deve essere maggiore o uguale a zero e non puo&apos;
+                  superare il totale delle righe selezionate.
+                </p>
+              )}
             </div>
-          ))}
-        </div>
+
+            <div className="grid gap-2 text-sm sm:grid-cols-2">
+              <div className="rounded-md bg-muted/40 p-2">
+                <p className="text-xs text-muted-foreground">Totale righe</p>
+                <p className="font-medium">
+                  {formatCurrencyPrecise(grossSelectedAmount)}
+                </p>
+              </div>
+              <div className="rounded-md bg-muted/40 p-2">
+                <p className="text-xs text-muted-foreground">Saldo delega</p>
+                <p className="font-medium">
+                  {formatCurrencyPrecise(Math.max(0, netDelegaAmount))}
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       <div className="space-y-2">

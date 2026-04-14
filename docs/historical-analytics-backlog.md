@@ -6,7 +6,34 @@
 incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 `canonical`.
 
-Last updated: 2026-04-02 (fiscal truth / Gestione Separata parity)
+Last updated: 2026-04-14 (fiscal reality layer interest + compensation support)
+
+## Update 2026-04-14 — Fiscal reality layer: schema gap follow-up
+
+Slice completata: `explicit F24 interests + compensation credit support`.
+
+Deliverable chiusi:
+
+- nuova migration `20260414211500_fiscal_interests_and_compensation.sql`
+- `fiscal_obligations.component` esteso con:
+  - `interessi_erario`
+  - `interessi_inps`
+- `fiscal_f24_submissions.compensation_credit` aggiunto con default `0`
+- `fiscal_f24_payment_lines_enriched` riallineata per esporre il credito
+- sweep TS/UI/provider completato
+- `F24RegistrationDialog` allineato al nuovo modello con input dedicato per il
+  credito in compensazione
+
+Motivazione:
+
+- le quietanze AdE reali hanno mostrato che il modello v1 non riusciva a
+  rappresentare in modo nativo né gli interessi di rateazione né i casi in cui
+  un F24 usa un credito preesistente per abbassare il saldo delega effettivo
+
+Residuo immediato:
+
+- applicare il data cleanup sui record fiscali reali remoti dopo review finale
+- aggiungere copertura test mirata sul path con `compensation_credit`
 
 ## Update 2026-04-02 — Fiscal weekend date parity
 
