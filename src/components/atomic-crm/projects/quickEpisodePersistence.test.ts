@@ -15,6 +15,9 @@ describe("quickEpisodePersistence", () => {
 
   const data = {
     service_date: "2026-02-22",
+    service_end: "",
+    all_day: true,
+    description: "",
     service_type: "riprese_montaggio" as const,
     fee_shooting: 233,
     fee_editing: 156,
@@ -69,6 +72,61 @@ describe("quickEpisodePersistence", () => {
     });
   });
 
+  it("forwards description when provided and trims it", () => {
+    const payload = buildQuickEpisodeServiceCreateData({
+      record,
+      data: {
+        ...data,
+        description: "  Savoca — Bar Vitelli  ",
+      },
+    });
+    expect(payload.description).toBe("Savoca — Bar Vitelli");
+  });
+
+  it("omits description when blank or whitespace-only", () => {
+    const payload = buildQuickEpisodeServiceCreateData({
+      record,
+      data: { ...data, description: "   " },
+    });
+    expect(payload).not.toHaveProperty("description");
+  });
+
+  it("persists a timed episode as an ISO timestamp range with all_day=false", () => {
+    const payload = buildQuickEpisodeServiceCreateData({
+      record,
+      data: {
+        ...data,
+        all_day: false,
+        service_date: "2026-04-11T08:30",
+        service_end: "2026-04-11T14:30",
+      },
+    });
+    expect(payload.all_day).toBe(false);
+    // datetime-local is naive local; browser-local for our single user is
+    // Europe/Rome so we just assert both become parseable ISO strings with
+    // end > start.
+    expect(payload.service_date).toMatch(/^2026-04-1[01]T/);
+    expect(payload.service_end).toMatch(/^2026-04-1[01]T/);
+    expect(
+      new Date(payload.service_end!).getTime(),
+    ).toBeGreaterThan(new Date(payload.service_date).getTime());
+  });
+
+  it("omits service_end when blank in the input (degenerate but valid)", () => {
+    const payload = buildQuickEpisodeServiceCreateData({
+      record,
+      data: {
+        ...data,
+        all_day: false,
+        service_date: "2026-04-11T08:30",
+        service_end: "",
+      },
+    });
+    expect(payload.all_day).toBe(false);
+    expect(payload.service_date).toMatch(/^2026-04-1[01]T/);
+    expect(payload).not.toHaveProperty("service_end");
+  });
+
   it("builds only extra (non-km) expense payloads — km expenses are auto-created by DB trigger", () => {
     expect(
       buildQuickEpisodeExpenseCreateData({
@@ -95,6 +153,28 @@ describe("quickEpisodePersistence", () => {
         description: "Pranzo troupe",
       },
     ]);
+  });
+
+  it("coerces expense_date to YYYY-MM-DD even when service_date is a full timestamp", () => {
+    const payloads = buildQuickEpisodeExpenseCreateData({
+      record,
+      data: {
+        ...data,
+        all_day: false,
+        service_date: "2026-04-11T08:30",
+        service_end: "2026-04-11T14:30",
+        extra_expenses: [
+          {
+            expense_type: "altro" as const,
+            amount: 10,
+            markup_percent: 0,
+            description: "Casello",
+          },
+        ],
+      },
+    });
+    expect(payloads).toHaveLength(1);
+    expect(payloads[0].expense_date).toBe("2026-04-11");
   });
 
   describe("findExistingQuickEpisodeServices", () => {

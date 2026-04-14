@@ -108,6 +108,59 @@ Last updated: 2026-04-02 (fiscal reality layer — mobile parity)
 
 ---
 
+## Update 2026-04-14 — Quick Episode description + datetime range
+
+`QuickEpisodeDialog` (the Puntata shortcut on `ProjectShow`) now mirrors the
+temporal fields of the full `ServiceCreate` form:
+
+- A new "Tutto il giorno" switch that defaults to ON (previous behavior). When
+  the user turns it OFF, both `Data inizio` (`service_date`) and `Data fine`
+  (`service_end`) become `<input type="datetime-local">` inputs so timed
+  episodes (e.g. `08:30 — 14:30`) can be registered without falling back to
+  the full ServiceCreate page.
+- A new `Descrizione` input, persisted on `services.description`. Before this
+  change the Puntata shortcut always left `description` NULL and users
+  squeezed short titles ("Savoca — Bar Vitelli", "Saline di Trapani") into
+  `location` or `notes`.
+
+`EpisodeFormData` / `EpisodeFormDefaults` in
+`src/components/atomic-crm/projects/QuickEpisodeForm.tsx` gain `all_day`,
+`service_end` and `description`. `buildQuickEpisodeServiceCreateData` in
+`quickEpisodePersistence.ts` no longer hardcodes `all_day: true` and forwards
+the three new fields through a small `toServicePersistenceDate` helper that:
+
+- keeps date-only strings (`YYYY-MM-DD`) untouched for the `all_day=true`
+  branch;
+- converts `<input type="datetime-local">` values to ISO-with-offset via
+  `new Date(...).toISOString()` for the `all_day=false` branch — the one
+  intentional use of `new Date("YYYY-MM-DDTHH:mm")`, because `datetime-local`
+  is explicitly browser-local semantic and not a business date-only string
+  covered by rule WF-8.
+
+`buildQuickEpisodeExpenseCreateData` uses `toBusinessISODate` to keep
+`expenses.expense_date` as a `YYYY-MM-DD` date even when `service_date`
+carries a time component — `expenses.expense_date` is a plain `date` column,
+not `timestamptz`, so stuffing a timestamp into it would misformat the
+expense row.
+
+Combined with the Google Calendar sync fix from commit `e7e8bded` (rule
+`BE-9`), a timed Puntata now syncs to Google Calendar with the actual start
+and end hours, not the former 09:00-18:00 default.
+
+Files touched:
+
+- `src/components/atomic-crm/projects/QuickEpisodeForm.tsx`
+- `src/components/atomic-crm/projects/QuickEpisodeDialog.tsx`
+- `src/components/atomic-crm/projects/quickEpisodePersistence.ts`
+- `src/components/atomic-crm/projects/quickEpisodePersistence.test.ts`
+
+Design doc:
+`docs/superpowers/specs/2026-04-14-quick-episode-description-and-datetime-design.md`
+Plan:
+`docs/superpowers/plans/2026-04-14-quick-episode-description-and-datetime.md`
+
+---
+
 ## Update 2026-04-14 — Google Calendar sync honors real start/end times
 
 `buildCalendarEvent` in `supabase/functions/google_calendar_sync/index.ts`

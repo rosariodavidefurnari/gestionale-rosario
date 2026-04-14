@@ -16,6 +16,9 @@ export interface FeeDefaults {
 
 export interface EpisodeFormDefaults extends FeeDefaults {
   service_date: string;
+  service_end: string;
+  all_day: boolean;
+  description: string;
   km_distance: number;
   location: string;
   notes: string;
@@ -57,6 +60,9 @@ export const getDefaultFees = (
 
 export interface EpisodeFormData {
   service_date: string;
+  service_end: string;
+  all_day: boolean;
+  description: string;
   service_type: string;
   fee_shooting: number;
   fee_editing: number;
@@ -101,6 +107,9 @@ export const QuickEpisodeForm = ({
   onCancel,
 }: Props) => {
   const [serviceDate, setServiceDate] = useState(defaults.service_date);
+  const [serviceEnd, setServiceEnd] = useState(defaults.service_end);
+  const [allDay, setAllDay] = useState(defaults.all_day);
+  const [description, setDescription] = useState(defaults.description);
   const [feeShooting, setFeeShooting] = useState(defaults.fee_shooting);
   const [feeEditing, setFeeEditing] = useState(defaults.fee_editing);
   const [feeOther, setFeeOther] = useState(defaults.fee_other);
@@ -150,8 +159,15 @@ export const QuickEpisodeForm = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!serviceDate) return;
+    if (serviceEnd && serviceEnd < serviceDate) {
+      alert("La data fine non può essere prima della data inizio");
+      return;
+    }
     onSubmit({
       service_date: serviceDate,
+      service_end: serviceEnd,
+      all_day: allDay,
+      description,
       service_type: defaults.service_type,
       fee_shooting: feeShooting,
       fee_editing: feeEditing,
@@ -167,15 +183,40 @@ export const QuickEpisodeForm = ({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <Label htmlFor="ep-date">Data *</Label>
-          <Input
-            id="ep-date"
-            type="date"
-            value={serviceDate}
-            onChange={(e) => setServiceDate(e.target.value)}
-            required
-          />
+        <div className="sm:col-span-2 flex flex-col gap-3">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={allDay}
+              onChange={(e) => {
+                setAllDay(e.target.checked);
+                // If we switch mode, wipe the end so the user re-picks it
+                // in the right format rather than seeing a stale datetime.
+                setServiceEnd("");
+              }}
+              className="size-4"
+            />
+            Tutto il giorno
+          </label>
+          <div>
+            <Label htmlFor="ep-date">Data inizio *</Label>
+            <Input
+              id="ep-date"
+              type={allDay ? "date" : "datetime-local"}
+              value={serviceDate}
+              onChange={(e) => setServiceDate(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="ep-date-end">Data fine</Label>
+            <Input
+              id="ep-date-end"
+              type={allDay ? "date" : "datetime-local"}
+              value={serviceEnd}
+              onChange={(e) => setServiceEnd(e.target.value)}
+            />
+          </div>
         </div>
         <div>
           <Label htmlFor="ep-shooting">Riprese (EUR)</Label>
@@ -250,6 +291,15 @@ export const QuickEpisodeForm = ({
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="es. Catania"
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <Label htmlFor="ep-description">Descrizione</Label>
+          <Input
+            id="ep-description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="es. Savoca — Bar Vitelli"
           />
         </div>
         <div className="sm:col-span-2">
