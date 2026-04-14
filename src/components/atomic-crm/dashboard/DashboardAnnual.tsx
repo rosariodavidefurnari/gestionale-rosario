@@ -29,7 +29,6 @@ import { DashboardDeadlineTracker } from "./DashboardDeadlineTracker";
 import { DashboardDeadlinesCard } from "./DashboardDeadlinesCard";
 import { DichiarazioneEntryDialog } from "./DichiarazioneEntryDialog";
 import { DashboardFiscalKpis } from "./DashboardFiscalKpis";
-import { DashboardNextDeadlineCard } from "./DashboardNextDeadlineCard";
 import { DashboardFiscalWarnings } from "./DashboardFiscalWarnings";
 import { DashboardKpiCards } from "./DashboardKpiCards";
 import { DashboardLoading } from "./DashboardLoading";
@@ -195,15 +194,10 @@ export const DashboardAnnual = () => {
             )}
           </div>
 
-          {/* NEW: real-data-driven tax view (reads fiscal_declarations +
-              fiscal_obligations + F24 + payments). Shows "next deadline" with
-              concrete €/date instead of the old theoretical simulation. */}
-          {isCurrentYear && <DashboardNextDeadlineCard />}
-
           <p className="text-xs text-muted-foreground -mt-3">
-            I KPI qui sotto usano la simulazione teorica forfettaria
-            (coefficiente + aliquote di legge). Per le date e gli importi reali
-            da versare fai riferimento alla card &quot;Tasse&quot; in alto.
+            Questa parte usa ipotesi fiscali e configurazione del regime
+            forfettario: trattala come simulazione, non come dichiarazione
+            definitiva.
           </p>
 
           <DashboardFiscalWarnings warnings={data.fiscal.warnings} />
@@ -261,14 +255,10 @@ export const DashboardAnnual = () => {
         open={showDichiarazione}
         onOpenChange={setShowDichiarazione}
         taxYear={declarationTaxYear}
-        // NOTE: we used to pass data.fiscal.fiscalKpis.stima* here but those
-        // are the estimates for `selectedYear` (e.g. 2026 YTD), NOT for
-        // `declarationTaxYear` (e.g. 2025). The divergence warning produced
-        // bogus "Diverge >30%" alerts for every real declaration value. We
-        // now pass undefined so the dialog hides the warning entirely. A
-        // future iteration can compute the estimate for the right tax year.
-        estimatedSubstituteTax={undefined}
-        estimatedInps={undefined}
+        estimatedSubstituteTax={
+          data?.fiscal?.fiscalKpis.stimaImpostaAnnuale
+        }
+        estimatedInps={data?.fiscal?.fiscalKpis.stimaInpsAnnuale}
       />
 
       <F24RegistrationDialog

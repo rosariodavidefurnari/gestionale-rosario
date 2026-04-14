@@ -28,7 +28,6 @@ import type { CrmDataProvider } from "../providers/types";
 import { DashboardHistorical } from "./DashboardHistorical";
 import { DashboardAnnualAiSummaryCard } from "./DashboardAnnualAiSummaryCard";
 import { DashboardFiscalWarnings } from "./DashboardFiscalWarnings";
-import { DashboardNextDeadlineCard } from "./DashboardNextDeadlineCard";
 import { DichiarazioneEntryDialog } from "./DichiarazioneEntryDialog";
 import { F24RegistrationDialog } from "./F24RegistrationDialog";
 import { ObligationEntryDialog } from "./ObligationEntryDialog";
@@ -213,7 +212,6 @@ const MobileAnnualDashboard = () => {
               </Button>
             </div>
           )}
-          <DashboardNextDeadlineCard />
           <DashboardFiscalWarnings warnings={data.fiscal.warnings} />
           <MobileFiscalKpis
             fiscal={data.fiscal}
@@ -227,11 +225,10 @@ const MobileAnnualDashboard = () => {
         open={showDichiarazione}
         onOpenChange={setShowDichiarazione}
         taxYear={declarationTaxYear}
-        // See DashboardAnnual.tsx for context: the old stima* fields were
-        // for selectedYear, not declarationTaxYear — they triggered false
-        // "Diverge >30%" warnings. Passing undefined hides the warning.
-        estimatedSubstituteTax={undefined}
-        estimatedInps={undefined}
+        estimatedSubstituteTax={
+          data?.fiscal?.fiscalKpis.stimaImpostaAnnuale
+        }
+        estimatedInps={data?.fiscal?.fiscalKpis.stimaInpsAnnuale}
       />
       <F24RegistrationDialog
         open={f24Target != null}

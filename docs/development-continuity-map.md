@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-15 (dashboard fiscal — next deadline card on real-data baseline)
+Last updated: 2026-04-14 (fiscal reality layer — interest + compensation support)
 
 ---
 
@@ -14,7 +14,6 @@ Last updated: 2026-04-15 (dashboard fiscal — next deadline card on real-data b
 
 ### Recent Updates (cronologico, più recente in alto)
 
-- [2026-04-15](#update-2026-04-15--dashboard-fiscal-next-deadline-card-on-real-data-baseline) — Dashboard fiscal: next-deadline card on real-data baseline (`computeTaxSchedule` + `DashboardNextDeadlineCard`)
 - [2026-04-14](#update-2026-04-14--fiscal-reality-layer-interest--compensation-support) — Fiscal reality layer: explicit F24 interests (`1668` / `DPPI`) + submission `compensation_credit`
 - [2026-04-02 (f)](#update-2026-04-02-f--fiscal-reality-layer-mobile-parity) — Fiscal reality layer mobile parity: responsive dialogs (Sheet on mobile), fiscal buttons + dialogs wired in MobileAnnualDashboard
 - [2026-04-02 (e)](#update-2026-04-02-e--fiscal-reality-layer-ui-entry-dialogs) — Fiscal reality layer UI entry dialogs: DichiarazioneEntryDialog, F24RegistrationDialog, ObligationEntryDialog; trigger buttons in DashboardAnnual; Phase 1 inconsistency note in DeadlinesCard
@@ -107,103 +106,6 @@ Last updated: 2026-04-15 (dashboard fiscal — next deadline card on real-data b
 - [Nota manutenzione 2026-03-02](#nota-manutenzione-2026-03-02-fix-ci)
 - [Testing Session Log 2026-03-04](#testing-session-log-2026-03-04--e2e-complete-validation)
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
-
----
-
-## Update 2026-04-15 — Dashboard fiscal next deadline card on real-data baseline
-
-**Goal:** the user-facing tax widget must show concrete dates and amounts
-based on the real accountant declaration, not on the theoretical forfettario
-formula. For Rosario the theoretical rate (78% × 26.07% + 5%) ≈ 20.33% but
-the real rate from his 2024 declaration is 28.39% — a 20-30% gap that made
-the old dashboard mislead him into under-reserving for taxes.
-
-**New files:**
-
-- `src/components/atomic-crm/dashboard/computeTaxSchedule.ts` — pure function.
-  Inputs: `declarations + obligations + payments + paymentLines + todayIso`.
-  Outputs: `{baseline, ytd, upcomingDeadlines, totalCashOutYear,
-  totalSaldoPortion, totalAnticipoPortion}`. Picks the most recent
-  closed-year declaration with non-zero totals as baseline; computes
-  `effectiveRate = (total_sost + total_inps) / revenue_reported_year`;
-  applies it to current-year revenue for YTD matured taxes; reads future
-  obligations directly from the DB for upcoming deadlines; subtracts any
-  already-paid F24 payment lines. No formula, no magic constants.
-- `src/components/atomic-crm/dashboard/computeTaxSchedule.test.ts` — 10 unit
-  tests covering: baseline pick, 2024 real effective rate, YTD matured
-  projection, two-deadline rollup (expected 8.224,50 € giugno + 2.876,10 €
-  novembre = 11.100,60 € total for Rosario 2026), null baseline fallback,
-  placeholder declaration skip, bollo/dichiarazione exclusion from
-  high-priority, F24 payment line deduction.
-- `src/components/atomic-crm/dashboard/DashboardNextDeadlineCard.tsx` —
-  self-contained React card. Uses `useGetList<Payment>` to share the cache
-  with `useDashboardData`, plus 4 `useQuery` calls for fiscal declarations,
-  current-year obligations, next-year obligations, and enriched payment
-  lines. Shows: (a) salvadanaio YTD ("tuoi vs tasse maturate" with the real
-  effective rate), (b) next deadline big card, (c) second deadline small
-  card, (d) total cash out year with saldo/anticipo split.
-
-**Provider change:**
-
-- `fiscalRealityProvider.ts` — new `listFiscalDeclarations()` method that
-  returns all declarations for the authenticated user, ordered by
-  `tax_year`. Used by the new card to find the baseline.
-
-**Wiring change:**
-
-- `DashboardAnnual.tsx` — `<DashboardNextDeadlineCard />` inserted above
-  `<DashboardFiscalWarnings />` and `<DashboardFiscalKpis />` when
-  `isCurrentYear` is true. The old simulation KPIs remain below with a
-  disclaimer text clarifying they are theoretical.
-- `MobileDashboard.tsx` — same card inserted above
-  `<DashboardFiscalWarnings />` and `<MobileFiscalKpis />`.
-
-**Bug fix:**
-
-- `DichiarazioneEntryDialog` in both `DashboardAnnual` and `MobileDashboard`
-  used to receive `data.fiscal.fiscalKpis.stimaImpostaAnnuale` and
-  `stimaInpsAnnuale` as `estimatedSubstituteTax`/`estimatedInps` props.
-  Those are the estimates for `selectedYear` (e.g. 2026 YTD with 3.5 months
-  of data), but the dialog is for `declarationTaxYear = selectedYear - 1`
-  (e.g. 2025). Any real 2025 value the user typed would trigger a spurious
-  "Diverge >30% dalla stima CRM" warning against a YTD partial estimate of
-  a completely different year. Fix: pass `undefined` for now, hiding the
-  warning. A future iteration can compute the estimate for the correct tax
-  year using `buildFiscalYearEstimate({taxYear: declarationTaxYear})`.
-
-**What stays unchanged (intentional):**
-
-- `fiscalModel.ts` + `fiscalDeadlines.ts` + `buildFiscalRealityAwareSchedule`
-  are not touched. They still drive `DashboardFiscalKpis` and the existing
-  `DashboardDeadlinesCard` as a secondary "simulation" surface. Removing
-  them would have touched ~3.600 lines of test and several adjacent
-  surfaces; the additive approach keeps the PR small and reversible.
-- `fiscal_obligations` / `fiscal_declarations` / `fiscal_f24_submissions`
-  schemas unchanged. The new card reads from them as-is.
-
-**Manual DB snapshot used for Rosario (for reference, not committed):**
-
-- `fiscal_declarations` 2024: `total_substitute_tax=233, total_inps=3667.40,
-  prior_advances_substitute_tax=429, prior_advances_inps=1788.40` — this is
-  the real accountant output for the 2024 tax year.
-- `fiscal_declarations` 2025: `total_substitute_tax=423.17,
-  total_inps=6661.31, prior_advances_substitute_tax=233,
-  prior_advances_inps=1503.09` — projected from 2024 real × 2025/2024
-  revenue ratio (1.8162).
-- `fiscal_obligations` for 2026-06-30 and 2026-11-30: 6 rows with
-  `source='manual'` containing `imposta_saldo`, `inps_saldo`,
-  `imposta_acconto_1/2`, `inps_acconto_1/2` (totals ~11.100 €). The new
-  card reads them via `getFiscalObligations(2026)`.
-- `imposta_saldo 2024/2025` row was set to `amount=0, is_overridden=true`
-  because the 233 € was already covered by the 429 € advances paid in 2024;
-  the 196 € residual credit is represented on the 21/07/2025 F24 submission
-  via its `compensation_credit` column.
-
-**Related rule:** `DOM-6` added to `.claude/rules/learning.md` — "stima
-user-facing deve partire da dichiarazioni reali, mai formula teorica".
-
-**Related memory:** `project_fiscal_real_data_baseline.md` created in
-session memory index.
 
 ---
 
