@@ -63,6 +63,7 @@
 | **Dominio**  | DOM-5 | Fiscale due layer → check entrambi        |
 | **DB**       | DB-6  | Payload servizi figli → eredita client_id |
 | **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
+| **Backend**  | BE-9  | EF Calendar timed → usa timestamp service |
 
 ---
 
@@ -228,6 +229,12 @@ verify_jwt = false
 **Quando**: deployo Edge Functions con `npx supabase functions deploy`
 **Fare**: usare `--project-ref qvdmzhyzpyaveniirsmo`, NON il vecchio `dfrrigmjsvcsdhgqtikz`
 **Perché**: il progetto è stato ricreato, il vecchio ref dà 403
+
+### BE-9: google_calendar_sync timed event → usa i timestamp reali del service
+
+**Quando**: tocco `buildCalendarEvent` in `supabase/functions/google_calendar_sync/index.ts` oppure qualsiasi EF che converte record del CRM in eventi Google Calendar timed (non all-day)
+**Fare**: passare `service.service_date` e `service.service_end` VERBATIM come `dateTime` RFC3339 (i timestamp DB sono gia' `timestamp with time zone`, portano l'offset UTC, Google li parsa direttamente). MAI fare `service_date.slice(0,10)` per poi concatenare un orario hardcoded tipo `T09:00:00`. Se `service_end` e' null ma `all_day` e' false, fallback a `service_date + 1h` (non al giorno successivo e non a un default globale) per avere un range valido non degenere.
+**Perché**: il 2026-04-14 `buildCalendarEvent` aveva un TODO non chiuso ("Timed event: default 09:00–18:00") che prendeva solo la parte-data dei timestamp e concatenava `T09:00:00` / `T18:00:00`. Risultato: ogni evento timed sincronizzato su Google Calendar mostrava 09:00-18:00 invece degli orari reali inseriti dall'utente (es. 08:30-14:30 per "Savoca - Bar Vitelli"). Gli orari reali erano gia' presenti nel DB e nel form — il bug era solo nella serializzazione verso Google.
 
 ### WF-7: Dopo push → controlla CI autonomamente
 

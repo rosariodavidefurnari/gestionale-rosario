@@ -65,12 +65,16 @@ function buildCalendarEvent(
   descriptionLines.push(`\nApri nel Gestionale:\n${serviceUrl}`);
 
   // Date handling: all_day → date fields, otherwise dateTime
-  // DB may return ISO timestamps like "2023-03-21T00:00:00+00:00", extract date part
-  const startDate = service.service_date.slice(0, 10);
-  const endDate = (service.service_end || service.service_date).slice(0, 10);
-
+  // DB timestamps are `timestamp with time zone`, so they arrive here as RFC3339
+  // strings with an explicit UTC offset (e.g. "2026-04-11T06:30:00+00:00" for a
+  // service scheduled at 08:30 Europe/Rome). Google Calendar accepts that
+  // directly — it parses the offset and ignores the `timeZone` field when the
+  // offset is explicit, but we still pass "Europe/Rome" for clarity in case
+  // Google needs to render the event in the correct business timezone.
   if (service.all_day) {
-    // Google Calendar all-day events use exclusive end date
+    // All-day events need Y-M-D only, and Google Calendar uses exclusive end.
+    const startDate = service.service_date.slice(0, 10);
+    const endDate = (service.service_end || service.service_date).slice(0, 10);
     const endExclusive = addDaysToISODate(endDate, 1);
     return {
       summary,
@@ -81,13 +85,22 @@ function buildCalendarEvent(
     };
   }
 
-  // Timed event: default 09:00–18:00 in Europe/Rome
+  // Timed event: use the stored timestamps verbatim. If service_end is missing
+  // (valid edge case — the form allows leaving it blank), fall back to
+  // start + 1h so Google Calendar still gets a valid, non-degenerate range.
+  const startDateTime = service.service_date;
+  const endDateTime =
+    service.service_end ||
+    new Date(
+      new Date(service.service_date).getTime() + 60 * 60 * 1000,
+    ).toISOString();
+
   return {
     summary,
     description: descriptionLines.join("\n"),
     location: eventLocation,
-    start: { dateTime: `${startDate}T09:00:00`, timeZone: "Europe/Rome" },
-    end: { dateTime: `${endDate}T18:00:00`, timeZone: "Europe/Rome" },
+    start: { dateTime: startDateTime, timeZone: "Europe/Rome" },
+    end: { dateTime: endDateTime, timeZone: "Europe/Rome" },
   };
 }
 

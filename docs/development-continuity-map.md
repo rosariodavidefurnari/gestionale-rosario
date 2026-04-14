@@ -108,6 +108,46 @@ Last updated: 2026-04-02 (fiscal reality layer — mobile parity)
 
 ---
 
+## Update 2026-04-14 — Google Calendar sync honors real start/end times
+
+`buildCalendarEvent` in `supabase/functions/google_calendar_sync/index.ts`
+had a TODO left open for timed events: it took only the date portion of
+`service.service_date` / `service.service_end` and concatenated a fixed
+`T09:00:00` / `T18:00:00`, so every non-all-day service pushed to Google
+Calendar showed up as a 09:00-18:00 event regardless of the real hours
+entered in the form. A service scheduled 08:30-14:30 on 2026-04-11
+("Savoca - Bar Vitelli") was the regression witness that surfaced the
+bug.
+
+Fix: timed events now serialize `service_date` and `service_end`
+verbatim as RFC3339 `dateTime` values. Supabase returns the DB
+`timestamp with time zone` columns as ISO strings with explicit UTC
+offset (e.g. `2026-04-11T06:30:00+00:00`), which Google Calendar parses
+directly; `timeZone: "Europe/Rome"` is still passed for clarity even
+though Google ignores it when the offset is explicit. If
+`service_end` is null for a timed event (the form allows leaving it
+blank), the EF falls back to `start + 1h` so Google always gets a
+non-degenerate range.
+
+**Touched files**
+
+- `supabase/functions/google_calendar_sync/index.ts` —
+  `buildCalendarEvent` rewritten for timed events; all-day branch
+  unchanged.
+- `.claude/rules/learning.md` — new trigger BE-9 (google_calendar_sync
+  timed event → use real timestamps).
+
+**Deploy**: the EF was redeployed manually to the remote via
+`npx supabase functions deploy google_calendar_sync --project-ref qvdmzhyzpyaveniirsmo`
+before this commit. Reminder that `git push` alone does NOT deploy
+Edge Functions (see BE-1 + BE-8).
+
+**Back-compat**: existing Google Calendar events for services already
+synced before the fix keep their wrong 09:00-18:00 times until the next
+update/save on the source service. Saving the service in the CRM again
+triggers `update` on the EF, which rewrites the event with the correct
+timestamps.
+
 ## Update 2026-04-14 — Quick Episode client_id inheritance + dedup guard
 
 Two related regressions in the Quick Episode flow are fixed in a single pass:
