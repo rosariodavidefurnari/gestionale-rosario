@@ -66,6 +66,7 @@
 | **DB**       | DB-7  | F24 reali → interessi e compensazioni     |
 | **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
 | **Backend**  | BE-9  | EF Calendar timed → usa timestamp service |
+| **Dominio**  | DOM-6 | Stima fiscale → aliquota effettiva reale, no formula |
 
 ---
 
@@ -307,6 +308,12 @@ UTC midnight — giorno sbagliato in `Europe/Rome` nella stessa finestra.
 **Quando**: aggiungo feature fiscali, modifico deadline, dashboard o promemoria
 **Fare**: verificare ENTRAMBI i layer: 1) stima (fiscalModel, fiscalDeadlines) 2) realtà (fiscal_declarations, fiscal_obligations, F24). Un consumer deve usare `buildFiscalRealityAwareSchedule()` per il merge, MAI riscrivere la logica inline. Se tocco il layer stima, verificare che il read model produce output coerente. Se tocco il layer realtà, verificare che il fallback estimated funzioni ancora.
 **Perché**: il sistema ha 2 fonti fiscali — stime CRM e dati reali dal commercialista. Se una feature legge solo una delle due, mostra dati parziali o contraddittori. Phase 1 ha anche un'inconsistenza nota: dashboard mostra obblighi reali, promemoria automatici usano ancora le stime (Phase 2 follow-up).
+
+### DOM-6: Stima fiscale user-facing → aliquota effettiva reale, MAI formula teorica
+
+**Quando**: costruisco un widget/card che mostra all'utente "quanto pagherai" o "quanto accantonare" per il regime forfettario
+**Fare**: la stima user-facing deve partire dalla dichiarazione reale più recente del commercialista (`fiscal_declarations` con `total_substitute_tax + total_inps > 0`). Calcolare l'aliquota effettiva come `(sost + inps) / fatturato_reale_anno_dichiarazione` (fatturato dai `payments` con status=ricevuto). Applicare quella % al fatturato dell'anno in corso. Usare il modulo `computeTaxSchedule` (funzione pura) — NON duplicare la logica, NON inventare formule. `fiscalModel.ts`/`fiscalDeadlines.ts` (formula 78% × 26,07% × 5%) possono restare per compat ma NON guidano l'UX utente.
+**Perché**: il 15/04/2026 scoperto che la formula teorica forfettario sottostima del 20-30% il dovuto reale. Per Rosario, anno 2024 reale: 3.900,40 € totali su 13.740,18 € fatturato = aliquota effettiva 28,39%, ma il modello teorico calcolava 3.190 € (20,33% teorico × 78%). La formula ignora maternità 0,72%, conguagli, minimali INPS, scelte di arrotondamento del commercialista. Se il widget user-facing applica la formula, quando il fatturato raddoppia l'errore in valore assoluto diventa migliaia di euro e l'utente smette di fidarsi del gestionale. Componenti canonici: `DashboardNextDeadlineCard` (UI) + `computeTaxSchedule` (logica pura) + `listFiscalDeclarations` (dataProvider).
 
 ---
 

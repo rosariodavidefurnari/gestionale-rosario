@@ -955,6 +955,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/computeTaxSchedule.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/buildObligationsFromDeclaration.ts",
           "type": "registry:component"
         },
@@ -1004,6 +1008,10 @@
         },
         {
           "path": "src/components/atomic-crm/dashboard/DashboardPipelineCard.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardNextDeadlineCard.tsx",
           "type": "registry:component"
         },
         {

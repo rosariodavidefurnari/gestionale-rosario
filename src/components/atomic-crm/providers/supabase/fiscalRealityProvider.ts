@@ -108,6 +108,17 @@ export const buildFiscalRealityProviderMethods = () => ({
     return result.data as FiscalDeclaration | null;
   },
 
+  async listFiscalDeclarations(): Promise<FiscalDeclaration[]> {
+    const data = throwOnError(
+      await supabase
+        .from("fiscal_declarations")
+        .select("*")
+        .order("tax_year", { ascending: true }),
+      "listFiscalDeclarations",
+    );
+    return (data ?? []) as FiscalDeclaration[];
+  },
+
   async saveFiscalDeclaration(
     declaration: Omit<
       FiscalDeclaration,
