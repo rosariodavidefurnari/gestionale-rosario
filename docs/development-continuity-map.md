@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-14 (fiscal reality layer — interest + compensation support)
+Last updated: 2026-04-15 (ClientShow invoice draft button always-available + empty state)
 
 ---
 
@@ -14,6 +14,7 @@ Last updated: 2026-04-14 (fiscal reality layer — interest + compensation suppo
 
 ### Recent Updates (cronologico, più recente in alto)
 
+- [2026-04-15](#update-2026-04-15--clientshow-invoice-draft-always-available) — ClientShow: "Genera bozza fattura" button always visible + empty state in `InvoiceDraftDialog` when builder returns no collectable lines
 - [2026-04-14](#update-2026-04-14--fiscal-reality-layer-interest--compensation-support) — Fiscal reality layer: explicit F24 interests (`1668` / `DPPI`) + submission `compensation_credit`
 - [2026-04-02 (f)](#update-2026-04-02-f--fiscal-reality-layer-mobile-parity) — Fiscal reality layer mobile parity: responsive dialogs (Sheet on mobile), fiscal buttons + dialogs wired in MobileAnnualDashboard
 - [2026-04-02 (e)](#update-2026-04-02-e--fiscal-reality-layer-ui-entry-dialogs) — Fiscal reality layer UI entry dialogs: DichiarazioneEntryDialog, F24RegistrationDialog, ObligationEntryDialog; trigger buttons in DashboardAnnual; Phase 1 inconsistency note in DeadlinesCard
@@ -108,6 +109,56 @@ Last updated: 2026-04-14 (fiscal reality layer — interest + compensation suppo
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
 
 ---
+
+## Update 2026-04-15 — ClientShow invoice draft always-available
+
+**Modifica**
+- Rimossa la gate `hasCollectableAmount` attorno al bottone "Genera bozza
+  fattura" in `src/components/atomic-crm/clients/ClientShow.tsx`: il bottone
+  è ora sempre montato nel toolbar azioni del cliente (accanto a "Nuovo
+  pagamento" / "Modifica" / "Elimina").
+- `InvoiceDraftDialog` riceve ora il `draft` reale dal builder senza
+  riscriverlo a `null`. Il dialog stesso decide cosa renderizzare in base al
+  contenuto del draft.
+- Aggiunto in `src/components/atomic-crm/invoicing/InvoiceDraftDialog.tsx` un
+  sotto-componente locale `InvoiceDraftEmptyState`: quando `draft === null`
+  oppure `lineItems.length === 0`, il dialog renderizza un empty state
+  compatto con titolo, messaggio esplicativo ("Nessuna voce residua da
+  fatturare per questo cliente" + istruzione per rigenerare una fattura già
+  emessa rimuovendo `invoice_ref`) e un bottone "Chiudi". Nessun download
+  PDF/XML disponibile in questo ramo.
+- Semplificato il `useEffect` di auto-apertura via querystring
+  `?invoiceDraft=true`: non dipende più da `hasCollectableAmount`, apre il
+  dialog anche sul ramo empty state.
+- Rimosso l'import e l'uso di `hasInvoiceDraftCollectableAmount` da
+  `ClientShow.tsx`.
+
+**Scope e non-scope**
+- Scope: solo `ClientShow` + `InvoiceDraftDialog`.
+- Non toccati: `ProjectShow`, `ServiceShow`, `QuoteShow` (continuano a
+  gatehouse con `hasCollectableAmount`, per esplicita richiesta utente).
+- Non toccati: i 4 builder `buildInvoiceDraftFrom*` (comportamento
+  invariato, continuano a filtrare per `!invoice_ref`).
+- Nessuna modifica a schema, tipi, migration, Edge Functions.
+
+**Perché**
+- Sull'uso reale capitava di aprire un cliente con tutti i servizi già
+  marcati `invoice_ref` (es. Gustare Sicilia, saldo contabile ≠ 0 ma nessun
+  residuo fatturabile). Il bottone spariva senza feedback, lasciando l'utente
+  a chiedersi "perché non c'è più?". Ora l'azione è sempre disponibile e il
+  dialog spiega in-context perché non c'è nulla da generare e come recuperare
+  una bozza passata.
+
+**Sweep**
+- `ClientShow` è l'unico consumer del flow per questo entry point: non esiste
+  un `MobileClientShow`, quindi niente parity sweep.
+- `InvoiceDraftDialog` resta condiviso con gli altri 3 Show: la nuova
+  condizione `!draft || lineItems.length === 0` è più difensiva, non cambia
+  il comportamento quando il caller passa un draft valido (comportamento
+  verificato tramite lo stesso check sul ramo populated del dialog).
+
+**Riferimenti**
+- Spec di brainstorming: [`docs/superpowers/specs/2026-04-15-client-invoice-draft-always-available-design.md`](superpowers/specs/2026-04-15-client-invoice-draft-always-available-design.md).
 
 ## Update 2026-04-14 — Fiscal reality layer: interest + compensation support
 

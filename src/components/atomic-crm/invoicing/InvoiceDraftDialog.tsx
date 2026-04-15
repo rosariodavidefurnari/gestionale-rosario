@@ -34,6 +34,42 @@ const formatAmount = (value: number) =>
     minimumFractionDigits: 2,
   });
 
+const InvoiceDraftEmptyState = ({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContent className="max-w-md">
+      <DialogHeader>
+        <DialogTitle className="text-lg font-bold text-[#2C3E50]">
+          Bozza fattura
+        </DialogTitle>
+        <DialogDescription>
+          Nessuna voce residua da fatturare per questo cliente.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="rounded-lg border border-dashed border-[#2C3E50]/30 bg-[#E8EDF2]/40 p-4 text-sm text-[#2C3E50]">
+        Tutti i servizi e le spese collegate al cliente risultano già marcate
+        con un riferimento fattura. Se devi rigenerare una fattura già emessa,
+        rimuovi il riferimento <code>invoice_ref</code> dai record interessati
+        e riapri questa finestra.
+      </div>
+      <div className="flex justify-end pt-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+        >
+          Chiudi
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+);
+
 export const InvoiceDraftDialog = ({
   open,
   onOpenChange,
@@ -56,8 +92,8 @@ export const InvoiceDraftDialog = ({
     [lineItems],
   );
 
-  if (!draft) {
-    return null;
+  if (!draft || lineItems.length === 0) {
+    return <InvoiceDraftEmptyState open={open} onOpenChange={onOpenChange} />;
   }
 
   const clientName =

@@ -26,7 +26,6 @@ import { buildPaymentCreatePathFromClient } from "../payments/paymentLinking";
 import { ClientContactsSection } from "../contacts/ClientContactsSection";
 import { InvoiceDraftDialog } from "../invoicing/InvoiceDraftDialog";
 import { buildInvoiceDraftFromClient } from "../invoicing/buildInvoiceDraftFromClient";
-import { hasInvoiceDraftCollectableAmount } from "../invoicing/invoiceDraftTypes";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { CloudinaryImageField } from "../cloudinary/CloudinaryImageField";
 import { TagsListEdit } from "../tags/TagsListEdit";
@@ -128,14 +127,12 @@ const ClientHeader = ({ record }: { record: Client }) => {
     expenses: clientExpenses,
     payments: clientPayments,
   });
-  const hasCollectableAmount = hasInvoiceDraftCollectableAmount(invoiceDraft);
-
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get("invoiceDraft") === "true" && hasCollectableAmount) {
+    if (searchParams.get("invoiceDraft") === "true") {
       setInvoiceDraftOpen(true);
     }
-  }, [hasCollectableAmount, location.search]);
+  }, [location.search]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -170,23 +167,21 @@ const ClientHeader = ({ record }: { record: Client }) => {
             Nuovo pagamento
           </Link>
         </Button>
-        {hasCollectableAmount ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => setInvoiceDraftOpen(true)}
-          >
-            Genera bozza fattura
-          </Button>
-        ) : null}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => setInvoiceDraftOpen(true)}
+        >
+          Genera bozza fattura
+        </Button>
         <EditButton />
         <DeleteButton redirect="list" />
       </div>
       <InvoiceDraftDialog
         open={invoiceDraftOpen}
         onOpenChange={setInvoiceDraftOpen}
-        draft={hasCollectableAmount ? invoiceDraft : null}
+        draft={invoiceDraft}
       />
     </div>
   );
