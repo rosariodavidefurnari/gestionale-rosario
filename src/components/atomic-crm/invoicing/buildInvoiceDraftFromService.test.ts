@@ -257,4 +257,38 @@ describe("buildServiceLineDescription with projectLabel prefix", () => {
       "Rosario Bambara · Riprese Montaggio del 10/01/2026",
     );
   });
+
+  it("deduplicates location when it matches description (case-insensitive)", () => {
+    // Real-world case from GUSTARE SICILIA invoice: description and
+    // location both filled with the same city name.
+    const service = baseService({
+      description: "Piana Degli Albanesi",
+      location: "Piana Degli Albanesi",
+    });
+    expect(buildServiceLineDescription(service, "GUSTARE SICILIA - 2026")).toBe(
+      "GUSTARE SICILIA - 2026 · Piana Degli Albanesi · Riprese Montaggio del 10/01/2026",
+    );
+
+    // Same, case-insensitive
+    const svcCase = baseService({
+      description: "SAVOCA",
+      location: "savoca",
+    });
+    expect(buildServiceLineDescription(svcCase)).toBe(
+      "SAVOCA · Riprese Montaggio del 10/01/2026",
+    );
+  });
+
+  it("keeps location when it differs from description", () => {
+    // When description and location are semantically distinct, both
+    // should still appear (e.g. description="Puntata 5" at
+    // location="Piana Degli Albanesi").
+    const service = baseService({
+      description: "Puntata 5",
+      location: "Piana Degli Albanesi",
+    });
+    expect(buildServiceLineDescription(service)).toBe(
+      "Puntata 5 · Riprese Montaggio del 10/01/2026 · Piana Degli Albanesi",
+    );
+  });
 });

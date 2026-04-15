@@ -57,14 +57,26 @@ export const buildServiceLineDescription = (
     service.all_day,
   );
 
-  if (service.description?.trim()) {
-    parts.push(service.description.trim());
+  const trimmedDescription = service.description?.trim() ?? "";
+  const trimmedLocation = service.location?.trim() ?? "";
+
+  if (trimmedDescription) {
+    parts.push(trimmedDescription);
   }
 
   parts.push(dateRange ? `${serviceType} del ${dateRange}` : serviceType);
 
-  if (service.location?.trim()) {
-    parts.push(service.location.trim());
+  // Skip location when it's an exact duplicate of the description
+  // (case-insensitive). Users sometimes fill both fields with the
+  // shoot city — e.g. description="Piana Degli Albanesi" and
+  // location="Piana Degli Albanesi". Without this guard the line
+  // would read "... · Piana Degli Albanesi · Montaggio del X · Piana
+  // Degli Albanesi", which is noise on the invoice.
+  if (
+    trimmedLocation &&
+    trimmedLocation.toLowerCase() !== trimmedDescription.toLowerCase()
+  ) {
+    parts.push(trimmedLocation);
   }
 
   return parts.join(" · ");

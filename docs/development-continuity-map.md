@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-15 (Invoice draft service lines include project name prefix for SdI clarity)
+Last updated: 2026-04-15 (Invoice draft: deduplicate location when identical to service description)
 
 ---
 
