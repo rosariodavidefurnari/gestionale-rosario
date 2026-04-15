@@ -528,8 +528,11 @@ describe("mergeKmLinesIntoPrecedingService", () => {
     expect(result).toHaveLength(1);
     expect(result[0].kind).toBe("service");
     expect(result[0].unitPrice).toBeCloseTo(437.86, 2);
-    expect(result[0].description).toContain("(incl. rimborso trasferta");
-    expect(result[0].description).toContain("EUR 48.86");
+    // Neutral wording: no "rimborso" (fiscally loaded term) and no
+    // numeric amount that would suggest a scorporabile reimbursement.
+    expect(result[0].description).toContain("(comprensivo di trasferta)");
+    expect(result[0].description).not.toContain("rimborso");
+    expect(result[0].description).not.toContain("48.86");
   });
 
   it("pairs each km line with its own preceding service (multiple services)", () => {

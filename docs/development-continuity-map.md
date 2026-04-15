@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-15 (FatturaPA XML: ImponibileImporto fix + DatiBollo emission, verified against XSD v1.2.3)
+Last updated: 2026-04-15 (Invoice draft km annotation uses neutral wording, avoids "rimborso" term)
 
 ---
 
@@ -109,6 +109,43 @@ Last updated: 2026-04-15 (FatturaPA XML: ImponibileImporto fix + DatiBollo emiss
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
 
 ---
+
+## Update 2026-04-15 — Invoice draft km annotation: neutral wording
+
+**Bug semantico (non bloccante lato SdI)**
+- Dopo il fix del merge km nei servizi, la descrizione della riga
+  XML consolidata conteneva `(incl. rimborso trasferta EUR X,YY)`.
+  Il termine `rimborso` ha un significato tecnico preciso nell'IVA
+  italiana: evoca l'art. 15 DPR 633/72 (spese anticipate in nome e
+  per conto del cliente, NON imponibili). Nel nostro caso i km sono
+  invece una **componente piena di ricavo** della prestazione — e
+  per regime forfettario RF19 / Natura N2.2 l'intero `PrezzoTotale`
+  della riga e' imponibile. Un commercialista distratto o un
+  controllo potrebbe leggere `rimborso` come rinvio all'art. 15
+  (scorporabile), mentre qui e' dentro imponibile.
+
+**Fix**
+- `invoiceDraftXml.ts` `mergeKmLinesIntoPrecedingService`:
+  annotazione sostituita con `(comprensivo di trasferta)`. Niente
+  piu' parola `rimborso`, niente importo numerico isolato.
+  L'informazione che la riga include la componente viaggio resta
+  trasparente, senza ambiguita' fiscale.
+- Guardia idempotente: se la descrizione termina gia' con
+  l'annotazione non la duplica su merge ripetuti.
+
+**Test**
+- `mergeKmLinesIntoPrecedingService` single-service: ora asserisce
+  `(comprensivo di trasferta)` + assenza di `rimborso` e del numero
+  `48.86` nella descrizione merged.
+
+**Contesto fiscale**
+- Regime forfettario RF19: i "rimborsi" km addebitati al cliente
+  come maggiorazione della prestazione sono ricavo pieno. Non
+  confondibili con i rimborsi spese ex art. 15 DPR 633/72, che
+  richiedono documenti intestati al cliente e restano fuori
+  imponibile. Il XML FatturaPA qui generato e' coerente con il
+  primo scenario (ricavo pieno, Natura N2.2 per assenza di IVA
+  dovuta al regime agevolato, non per natura art. 15).
 
 ## Update 2026-04-15 — FatturaPA XML: ImponibileImporto fix + DatiBollo emission
 

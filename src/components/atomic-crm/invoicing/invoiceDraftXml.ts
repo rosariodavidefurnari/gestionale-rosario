@@ -129,11 +129,22 @@ export const mergeKmLinesIntoPrecedingService = (
         const kmAmount = line.quantity * line.unitPrice;
         const mergedUnitPrice =
           last.unitPrice + kmAmount / (last.quantity || 1);
+        // Annotation uses neutral wording: "(comprensivo di trasferta)".
+        // We deliberately AVOID the word "rimborso" and the numeric
+        // amount — both would wrongly suggest the km component is a
+        // rimborso ex art. 15 DPR 633/72 (which is non-taxable and
+        // must be kept OUT of the imponibile). Here the km is fully
+        // part of the taxable service revenue under regime forfettario
+        // RF19 / Natura N2.2. Keeping the wording neutral prevents
+        // any reader from interpreting the line as a scorporabile
+        // reimbursement.
+        const annotation = "(comprensivo di trasferta)";
+        const alreadyAnnotated = last.description.endsWith(annotation);
         out[out.length - 1] = {
           ...last,
-          description:
-            `${last.description} ` +
-            `(incl. rimborso trasferta EUR ${kmAmount.toFixed(2)})`,
+          description: alreadyAnnotated
+            ? last.description
+            : `${last.description} ${annotation}`,
           unitPrice: mergedUnitPrice,
         };
         continue;
