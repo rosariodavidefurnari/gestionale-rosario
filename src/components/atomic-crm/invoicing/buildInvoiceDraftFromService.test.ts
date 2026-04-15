@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import type { Client, Service } from "../types";
-import { buildInvoiceDraftFromService } from "./buildInvoiceDraftFromService";
+import type { Client, Project, Service } from "../types";
+import {
+  buildInvoiceDraftFromService,
+  buildServiceLineDescription,
+  formatProjectLabel,
+} from "./buildInvoiceDraftFromService";
 
 const baseClient: Client = {
   id: "client-1",
@@ -196,5 +200,61 @@ describe("buildInvoiceDraftFromService", () => {
     });
 
     expect(draft.source.label).toBe("Spot promo · 10/01/2026");
+  });
+});
+
+describe("formatProjectLabel", () => {
+  const baseProject: Pick<Project, "name" | "category"> = {
+    name: "VALE IL VIAGGIO - 2026",
+    category: "produzione_tv",
+  };
+
+  it("returns the trimmed project name when available", () => {
+    expect(formatProjectLabel(baseProject)).toBe("VALE IL VIAGGIO - 2026");
+  });
+
+  it("falls back to prettified category when name is empty", () => {
+    expect(formatProjectLabel({ name: "   ", category: "produzione_tv" })).toBe(
+      "Produzione Tv",
+    );
+    expect(formatProjectLabel({ name: "", category: "spot" })).toBe("Spot");
+    expect(formatProjectLabel({ name: "", category: "evento_privato" })).toBe(
+      "Evento Privato",
+    );
+  });
+
+  it("returns undefined for null / undefined project", () => {
+    expect(formatProjectLabel(null)).toBeUndefined();
+    expect(formatProjectLabel(undefined)).toBeUndefined();
+  });
+});
+
+describe("buildServiceLineDescription with projectLabel prefix", () => {
+  it("prepends the project label separated by '·'", () => {
+    const service = baseService({
+      description: "Rosario Bambara",
+      location: "Taormina",
+    });
+    const desc = buildServiceLineDescription(service, "VALE IL VIAGGIO - 2026");
+    expect(desc).toBe(
+      "VALE IL VIAGGIO - 2026 · Rosario Bambara · Riprese Montaggio del 10/01/2026 · Taormina",
+    );
+  });
+
+  it("omits the prefix when projectLabel is empty or whitespace", () => {
+    const service = baseService({ description: "Rosario Bambara" });
+    expect(buildServiceLineDescription(service, "")).toBe(
+      "Rosario Bambara · Riprese Montaggio del 10/01/2026",
+    );
+    expect(buildServiceLineDescription(service, "   ")).toBe(
+      "Rosario Bambara · Riprese Montaggio del 10/01/2026",
+    );
+  });
+
+  it("behaves identically to the zero-arg form when projectLabel is omitted", () => {
+    const service = baseService({ description: "Rosario Bambara" });
+    expect(buildServiceLineDescription(service)).toBe(
+      "Rosario Bambara · Riprese Montaggio del 10/01/2026",
+    );
   });
 });

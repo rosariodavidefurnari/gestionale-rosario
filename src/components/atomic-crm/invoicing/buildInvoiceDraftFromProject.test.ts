@@ -82,8 +82,12 @@ describe("buildInvoiceDraftFromProject", () => {
     });
 
     expect(draft.lineItems).toHaveLength(6);
-    expect(draft.lineItems[0].description).toBe("Riprese del 10/01/2026");
-    expect(draft.lineItems[5].description).toBe("Riprese del 15/01/2026");
+    expect(draft.lineItems[0].description).toBe(
+      "Progetto Alpha · Riprese del 10/01/2026",
+    );
+    expect(draft.lineItems[5].description).toBe(
+      "Progetto Alpha · Riprese del 15/01/2026",
+    );
   });
 
   it("adds per-service km reimbursement lines", () => {
@@ -108,13 +112,13 @@ describe("buildInvoiceDraftFromProject", () => {
     // s1: service line + km line, s2: service line + km line, s3 excluded (different project)
     expect(draft.lineItems).toHaveLength(4);
     expect(draft.lineItems[1]).toEqual({
-      description: "Rimborso chilometrico · 10 km × €0,20/km",
+      description: "Progetto Alpha · Rimborso chilometrico · 10 km × €0,20/km",
       quantity: 1,
       unitPrice: 2,
       kind: "km",
     });
     expect(draft.lineItems[3]).toEqual({
-      description: "Rimborso chilometrico · 5 km × €0,20/km",
+      description: "Progetto Alpha · Rimborso chilometrico · 5 km × €0,20/km",
       quantity: 1,
       unitPrice: 1,
       kind: "km",

@@ -12,22 +12,24 @@ import {
 import {
   buildServiceLineDescription,
   buildKmLineDescription,
+  formatProjectLabel,
 } from "./buildInvoiceDraftFromService";
 
 const PROJECTLESS_KEY = "__client_level__";
+const PROJECTLESS_LABEL = "Servizi senza progetto";
 
-const getProjectLabel = ({
+const getGroupLabel = ({
   projectId,
   projectsById,
 }: {
   projectId: string;
   projectsById: Map<string, Project>;
-}) => {
+}): string => {
   if (projectId === PROJECTLESS_KEY) {
-    return "Servizi senza progetto";
+    return PROJECTLESS_LABEL;
   }
-
-  return projectsById.get(projectId)?.name ?? "Progetto";
+  const project = projectsById.get(projectId);
+  return formatProjectLabel(project) ?? "Progetto";
 };
 
 export const buildInvoiceDraftFromClient = ({
@@ -68,7 +70,7 @@ export const buildInvoiceDraftFromClient = ({
   const lineItems: InvoiceDraftLineItem[] = [];
 
   grouped.forEach((groupServices, projectId) => {
-    const projectLabel = getProjectLabel({ projectId, projectsById });
+    const groupLabel = getGroupLabel({ projectId, projectsById });
 
     const sorted = [...groupServices].sort(
       (a, b) =>
@@ -79,7 +81,7 @@ export const buildInvoiceDraftFromClient = ({
       const netValue = calculateServiceNetValue(service);
       if (netValue > 0) {
         lineItems.push({
-          description: `${projectLabel} · ${buildServiceLineDescription(service)}`,
+          description: buildServiceLineDescription(service, groupLabel),
           quantity: 1,
           unitPrice: netValue,
           kind: "service",
@@ -93,7 +95,11 @@ export const buildInvoiceDraftFromClient = ({
       });
       if (kmValue > 0) {
         lineItems.push({
-          description: `${projectLabel} · ${buildKmLineDescription(service, defaultKmRate)}`,
+          description: buildKmLineDescription(
+            service,
+            defaultKmRate,
+            groupLabel,
+          ),
           quantity: 1,
           unitPrice: kmValue,
           kind: "km",
@@ -114,7 +120,7 @@ export const buildInvoiceDraftFromClient = ({
       !e.source_service_id,
   )) {
     const projectLabel = expense.project_id
-      ? getProjectLabel({
+      ? getGroupLabel({
           projectId: String(expense.project_id),
           projectsById,
         })

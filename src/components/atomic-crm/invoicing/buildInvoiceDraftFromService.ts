@@ -3,22 +3,52 @@ import {
   calculateServiceNetValue,
 } from "@/lib/semantics/crmSemanticRegistry";
 
-import type { Client, Service } from "../types";
+import type { Client, Project, Service } from "../types";
 import type { InvoiceDraftInput } from "./invoiceDraftTypes";
 import { formatDateRange } from "../misc/formatDateRange";
 
-const prettifyServiceType = (value: string) =>
+const prettifyEnum = (value: string) =>
   value.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
+
+const prettifyServiceType = prettifyEnum;
+
+/**
+ * Build a user-facing label for a project to be used as a prefix in
+ * invoice line descriptions. Prefers `project.name` (mandatory in the
+ * type but defensive against runtime empty strings) and falls back to
+ * a prettified `project.category` if the name is missing.
+ *
+ * Returns undefined if neither is available.
+ */
+export const formatProjectLabel = (
+  project: Pick<Project, "name" | "category"> | null | undefined,
+): string | undefined => {
+  if (!project) return undefined;
+  const trimmedName = project.name?.trim();
+  if (trimmedName) return trimmedName;
+  if (project.category) return prettifyEnum(project.category);
+  return undefined;
+};
 
 /**
  * Build a comprehensive line-item description from all populated service
- * fields so the invoice draft is self-explanatory.
+ * fields so the invoice draft is self-explanatory. When `projectLabel`
+ * is provided it is prepended to the description so the line carries
+ * the project context even when read in isolation (e.g. in the XML
+ * sent to SdI, which has no "Rif. progetto" field).
  *
- * Pattern: "{description} · {ServiceType} del {date range} · {location}"
- * Parts are omitted when the underlying field is empty/null.
+ * Pattern: "{projectLabel} · {description} · {ServiceType} del {date range} · {location}"
+ * Any part is omitted when the underlying field is empty/null.
  */
-export const buildServiceLineDescription = (service: Service): string => {
+export const buildServiceLineDescription = (
+  service: Service,
+  projectLabel?: string,
+): string => {
   const parts: string[] = [];
+
+  if (projectLabel?.trim()) {
+    parts.push(projectLabel.trim());
+  }
 
   const serviceType = prettifyServiceType(service.service_type);
   const dateRange = formatDateRange(
@@ -61,8 +91,15 @@ const formatKmRate = (rate: number) =>
 export const buildKmLineDescription = (
   service: Service,
   defaultKmRate: number,
+  projectLabel?: string,
 ): string => {
-  const parts: string[] = ["Rimborso chilometrico"];
+  const parts: string[] = [];
+
+  if (projectLabel?.trim()) {
+    parts.push(projectLabel.trim());
+  }
+
+  parts.push("Rimborso chilometrico");
 
   if (service.travel_origin?.trim() && service.travel_destination?.trim()) {
     const route = `${service.travel_origin.trim()} – ${service.travel_destination.trim()}`;

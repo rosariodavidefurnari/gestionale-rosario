@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-15 (FatturaPA XML cent-snap: fix sum(PrezzoTotale) vs ImponibileImporto drift)
+Last updated: 2026-04-15 (Invoice draft service lines include project name prefix for SdI clarity)
 
 ---
 
@@ -109,6 +109,54 @@ Last updated: 2026-04-15 (FatturaPA XML cent-snap: fix sum(PrezzoTotale) vs Impo
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
 
 ---
+
+## Update 2026-04-15 — Invoice draft: project name prefix in service descriptions
+
+**Motivazione**
+- Fino a prima, la descrizione di ogni `<DettaglioLinee>` contiene
+  solo `{service.description} · {ServiceType} del {date} · {location}`.
+  Il nome del progetto appariva solo come `Rif.` in fondo al PDF, ma
+  nell'XML non c'e' un campo strutturato equivalente: SdI e il cliente
+  vedono solo la stringa `Descrizione`. Righe isolate come
+  "Rosario Bambara · Riprese Montaggio del 02/02/2026 · Taormina"
+  non permettono di ricondurre la prestazione al progetto committente.
+
+**Fix**
+- Nuovo helper `formatProjectLabel(project)` in
+  `buildInvoiceDraftFromService.ts`: restituisce `project.name`
+  trimmato; se vuoto, fallback a `prettifyEnum(project.category)`
+  (es. `produzione_tv` -> `Produzione Tv`); se entrambi mancano,
+  `undefined`.
+- `buildServiceLineDescription(service, projectLabel?)` accetta un
+  parametro opzionale che viene PREPENDUTO alla descrizione:
+  `{projectLabel} · {desc} · {type del date} · {location}`.
+- `buildKmLineDescription(service, defaultKmRate, projectLabel?)`
+  stessa cosa sulle righe km (prima di "Rimborso chilometrico").
+- `buildInvoiceDraftFromProject`: calcola `projectLabel` una volta
+  e lo passa a ogni riga generata.
+- `buildInvoiceDraftFromClient`: refactor da `getProjectLabel` ->
+  `getGroupLabel`, che usa `formatProjectLabel` per progetti reali
+  e `"Servizi senza progetto"` per il gruppo PROJECTLESS. Rimossa
+  la concatenazione manuale `${label} · ${desc}` — ora passata via
+  parametro.
+- `buildInvoiceDraftFromService` (flow standalone senza project a
+  disposizione): **non cambia**. Se in futuro serve, basta passare
+  il progetto dal call site.
+
+**Test**
+- Aggiornati i test del project builder che asserivano descrizioni
+  senza prefisso.
+- Nuovo describe `formatProjectLabel`: name presente, fallback su
+  category prettificata, null/undefined -> undefined.
+- Nuovo describe `buildServiceLineDescription with projectLabel
+  prefix`: prefix presente, prefix vuoto/whitespace, zero-arg
+  retrocompatibilita'.
+
+**Risultato atteso**
+- Ogni riga XML della bozza ora dice ad es.:
+  `VALE IL VIAGGIO - 2026 · Rosario Bambara · Riprese Montaggio del
+   02/02/2026 · Taormina (comprensivo di trasferta)`
+  e quindi e' auto-esplicativa anche letta in isolamento.
 
 ## Update 2026-04-15 — FatturaPA XML cent-snap: fix sum(PrezzoTotale) drift
 

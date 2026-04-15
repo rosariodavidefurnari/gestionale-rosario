@@ -12,6 +12,7 @@ import { getInvoiceDraftLineTotal } from "./invoiceDraftTypes";
 import {
   buildServiceLineDescription,
   buildKmLineDescription,
+  formatProjectLabel,
 } from "./buildInvoiceDraftFromService";
 
 type DraftPayment = Pick<Payment, "amount" | "payment_type" | "status">;
@@ -43,6 +44,12 @@ export const buildInvoiceDraftFromProject = ({
         new Date(right.service_date).valueOf(),
     );
 
+  // Project label (name, fallback to category) is prepended to every
+  // service line so each <DettaglioLinee> in the emitted XML is
+  // self-explanatory even when read in isolation — the SdI format has
+  // no structured "Rif. progetto" field, only free-text descriptions.
+  const projectLabel = formatProjectLabel(project);
+
   const lineItems: InvoiceDraftLineItem[] = projectServices.flatMap(
     (service) => {
       const items: InvoiceDraftLineItem[] = [];
@@ -50,7 +57,7 @@ export const buildInvoiceDraftFromProject = ({
       const netValue = calculateServiceNetValue(service);
       if (netValue > 0) {
         items.push({
-          description: buildServiceLineDescription(service),
+          description: buildServiceLineDescription(service, projectLabel),
           quantity: 1,
           unitPrice: netValue,
           kind: "service",
@@ -64,7 +71,11 @@ export const buildInvoiceDraftFromProject = ({
       });
       if (kmValue > 0) {
         items.push({
-          description: buildKmLineDescription(service, defaultKmRate),
+          description: buildKmLineDescription(
+            service,
+            defaultKmRate,
+            projectLabel,
+          ),
           quantity: 1,
           unitPrice: kmValue,
           kind: "km",
