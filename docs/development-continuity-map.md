@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-15 (Invoice draft km annotation uses neutral wording, avoids "rimborso" term)
+Last updated: 2026-04-15 (FatturaPA XML cent-snap: fix sum(PrezzoTotale) vs ImponibileImporto drift)
 
 ---
 
@@ -109,6 +109,51 @@ Last updated: 2026-04-15 (Invoice draft km annotation uses neutral wording, avoi
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
 
 ---
+
+## Update 2026-04-15 — FatturaPA XML cent-snap: fix sum(PrezzoTotale) drift
+
+**Bug**
+- Aruba "Verifica calcoli" segnalava `ImponibileImporto` discordante
+  dai `<PrezzoTotale>` dichiarati nell'XML. Causa: `calculateKmReimbursement`
+  ritorna il prodotto `km_distance * km_rate` senza arrotondare a 2
+  decimali. Esempio reale: `195.43 * 0.25 = 48.8575`. Il valore viene
+  stampato come `"48.86"` da `toFixed(2)` ma internamente il float
+  resta `48.8575`. Sommando 7 righe km con mezzo cent di drift si
+  accumulano ~0.0075 EUR per riga, che arrotondati per difetto nella
+  somma globale danno `ImponibileImporto = 3416.91` mentre la somma
+  aritmetica delle stringhe visualizzate e' `3416.92`. 1 cent di
+  differenza = warning Aruba.
+
+**Fix**
+- `invoiceDraftXml.ts`:
+  - Nuovo helper `round2(n) = Math.round(n * 100) / 100`, single
+    source of truth per lo snap a 2 decimali.
+  - Dopo il merge km, ogni `unitPrice` delle `lines` viene
+    normalizzato con `round2` (cent-clean).
+  - `taxableAmount` e `totalAmount` calcolati direttamente dalle
+    `lines` cent-snapped (bypass di `computeInvoiceDraftTotals` per
+    evitare doppia normalizzazione non necessaria).
+  - `<PrezzoTotale>` di ogni `DettaglioLinee` emette
+    `fmtNum(round2(quantity * unitPrice))`.
+  - `mergeKmLinesIntoPrecedingService`: sia `kmAmount` sia
+    `mergedUnitPrice` passano per `round2` prima di essere scritti
+    nel line item merged.
+
+**Invariante garantita**
+- `sum(PrezzoTotale stringhe XML) == ImponibileImporto == taxableAmount`
+  con precisione esatta al centesimo.
+- `ImportoTotaleDocumento == taxableAmount + stampDuty` con
+  precisione esatta al centesimo.
+
+**Test**
+- Nuovo test di regressione end-to-end
+  `buildInvoiceDraftXml - sum(PrezzoTotale) == ImponibileImporto
+  invariant`: costruisce un draft con 7 righe km aventi il pattern
+  reale di mezzo-cent (195.43, 162.17, 156.8, 156.8, 157.59 km a
+  0.25 EUR/km), genera l'XML, e verifica che la somma dei
+  `<PrezzoTotale>` visibili nell'XML coincida esattamente con il
+  `<ImponibileImporto>` dichiarato e che `ImportoTotaleDocumento`
+  includa correttamente il bollo.
 
 ## Update 2026-04-15 — Invoice draft km annotation: neutral wording
 

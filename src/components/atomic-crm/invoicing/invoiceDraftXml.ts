@@ -1,8 +1,6 @@
 import { todayISODate } from "@/lib/dateTimezone";
 import type { BusinessProfile, Client } from "../types";
 import {
-  computeInvoiceDraftTotals,
-  getInvoiceDraftLineTotal,
   normalizeInvoiceDraftLineItems,
   type InvoiceDraftInput,
   type InvoiceDraftLineItem,
@@ -126,9 +124,14 @@ export const mergeKmLinesIntoPrecedingService = (
     if (line.kind === "km") {
       const last = out[out.length - 1];
       if (last && last.kind === "service") {
-        const kmAmount = line.quantity * line.unitPrice;
-        const mergedUnitPrice =
-          last.unitPrice + kmAmount / (last.quantity || 1);
+        // Round km contribution to cents so the merged unit price is
+        // cent-exact; otherwise float drift from calculateKmReimbursement
+        // (e.g. 195.43 * 0.25 = 48.8575) breaks the
+        // sum(PrezzoTotale) == ImponibileImporto invariant.
+        const kmAmount = round2(line.quantity * line.unitPrice);
+        const mergedUnitPrice = round2(
+          last.unitPrice + kmAmount / (last.quantity || 1),
+        );
         // Annotation uses neutral wording: "(comprensivo di trasferta)".
         // We deliberately AVOID the word "rimborso" and the numeric
         // amount — both would wrongly suggest the km component is a
@@ -157,6 +160,20 @@ export const mergeKmLinesIntoPrecedingService = (
 
 /** Format a number with exactly `decimals` decimal places (no locale). */
 const fmtNum = (n: number, decimals = 2) => n.toFixed(decimals);
+
+/**
+ * Round a number to 2 decimal places (cent precision) using half-up
+ * rounding. CRITICAL for SdI validation: every monetary value emitted
+ * into the XML must be cent-exact so that
+ *   sum(PrezzoTotale) == ImponibileImporto
+ * holds arithmetically. Without rounding, `calculateKmReimbursement`
+ * can return values like `48.8575` (195.43 km × 0.25) that render as
+ * "48.86" via fmtNum but accumulate a 0.75-cent drift per line when
+ * summed internally — triggering "Verifica calcoli" warnings from
+ * Aruba / SdI. This helper is the one place where we normalize to
+ * cents before any arithmetic or emission.
+ */
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 const tag = (name: string, value: string | number) =>
   `<${name}>${esc(String(value))}</${name}>`;
@@ -204,12 +221,28 @@ export const buildInvoiceDraftXml = ({
   invoiceNumber,
   progressivoInvio = "1",
 }: InvoiceDraftXmlOptions): string => {
-  // Normalize, then fold km reimbursements into the preceding service
-  // line (see `mergeKmLinesIntoPrecedingService` for the rationale).
+  // Normalize, fold km reimbursements into the preceding service line,
+  // then snap every unitPrice to cent precision. The final snap is the
+  // single source of truth that guarantees every <PrezzoTotale> emitted
+  // matches the arithmetic sum declared in <ImponibileImporto>. See
+  // `round2` for the SdI "Verifica calcoli" rationale.
   const lines = mergeKmLinesIntoPrecedingService(
     normalizeInvoiceDraftLineItems(draft.lineItems),
+  ).map((li) => ({ ...li, unitPrice: round2(li.unitPrice) }));
+
+  // Compute totals from the cent-snapped lines directly. We intentionally
+  // bypass `computeInvoiceDraftTotals` because it re-normalizes the
+  // lineItems and we want a stable aggregate over the exact values we
+  // are about to emit as <PrezzoTotale>.
+  const taxableAmount = round2(
+    lines.reduce((sum, li) => sum + li.quantity * li.unitPrice, 0),
   );
-  const totals = computeInvoiceDraftTotals(lines);
+  const stampDuty = taxableAmount > 77.47 ? 2 : 0;
+  const totals = {
+    taxableAmount,
+    stampDuty,
+    totalAmount: round2(taxableAmount + stampDuty),
+  };
 
   const clientName =
     draft.client.billing_name ?? draft.client.name ?? "Cliente";
@@ -336,7 +369,7 @@ export const buildInvoiceDraftXml = ({
       tag("Descrizione", li.description),
       tag("Quantita", fmtNum(li.quantity)),
       tag("PrezzoUnitario", fmtNum(li.unitPrice)),
-      tag("PrezzoTotale", fmtNum(getInvoiceDraftLineTotal(li))),
+      tag("PrezzoTotale", fmtNum(round2(li.quantity * li.unitPrice))),
       tag("AliquotaIVA", "0.00"),
       tag("Natura", "N2.2"),
       "</DettaglioLinee>",
@@ -349,16 +382,13 @@ export const buildInvoiceDraftXml = ({
   // secondo le regole definite nelle specifiche tecniche"). The stamp
   // duty (`stampDuty`) is NOT part of this sum: it lives in
   // <DatiBollo> and contributes only to ImportoTotaleDocumento.
-  const sumPrezzoTotale = lines.reduce(
-    (sum, li) => sum + getInvoiceDraftLineTotal(li),
-    0,
-  );
-
+  // Since `lines` is already cent-snapped, `taxableAmount` is exactly
+  // the sum of <PrezzoTotale> strings Aruba will see.
   const datiRiepilogo = [
     "<DatiRiepilogo>",
     tag("AliquotaIVA", "0.00"),
     tag("Natura", "N2.2"),
-    tag("ImponibileImporto", fmtNum(sumPrezzoTotale)),
+    tag("ImponibileImporto", fmtNum(totals.taxableAmount)),
     tag("Imposta", "0.00"),
     tag("RiferimentoNormativo", RIFERIMENTO_NORMATIVO),
     "</DatiRiepilogo>",

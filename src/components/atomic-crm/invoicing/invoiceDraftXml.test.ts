@@ -586,3 +586,76 @@ describe("mergeKmLinesIntoPrecedingService", () => {
     expect(after).toBeCloseTo(before, 2);
   });
 });
+
+describe("buildInvoiceDraftXml — sum(PrezzoTotale) == ImponibileImporto invariant", () => {
+  // Regression: 195.43 km × 0.25 = 48.8575 (half-cent). Previously the
+  // sum of float unitPrice across multiple km lines drifted by ~0.01,
+  // so Aruba's "Verifica calcoli" flagged a mismatch between the
+  // declared ImponibileImporto and the sum of <PrezzoTotale> visible
+  // in the XML. Snap to cent precision inside the builder fixes it.
+  it("keeps ImponibileImporto exactly equal to sum of PrezzoTotale even with km half-cent float drift", () => {
+    const svcKm = (label: string, kmDistance: number) => [
+      {
+        description: label,
+        quantity: 1,
+        unitPrice: 389,
+        kind: "service" as const,
+      },
+      {
+        description: `Rimborso km ${kmDistance}`,
+        quantity: 1,
+        // Simulate what calculateKmReimbursement returns with NO rounding
+        unitPrice: kmDistance * 0.25,
+        kind: "km" as const,
+      },
+    ];
+
+    const driftDraft: InvoiceDraftInput = {
+      ...testDraft,
+      lineItems: [
+        // Natale Giunta: no km
+        {
+          description: "Natale Giunta · Palermo",
+          quantity: 1,
+          unitPrice: 389,
+          kind: "service",
+        },
+        // 7 services with half-cent km values mirroring the real case
+        ...svcKm("Rosario Bambara · Taormina", 195.43),
+        ...svcKm("Roberto Lipari · Milazzo", 195.43),
+        ...svcKm("Lydia Giordano · Catania", 162.17),
+        ...svcKm("Luca Madonia · Catania", 156.8),
+        ...svcKm("Marilina Giaquinta · Catania", 156.8),
+        ...svcKm("Manuela Ventura · Villa Bellini", 157.59),
+        ...svcKm("Savoca - Bar Vitelli · Savoca", 195.43),
+      ],
+    };
+
+    const xmlDrift = buildInvoiceDraftXml({
+      draft: driftDraft,
+      issuer: testIssuer,
+      invoiceNumber: "FPR 8/26",
+    });
+
+    const linee = getAllTags(xmlDrift, "DettaglioLinee");
+    const declaredImponibile = parseFloat(
+      getTag(getTag(xmlDrift, "DatiRiepilogo")!, "ImponibileImporto")!,
+    );
+    const sumPrezzoTotaleFromXml = linee.reduce(
+      (sum, linea) => sum + parseFloat(getTag(linea, "PrezzoTotale")!),
+      0,
+    );
+
+    // The sum of the STRING values Aruba sees in the XML must match
+    // the declared ImponibileImporto exactly (to the cent).
+    expect(Math.round(sumPrezzoTotaleFromXml * 100)).toBe(
+      Math.round(declaredImponibile * 100),
+    );
+
+    // And ImportoTotaleDocumento == ImponibileImporto + bollo (2.00)
+    const totaleDoc = parseFloat(getTag(xmlDrift, "ImportoTotaleDocumento")!);
+    expect(Math.round(totaleDoc * 100)).toBe(
+      Math.round((declaredImponibile + 2) * 100),
+    );
+  });
+});
