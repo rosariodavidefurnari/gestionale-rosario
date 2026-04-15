@@ -219,7 +219,7 @@ const ServiceFeeInputs = () => {
 
 const ServiceKmInputs = () => {
   const { operationalConfig } = useConfigurationContext();
-  const { getValues, setValue } = useFormContext();
+  const { setValue } = useFormContext();
   const defaultKmRate = operationalConfig.defaultKmRate;
   const kmDistance = useWatch({ name: "km_distance" }) ?? 0;
   const kmRate = useWatch({ name: "km_rate" }) ?? defaultKmRate;
@@ -257,15 +257,12 @@ const ServiceKmInputs = () => {
               shouldDirty: true,
             });
 
-            const currentLocation = getValues("location");
-            if (
-              typeof currentLocation !== "string" ||
-              currentLocation.trim() === ""
-            ) {
-              setValue("location", estimate.generatedLocation, {
-                shouldDirty: true,
-              });
-            }
+            // NOTE: do NOT touch `location` here. The service location is
+            // where the shoot takes place (e.g. "Taormina"), while
+            // `travel_destination` is where the car is parked (e.g.
+            // "Acireale"). The two can differ and must stay independent —
+            // overwriting `location` from the travel estimator corrupts the
+            // invoice draft description.
           }}
         />
       </div>

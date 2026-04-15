@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-15 (Invoice draft builders skip trigger-generated km expenses to fix double counting)
+Last updated: 2026-04-15 (TravelEstimator no longer overwrites service.location)
 
 ---
 
@@ -109,6 +109,33 @@ Last updated: 2026-04-15 (Invoice draft builders skip trigger-generated km expen
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
 
 ---
+
+## Update 2026-04-15 — TravelEstimator no longer overwrites service.location
+
+**Bug**
+- In `src/components/atomic-crm/services/ServiceInputs.tsx` il bottone
+  TravelEstimator aveva un ramo che, se `location` era vuoto, scriveva
+  `setValue("location", estimate.generatedLocation)`. `location` e'
+  semanticamente "dove si svolge il servizio" (es. Taormina), mentre
+  `travel_destination` e' "dove parcheggio l'auto" (es. Acireale).
+  Sovrascrivere `location` con la destinazione del viaggio corrompeva la
+  bozza fattura: il cliente riceveva una riga servizio con il luogo del
+  parcheggio invece del luogo delle riprese.
+
+**Fix**
+- Rimosso completamente il blocco `setValue("location", ...)` dentro
+  l'`onApply` del TravelEstimator. L'estimator ora scrive SOLO
+  `km_distance`, `km_rate`, `travel_origin`, `travel_destination`,
+  `trip_mode`. `location` resta sotto controllo esplicito dell'utente.
+- Rimosso anche l'import di `getValues` da `useFormContext`, non piu'
+  usato.
+
+**Pattern**
+- Nuovo trigger UI-9 in `.claude/rules/learning.md`:
+  estimator/helper di form non devono "gentilmente" auto-compilare campi
+  con semantica diversa dal proprio scopo, neanche con guardia
+  `if (field is empty)`. Se serve una copia, deve essere un bottone
+  esplicito che l'utente clicca coscientemente.
 
 ## Update 2026-04-15 — Invoice draft km double counting fix
 

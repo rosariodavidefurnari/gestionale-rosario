@@ -45,6 +45,7 @@
 | **Workflow** | WF-6  | Commit codice → docs+memoria STESSO       |
 | **UI**       | UI-7  | Desktop props → verificare mobile         |
 | **UI**       | UI-8  | Nuova superficie AI → card unificata      |
+| **UI**       | UI-9  | Estimator/helper form → mai auto-scrivere campi business |
 | **Backend**  | BE-5  | EF env vars → stop+start NON restart      |
 | **Backend**  | BE-6  | Reload remoto → TRUNCATE prima load       |
 | **Workflow** | WF-7  | Dopo push → controlla CI autonomo         |
@@ -135,6 +136,27 @@
 ---
 
 ## DB Triggers
+
+### UI-9: Estimator/helper form -> mai auto-scrivere campi business con semantica diversa
+
+**Quando**: scrivo o modifico un helper di form (estimator, autocomplete,
+picker) che nel suo `onApply` fa piu' `setValue` su piu' campi del form
+**Fare**: scrivere SOLO i campi che sono semanticamente la ragione d'essere
+del helper. Non "gentilmente" precompilare altri campi dedotti, neanche con
+guardia `if (field is empty)`. Se serve un comportamento copia, farlo come
+azione esplicita (bottone "Usa destinazione come localita'") che l'utente
+clicca coscientemente.
+**Perche'**: il 2026-04-15 il TravelEstimator in `ServiceInputs.tsx`
+scriveva anche `service.location` con `estimate.generatedLocation` se
+location era vuoto. Risultato: per l'utente che mette prima il `location`
+reale delle riprese (Taormina) e poi compila i km in un secondo momento,
+il campo restava corretto. Ma l'utente che apriva l'estimator PRIMA di
+mettere la location vedeva `location` riempito con il punto auto
+(Acireale) e poi non lo correggeva. La bozza fattura finiva con il punto
+auto al posto del luogo delle riprese, ingannando il cliente. Fix:
+rimosso completamente il ramo di auto-scrittura di `location`.
+
+---
 
 ### DB-1: Enum/Choice = aggiorna TUTTE le superfici
 
