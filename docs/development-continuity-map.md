@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-15 (TravelEstimator no longer overwrites service.location)
+Last updated: 2026-04-15 (FatturaPA XML: Latin-1 sanitize + km lines folded into services)
 
 ---
 
@@ -109,6 +109,55 @@ Last updated: 2026-04-15 (TravelEstimator no longer overwrites service.location)
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
 
 ---
+
+## Update 2026-04-15 — FatturaPA XML: Latin-1 sanitize + km folded into services
+
+**Bug**
+- Una fattura reale e' stata rigettata da Aruba PEC con errore
+  `'Descrizione' element is invalid ... String1000LatinType - The
+  Pattern constraint failed`. Il tipo XSD `String*LatinType` di
+  FatturaPA ha pattern `[\x00-\x7F\xA0-\xFF]*` e non ammette code
+  point fuori Latin-1. Le descrizioni dei rimborsi km contenevano
+  `€` (U+20AC) e `–` (U+2013) — entrambi fuori range.
+- Inoltre, anche dopo sanitize, Aruba tende a non "digerire" righe
+  separate di rimborso spese che non sono servizi/prodotti classici.
+
+**Fix**
+- `src/components/atomic-crm/invoicing/invoiceDraftXml.ts`:
+  - Nuovo helper `sanitizeLatinForFatturaPA()` con mapping per i
+    caratteri noti (`€`→`EUR`, `–`/`—`→`-`, smart quotes, ellissi,
+    frecce) + strip di qualsiasi altro code point non-Latin-1.
+    Applicato dentro `esc()` quindi TUTTE le stringhe che finiscono
+    nel XML passano dal sanitize automaticamente.
+  - Nuovo helper `mergeKmLinesIntoPrecedingService()` che fonde ogni
+    riga `kind: "km"` dentro la `kind: "service"` immediatamente
+    precedente, annotando la descrizione con
+    `(incl. rimborso trasferta EUR X,YY)`. Applicato solo lato XML.
+- `invoiceDraftTypes.ts`: nuovo campo opzionale
+  `InvoiceDraftLineItem.kind: "service" | "km" | "expense" |
+  "payment" | "stamp_duty"`. Il campo e' propagato da
+  `normalizeInvoiceDraftLineItems`.
+- `buildInvoiceDraftFrom{Project,Client,Service}`: ogni riga
+  emessa e' ora marcata con `kind` coerente.
+
+**Pattern**
+- Nuovo trigger DOM-7 in `.claude/rules/learning.md`: ogni helper/EF
+  che scrive XML FatturaPA DEVE passare dalle utility di sanitize.
+  Niente duplicazione della logica in altri layer.
+- Il PDF renderer non e' stato toccato: riceve le righe originali e
+  continua a mostrare servizio + riga km separate. Solo il XML
+  consolida.
+
+**Contesto**
+- Soluzione "A" preferita dall'utente su opzioni [A consolidamento,
+  B riga unica, C accorciamento descrizioni]. Mantiene il PDF
+  leggibile per il cliente e l'XML accettato da Aruba/SdI.
+- Test aggiunti in `invoiceDraftXml.test.ts`:
+  - 6 casi `sanitizeLatinForFatturaPA`: €, dash, smart quotes,
+    ellissi, preservazione Latin-1, strip CJK, real-world km desc.
+  - 5 casi `mergeKmLinesIntoPrecedingService`: merge singolo,
+    multi-service, km orfano, no interference con expense/payment/
+    stamp_duty, conservazione totale.
 
 ## Update 2026-04-15 — TravelEstimator no longer overwrites service.location
 

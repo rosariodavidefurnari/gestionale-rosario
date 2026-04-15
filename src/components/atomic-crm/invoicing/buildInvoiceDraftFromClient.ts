@@ -82,6 +82,7 @@ export const buildInvoiceDraftFromClient = ({
           description: `${projectLabel} · ${buildServiceLineDescription(service)}`,
           quantity: 1,
           unitPrice: netValue,
+          kind: "service",
         });
       }
 
@@ -95,6 +96,7 @@ export const buildInvoiceDraftFromClient = ({
           description: `${projectLabel} · ${buildKmLineDescription(service, defaultKmRate)}`,
           quantity: 1,
           unitPrice: kmValue,
+          kind: "km",
         });
       }
     });
@@ -131,6 +133,7 @@ export const buildInvoiceDraftFromClient = ({
         description: `${projectLabel} · Spesa: ${expense.description || expense.expense_type}`,
         quantity: 1,
         unitPrice: amount,
+        kind: "expense",
       });
     }
   }
@@ -150,6 +153,7 @@ export const buildInvoiceDraftFromClient = ({
       description: "Pagamenti gia ricevuti",
       quantity: 1,
       unitPrice: -receivedTotal,
+      kind: "payment",
     });
   }
 

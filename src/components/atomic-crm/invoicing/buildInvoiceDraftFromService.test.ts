@@ -113,6 +113,7 @@ describe("buildInvoiceDraftFromService", () => {
       description: "Rimborso chilometrico · 50 km × €0,40/km",
       quantity: 1,
       unitPrice: 20,
+      kind: "km",
     });
   });
 

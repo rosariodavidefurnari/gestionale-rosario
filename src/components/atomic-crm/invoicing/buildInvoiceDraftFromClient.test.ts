@@ -96,21 +96,25 @@ describe("buildInvoiceDraftFromClient", () => {
           description: "Progetto 1 · Riprese del 10/01/2026",
           quantity: 1,
           unitPrice: 100,
+          kind: "service",
         },
         {
           description: "Progetto 2 · Riprese del 10/01/2026",
           quantity: 1,
           unitPrice: 200,
+          kind: "service",
         },
         {
           description: "Progetto 2 · Rimborso chilometrico · 10 km × €0,20/km",
           quantity: 1,
           unitPrice: 2,
+          kind: "km",
         },
         {
           description: "Servizi senza progetto · Riprese del 10/01/2026",
           quantity: 1,
           unitPrice: 50,
+          kind: "service",
         },
       ]),
     );

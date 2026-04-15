@@ -103,6 +103,7 @@ export const buildInvoiceDraftFromService = ({
               description: buildServiceLineDescription(service),
               quantity: 1,
               unitPrice: netValue,
+              kind: "service" as const,
             }
           : null,
         kmValue > 0
@@ -110,6 +111,7 @@ export const buildInvoiceDraftFromService = ({
               description: buildKmLineDescription(service, defaultKmRate),
               quantity: 1,
               unitPrice: kmValue,
+              kind: "km" as const,
             }
           : null,
       ].filter((lineItem): lineItem is NonNullable<typeof lineItem> =>

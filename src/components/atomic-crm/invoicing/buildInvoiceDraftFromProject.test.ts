@@ -111,11 +111,13 @@ describe("buildInvoiceDraftFromProject", () => {
       description: "Rimborso chilometrico · 10 km × €0,20/km",
       quantity: 1,
       unitPrice: 2,
+      kind: "km",
     });
     expect(draft.lineItems[3]).toEqual({
       description: "Rimborso chilometrico · 5 km × €0,20/km",
       quantity: 1,
       unitPrice: 1,
+      kind: "km",
     });
   });
 
@@ -155,6 +157,7 @@ describe("buildInvoiceDraftFromProject", () => {
       description: "Pagamenti gia ricevuti",
       quantity: 1,
       unitPrice: -50,
+      kind: "payment",
     });
   });
 

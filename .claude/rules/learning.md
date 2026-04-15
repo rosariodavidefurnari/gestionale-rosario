@@ -50,6 +50,7 @@
 | **Backend**  | BE-6  | Reload remoto → TRUNCATE prima load       |
 | **Workflow** | WF-7  | Dopo push → controlla CI autonomo         |
 | **Dominio**  | DOM-3 | FatturaPA XML → schema XSD + Aruba        |
+| **Dominio**  | DOM-7 | FatturaPA Descrizione → solo Latin-1 (`€`/`–` vietati) |
 | **Dominio**  | DOM-4 | Stato semantico ≠ `array.length`          |
 | **Config**   | CFG-2 | BusinessProfile → merge defaults safe     |
 | **Config**   | CFG-3 | Flag/prop root → verificare consumo reale |
@@ -339,6 +340,31 @@ UTC midnight — giorno sbagliato in `Europe/Rome` nella stessa finestra.
 **Quando**: tocco la generazione XML FatturaPA (`invoiceDraftXml.ts`)
 **Fare**: verificare conformità allo schema XSD FPR12 v1.2.3 e compatibilità col flusso Aruba PEC. I campi critici sono: DatiTrasmissione (CF intermediario Aruba), CedentePrestatore (RF19), DettaglioLinee (IVA 0% N2.2), DatiPagamento (MP05 bonifico). Bollo escluso dall'XML (gestito da Aruba).
 **Perché**: Aruba scarta silenziosamente XML non conformi allo schema, senza dare errori chiari. Un campo mancante o malformato blocca l'invio della fattura.
+
+### DOM-7: FatturaPA `String*LatinType` accetta solo Latin-1 — sanitize SEMPRE
+
+**Quando**: genero, modifico o testo la generazione del XML FatturaPA
+(`invoiceDraftXml.ts` o qualsiasi EF/helper che emette `<Descrizione>`,
+`<Causale>`, `<Denominazione>`, `<Indirizzo>`, ecc.)
+**Fare**: applicare `sanitizeLatinForFatturaPA()` a ogni stringa prima di
+inserirla nel tag (gia' fatto dentro `esc()` nel builder). Il tipo XSD
+`String*LatinType` ha pattern `[\x00-\x7F\xA0-\xFF]*` — SdI e Aruba PEC
+rifiutano silenziosamente il file se compare anche un solo code point
+fuori range. I caratteri piu' pericolosi sono:
+- `€` (U+20AC) -> deve diventare `EUR`
+- `–` (en-dash U+2013) / `—` (em-dash U+2014) -> `-`
+- `'` `'` `"` `"` (smart quotes) -> `'` `"`
+- `…` (U+2026) -> `...`
+- caratteri CJK, emoji, ogni altro non-Latin-1 -> stripped
+I middledot `·` (U+00B7) e il multiplication sign `×` (U+00D7) sono
+**in** Latin-1 e possono restare.
+**Perche'**: il 2026-04-15 una fattura reale su Aruba e' stata rigettata
+perche' le descrizioni dei rimborsi km contenevano sia `€0,25/km` sia
+`Valguarnera – Acireale`. L'errore Aruba e': `'Descrizione' ... is
+invalid according to 'String1000LatinType' - The Pattern constraint
+failed`. Tutte le nuove Edge Functions / helper che scrivono XML devono
+passare dalle stesse utility — duplicare la logica di sanitize e'
+vietato.
 
 ### DOM-4: Stato semantico di dominio ≠ lunghezza array UI
 

@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import type { BusinessProfile, Client } from "../types";
 import type { InvoiceDraftInput } from "./invoiceDraftTypes";
-import { buildInvoiceDraftXml } from "./invoiceDraftXml";
+import {
+  buildInvoiceDraftXml,
+  mergeKmLinesIntoPrecedingService,
+  sanitizeLatinForFatturaPA,
+} from "./invoiceDraftXml";
 
 // ── Fixtures aligned with real Aruba invoice ─────────────────────────
 // Reference: Fatture/2025/IT01879020517A2025_aGgQD.xml
@@ -423,5 +427,131 @@ describe("buildInvoiceDraftXml", () => {
       expect(getTag(idFiscale, "IdPaese")).toBe("IT");
       expect(getTag(idFiscale, "IdCodice")).toBe("12345678901");
     });
+  });
+});
+
+describe("sanitizeLatinForFatturaPA", () => {
+  it("replaces € with EUR", () => {
+    expect(sanitizeLatinForFatturaPA("€0,25/km")).toBe("EUR0,25/km");
+  });
+
+  it("replaces en-dash, em-dash and figure dash with hyphen", () => {
+    expect(sanitizeLatinForFatturaPA("Valguarnera – Acireale")).toBe(
+      "Valguarnera - Acireale",
+    );
+    expect(sanitizeLatinForFatturaPA("a—b")).toBe("a-b");
+    expect(sanitizeLatinForFatturaPA("a‒b")).toBe("a-b");
+  });
+
+  it("replaces smart quotes with ASCII quotes", () => {
+    expect(sanitizeLatinForFatturaPA("\u201Choh\u201D")).toBe('"hoh"');
+    expect(sanitizeLatinForFatturaPA("\u2018test\u2019")).toBe("'test'");
+  });
+
+  it("replaces ellipsis with three dots", () => {
+    expect(sanitizeLatinForFatturaPA("hmm…")).toBe("hmm...");
+  });
+
+  it("preserves characters that are already in Latin-1", () => {
+    // · U+00B7, × U+00D7, ° U+00B0, © U+00A9
+    expect(sanitizeLatinForFatturaPA("a · b × c ° d ©")).toBe(
+      "a · b × c ° d ©",
+    );
+  });
+
+  it("strips code points outside Latin-1 with no explicit mapping", () => {
+    // Chinese char U+4E2D is not in the replacement table and not in Latin-1
+    expect(sanitizeLatinForFatturaPA("hello 中 world")).toBe("hello  world");
+  });
+
+  it("handles the real-world km reimbursement description", () => {
+    const input =
+      "Rimborso chilometrico · Via Calabria, 13, 94019 Valguarnera " +
+      "Caropepe EN, Italia – 95024 Acireale CT, Italia A/R · 195.43 " +
+      "km × €0,25/km";
+    const output = sanitizeLatinForFatturaPA(input);
+    // No en-dash, no €, everything else preserved
+    expect(output).not.toContain("\u2013");
+    expect(output).not.toContain("\u20AC");
+    expect(output).toContain("Italia - 95024");
+    expect(output).toContain("EUR0,25/km");
+    // All remaining characters must be in Latin-1
+    // eslint-disable-next-line no-control-regex
+    expect(output).toMatch(/^[\x00-\x7F\xA0-\xFF]*$/);
+  });
+});
+
+describe("mergeKmLinesIntoPrecedingService", () => {
+  it("merges a km line into the immediately preceding service line", () => {
+    const result = mergeKmLinesIntoPrecedingService([
+      {
+        description: "Rosario Bambara · Riprese Montaggio · Taormina",
+        quantity: 1,
+        unitPrice: 389,
+        kind: "service",
+      },
+      {
+        description: "Rimborso chilometrico · 195.43 km × €0,25/km",
+        quantity: 1,
+        unitPrice: 48.86,
+        kind: "km",
+      },
+    ]);
+    expect(result).toHaveLength(1);
+    expect(result[0].kind).toBe("service");
+    expect(result[0].unitPrice).toBeCloseTo(437.86, 2);
+    expect(result[0].description).toContain("(incl. rimborso trasferta");
+    expect(result[0].description).toContain("EUR 48.86");
+  });
+
+  it("pairs each km line with its own preceding service (multiple services)", () => {
+    const result = mergeKmLinesIntoPrecedingService([
+      { description: "Svc A", quantity: 1, unitPrice: 100, kind: "service" },
+      { description: "km A", quantity: 1, unitPrice: 10, kind: "km" },
+      { description: "Svc B", quantity: 1, unitPrice: 200, kind: "service" },
+      { description: "km B", quantity: 1, unitPrice: 20, kind: "km" },
+    ]);
+    expect(result).toHaveLength(2);
+    expect(result[0].unitPrice).toBe(110);
+    expect(result[1].unitPrice).toBe(220);
+  });
+
+  it("leaves a km line untouched if there is no preceding service", () => {
+    const result = mergeKmLinesIntoPrecedingService([
+      { description: "km alone", quantity: 1, unitPrice: 10, kind: "km" },
+    ]);
+    expect(result).toHaveLength(1);
+    expect(result[0].kind).toBe("km");
+    expect(result[0].unitPrice).toBe(10);
+  });
+
+  it("does not touch expense, payment or stamp_duty lines", () => {
+    const result = mergeKmLinesIntoPrecedingService([
+      { description: "Svc", quantity: 1, unitPrice: 100, kind: "service" },
+      { description: "km", quantity: 1, unitPrice: 10, kind: "km" },
+      { description: "Spesa", quantity: 1, unitPrice: 50, kind: "expense" },
+      { description: "Pag", quantity: 1, unitPrice: -60, kind: "payment" },
+      { description: "Bollo", quantity: 1, unitPrice: 2, kind: "stamp_duty" },
+    ]);
+    expect(result).toHaveLength(4);
+    expect(result[0].unitPrice).toBe(110);
+    expect(result[1].kind).toBe("expense");
+    expect(result[2].kind).toBe("payment");
+    expect(result[3].kind).toBe("stamp_duty");
+  });
+
+  it("preserves the overall invoice total after merging", () => {
+    const input: InvoiceDraftInput["lineItems"] = [
+      { description: "Svc 1", quantity: 1, unitPrice: 389, kind: "service" },
+      { description: "km 1", quantity: 1, unitPrice: 48.86, kind: "km" },
+      { description: "Svc 2", quantity: 1, unitPrice: 389, kind: "service" },
+      { description: "km 2", quantity: 1, unitPrice: 40.54, kind: "km" },
+    ];
+    const before = input.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+    const after = mergeKmLinesIntoPrecedingService(input).reduce(
+      (s, l) => s + l.quantity * l.unitPrice,
+      0,
+    );
+    expect(after).toBeCloseTo(before, 2);
   });
 });

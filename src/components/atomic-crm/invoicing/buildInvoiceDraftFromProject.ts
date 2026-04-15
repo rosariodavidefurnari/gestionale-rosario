@@ -53,6 +53,7 @@ export const buildInvoiceDraftFromProject = ({
           description: buildServiceLineDescription(service),
           quantity: 1,
           unitPrice: netValue,
+          kind: "service",
         });
       }
 
@@ -66,6 +67,7 @@ export const buildInvoiceDraftFromProject = ({
           description: buildKmLineDescription(service, defaultKmRate),
           quantity: 1,
           unitPrice: kmValue,
+          kind: "km",
         });
       }
 
@@ -97,6 +99,7 @@ export const buildInvoiceDraftFromProject = ({
         description: `Spesa: ${expense.description || expense.expense_type}`,
         quantity: 1,
         unitPrice: amount,
+        kind: "expense",
       });
     }
   }
@@ -111,6 +114,7 @@ export const buildInvoiceDraftFromProject = ({
       description: "Pagamenti gia ricevuti",
       quantity: 1,
       unitPrice: -receivedTotal,
+      kind: "payment",
     });
   }
 
