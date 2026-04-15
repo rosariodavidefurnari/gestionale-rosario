@@ -286,16 +286,37 @@ export const buildInvoiceDraftXml = ({
 
   // ── Body ───────────────────────────────────────────────────────
 
+  // Virtual stamp duty: declared in <DatiBollo> inside
+  // DatiGeneraliDocumento (FatturaPA 1.2), NOT as a DettaglioLinee.
+  const datiBollo =
+    totals.stampDuty > 0
+      ? [
+          "<DatiBollo>",
+          tag("BolloVirtuale", "SI"),
+          tag("ImportoBollo", fmtNum(totals.stampDuty)),
+          "</DatiBollo>",
+        ].join("\n")
+      : "";
+
+  // XSD sequence for DatiGeneraliDocumentoType (FatturaPA v1.2.3):
+  //   TipoDocumento, Divisa, Data, Numero, DatiRitenuta, DatiBollo,
+  //   DatiCassaPrevidenziale, ScontoMaggiorazione, ImportoTotaleDocumento,
+  //   Arrotondamento, Causale, Art73
+  // DatiBollo MUST come BEFORE ImportoTotaleDocumento — otherwise the
+  // schema rejects the document with a sequence error.
   const datiGeneraliDocumento = [
     "<DatiGeneraliDocumento>",
     tag("TipoDocumento", "TD01"),
     tag("Divisa", "EUR"),
     tag("Data", draft.invoiceDate ?? todayISODate()),
     tag("Numero", invoiceNumber),
+    datiBollo,
     tag("ImportoTotaleDocumento", fmtNum(totals.totalAmount)),
     tag("Causale", CAUSALE),
     "</DatiGeneraliDocumento>",
-  ].join("\n");
+  ]
+    .filter((chunk) => chunk !== "")
+    .join("\n");
 
   const dettaglioLinee = lines.map((li, i) =>
     [
@@ -311,11 +332,22 @@ export const buildInvoiceDraftXml = ({
     ].join("\n"),
   );
 
+  // `ImponibileImporto` MUST equal the sum of `PrezzoTotale` of the
+  // DettaglioLinee — otherwise SdI rejects with code 00422
+  // ("Il valore del campo ImponibileImporto non risulta calcolato
+  // secondo le regole definite nelle specifiche tecniche"). The stamp
+  // duty (`stampDuty`) is NOT part of this sum: it lives in
+  // <DatiBollo> and contributes only to ImportoTotaleDocumento.
+  const sumPrezzoTotale = lines.reduce(
+    (sum, li) => sum + getInvoiceDraftLineTotal(li),
+    0,
+  );
+
   const datiRiepilogo = [
     "<DatiRiepilogo>",
     tag("AliquotaIVA", "0.00"),
     tag("Natura", "N2.2"),
-    tag("ImponibileImporto", fmtNum(totals.totalAmount)),
+    tag("ImponibileImporto", fmtNum(sumPrezzoTotale)),
     tag("Imposta", "0.00"),
     tag("RiferimentoNormativo", RIFERIMENTO_NORMATIVO),
     "</DatiRiepilogo>",

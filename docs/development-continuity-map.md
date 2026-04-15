@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-15 (FatturaPA XML: Latin-1 sanitize + km lines folded into services)
+Last updated: 2026-04-15 (FatturaPA XML: ImponibileImporto fix + DatiBollo emission, verified against XSD v1.2.3)
 
 ---
 
@@ -109,6 +109,65 @@ Last updated: 2026-04-15 (FatturaPA XML: Latin-1 sanitize + km lines folded into
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
 
 ---
+
+## Update 2026-04-15 — FatturaPA XML: ImponibileImporto fix + DatiBollo emission
+
+**Bug**
+- Dopo il fix di Latin sanitize + km merge, Aruba PEC rigettava con
+  errore SdI **00422** "Il valore del campo ImponibileImporto non
+  risulta calcolato secondo le regole definite nelle specifiche
+  tecniche". Causa doppia:
+  1. `ImponibileImporto` in `<DatiRiepilogo>` era calcolato come
+     `totals.totalAmount` (che INCLUDE il bollo). La regola SdI
+     impone invece che `ImponibileImporto == sum(PrezzoTotale)` delle
+     righe `<DettaglioLinee>`, con tolleranza di 1 EUR. Il bollo non
+     rientra nella somma delle linee.
+  2. Il bollo virtuale non era emesso affatto nel XML. La specifica
+     FatturaPA v1.2.3 richiede `<DatiBollo>` dentro
+     `<DatiGeneraliDocumento>` con `BolloVirtuale=SI` e
+     `ImportoBollo`.
+
+**Fix**
+- `invoiceDraftXml.ts`:
+  - `ImponibileImporto` ora e' calcolato come `sumPrezzoTotale` delle
+    linee (dopo il merge km), escludendo il bollo. Il bollo contribuisce
+    solo a `ImportoTotaleDocumento`.
+  - Aggiunto blocco `<DatiBollo>` condizionale quando
+    `totals.stampDuty > 0`. Posizione XSD corretta: PRIMA di
+    `ImportoTotaleDocumento` (sequence XSD
+    `DatiGeneraliDocumentoType`: TipoDocumento -> Divisa -> Data ->
+    Numero -> DatiRitenuta -> **DatiBollo** -> DatiCassaPrevidenziale ->
+    ScontoMaggiorazione -> ImportoTotaleDocumento -> Arrotondamento ->
+    Causale -> Art73).
+
+**Verifica contro specifiche ufficiali**
+- Verificato lo schema XSD `Schema_VFPR12_v1.2.3.xsd` da
+  `fatturapa.gov.it` (link in fondo).
+- Confermato `DatiBolloType` con `BolloVirtuale` (enum "SI") e
+  `ImportoBollo` (Amount2DecimalType, optional).
+- Confermato `String1000LatinType` pattern come
+  `[\p{IsBasicLatin}\p{IsLatin-1Supplement}]{1,1000}` — il nostro
+  sanitize range `[\x00-\x7F\xA0-\xFF]` e' sottoinsieme compatibile.
+- Confermata posizione di `DatiBollo` nella sequence
+  `DatiGeneraliDocumentoType`: 6a posizione, PRIMA di
+  `ImportoTotaleDocumento`.
+
+**Test**
+- Aggiornato `has ImponibileImporto ...`: ora si aspetta 5113.00
+  (solo linee) invece di 5115.00 (linee + bollo).
+- Sostituito il test "does NOT include DatiBollo" con l'assertion
+  positiva su `BolloVirtuale=SI` + `ImportoBollo=2.00` dentro
+  `DatiGeneraliDocumento`.
+- Aggiunto test di regressione per fatture sotto soglia bollo
+  (imponibile 50 < 77.47): nessun `<DatiBollo>` emesso,
+  `ImportoTotaleDocumento` senza bollo.
+
+**Link fonte**
+- XSD schema:
+  `https://www.fatturapa.gov.it/export/documenti/fatturapa/v1.4/Schema_VFPR12_v1.2.3.xsd`
+- Pagina specifiche tecniche v1.9 (citata da Aruba nel messaggio
+  d'errore):
+  `https://www.agenziaentrate.gov.it/portale/specifiche-tecniche-versione-1.9`
 
 ## Update 2026-04-15 — FatturaPA XML: Latin-1 sanitize + km folded into services
 

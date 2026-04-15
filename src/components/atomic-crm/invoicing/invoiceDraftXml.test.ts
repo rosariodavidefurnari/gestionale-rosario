@@ -272,9 +272,12 @@ describe("buildInvoiceDraftXml", () => {
       expect(getTag(riepilogo, "Natura")).toBe("N2.2");
     });
 
-    it("has ImponibileImporto matching total (includes stamp duty)", () => {
+    it("has ImponibileImporto equal to sum of PrezzoTotale (excludes stamp duty)", () => {
+      // Critical for SdI validation (error 00422): ImponibileImporto MUST
+      // equal the sum of DettaglioLinee.PrezzoTotale. The stamp duty lives
+      // in <DatiBollo>, not in the riepilogo sum.
       const riepilogo = getTag(xml, "DatiRiepilogo")!;
-      expect(getTag(riepilogo, "ImponibileImporto")).toBe("5115.00");
+      expect(getTag(riepilogo, "ImponibileImporto")).toBe("5113.00");
     });
 
     it("has Imposta 0.00", () => {
@@ -321,14 +324,39 @@ describe("buildInvoiceDraftXml", () => {
   });
 
   describe("Bollo handling", () => {
-    it("does NOT include DatiBollo in XML (Aruba handles it)", () => {
-      expect(xml).not.toContain("<DatiBollo>");
-      expect(xml).not.toContain("<BolloVirtuale>");
+    it("includes DatiBollo inside DatiGeneraliDocumento when stamp duty applies", () => {
+      const datiGenerali = getTag(xml, "DatiGeneraliDocumento")!;
+      expect(datiGenerali).toContain("<DatiBollo>");
+      const datiBollo = getTag(datiGenerali, "DatiBollo")!;
+      expect(getTag(datiBollo, "BolloVirtuale")).toBe("SI");
+      expect(getTag(datiBollo, "ImportoBollo")).toBe("2.00");
     });
 
-    it("stamp duty IS included in totals (ImportoTotaleDocumento)", () => {
+    it("stamp duty IS included in ImportoTotaleDocumento", () => {
       // 5113 (service) + 2 (stamp) = 5115
       expect(getTag(xml, "ImportoTotaleDocumento")).toBe("5115.00");
+    });
+
+    it("omits DatiBollo when invoice total is below stamp duty threshold", () => {
+      // Taxable amount 50 < 77.47 → no stamp duty
+      const smallDraft: InvoiceDraftInput = {
+        ...testDraft,
+        lineItems: [
+          {
+            description: "Prestazione minore",
+            quantity: 1,
+            unitPrice: 50,
+            kind: "service",
+          },
+        ],
+      };
+      const xmlSmall = buildInvoiceDraftXml({
+        draft: smallDraft,
+        issuer: testIssuer,
+        invoiceNumber: "FPR 7/26",
+      });
+      expect(xmlSmall).not.toContain("<DatiBollo>");
+      expect(getTag(xmlSmall, "ImportoTotaleDocumento")).toBe("50.00");
     });
   });
 
