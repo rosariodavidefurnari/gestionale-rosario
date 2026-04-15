@@ -246,6 +246,48 @@ describe("buildInvoiceDraftFromProject", () => {
     expect(expenseLine!.unitPrice).toBe(120);
   });
 
+  it("skips expenses linked to a service via source_service_id to avoid km double counting", () => {
+    // Regression: the `sync_service_km_expense` DB trigger auto-creates an
+    // `expense` of type `spostamento_km` for every service with km_distance.
+    // The builder must NOT emit a second "Spesa: Spostamento" line for that
+    // expense — the km is already represented by "Rimborso chilometrico".
+    const triggerExpense: Expense = {
+      id: "trigger-km-1",
+      project_id: "project-1",
+      client_id: "client-1",
+      source_service_id: "s1",
+      expense_date: "2026-01-10",
+      expense_type: "spostamento_km",
+      description: "Spostamento - Catania",
+      amount: 0,
+      km_distance: 150,
+      km_rate: 0.25,
+      created_at: "2026-01-10T10:00:00.000Z",
+    };
+
+    const draft = buildInvoiceDraftFromProject({
+      project: baseProject,
+      client: baseClient,
+      services: [
+        buildService("s1", {
+          fee_shooting: 500,
+          km_distance: 150,
+          km_rate: 0.25,
+        }),
+      ],
+      expenses: [triggerExpense],
+    });
+
+    const kmLines = draft.lineItems.filter((l) =>
+      l.description.includes("Rimborso chilometrico"),
+    );
+    const spostamentoLines = draft.lineItems.filter((l) =>
+      l.description.includes("Spostamento"),
+    );
+    expect(kmLines).toHaveLength(1);
+    expect(spostamentoLines).toHaveLength(0);
+  });
+
   it("treats credito_ricevuto as negative expense", () => {
     const expense: Expense = {
       id: "e1",

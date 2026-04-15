@@ -73,11 +73,16 @@ export const buildInvoiceDraftFromProject = ({
     },
   );
 
-  // Expense line items (billable, not yet invoiced)
+  // Expense line items (billable, not yet invoiced).
+  // Skip expenses created by the `sync_service_km_expense` DB trigger
+  // (identified by `source_service_id`): they mirror a service km and are
+  // already represented by the "Rimborso chilometrico" line above — see
+  // learning triggers DB-3 and DB-5.
   for (const expense of expenses.filter(
     (e) =>
       String(e.project_id) === String(project.id) &&
-      (!e.invoice_ref || e.invoice_ref.trim().length === 0),
+      (!e.invoice_ref || e.invoice_ref.trim().length === 0) &&
+      !e.source_service_id,
   )) {
     const amount =
       expense.expense_type === "credito_ricevuto"

@@ -64,6 +64,7 @@
 | **Dominio**  | DOM-5 | Fiscale due layer → check entrambi        |
 | **DB**       | DB-6  | Payload servizi figli → eredita client_id |
 | **DB**       | DB-7  | F24 reali → interessi e compensazioni     |
+| **DB**       | DB-8  | Builder che unisce services+expenses → skip source_service_id |
 | **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
 | **Backend**  | BE-9  | EF Calendar timed → usa timestamp service |
 
@@ -191,6 +192,27 @@ righe positive per via di un credito in compensazione
 positivo su obligations/payment_lines. Senza estensione schema si finisce a
 gonfiare importi INPS/Erario o a inventare righe negative impossibili, e il
 gestionale smette di rappresentare i quietanze AdE 1:1.
+
+### DB-8: Builder/reader che unisce services e expenses -> filtrare `source_service_id`
+
+**Quando**: scrivo una funzione che legge sia `services` sia `expenses` sullo
+stesso progetto/cliente e ne deriva righe output (invoice draft builder,
+export, report, aggregatore AI, schermata di dettaglio cliente)
+**Fare**: nel filtro sulle `expenses` escludere SEMPRE le righe con
+`source_service_id != null`. Quelle sono generate dal trigger DB
+`sync_service_km_expense` a partire dal service corrispondente e sono
+gia' rappresentate dalla riga "Rimborso chilometrico" del service. Il check
+va sopra il calcolo `amount`, non dentro. Aggiungere test di regressione
+con un service km + l'expense auto generata, e asserire che la riga km
+appaia esattamente 1 volta.
+**Perché**: il 2026-04-15 `buildInvoiceDraftFromProject` e
+`buildInvoiceDraftFromClient` generavano per la stessa trasferta sia una
+riga "Rimborso chilometrico" (da `service.km_distance`) sia una riga
+"Spesa: Spostamento" (da `expense.spostamento_km` creata dal trigger DB).
+Ogni km veniva contato due volte nella bozza fattura, gonfiando il
+netto a pagare e rischiando fatture reali emesse con importi sbagliati.
+Questo pattern si ripete ogni volta che qualcuno sposta un invariant in un
+DB trigger senza aggiornare i consumer downstream (vedi anche DB-5).
 
 ---
 

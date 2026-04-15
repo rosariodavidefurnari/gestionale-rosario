@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-15 (ClientShow invoice draft button always-available + empty state)
+Last updated: 2026-04-15 (Invoice draft builders skip trigger-generated km expenses to fix double counting)
 
 ---
 
@@ -109,6 +109,40 @@ Last updated: 2026-04-15 (ClientShow invoice draft button always-available + emp
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
 
 ---
+
+## Update 2026-04-15 — Invoice draft km double counting fix
+
+**Bug**
+- Bozza fattura di progetto e cliente mostravano ogni trasferta due volte:
+  una riga "Rimborso chilometrico" (da `service.km_distance`) + una riga
+  "Spesa: Spostamento" (da `expense.spostamento_km` creata dal trigger DB
+  `sync_service_km_expense`). Risultato: `netto a pagare` gonfiato di una
+  quantita' pari alla somma dei rimborsi km.
+- Bozza reale vista con 6 duplicati su un PDF cliente.
+
+**Fix**
+- `src/components/atomic-crm/invoicing/buildInvoiceDraftFromProject.ts` e
+  `buildInvoiceDraftFromClient.ts`: nel filtro sulle `expenses` escludo le
+  righe con `source_service_id != null`. Quelle sono mirror del service km
+  create dal trigger e sono gia' rappresentate nella riga "Rimborso
+  chilometrico". Le expenses manuali (senza `source_service_id`) restano
+  incluse.
+- `buildInvoiceDraftFromService.ts` non era affetto (non legge expenses).
+- Test di regressione in entrambe le test suite: service con
+  `km_distance=200` + expense trigger collegata via `source_service_id`
+  deve produrre 1 sola riga km, 0 righe "Spostamento".
+
+**Pattern**
+- Applicazione concreta del nuovo trigger DB-8 in
+  `.claude/rules/learning.md`: ogni builder/reader che unisce
+  `services` + `expenses` deve filtrare via `source_service_id`.
+- Riferimento correlato: DB-3 (km servizi -> spesa auto da trigger DB),
+  DB-5 (sposto invariant dal frontend al DB trigger -> audit duplicati).
+
+**Contesto**
+- Il trigger DB e' la fonte corretta per il totale speso in km (viene
+  contato una volta sola in dashboard e analytics). La duplicazione era
+  solo nel builder PDF lato frontend: il DB era coerente.
 
 ## Update 2026-04-15 — ClientShow invoice draft always-available
 
