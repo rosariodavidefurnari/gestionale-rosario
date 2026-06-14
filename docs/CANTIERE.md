@@ -174,21 +174,29 @@ Non fatto:
 
 ## Prossima Azione
 
-Ciclo attivo: TASK 4 del brief DB (`gestionale-rifinitura-db_2.md`) — Fiscal
-Cascade Protection (flip FK `CASCADE -> NO ACTION` su financial_documents,
-projects, services, quotes + UX delete pessimistic + controllore TDD).
+Ultimo ciclo chiuso: TASK 4 del brief DB (`gestionale-rifinitura-db_2.md`) —
+Fiscal Cascade Protection (flip FK `CASCADE -> NO ACTION` su
+financial_documents, projects, services, quotes + UX delete pessimistic +
+controllore TDD).
 
-Stato: COMPLETATO su DB. Implementato e verificato in locale (RED/GREEN), poi
-committato (`2a33a9cf`, branch `work/fiscal-backup-rls-hardening`) e APPLICATO AL
-REMOTO produzione: migration applicata via `db query --linked -f` + `migration
-repair`, GREEN su remoto (controllore exit 0), 4 FK = `NO ACTION` verificate via
-MCP, 0 residui fixture, 0 orfani.
+Stato: COMPLETATO su DB e frontend. Implementato e verificato in locale
+(RED/GREEN), poi committato (`2a33a9cf`, branch
+`work/fiscal-backup-rls-hardening`) e APPLICATO AL REMOTO produzione: migration
+applicata via `db query --linked -f` + `migration repair`, GREEN su remoto
+(controllore exit 0), 4 FK = `NO ACTION` verificate via MCP, 0 residui fixture,
+0 orfani. La UX `pessimistic` e' ora live su Vercel production.
 
-Unica azione aperta: la UX `pessimistic` (frontend) e' sul branch ma NON ancora
-live su Vercel (Vercel deploya solo da `main`). Finche' il branch non e' mergiato
-in `main`, su produzione il DB e' protetto (dato salvo) ma una delete bloccata
-mostra l'errore PostgREST grezzo invece del messaggio italiano (nessuna perdita
-dati). Prossimo passo: aprire PR / merge in `main` per attivare la UX.
+Verifica Vercel production del 2026-06-14:
+
+- deployment `dpl_7co7ZQvmkPgMojnVon3rvj1EYa7t` = `READY`;
+- target = `production`;
+- commit = `cb09ba8d3f8463f33b1e9e6611e351a1b39b3a68` su `main`;
+- build `tsc && vite build` completata;
+- alias production `https://gestionale-rosario.vercel.app` risponde `HTTP 200`;
+- runtime logs production `error`/`fatal` ultima ora: nessun log trovato.
+
+Prossimo passo: avviare la Fase 2 roadmap ("Verita' dati remoto vs locale vs
+XML") con spec/piano dedicati prima di toccare dati, schema o flussi fiscali.
 
 Esito RED/GREEN locale:
 
@@ -225,8 +233,8 @@ Guardrail di processo aggiunto: hook `UserPromptSubmit` in `.claude/settings.jso
 (RAG attivo + review multi-superficie obbligatori) + trigger `WF-15` in
 `.claude/rules/learning.md`.
 
-La Fase 2 roadmap ("Verita' dati remoto vs locale vs XML") resta in coda dopo
-TASK 4. TASK 5 del brief (RLS backup fiscali) e' gia' chiuso in questo branch.
+La Fase 2 roadmap ("Verita' dati remoto vs locale vs XML") e' la prossima azione
+operativa. TASK 5 del brief (RLS backup fiscali) e' gia' chiuso.
 
 Stato verifiche finali:
 
@@ -234,33 +242,40 @@ Stato verifiche finali:
 - `npm run security:check:fiscal-backups:rest` passa
 - `npm run continuity:check` passa
 - `make typecheck` passa
+- Vercel production `READY` su commit `cb09ba8d`, alias production `HTTP 200`
 
 ## Lavoro Attivo
 
 Tema:
 
-- sicurezza RLS delle quattro tabelle fiscali backup `*_backup_20260414`.
+- prossimo ciclo: Fase 2 roadmap ("Verita' dati remoto vs locale vs XML").
+- TASK 4 Fiscal Cascade Protection: chiuso su DB remoto e frontend Vercel.
+- TASK 5 RLS backup fiscali: chiuso.
 
 Artefatti:
 
 - roadmap:
   `docs/gestionale-roadmap-generale.md`
-- spec:
+- spec TASK 4:
+  `docs/superpowers/specs/2026-06-14-fiscal-cascade-protection-design.md`
+- piano TASK 4:
+  `docs/superpowers/plans/2026-06-14-fiscal-cascade-protection.md`
+- controllore TASK 4:
+  - `scripts/check-cascade-protection.sql`
+  - `npm run security:check:cascade-protection`
+- migration TASK 4:
+  `supabase/migrations/20260614185413_harden_cascade_protection_fiscal.sql`
+- spec TASK 5:
   `docs/superpowers/specs/2026-06-14-fiscal-backup-rls-hardening-design.md`
-- piano:
+- piano TASK 5:
   `docs/superpowers/plans/2026-06-14-fiscal-backup-rls-hardening.md`
-- controllori:
+- controllori TASK 5:
   - `scripts/check-fiscal-backup-rls.sql`
   - `scripts/check-fiscal-backup-rest-anon.mjs`
-- migration:
-  - `supabase/migrations/20260614150557_harden_fiscal_backup_rls.sql`
-- spec/piano prossima fase:
-  - `docs/superpowers/specs/2026-06-14-migration-history-reconciliation-design.md`
-  - `docs/superpowers/plans/2026-06-14-migration-history-reconciliation.md`
-- documenti canonici da aggiornare prima della chiusura:
-  - `docs/architecture.md`
-  - `docs/development-continuity-map.md`
-  - `docs/gestionale-roadmap-generale.md`
+- migration TASK 5:
+  `supabase/migrations/20260614150557_harden_fiscal_backup_rls.sql`
+- spec/piano Fase 2:
+  da creare prima di modificare dati, schema o flussi fiscali.
 
 ## RAG / DeepWiki
 
