@@ -3,16 +3,6 @@
 -- Add compensation_credit to fiscal_f24_submissions to track credits used
 -- in compensation inside an F24 delega (e.g. saldo sostitutiva in eccesso
 -- compensato contro debito INPS).
---
--- Background: reconciling Rosario's fiscal_obligations with the real F24
--- quietanze from Agenzia delle Entrate revealed that the schema couldn't
--- represent two real-world phenomena:
---   1) 1668/DPPI interest rows on rate F24 (30-60 centesimi per rata)
---   2) 196 euro compensation credit used on F24 21/07/2025 (saldo
---      sostitutiva 2024 in eccesso applicato contro saldo INPS 2024)
---
--- Both are tracked on the real F24 delivered by AdE and must be reflected
--- 1:1 in fiscal_obligations / fiscal_f24_submissions.
 
 -- 1. Extend the component CHECK to allow interests
 ALTER TABLE fiscal_obligations

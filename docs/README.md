@@ -1,6 +1,6 @@
 # Documentation Map
 
-Last updated: 2026-04-02
+Last updated: 2026-06-14
 
 ## Purpose
 
@@ -132,15 +132,16 @@ letto come fonte primaria.
 ## Reading Order For AI Or New Sessions
 
 1. `docs/README.md`
-2. `docs/development-continuity-map.md`
-3. `docs/architecture.md`
-4. `docs/local-truth-rebuild.md`
-5. `docs/historical-analytics-handoff.md`
-6. `docs/historical-analytics-backlog.md`
-7. `docs/contacts-client-project-architecture.md`
-8. `docs/ai-visual-blocks-pattern.md`
-9. `docs/data-import-analysis.md`
-10. `Gestionale_Rosario_Furnari_Specifica.md`
+2. `docs/CANTIERE.md`
+3. `docs/development-continuity-map.md`
+4. `docs/architecture.md`
+5. `docs/local-truth-rebuild.md`
+6. `docs/historical-analytics-handoff.md`
+7. `docs/historical-analytics-backlog.md`
+8. `docs/contacts-client-project-architecture.md`
+9. `docs/ai-visual-blocks-pattern.md`
+10. `docs/data-import-analysis.md`
+11. `Gestionale_Rosario_Furnari_Specifica.md`
 
 ## Canonical
 
@@ -209,6 +210,19 @@ sessione agentica.
 - `specs/` — design spec pre-implementazione
 
 ## Working
+
+### `docs/CANTIERE.md`
+
+Documento ponte di ripartenza operativa.
+
+Serve per:
+
+- sapere sempre qual e' la prossima cosa da fare;
+- collegare roadmap, spec, piano, review, RAG e gate aperti;
+- ripartire in una nuova chat senza ricostruire il contesto a memoria;
+- obbligare l'agente ad aggiornare stato e prossima azione prima della chiusura.
+
+Non sostituisce `AGENTS.md`, spec, piani, query o test.
 
 ### `docs/historical-analytics-handoff.md`
 

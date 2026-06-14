@@ -473,7 +473,7 @@ Real AdE quietanze exposed two missing real-world cases:
 
 Changes introduced:
 
-- DB migration `20260414211500_fiscal_interests_and_compensation.sql`
+- DB migration `20260414192200_fiscal_interests_and_compensation.sql`
   extends `fiscal_obligations.component` with `interessi_erario` and
   `interessi_inps`
 - `fiscal_f24_submissions` gains `compensation_credit numeric(10,2) not null default 0`
@@ -756,6 +756,50 @@ schedule instead of local reinterpretation.
 `DashboardKpiCards`.
 
 ---
+
+## Update 2026-06-14 — Fiscal backup RLS hardening
+
+Le quattro tabelle backup fiscali `*_backup_20260414` presenti sul remoto erano
+leggibili via REST anon (`206` con `Content-Range` positivo) perche' RLS era
+disabilitata e i privilegi `anon` / `authenticated` erano ancora effettivi.
+
+Intervento:
+
+- aggiunto controllore metadata:
+  `scripts/check-fiscal-backup-rls.sql`
+- aggiunto controllore REST anon:
+  `scripts/check-fiscal-backup-rest-anon.mjs`
+- aggiunti script:
+  - `npm run security:check:fiscal-backups`
+  - `npm run security:check:fiscal-backups:rest`
+- aggiunta migration replayable:
+  `supabase/migrations/20260614150557_harden_fiscal_backup_rls.sql`
+- applicata al remoto con:
+  `npx supabase db query --linked -f supabase/migrations/20260614150557_harden_fiscal_backup_rls.sql`
+
+Decisione:
+
+- l'hardening RLS e' stato applicato con query mirata, non tramite `db push`.
+- la migration history e' stata poi riconciliata:
+  - canonical timestamp fiscale: `20260414192200`
+  - timestamp locale fantasma rimosso: `20260414211500`
+  - hardening RLS registrato in history: `20260614150557`
+- Supabase MCP canonico per questo repo:
+  `supabase-gestionale` (`qvdmzhyzpyaveniirsmo`).
+
+GREEN:
+
+- `npm run security:check:fiscal-backups` passa
+- `npm run security:check:fiscal-backups:rest` passa
+- REST anon ritorna `401` e nessun `Content-Range` per tutte e quattro le
+  backup tables
+- `npm run continuity:check` passa
+- `make typecheck` passa
+
+Regola collegata:
+
+- le migration devono essere additive e indipendenti; hardening RLS ammesso solo
+  se non distruttivo, scoped e accompagnato da controllori RED/GREEN.
 
 ## Update 2026-04-02 (c) — Fiscal reality layer provider methods
 

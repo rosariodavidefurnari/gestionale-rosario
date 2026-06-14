@@ -4,6 +4,11 @@
 
 - `AGENTS.md` e' la fonte canonica condivisa per istruzioni di progetto,
   continuita' e workflow agentico.
+- `docs/CANTIERE.md` e' il ponte operativo di ripartenza:
+  - dice sempre qual e' la prossima cosa da fare
+  - collega roadmap, spec, piano, review, RAG e gate aperti
+  - va letto all'inizio di ogni nuova chat dopo `AGENTS.md`
+  - va aggiornato prima della chiusura di ogni lavoro strutturato
 - `CLAUDE.md` deve essere solo complementare:
   - importa `AGENTS.md`
   - aggiunge solo delta specifici di Claude Code
@@ -29,6 +34,101 @@
 - seguire il piano o l'attivita' corrente dedotta dal contesto
 - chiedere SOLO per ambiguita' rischiose, impatto distruttivo o tradeoff
   architetturali non deducibili dal repo
+- quando si usano sub-agenti, non lasciarli appesi: prima di chiudere un ciclo,
+  portarli a stato finale con gli strumenti disponibili e registrare eventuali
+  finding rilevanti nel Cantiere/spec/piano
+
+## SPEC-FIRST / PLAN-FIRST RULE
+
+- ogni attivita' strutturale o ad alto rischio deve partire da una spec scritta
+  prima del piano
+- dopo la spec, creare un piano operativo separato; solo dopo si puo' eseguire
+- prima della review della spec e prima della review del piano, interrogare
+  DeepWiki/RAG quando l'attivita' e' cross-file, rischiosa o puo' avere
+  superfici nascoste; poi verificare ogni claim sul sorgente reale
+- dopo aver creato la spec, fare una review della spec prima di considerarla
+  pronta
+- dopo aver creato il piano, fare una review del piano prima di implementare
+- dopo l'implementazione, fare una review del lavoro eseguito prima della
+  verifica finale
+- la spec deve dichiarare problema, obiettivi, non-obiettivi, fonti di verita',
+  rischi, decisioni, invarianti e criteri di accettazione
+- il piano deve dichiarare file coinvolti, step, verifiche, documentazione,
+  stop point, review richieste e relazione con la spec
+- se l'attivita' tocca database, schema, dashboard, AI, provider, fiscalita',
+  fatture, pagamenti, servizi, spese o UX/mobile, spec e piano sono obbligatori
+- eccezioni solo per micro-fix non strutturali, letture, ispezioni o risposte
+  puramente informative
+- se manca una spec o un piano per un intervento non banale, fermarsi e crearli
+  prima di modificare codice, schema o dati
+
+## CANTIERE RULE
+
+- `docs/CANTIERE.md` e' un documento `working`, non archivio storico
+- deve essere autosufficiente: chi lo apre deve capire stato corrente,
+  prossima azione, file da leggere, gate aperti, ultimo RAG utile e rischi
+- deve contenere link a roadmap, spec, piano e documenti canonici coinvolti
+- deve indicare esplicitamente quando una review e' invalida o da rifare
+- va aggiornato quando cambia uno di questi elementi:
+  - prossima azione
+  - spec/piano attivo
+  - esito review
+  - esito RAG/DeepWiki
+  - controllore/test richiesto
+  - stop point o rischio bloccante
+- se `CANTIERE.md` contraddice codice, DB o documenti canonici, vince la fonte
+  reale e `CANTIERE.md` va corretto subito
+
+## DETERMINISTIC WORK RULE
+
+- parola d'ordine del progetto: deterministico
+- non basare decisioni su impressioni, output parziali o "sembra corretto"
+- ogni intervento deve dichiarare input, comando/query, output atteso e stop
+  condition prima di modificare codice, schema o dati
+- ogni claim critico deve essere verificato sulla fonte reale: codice reale,
+  schema reale, DB reale, seed reale, XML reali o documentazione canonica
+- per soldi, fiscalita', dashboard e sicurezza, preferire query ripetibili,
+  test automatici, smoke deterministici e diff espliciti a controlli manuali
+  non tracciati
+- se un risultato non e' riproducibile, non usarlo come base per una modifica
+  strutturale
+
+## EXECUTABLE GUARDRAILS RULE
+
+- le regole scritte non bastano: quando un errore e' probabile o costoso,
+  aggiungere un controllore eseguibile nel repo
+- per controllore si intende test unitario, test E2E, script deterministico,
+  lint custom, continuity check, pre-commit guard, CI check o query di verifica
+  versionata
+- ogni spec/piano deve dichiarare se serve un controllore nuovo o se bastano
+  quelli esistenti
+- se una regola riguarda soldi, fiscalita', sicurezza, RLS, dashboard
+  finanziarie, migration, enum o parita' mobile/desktop, valutare sempre un
+  controllore automatico
+- non aggiungere controllori fragili o rumorosi: devono avere input chiari,
+  output stabile, falso positivo basso e comando documentato
+- se un controllo non puo' stare in pre-commit perche' richiede servizi remoti,
+  creare uno script/manual gate ripetibile e documentarlo nel piano
+
+## CONTRATTO OPERATIVO - VERSIONE SCHERZOSA MA VINCOLANTE
+
+- parola d'ordine: deterministico
+- prima si misura, poi si tocca
+- se ci sono soldi o fiscalita', il test passa davanti a tutti
+- spec e piano sono il biglietto d'ingresso: senza biglietto non si entra
+- ogni review e' un casello: se non passa, non si prosegue
+- se chiami sub-agenti, quando hai finito li porti a casa: nessun thread
+  operativo lasciato appeso
+- niente "mi pare": o c'e' una fonte reale, o e' solo una supposizione
+- niente "poi lo controlliamo": se e' importante, il controllo nasce prima
+- se una regola costa cara quando viene infranta, le mettiamo un controllore
+  nel repo
+- il database non si modifica al buio: query, output atteso e stop condition
+  prima di qualunque intervento
+- SOLID resta il telaio: responsabilita' chiare, contratti stabili, niente
+  astrazioni decorative
+- la roadmap indica la direzione, ma spec, piano, test e review decidono i
+  passi
 
 ## LOCAL DEEPWIKI / SEMANTIC CODE SEARCH
 
@@ -94,6 +194,51 @@ Disciplina:
 - se esiste una fonte reale nel repo, non creare una seconda verita' con
   fixture hardcoded di dominio
 
+## MONEY / FISCAL TDD RULE
+
+- per ogni modifica che tocca soldi, fiscalita', tasse, incassi, pagamenti,
+  fatture, spese, dashboard finanziarie, riconciliazione o sicurezza dei dati
+  finanziari, applicare TDD prima dell'implementazione
+- nessun codice produttivo o migration applicata senza prima un test,
+  controllo automatico o query di verifica che dimostri il problema
+- il piano deve dichiarare esplicitamente il ciclo RED/GREEN:
+  - RED: test o controllo che fallisce sul comportamento attuale o dimostra la
+    vulnerabilita'
+  - GREEN: implementazione minima per far passare il test o chiudere la falla
+  - REFACTOR: pulizia solo dopo il verde
+- per modifiche DB/security, il "test" puo' essere una combinazione di query
+  metadata, test SQL, controllo REST anon/authenticated e verifica RLS/grant,
+  ma deve essere ripetibile e scritto nel piano prima dell'applicazione
+- test scritti dopo l'implementazione non bastano per soldi e fiscalita'; se si
+  e' gia' implementato prima del test, fermarsi e ricondurre il lavoro a un
+  ciclo test-first verificabile
+- la review post-implementazione deve controllare anche che i test coprano la
+  semantica finanziaria corretta, non solo che il codice compili
+
+## SOLID ENGINEERING RULE
+
+- ogni modifica strutturale deve rispettare SOLID come regola di progetto,
+  non come preferenza stilistica
+- applicare SOLID in modo pragmatico:
+  - **Single Responsibility**: ogni modulo, componente, provider, helper o vista
+    DB deve avere una responsabilita' chiara; se una funzione mescola dominio,
+    UI, fetch e formattazione, va separata prima di estenderla
+  - **Open/Closed**: preferire estensioni locali, registry e configurazioni
+    esistenti invece di modificare switch sparsi o duplicare logiche
+  - **Liskov Substitution**: rispettare contratti e shape esistenti; non
+    introdurre varianti che funzionano solo in un consumer e rompono altri
+  - **Interface Segregation**: props, provider methods e tipi devono esporre
+    solo cio' che serve; evitare oggetti "tutto dentro" difficili da validare
+  - **Dependency Inversion**: UI e AI non devono dipendere da dettagli grezzi di
+    storage quando esiste un provider, helper, vista o registry di dominio
+- SOLID non autorizza over-engineering: se un'astrazione non riduce complessita',
+  duplicazione reale o rischio di drift, non va aggiunta
+- quando SOLID entra in tensione con la verita' del dominio, vince il dominio:
+  prima chiarire dati, semantica e fonte di verita', poi astrarre
+- ogni piano futuro deve dichiarare quali responsabilita' vengono separate o
+  preservate, soprattutto su dashboard, AI, provider, fatture, pagamenti,
+  servizi, spese e fiscalita'
+
 Regola attuale per il locale:
 
 - il rebuild del dominio locale parte da `supabase/seed_domain_data.sql`,
@@ -110,6 +255,21 @@ Regola attuale per il locale:
 
 Regola attuale per migration e bootstrap:
 
+- le migration devono essere additive e indipendenti
+- additive significa:
+  - aggiungere o estendere senza perdere dati;
+  - evitare `DROP`, `DELETE`, `TRUNCATE`, rename distruttivi, riscritture
+    semantiche o constraint tightening non preceduti da backfill/compatibilita';
+  - per rimozioni o cambi incompatibili usare un percorso expand/contract con
+    spec, piano, controllori e review dedicati
+- indipendenti significa:
+  - replayable da zero;
+  - self-contained;
+  - non dipendenti da UUID catturati dal remoto, stato manuale, ordine non
+    dichiarato, record creati a mano o dati non versionati
+- migration di hardening sicurezza/RLS sono ammesse solo se non distruttive,
+  strettamente scoped, idempotenti dove possibile e accompagnate da controllori
+  RED/GREEN
 - ogni migration deve essere replayable da zero
 - non dipendere da UUID catturati dal remoto, stato manuale o record creati a
   mano
