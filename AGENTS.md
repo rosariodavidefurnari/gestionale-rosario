@@ -30,6 +30,43 @@
 - chiedere SOLO per ambiguita' rischiose, impatto distruttivo o tradeoff
   architetturali non deducibili dal repo
 
+## LOCAL DEEPWIKI / SEMANTIC CODE SEARCH
+
+DeepWiki locale e' uno strumento obbligatorio per ricerca semantica sul codice,
+non una seconda documentazione del progetto.
+
+Usarlo prima di lavori cross-file o ad alto rischio quando serve trovare
+superfici che una ricerca testuale puo' non vedere:
+
+- impact analysis prima di modifiche su dashboard, AI, provider, Supabase,
+  fiscalita', fatturazione, payments, expenses, services, projects o quote
+- debugging di flussi che attraversano frontend, provider, viste DB e Edge
+  Functions
+- code review e sweep obbligatori per trovare consumer, registry, helper,
+  test e server layer collegati
+- pre-plan/pre-spec quando la domanda e' "dove vive questa logica?" o "quali
+  superfici dipendono da questo comportamento?"
+
+Regola corpus:
+
+- il RAG/wiki DeepWiki di progetto deve indicizzare CODE ONLY
+- includere normalmente `src`, `supabase`, `scripts`, `tests`
+- NON inserire `docs/`, `AGENTS.md`, `CLAUDE.md`, `.claude/`, planning notes,
+  decision log, handoff, backlog o altra prosa nel corpus RAG
+- la documentazione puo' driftare rispetto al codice; quindi per intent,
+  decisioni, vincoli e continuita' leggere i documenti direttamente dal repo,
+  non tramite ricerca semantica blended
+
+Disciplina:
+
+- ogni query/rebuild DeepWiki deve usare `model: "gemini-2.5-pro"`
+- prima di fidarsi del RAG, verificare staleness dello snapshot rispetto al
+  working tree; modifiche locali non indicizzate vanno lette dal sorgente reale
+- ogni file o claim suggerito dal RAG va verificato sul codice reale prima di
+  implementare, concludere una review o dichiarare "fatto"
+- se serve una ricerca semantica sui documenti, creare un indice docs-only
+  separato; mai mischiare codice e documentazione nello stesso corpus
+
 ## BOUNDARY WITH PRODUCT AI
 
 - questo file governa gli agenti che sviluppano il repo, non la chat AI interna
@@ -94,7 +131,7 @@ Regola attuale per migration e bootstrap:
 
 ## CRITICAL TRIGGERS
 
-Errori ad alto costo gia' pagati. L'archivio completo (35 trigger) e' in
+Errori ad alto costo gia' pagati. L'archivio completo e' in
 `.claude/rules/learning.md`.
 
 - **Fiscale = CASSA**: la base imponibile forfettaria usa `payments`
