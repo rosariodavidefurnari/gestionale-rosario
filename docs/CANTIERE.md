@@ -178,10 +178,17 @@ Ciclo attivo: TASK 4 del brief DB (`gestionale-rifinitura-db_2.md`) — Fiscal
 Cascade Protection (flip FK `CASCADE -> NO ACTION` su financial_documents,
 projects, services, quotes + UX delete pessimistic + controllore TDD).
 
-Stato: IMPLEMENTATO e verificato IN LOCALE. Migration applicata al DB locale,
-RED/GREEN locale eseguiti. Sul REMOTO produzione le 4 FK sono ANCORA `CASCADE`:
-unica azione aperta = applicare la migration al remoto (gate separato, con
-conferma utente). NIENTE mutazione prod senza conferma esplicita.
+Stato: COMPLETATO su DB. Implementato e verificato in locale (RED/GREEN), poi
+committato (`2a33a9cf`, branch `work/fiscal-backup-rls-hardening`) e APPLICATO AL
+REMOTO produzione: migration applicata via `db query --linked -f` + `migration
+repair`, GREEN su remoto (controllore exit 0), 4 FK = `NO ACTION` verificate via
+MCP, 0 residui fixture, 0 orfani.
+
+Unica azione aperta: la UX `pessimistic` (frontend) e' sul branch ma NON ancora
+live su Vercel (Vercel deploya solo da `main`). Finche' il branch non e' mergiato
+in `main`, su produzione il DB e' protetto (dato salvo) ma una delete bloccata
+mostra l'errore PostgREST grezzo invece del messaggio italiano (nessuna perdita
+dati). Prossimo passo: aprire PR / merge in `main` per attivare la UX.
 
 Esito RED/GREEN locale:
 
