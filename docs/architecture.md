@@ -1330,3 +1330,22 @@ FiscalConfig, FiscalTaxProfile             ← Fiscale
 <!-- Settings save bar: sticky on mobile (overflow container), fixed on desktop -->
 <!-- Settings save bar: always visible on desktop, auto-hide on mobile -->
 <!-- Settings: removed Authentication/SSO section (single-user, not needed) -->
+
+## Fiscal Cascade Protection (2026-06-14, TASK 4)
+
+Le FK padre verso i dati fiscali/finanziari usano `ON DELETE NO ACTION` (non
+piu' `CASCADE`): `financial_documents.client_id`, `projects.client_id`,
+`services.project_id`, `quotes.client_id`. Cancellare un cliente o un progetto
+con storia collegata e' quindi BLOCCATO dal DB (coerente con
+"deletion not supported, use disabling"). Le cascate legittime restano: la spesa
+km derivata (`expenses.source_service_id`), le allocazioni
+(`financial_document_*_allocations`), le righe F24
+(`fiscal_f24_payment_lines`). Migration:
+`supabase/migrations/20260614185413_harden_cascade_protection_fiscal.sql`.
+
+Lato UI, `DeleteButton` (`src/components/admin/delete-button.tsx`) ha una prop
+`mutationMode` (default `undoable`); `ClientShow`/`ProjectShow` la impostano a
+`pessimistic` con `onError` (`misc/blockedDeleteOnError.ts`) per mostrare un
+errore italiano leggibile (SQLSTATE 23503 su `error.body.code`) invece di un
+falso successo ottimistico. Controllore: `scripts/check-cascade-protection.sql`
+(`npm run security:check:cascade-protection`).

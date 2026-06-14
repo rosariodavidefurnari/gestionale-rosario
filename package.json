@@ -10,6 +10,7 @@
     "continuity:check": "node ./scripts/check-continuity.mjs",
     "security:check:fiscal-backups": "npx supabase db query --linked -f scripts/check-fiscal-backup-rls.sql",
     "security:check:fiscal-backups:rest": "node scripts/check-fiscal-backup-rest-anon.mjs --env .env.production",
+    "security:check:cascade-protection": "npx supabase db query --linked -f scripts/check-cascade-protection.sql",
     "local:admin:bootstrap": "node ./scripts/bootstrap-local-admin.mjs",
     "preview": "vite preview",
     "lint:apply": "eslint **/*.{mjs,ts,tsx} --fix",

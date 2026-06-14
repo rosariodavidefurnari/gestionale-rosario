@@ -68,6 +68,7 @@
 | **DB**       | DB-7  | F24 reali → interessi e compensazioni     |
 | **DB**       | DB-8  | Builder che unisce services+expenses → skip source_service_id |
 | **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
+| **Workflow** | WF-15 | Lavoro rischioso → RAG attivo + review multi-superficie |
 | **Backend**  | BE-9  | EF Calendar timed → usa timestamp service |
 
 ---
@@ -529,6 +530,26 @@ silenziosamente il duplicato `acc079b0` sullo stesso progetto/data del service
 rilevamento e' arrivato solo dopo che l'utente lo ha visto in lista. I flow
 rapidi saltano la review lunga del ServiceCreate e quindi hanno bisogno di un
 guard esplicito server-side.
+
+### WF-15: Lavoro rischioso/cross-file -> RAG attivo + review multi-superficie
+
+**Quando**: sto per scrivere spec, piano o review, o sto per modificare DB,
+schema, RLS, migration, fiscalita, fatture, pagamenti, spese, dashboard, AI, o
+qualunque cosa cross-file/ad alto rischio
+**Fare**:
+1. interrogare ATTIVAMENTE il RAG DeepWiki locale PRIMA di spec/piano/review
+   (curl `http://localhost:8001/chat/completions/stream`, `model: gemini-2.5-pro`,
+   `repo_url` = snapshot corrente), poi verificare OGNI claim sul sorgente reale;
+2. fare le review MULTI-SUPERFICIE e MULTI-COMPETENZA con piu' revisori
+   specializzati (DB/Postgres, dominio fiscale forfettario, frontend/superfici +
+   mobile parity, provider/backend/Edge, TDD/controllori), e OGNI revisore deve
+   usare il RAG.
+**Perché**: il 2026-06-14 ho fatto una review mono-superficie senza RAG per
+risparmiare token; l'utente ha imposto il contrario. La ricerca semantica trova
+superfici nascoste (consumer, registry, helper, cascate, lifecycle) che grep da
+solo perde. Saltarla per risparmiare token e' la causa radice degli errori
+cross-file. Il guardrail e' anche eseguibile come hook `UserPromptSubmit` in
+`.claude/settings.json` (inietta il mandato a ogni turno).
 
 ---
 

@@ -238,3 +238,18 @@ Titolo principale nelle card mobile lista: `text-base font-bold` (clients, conta
 ## AI Snapshot Financial Views (2026-04-01)
 
 buildUnifiedCrmReadContext now receives pre-computed financial data from DB views (project_financials, client_commercial_position) instead of calculating from raw tables. The snapshot shape for clientFinancials includes totalExpenses. No relational changes.
+
+## Client/Project deletion protection (2026-06-14, TASK 4)
+
+Cancellare un `client` con fatture/progetti/preventivi collegati, o un `project`
+con servizi collegati, e' ora BLOCCATO dal database: le FK
+`financial_documents.client_id`, `projects.client_id`, `services.project_id`,
+`quotes.client_id` sono passate da `ON DELETE CASCADE` a `NO ACTION`. Prima un
+click su "Elimina" cancellava in cascata, in silenzio, la storia fiscale. Ora il
+`DeleteButton` di `ClientShow`/`ProjectShow` e' in `mutationMode="pessimistic"` e
+mostra un messaggio italiano (es. "Impossibile eliminare: ci sono fatture,
+progetti o preventivi collegati...") tramite `misc/blockedDeleteOnError.ts`.
+Per rimuovere un cliente/progetto bisogna prima eliminare o scollegare i figli.
+La cancellazione di un singolo servizio resta consentita (rimuove solo la spesa
+km derivata via trigger). Dettagli:
+`docs/development-continuity-map.md` (Update 2026-06-14).

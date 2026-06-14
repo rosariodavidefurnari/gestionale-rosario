@@ -1,10 +1,11 @@
-import { ShowBase, useGetList, useShowContext } from "ra-core";
+import { ShowBase, useGetList, useNotify, useShowContext } from "ra-core";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { EditButton } from "@/components/admin/edit-button";
 import { DeleteButton } from "@/components/admin/delete-button";
+import { blockedDeleteOnError } from "../misc/blockedDeleteOnError";
 import { Phone, Mail, MapPin, FileText, Euro } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -97,6 +98,7 @@ const ClientShowContent = () => {
 
 const ClientHeader = ({ record }: { record: Client }) => {
   const [invoiceDraftOpen, setInvoiceDraftOpen] = useState(false);
+  const notify = useNotify();
   const location = useLocation();
   const { operationalConfig } = useConfigurationContext();
   const { data: services = [] } = useGetList<Service>("services", {
@@ -176,7 +178,16 @@ const ClientHeader = ({ record }: { record: Client }) => {
           Genera bozza fattura
         </Button>
         <EditButton />
-        <DeleteButton redirect="list" />
+        <DeleteButton
+          redirect="list"
+          mutationMode="pessimistic"
+          mutationOptions={{
+            onError: blockedDeleteOnError(
+              notify,
+              "Impossibile eliminare: questo cliente ha dati collegati (fatture, progetti, preventivi, pagamenti o spese). Elimina o scollega prima quelli.",
+            ),
+          }}
+        />
       </div>
       <InvoiceDraftDialog
         open={invoiceDraftOpen}

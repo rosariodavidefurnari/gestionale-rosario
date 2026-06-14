@@ -225,21 +225,27 @@ test.describe("Module: Projects - Complete", () => {
     await expect(page.getByText("In corso").first()).toBeVisible();
   });
 
-  test("delete project uses undo pattern", async ({ page }) => {
+  test("delete project with services is blocked (pessimistic)", async ({
+    page,
+  }) => {
+    // Il progetto di test ha servizi (e pagamenti/spese) collegati: con le FK
+    // protette (TASK 4) la cancellazione e' BLOCCATA dal DB. mutationMode
+    // pessimistic: errore italiano leggibile, niente falso successo/undo.
     await loginAsLocalAdmin(page);
 
     await page.getByRole("link", { name: "Progetti" }).click();
     await page.locator("table tbody tr a").first().click();
     await expect(page).toHaveURL(/\/projects\/.+\/show$/);
 
-    // DeleteButton uses undo pattern (no confirmation dialog)
     const deleteBtn = page.getByRole("button", { name: /Elimina/ });
     await expect(deleteBtn).toBeVisible({ timeout: 10000 });
     await deleteBtn.click();
 
-    // Should show undo notification ("Elemento eliminato")
-    await expect(page.getByText(/Elemento eliminato|eliminat/i)).toBeVisible({
+    // Errore di blocco leggibile, niente "Elemento eliminato" / "Annulla"
+    await expect(page.getByText(/Impossibile eliminare/i)).toBeVisible({
       timeout: 5000,
     });
+    await expect(page.getByText(/Elemento eliminato/)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Annulla" })).toHaveCount(0);
   });
 });

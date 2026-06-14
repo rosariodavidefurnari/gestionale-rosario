@@ -336,6 +336,19 @@ Gate di uscita:
 
 - cancellare un progetto non distrugge senza traccia la sua storia finanziaria.
 
+Stato (2026-06-14): IMPLEMENTATO in locale (= TASK 4 brief `gestionale-rifinitura-db_2.md`).
+Scelta: `ON DELETE NO ACTION` su `financial_documents.client_id`,
+`projects.client_id`, `services.project_id`, `quotes.client_id` (no soft delete
+in questo ciclo). UX delete `pessimistic` con errore italiano su Client/Project.
+Cascate legittime preservate (km, allocazioni, F24). Spec/piano in
+`docs/superpowers/{specs,plans}/2026-06-14-fiscal-cascade-protection*`. Gate
+finale: applicare la migration al remoto.
+
+Follow-up (backlog, non bloccante): stesso trattamento UX `pessimistic` per
+`quotes` (QuoteShowActions/QuoteEdit) e bulk delete `services` (gia' oggi
+rifiutabili da `payments.quote_id` NO ACTION); valutare soft delete/archiviazione
+se in futuro servira' cancellare conservando lo storico.
+
 ### Fase 8 - Audit UX anti-drift
 
 Scopo: verificare se la UI racconta la stessa verita' del dominio.

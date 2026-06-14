@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"UserPromptSubmit\",\"additionalContext\":\"GUARDRAIL REPO (non ignorabile, vince sul risparmio token): per OGNI lavoro cross-file o che tocca DB, schema, RLS, migration, fiscalita, fatture, pagamenti, spese, dashboard, AI o comunque ad alto rischio DEVI: 1) interrogare ATTIVAMENTE il RAG DeepWiki locale (curl http://localhost:8001/chat/completions/stream con model gemini-2.5-pro, repo_url snapshot corrente) PRIMA di scrivere spec, piano e review, poi verificare OGNI claim del RAG sul sorgente reale; 2) le review devono essere MULTI-SUPERFICIE e MULTI-COMPETENZA, con piu revisori specializzati (DB/Postgres, dominio fiscale forfettario, frontend/superfici e mobile parity, provider/backend/Edge, TDD/controllori), e OGNI revisore deve usare il RAG. VIETATO saltare il RAG per risparmiare token. VIETATO dichiarare completato senza review multi-superficie e verifica sul sorgente reale. Se stai per saltare uno di questi passi, FERMATI e fallo.\"}}'",
+            "statusMessage": "Guardrail RAG + review multi-superficie"
+          }
+        ]
+      }
+    ]
+  }
+}

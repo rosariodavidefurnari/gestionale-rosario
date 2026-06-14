@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { humanize, singularize } from "inflection";
 import type { UseDeleteOptions, RedirectionSideEffect } from "ra-core";
 import {
-  useDeleteWithUndoController,
+  useDeleteController,
+  useEvent,
   useGetRecordRepresentation,
   useResourceTranslation,
   useRecordContext,
@@ -17,6 +18,15 @@ export type DeleteButtonProps = {
   size?: "default" | "sm" | "lg" | "icon";
   onClick?: React.ReactEventHandler<HTMLButtonElement>;
   mutationOptions?: UseDeleteOptions;
+  /**
+   * Mutation mode for the delete.
+   * - "undoable" (default): optimistic delete with an undo notification.
+   * - "pessimistic": waits for the server; the error (e.g. a blocking foreign
+   *   key) surfaces BEFORE any success, and no phantom "Undo" toast appears.
+   *   Use for records protected by ON DELETE NO ACTION/RESTRICT (clients,
+   *   projects) so the user gets a real error instead of a fake success.
+   */
+  mutationMode?: "undoable" | "pessimistic";
   redirect?: RedirectionSideEffect;
   resource?: string;
   successMessage?: string;
@@ -53,6 +63,7 @@ export const DeleteButton = (props: DeleteButtonProps) => {
     onClick,
     size,
     mutationOptions,
+    mutationMode = "undoable",
     redirect = "list",
     successMessage,
     variant = "outline",
@@ -61,14 +72,26 @@ export const DeleteButton = (props: DeleteButtonProps) => {
   const record = useRecordContext(props);
   const resource = useResourceContext(props);
 
-  const { isPending, handleDelete } = useDeleteWithUndoController({
-    record,
-    resource,
-    redirect,
-    onClick,
-    mutationOptions,
-    successMessage,
-  });
+  // useDeleteController honours mutationMode (default "undoable" keeps the
+  // existing optimistic+undo behaviour for all current consumers); when
+  // "pessimistic" the server error surfaces before any success and the
+  // success notification is non-undoable (no phantom "Undo" toast).
+  const { isPending, handleDelete: controllerHandleDelete } =
+    useDeleteController({
+      record,
+      resource,
+      redirect,
+      mutationMode,
+      mutationOptions,
+      successMessage,
+    });
+  const handleDelete = useEvent(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (event?.stopPropagation) event.stopPropagation();
+      controllerHandleDelete();
+      if (typeof onClick === "function") onClick(event);
+    },
+  );
   const translate = useTranslate();
   const getRecordRepresentation = useGetRecordRepresentation(resource);
   let recordRepresentation = getRecordRepresentation(record);

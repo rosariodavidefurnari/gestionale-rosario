@@ -186,7 +186,12 @@ test.describe("Module: Clients - Complete CRUD", () => {
     await expect(page.getByText("Test Client")).toBeVisible();
   });
 
-  test("delete client shows undo toast", async ({ page }) => {
+  test("delete client with linked data is blocked (pessimistic)", async ({
+    page,
+  }) => {
+    // Il cliente di test ha progetto, pagamenti e spese collegati: con le FK
+    // protette (TASK 4) la cancellazione e' BLOCCATA dal DB. La UI e' in
+    // mutationMode pessimistic: niente falso successo/undo, ma errore italiano.
     await loginAsLocalAdmin(page);
 
     await page.getByRole("link", { name: "Clienti" }).click();
@@ -195,13 +200,12 @@ test.describe("Module: Clients - Complete CRUD", () => {
     // Clicca elimina
     await page.getByRole("button", { name: "Elimina" }).click();
 
-    // Verifica toast conferma (il sistema usa undo, non dialog)
-    await expect(page.getByText(/Elemento eliminato/)).toBeVisible();
+    // Errore di blocco leggibile (niente "Elemento eliminato", niente "Annulla")
+    await expect(page.getByText(/Impossibile eliminare/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Annulla" })).toHaveCount(0);
+    await expect(page.getByText(/Elemento eliminato/)).toHaveCount(0);
 
-    // Annulla eliminazione
-    await page.getByRole("button", { name: "Annulla" }).click();
-
-    // Verifica cliente ancora presente
+    // Il cliente NON e' stato cancellato
     await expect(page.getByText("Test Client")).toBeVisible();
   });
 });

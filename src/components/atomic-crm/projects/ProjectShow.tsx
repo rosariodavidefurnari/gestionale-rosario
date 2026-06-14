@@ -1,10 +1,17 @@
-import { ShowBase, useGetList, useGetOne, useShowContext } from "ra-core";
+import {
+  ShowBase,
+  useGetList,
+  useGetOne,
+  useNotify,
+  useShowContext,
+} from "ra-core";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { EditButton } from "@/components/admin/edit-button";
 import { DeleteButton } from "@/components/admin/delete-button";
+import { blockedDeleteOnError } from "../misc/blockedDeleteOnError";
 import { Calendar, Wallet, User, Euro, Car, Hash } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -85,6 +92,7 @@ const ProjectShowContent = () => {
 
 const ProjectHeader = ({ record }: { record: Project }) => {
   const [invoiceDraftOpen, setInvoiceDraftOpen] = useState(false);
+  const notify = useNotify();
   const location = useLocation();
   const { operationalConfig } = useConfigurationContext();
   const { data: client } = useGetOne("clients", { id: record.client_id });
@@ -161,7 +169,16 @@ const ProjectHeader = ({ record }: { record: Project }) => {
         ) : null}
         <QuickPaymentDialog record={record} />
         <EditButton />
-        <DeleteButton redirect="list" />
+        <DeleteButton
+          redirect="list"
+          mutationMode="pessimistic"
+          mutationOptions={{
+            onError: blockedDeleteOnError(
+              notify,
+              "Impossibile eliminare: questo progetto ha dati collegati (servizi, pagamenti o spese). Elimina o sposta prima quelli.",
+            ),
+          }}
+        />
       </div>
       <InvoiceDraftDialog
         open={invoiceDraftOpen}

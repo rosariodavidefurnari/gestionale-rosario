@@ -174,17 +174,52 @@ Non fatto:
 
 ## Prossima Azione
 
-Aprire il prossimo ciclo dalla roadmap generale: Fase 2, "Verita' dati: remoto
-vs locale vs XML".
+Ciclo attivo: TASK 4 del brief DB (`gestionale-rifinitura-db_2.md`) — Fiscal
+Cascade Protection (flip FK `CASCADE -> NO ACTION` su financial_documents,
+projects, services, quotes + UX delete pessimistic + controllore TDD).
 
-Prima di qualunque implementazione:
+Stato: IMPLEMENTATO e verificato IN LOCALE. Migration applicata al DB locale,
+RED/GREEN locale eseguiti. Sul REMOTO produzione le 4 FK sono ANCORA `CASCADE`:
+unica azione aperta = applicare la migration al remoto (gate separato, con
+conferma utente). NIENTE mutazione prod senza conferma esplicita.
 
-- creare spec dedicata;
-- interrogare DeepWiki/RAG;
-- fare review spec;
-- creare piano;
-- fare review piano;
-- definire controllori deterministici per confrontare remoto, seed e fonti XML.
+Esito RED/GREEN locale:
+
+- RED (FK CASCADE): `scripts/check-cascade-protection.sql` FALLISCE (exit 3,
+  "DELETE client NON bloccata").
+- migration `20260614185413_harden_cascade_protection_fiscal.sql` applicata in
+  locale (atomica BEGIN/COMMIT).
+- GREEN (FK NO ACTION): controllore PASSA (exit 0), anti-doppia-FK 0 righe,
+  gate per-FK `confdeltype='a'` su tutte e 4.
+- orfani su REMOTO = 0 su tutte e 4 le relazioni (ADD CONSTRAINT validera').
+
+Artefatti TASK 4:
+
+- spec: `docs/superpowers/specs/2026-06-14-fiscal-cascade-protection-design.md` (v2)
+- piano: `docs/superpowers/plans/2026-06-14-fiscal-cascade-protection.md`
+- controllore: `scripts/check-cascade-protection.sql` +
+  `npm run security:check:cascade-protection`
+- migration: `supabase/migrations/20260614185413_harden_cascade_protection_fiscal.sql`
+- UX: `src/components/admin/delete-button.tsx` (prop `mutationMode`),
+  `ClientShow`/`ProjectShow` (pessimistic + `misc/blockedDeleteOnError.ts` + test),
+  E2E `clients.complete`/`projects.complete` aggiornati al caso "bloccato".
+
+Review fatte (multi-superficie, ogni revisore con RAG, claim verificati sul sorgente):
+
+- review spec: BLOCK -> risolto in v2 (12 finding chiusi)
+- review piano: FLAG -> risolto (delete-button esteso con prop mutationMode;
+  `error.body.code` non `error.code`; apply via `db query --linked -f` +
+  `migration repair`; check anti doppia-FK; branch RED/GREEN default)
+- review post-implementazione: BLOCK -> risolto (E2E aggiornati al contratto
+  pessimistic; messaggi blocco estesi a pagamenti/spese; CANTIERE allineato;
+  controllore rinforzato con gate per-FK)
+
+Guardrail di processo aggiunto: hook `UserPromptSubmit` in `.claude/settings.json`
+(RAG attivo + review multi-superficie obbligatori) + trigger `WF-15` in
+`.claude/rules/learning.md`.
+
+La Fase 2 roadmap ("Verita' dati remoto vs locale vs XML") resta in coda dopo
+TASK 4. TASK 5 del brief (RLS backup fiscali) e' gia' chiuso in questo branch.
 
 Stato verifiche finali:
 
@@ -225,14 +260,26 @@ Artefatti:
 Stato DeepWiki:
 
 - API locale attiva su `http://localhost:8001`
-- cache locale presente:
-  `~/.adalflow/databases/rosariodavidefurnari_gestionale-rosario.pkl`
-- snapshot clone DeepWiki:
-  `e4aa581af58c900c27fe55a4191e0c7f4ee9b4b0`
-- working tree corrente:
-  `7694296d269293eb78d845885665864131738e6a`
-- conclusione: RAG utile per superfici gia' indicizzate, ma stale rispetto al
-  working tree; ogni claim va verificato sul sorgente reale.
+- indice operativo corrente:
+  `/root/.adalflow/databases/gestionale-rosario-current-20260614.pkl`
+- repo_url da usare nelle query RAG:
+  `/root/.adalflow/repos/gestionale-rosario-current-20260614`
+- snapshot indicizzato:
+  `39b3e463c8c4206b6bd334ef47018a7223e5ced6`
+- corpus code-only creato da `included_dirs = src, supabase, scripts, tests`
+  con `model: "gemini-2.5-pro"`.
+- validazione indice:
+  - 665 file sorgente letti;
+  - 2863 chunk/documenti caricati per retrieval;
+  - embeddings: 2863 non-empty, 0 empty, dimensione 3072;
+  - un 429 Google durante l'ultimo batch e' stato recuperato dal backoff;
+  - nessun `Giving up`, `embedding size mismatch` o `Filtered out` nei log di
+    validazione.
+- nota: sono entrati anche 2 file sotto `doc/` per match di path component
+  (`doc/src`), ma non `docs/`, planning notes o Cantiere.
+- conclusione: RAG operativo sullo snapshot corrente; resta supporto, non fonte
+  di verita'. Ogni file o claim suggerito dal RAG va verificato sul sorgente
+  reale prima di implementare, concludere review o dichiarare "fatto".
 
 Query eseguite:
 

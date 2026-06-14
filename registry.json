@@ -675,6 +675,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/misc/blockedDeleteOnError.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/misc/Status.tsx",
           "type": "registry:component"
         },

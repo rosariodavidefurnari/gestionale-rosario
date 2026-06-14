@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-04-15 (Invoice draft: deduplicate location when identical to service description)
+Last updated: 2026-06-14 (Fiscal Cascade Protection: FK CASCADE->NO ACTION on financial_documents/projects/services/quotes + pessimistic delete UX)
 
 ---
 
@@ -3260,3 +3260,33 @@ Test unitari aggiunti in `supabase/functions/_shared/getUserSale.test.ts`
 
 **File toccati:** `supabase/functions/_shared/getUserSale.ts`, `getUserSale.test.ts`
 **Impatto architetturale:** nessuno — solo error handling mancante aggiunto.
+
+## Update 2026-06-14 — Fiscal Cascade Protection (TASK 4)
+
+**Problema:** cancellare un `client` (o `project`) distruggeva in cascata, in
+silenzio, fatture/progetti/preventivi (o servizi) — perdita di storia fiscale,
+con doppio danno su `project_financials` (dashboard + contesto AI).
+
+**Cambiamento:** flip `ON DELETE CASCADE -> NO ACTION` su 4 FK
+(`financial_documents_client_id_fkey`, `projects_client_id_fkey`,
+`services_project_id_fkey`, `quotes_client_id_fkey`). Le cascate legittime
+(km expense via `expenses.source_service_id`, allocazioni,
+`fiscal_f24_payment_lines`) restano. Migration atomica
+`20260614185413_harden_cascade_protection_fiscal.sql`. Fix collaterale: il
+cascade `project->services` non passava piu' da `services.afterDelete`
+(calendar sync) lasciando eventi orfani; ora il blocco lo evita.
+
+**UX:** `DeleteButton` (src/components/admin/delete-button.tsx) esteso con prop
+`mutationMode` (default `undoable`). `ClientShow`/`ProjectShow` usano
+`mutationMode="pessimistic"` + `onError` (helper `misc/blockedDeleteOnError.ts`,
+legge `error.body.code === '23503'`) per mostrare un errore italiano PRIMA di
+ogni falso successo ottimistico.
+
+**Controllore:** `scripts/check-cascade-protection.sql` (single `DO`, atomico) +
+`npm run security:check:cascade-protection`. RED/GREEN provati in locale.
+
+**Sweep:** clients/projects (Show, single delete). Follow-up non bloccante:
+stesso pattern UX per quotes (Show/Edit) e bulk delete services.
+
+**Doc collegati:** spec `docs/superpowers/specs/2026-06-14-fiscal-cascade-protection-design.md`,
+piano `docs/superpowers/plans/2026-06-14-fiscal-cascade-protection.md`.
