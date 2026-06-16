@@ -139,6 +139,16 @@ Last updated: 2026-06-16 (Fatture view: pure helpers module financialDocumentHel
 - `misc/columnDefinitions.ts`: aggiunto `INVOICE_COLUMNS` (number, date,
   counterpart, type, direction, taxable, stamp, total) — stessa shape di
   `PAYMENT_COLUMNS`, riusato da column visibility/resize della lista Fatture
+- `invoices/FinancialDocumentListContent.tsx`: tabella desktop (resizable +
+  column visibility) e card mobile. READ-ONLY: nessun bulk select/checkbox.
+  Controparte = `client_name ?? supplier_name ?? "Non associata"`; badge tipo
+  e direzione (outbound verde / inbound ambra); importi via `formatEur`. Non
+  mostra mai settled/open/settlement.
+- `invoices/FinancialDocumentListFilter.tsx` + `FinancialDocumentMobileFilter`:
+  filtri direzione (`direction@eq`), tipo (`document_type@ilike` con suffisso
+  `%_invoice` / `%_credit_note`), anno (FilterBadge per anno derivato dai dati
+  → `issue_date@gte/@lte`), controparte (`FilterPopover` su clients →
+  `client_id@eq`), numero (`document_number@ilike`).
 
 ---
 
