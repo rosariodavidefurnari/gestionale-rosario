@@ -26,6 +26,135 @@ senza verde locale + OK utente.
 
 ---
 
+## REVISIONE v2 (post review piano multi-superficie + RAG) — AUTORITATIVA
+
+Dove confligge col corpo sotto, vince questa. La review (5 revisori, RAG +
+sorgente) ha trovato 5 critical che rendevano il piano non eseguibile; corretti
+qui, ogni claim riverificato sul sorgente.
+
+### Nuovo Task 0 — Estendere i tipi Kysely (`_shared/db.ts`) [C3]
+
+`db.ts` `Database` ha solo `payments: PaymentsTable` (no `financial_documents`,
+no `services`); `PaymentsTable` non ha `financial_document_id` (verificato
+`_shared/db.ts:91,118-125`). Prima di tutto: aggiungere
+`FinancialDocumentsTable`, `ServicesTable`, `ExpensesTable` (i campi usati:
+`id`, `invoice_ref`, `source_service_id`, `project_id`, `client_id`) e
+`financial_document_id: string | null` a `PaymentsTable`; registrarle in
+`Database`. Controllore eseguibile (no `deno check` in CI):
+`deno check supabase/functions/invoice_emit/index.ts` deve passare.
+
+### C1 — Idempotenza EF SENZA insert+catch in transazione
+
+Il driver Deno (`_shared/db.ts:154-155`) ha solo `begin`, niente savepoint: una
+violazione UNIQUE aborta la transazione, il `catch` JS non recupera, il COMMIT
+fallisce (rollback totale). VIETATO il pattern "insert + catch 23505". Invece:
+**pre-flight SELECT** su `financial_documents` per `(client_id,
+direction='outbound', document_number, issue_date)` PRIMA di aprire le scritture;
+se esiste → ritorna `{status:"already_emitted", financialDocumentId}` senza
+scrivere. (In alternativa `onConflict(...).doNothing().returning('id')` e
+`rows.length===0` ⇒ already_emitted.) Controllore #8 riscritto su questo.
+
+### C1bis — Guard server-side dentro l'EF (deferral acconto + race)
+
+- L'EF RIFIUTA `grossTaxable !== netCollectable` con errore esplicito
+  ("acconto pregresso non supportato in v1"): il deferral acconto e' garantito
+  server-side, non solo dalla UI.
+- Dopo gli UPDATE: se `servicesMarked + expensesMarked !=
+  serviceIds.length + expenseIds.length` ⇒ throw ⇒ rollback (race draft-vs-emit:
+  qualche riga gia' fatturata altrove). Controllore sul confronto count.
+
+### C2 + C4 — Re-import: funzione pura + group-by, ancora primaria `financial_document_id`
+
+Il prompt import crea **un record per riga** (verificato
+`invoice_import_extract/index.ts:59`): una fattura emessa re-importata genera N
+record con stesso `invoice_ref`. Il "trova payment in_attesa" dopo il 1° update
+ritorna 0 per i record 2..N ⇒ cadono nel create ⇒ duplicati. Correzione:
+
+- Estrarre funzione PURA testabile (vitest) in `_shared/invoiceImportConfirm.ts`:
+  `decideEmittedPaymentReconciliation({ recordsForInvoiceRef, emittedPayment })
+  → { action: "settle"|"create", paymentIdToSettle?, skipRecordIndexes }`.
+  Regola: se esiste un payment emesso dall'app per quell'`invoice_ref`
+  (ancora PRIMARIA `financial_document_id IS NOT NULL`; fallback `invoice_ref`
+  solo se nato dall'emit), allora 1 record → settle (in_attesa→ricevuto +
+  payment_date reale), gli altri N-1 → skip. Mai toccare payment `in_attesa`
+  MANUALI (senza `financial_document_id`).
+- Nel loop di `invoice_import_confirm` tenere un `Set<invoiceRef>` gia'
+  riconciliati per non ri-processare le righe 2..N.
+- Test puro con N=3 righe stesso ref ⇒ 1 settle + 2 skip. (In v1 senza acconto
+  e' 1→1, ma il guard intra-batch va comunque scritto.)
+
+### C4 — Falsificabilita' dei controllori (layer dichiarato)
+
+I test `_shared/*.test.ts` sono solo su funzioni pure (vitest non apre Postgres;
+no `deno test` in CI). Mappare ogni controllore al suo layer:
+- pure (vitest): `computeInvoiceDraftAmounts`, builder serviceIds/expenseIds,
+  `decideEmittedPaymentReconciliation`, `isInvoiceBillingComplete`,
+  validazione EF (`grossTaxable!=netCollectable`).
+- E2E smoke (`tests/e2e/invoices.smoke.spec.ts` + `resetAndSeedTestData`):
+  **controllore cardine #1** (emit → 1 financial_document + 1 payment; re-import
+  stesso XML ⇒ ancora 1), #3 (project_financials invariato), #4 (ri-bozza
+  collectable<=0). Dichiarato esplicitamente, non "query a mano".
+
+### C5 — Nuovo task prima della UI: `isInvoiceBillingComplete`
+
+`billingComplete` NON esiste (grep src/ = 0); `clientBilling.ts` ha solo helper
+di display; `buildInvoiceDraftXml` non valida (tag vuoti → Aruba scarta in
+silenzio, DOM-3). Nuovo task: helper PURO testato
+`isInvoiceBillingComplete({ client, issuer }) → { ok, missing: string[] }` sui
+campi realmente usati dall'XML (issuer: name, vatNumber, address*; client:
+name|billing_name, vat_number|fiscal_code, billing_address_*). Il gate del
+bottone e il RED Task 6 dipendono da questo; la UI mostra i `missing`.
+
+### Correzioni IMPORTANT/MINOR
+
+- **F4 (rationale corretto):** la vista corrente
+  `20260401094930_single_source_financials.sql` legge `total_paid` da
+  `payments WHERE status='ricevuto'` (no dual-path). L'emit e' cassa-neutro
+  perche' il payment nasce `in_attesa` (filtrato via), NON per via di
+  `payment_semantics_basis`. Controllore #3: `project_financials`
+  `total_paid`/`balance_due` invariati post-emit.
+- **Task 5b match primario** su `financial_document_id` (non
+  `client_id+invoice_ref+in_attesa`, che catturerebbe payment manuali).
+- **Task 3 RED con fixture reali:** `buildService(id, {fee_shooting, fee_editing,
+  fee_other, discount})` (netto via `calculateServiceNetValue`,
+  `crmSemanticRegistry.ts:177-184`), `buildExpense`; aggiungere caso
+  **service km-only** (netValue=0, kmValue>0) ⇒ in `serviceIds`.
+  `buildInvoiceDraftFromClient` ritorna `null` (non draft vuoto) quando
+  collectable<=0 (`:171`): la parita' id↔lineItems vale solo sul draft non-null.
+- **Task 7 fetch bulk:** LIST = un solo `useGetList('payments', {filter:
+  {'financial_document_id@in': ids}})`; SHOW = `@eq` su record.id; documento
+  senza payment (import storico) ⇒ badge NEUTRO, mai falso "non saldata".
+- **Task 8 sweep registry:** aggiornare `crmCapabilityRegistry.ts:359-366`
+  ("dialog senza scritture DB" diventa falso) e `crmSemanticRegistry.ts:474`
+  ("dedup stretto invoice_ref"); se si tocca `src/lib/semantics/`, includere
+  ANCHE `historical-analytics-handoff.md` + `historical-analytics-backlog.md` +
+  `architecture.md` nello stesso commit (`check-continuity.mjs:157-182`).
+  Aggiungere `client_commercial_position` ai docs (consumer payments, protetto
+  da `status='ricevuto'`).
+- **Minori:** Task 1 usa `--local` non `--linked` (verifica locale, lo stop
+  point vieta prod); verifica `confdeltype` nel WHERE (`where confdeltype='n'`,
+  assert count=1) non come colonna grezza; dedup guard UI su
+  `financial_documents_summary` (`client_id@eq` + `document_number@eq`), il vero
+  anti-doppio-click resta la UNIQUE server-side; riferimento Sheet =
+  `DichiarazioneEntryDialog.tsx:292-306`; RIMUOVERE "MobileDashboard parity"
+  (non consuma il dialog) — la parita' mobile reale e' il branch Sheet; estrarre
+  hook `useEmitInvoice` (dedup async su mock getList + builder messaggio puro,
+  WF-14) per non gonfiare il dialog; rinominare `invoiceNumber`→`documentNumber`;
+  documentare i limiti v1: re-emit con stesso numero ma `issue_date` diversa NON
+  bloccato dalla UNIQUE (2 documenti) → `window.confirm` + nota; delta bollo €2
+  = residuo noto → BR2.
+
+### Ordine task v2
+
+Task 0 (db.ts types) → Task 1 (migration) → Task 2 (amounts helper) →
+Task 2b (`isInvoiceBillingComplete`) → Task 3 (builder ids) →
+Task 3b (`decideEmittedPaymentReconciliation` puro) → Task 4 (EF, pre-flight +
+guard) → Task 5 (provider) → Task 5b (import update-in-place con group-by) →
+Task 6 (UI, `useEmitInvoice`, Sheet) → Task 7 (stato incasso bulk) →
+Task 8 (continuity + registry) → E2E smoke + verifiche finali.
+
+---
+
 ## Scoping v1 (decisione di sicurezza)
 
 - **Sorgenti:** solo `source.kind in ('project','client')`. Quote/singolo
