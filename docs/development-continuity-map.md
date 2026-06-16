@@ -63,10 +63,19 @@ Superfici toccate finora (Task 0-3):
   nella pagina dettaglio (Incassata/Da incassare/Parziale/Scaduta; nascosto per
   i documenti storici senza payment collegato).
 
+Tooling (chiuso): `_shared/db.ts` allineato — `payments.financial_document_id`
+reso opzionale su insert (no regressione su `invoice_import_confirm`), aggiunti
+`services.service_end/all_day/is_taxable`, `expenses.supplier_id`,
+`created_at: Generated<Date>` su payments/expenses; `invoice_emit/index.ts` con
+guard `user` -> `deno check invoice_emit` PULITO. Residuo follow-up:
+`invoice_import_confirm` ha ancora drift tipi pre-esistenti (services insert con
+piu' campi: `service_type`, fee_*, ecc.) -> rigenerazione completa di `db.ts`.
+
 Follow-up immediato (Task 7b): replicare il badge incasso anche nella LIST
-desktop (`FinancialDocumentListContent` + `INVOICE_COLUMNS`) e nella card mobile
-con fetch bulk `financial_document_id@in` (no N+1) — lo Show ha gia' parita'
-desktop/mobile.
+desktop (`FinancialDocumentListContent` + `INVOICE_COLUMNS` + colonne
+ridimensionabili) e nella card mobile con fetch bulk `financial_document_id@in`
+(no N+1) — lo Show ha gia' il badge. NON fatto ora: tocca l'infrastruttura
+colonne, fuori dal "piccolo e sicuro".
 
 Sweep ancora da completare (Task 8): registry
 (`crmCapabilityRegistry`/`crmSemanticRegistry`) + docs AI, E2E smoke

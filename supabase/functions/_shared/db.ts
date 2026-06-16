@@ -100,8 +100,10 @@ interface PaymentsTable {
   invoice_ref: string | null;
   status: string;
   notes: string | null;
-  financial_document_id: string | null;
-  created_at: Date;
+  // Optional on insert: nullable, no value required when omitted
+  // (invoice_import_confirm inserts payments without setting it).
+  financial_document_id?: string | null;
+  created_at: Generated<Date>;
 }
 
 interface ExpensesTable {
@@ -114,7 +116,8 @@ interface ExpensesTable {
   description: string | null;
   invoice_ref: string | null;
   source_service_id: string | null;
-  created_at: Date;
+  supplier_id?: string | null;
+  created_at: Generated<Date>;
 }
 
 interface ServicesTable {
@@ -122,6 +125,9 @@ interface ServicesTable {
   project_id: string | null;
   client_id: string | null;
   service_date: string;
+  service_end?: string | null;
+  all_day?: boolean | null;
+  is_taxable?: boolean | null;
   invoice_ref: string | null;
 }
 

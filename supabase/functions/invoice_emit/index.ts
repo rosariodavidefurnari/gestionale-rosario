@@ -139,7 +139,10 @@ Deno.serve(async (req: Request) =>
   OptionsMiddleware(req, async (request) =>
     AuthMiddleware(request, async (authedRequest) =>
       UserMiddleware(authedRequest, async (_, user) => {
-        const currentUserSale = user ? await getUserSale(user) : null;
+        if (!user) {
+          return createErrorResponse(401, "Unauthorized");
+        }
+        const currentUserSale = await getUserSale(user);
         if (!currentUserSale) {
           return createErrorResponse(401, "Unauthorized");
         }
