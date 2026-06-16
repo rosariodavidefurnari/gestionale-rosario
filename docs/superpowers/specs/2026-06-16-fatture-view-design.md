@@ -1,7 +1,7 @@
 # Vista "Fatture" (financial documents) - Design Spec
 
 Data: 2026-06-16
-Stato: draft v2 (recepita review esterna), in review utente
+Stato: draft v2.1 (recepita 2a review esterna + verifica money facts), in review utente
 Origine: BR1 dell'assessment `docs/superpowers/2026-06-15-gestionale-assessment.md`
 (finding #5: fatture emesse invisibili nell'app + AI le ignora).
 
@@ -38,6 +38,11 @@ quest'anno" l'utente deve andare su Aruba.
   `settled_amount=0`, `open_amount=total`, `settlement_status` = `open`/`overdue`
   per tutti -> lo "stato pagamento" e' INAFFIDABILE finche' non c'e' la
   riconciliazione (BR2). Da NON mostrare in v1.
+- Money facts verificati su prod (MCP, 2026-06-16): 27 `customer_invoice`
+  (somma `total_amount` = 41.013,21) + 1 `customer_credit_note` (`FPA 2/25`,
+  `total_amount = +200,00`, quindi POSITIVO -> va SOTTRATTA: netto fatturato =
+  40.813,21); valuta unica `EUR` (28/28); 0 documenti senza controparte;
+  0 documenti `inbound`/fornitore.
 - Provider: `dataProvider.ts:65` registra gia' la PK della vista
   (`primaryKeys.set("financial_documents_summary", ["id"])`) -> interrogabile
   come resource read-only.
@@ -59,8 +64,12 @@ quest'anno" l'utente deve andare su Aruba.
    direzione (Emessa/Ricevuta) e tipo (Fattura/Nota di credito).
 3. Filtri: direzione, tipo documento, anno (`issue_date`), cliente/fornitore;
    ricerca per numero documento; ordinamento default `issue_date` desc.
-4. Riepilogo in cima alla lista: "Totale fatturato" + n. documenti del FILTRO
-   attivo (stile approccio-bambino).
+4. Riepilogo in cima alla lista, coerente con il filtro attivo (copy semplice e
+   non ambiguo):
+   - Emesse: "Totale fatture emesse" (lordo, somma `total_amount`, al netto delle
+     note di credito) + "Imponibile" (somma `taxable_amount`) + n. documenti;
+   - Ricevute: "Totale documenti ricevuti" + n. documenti;
+   - Tutte: box separati Emesse netto / Ricevute (NON un unico totale) + n.
 5. Parita' mobile (card dedicata + `MobilePageTitle`).
 6. AI-aware: i documenti fiscali entrano nel contesto AI (snapshot + capability
    registry) cosi' l'AI puo' rispondere su fatture/fatturato.
@@ -119,12 +128,21 @@ seguendo il pattern dei moduli esistenti.
   dataset filtrato COMPLETO (non la pagina) tramite fetch dedicato del set
   filtrato (pattern simile a `admin/count.tsx`, ma sommando gli importi);
   funzione di somma pura testata.
-- Dettaglio: tutti i campi, scomposizione Imponibile/Bollo/Totale, link cliente,
-  date, note, `xml_document_code`, `related_document_number` per note credito,
-  `project_names` se presente. Read-only.
+- Dettaglio: campi fiscalmente utili e informativi (scomposizione
+  Imponibile/Bollo/Totale, controparte + link, date, note, `xml_document_code`,
+  `related_document_number` per note credito, `project_names` se presente),
+  ESCLUSI `settled_amount`/`open_amount`/`settlement_status` finche' le
+  allocazioni sono vuote. Read-only.
 - AI: in `dataProviderAi.ts` aggiungere `getList("financial_documents_summary")`
-  al Promise.all; passare a `buildUnifiedCrmReadContext`; aggiungere il modulo con
-  `ai` al registry -> capability registry lo espone. Tipo
+  al Promise.all con pagination ESPLICITA (es. `perPage: 500`, `sort issue_date
+  desc`) per non prendere solo la prima pagina; passare a
+  `buildUnifiedCrmReadContext`; aggiungere il modulo con `ai` al registry ->
+  capability registry lo espone. Nello snapshot includere SOLO campi utili
+  (`id, document_number, document_type, direction, issue_date, total_amount,
+  taxable_amount, stamp_amount, client_name, supplier_name, currency_code,
+  related_document_number, project_names`), ESCLUDENDO
+  `settled_amount/open_amount/settlement_status`. Opzionale ma consigliato:
+  aggregati per anno/direzione (fatturato per anno) per risposte rapide. Tipo
   `FinancialDocumentSummary` esteso se serve.
 
 ## Regole Di Calcolo Riepilogo
@@ -145,6 +163,20 @@ seguendo il pattern dei moduli esistenti.
     un unico totale.
 - Mostrare sempre il conteggio documenti del filtro. Opzionale: scomporre
   "Fatture emesse / Note di credito / Netto".
+- Lordo vs imponibile: il "Totale" usa `total_amount` (LORDO documento). La label
+  deve dirlo ("Totale fatture emesse"), MAI chiamarlo "imponibile". Mostrare in
+  affiancamento anche l'imponibile (somma `taxable_amount`) per chiarezza.
+- Segno note di credito (VERIFICATO su prod: la nota `FPA 2/25` ha
+  `total_amount = +200,00`, positivo): la funzione pura determina il segno dal
+  `document_type`, NON dal valore numerico, per evitare doppie inversioni:
+  `signedTotal = isCreditNote(doc) ? -Math.abs(total_amount) : Math.abs(total_amount)`.
+  Test su entrambi i casi (credit note positiva e, difensivamente, negativa).
+- Valuta: oggi tutto `EUR` (28/28). Regola comunque: NON sommare documenti con
+  `currency_code` diverso; se in futuro compaiono altre valute, mostrare totali
+  separati per valuta.
+- Controparte nulla (oggi 0 casi): se `client_name` e `supplier_name` sono null,
+  mostrare "Non associata"; i documenti senza controparte restano visibili
+  quando non e' applicato un filtro controparte.
 
 ## Query / Filtering
 
@@ -159,6 +191,12 @@ seguendo il pattern dei moduli esistenti.
   Fornitore per Ricevute); con direzione "Tutte" usare "Controparte" unico.
 - Tutti i filtri passano dal dataProvider (ra-data-postgrest), non da
   filtraggio client-side post-fetch, per coerenza con paginazione e riepilogo.
+- DA VERIFICARE NEL PIANO: supporto stabile del filtro OR in ra-data-postgrest
+  per "Controparte" (`client_name` OR `supplier_name`) e ricerca numero
+  (`document_number` OR `related_document_number`). Fallback v1 se l'OR non e'
+  affidabile: con direzione selezionata usare filtro singolo coerente
+  (Cliente/Fornitore) e ricerca solo su `document_number` (con
+  `related_document_number` mostrato nel dettaglio).
 
 ## SOLID
 
@@ -216,7 +254,11 @@ per la sola AI: scartato perche' qui vogliamo UI visibile + AI insieme.
 - Dettaglio read-only completo, nessun bottone di modifica/eliminazione.
 - Nessuno stato pagamento mostrato.
 - L'AI risponde correttamente a "quante fatture ho emesso nel 2025?" / "quanto ho
-  fatturato" usando il contesto aggiornato.
+  fatturato" usando il contesto aggiornato, e nella risposta: distingue fatture
+  emesse da documenti ricevuti; sottrae le note di credito; NON usa "pagato",
+  "incassato", "da incassare", "scaduto" (e' un dato di fatturato/emissione, non
+  di cassa); chiarisce che il totale e' basato sui documenti fiscali nel
+  gestionale.
 - `make typecheck`, `make lint`, `npm run continuity:check`, unit test ed E2E
   smoke verdi.
 - Parita' mobile verificata.
@@ -231,6 +273,14 @@ per la sola AI: scartato perche' qui vogliamo UI visibile + AI insieme.
   riepilogo" e "Query/filtering". RESPINTO con verifica: path `/fatture`
   decouplato dal nome resource (route ra-core = `name`, `CRM.tsx:169`) -> fuori
   scope v1.
+- v2.1: recepita 2a review esterna + verifica money facts su prod (MCP).
+  Accettati: totale LORDO (`total_amount`) con label esplicita + imponibile
+  affiancato; segno note credito dal `document_type` (nota reale `FPA 2/25` =
+  +200, da sottrarre); regola valuta (no mix, oggi tutto EUR); dettaglio esclude
+  i campi settlement; Obiettivo 4 reso direction-aware; controparte nulla ->
+  "Non associata"; nota OR/fallback per controparte e ricerca numero; snapshot AI
+  con campi ammessi + pagination esplicita + no settlement + aggregati per anno;
+  criterio AI rafforzato (no "pagato/incassato/scaduto").
 - Da fare: review MULTI-SUPERFICIE + RAG (provider/resource, AI context,
   UX/mobile, fiscale/totali, test) sul piano, poi review utente.
 
