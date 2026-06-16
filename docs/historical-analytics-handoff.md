@@ -6,7 +6,38 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-04-14 (fiscal reality layer interest + compensation support)
+Last updated: 2026-06-16 (financial documents exposed to unified AI read context)
+
+## Update 2026-06-16 — Fatture (financial_documents) visibili al contesto AI
+
+I documenti fiscali della vista `financial_documents_summary` (fatture e note
+di credito, emesse e ricevute) ora entrano nello snapshot AI unificato.
+
+Superfici toccate:
+
+- `src/lib/ai/unifiedCrmReadContextTypes.ts`: aggiunto
+  `snapshot.financialDocuments` (campi whitelisted camelCase: documentNumber,
+  documentType, direction, issueDate, totalAmount, taxableAmount, stampAmount,
+  clientName, supplierName, currencyCode, relatedDocumentNumber, projectNames) +
+  `snapshot.financialDocumentsCaveat`
+- `src/lib/ai/unifiedCrmReadContext.ts`: nuovo param `financialDocuments`
+  (default `[]`) nel tipo della firma E nel destructuring; mapping `.map()`
+  esplicito ai SOLI campi ammessi — MAI spread `...d`, perche il tipo
+  `FinancialDocumentSummary` porta `settled_amount`/`open_amount`/
+  `settlement_status` (stato pagamento) che NON devono finire nello snapshot
+- `src/components/atomic-crm/providers/supabase/dataProviderAi.ts`: fetch della
+  vista (`LARGE_PAGE`, sort `issue_date DESC`) nel `Promise.all` e pass-through
+  al builder
+- `supabase/functions/unified_crm_answer/prompt.ts`: snapshot enumerata +
+  istruzione lessicale (fatturato/emissione, NON cassa; somma emesse e SOTTRAI
+  note di credito; vietato pagato/incassato/scaduto sui documenti fiscali)
+
+Semantica chiave: i `financialDocuments` sono un dato di FATTURATO/EMISSIONE,
+non di cassa. Lo stato pagamento non e' disponibile a livello AI by design
+(anti-leak verificato da test in `unifiedCrmReadContext.test.ts`).
+
+Deploy: la Edge Function `unified_crm_answer` va deployata separatamente
+(`npx supabase functions deploy unified_crm_answer`) — non parte da `git push`.
 
 ## Update 2026-04-14 — Fiscal reality layer: AdE reconciliation gaps closed
 

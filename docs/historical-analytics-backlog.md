@@ -6,7 +6,36 @@
 incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 `canonical`.
 
-Last updated: 2026-04-14 (fiscal reality layer interest + compensation support)
+Last updated: 2026-06-16 (financial documents exposed to unified AI read context)
+
+## Update 2026-06-16 — Fatture nel contesto AI unificato
+
+Slice completata: `financialDocuments exposed to unified AI read context`.
+
+Deliverable chiusi:
+
+- `snapshot.financialDocuments` + `snapshot.financialDocumentsCaveat` nel tipo
+  `UnifiedCrmReadContext`
+- builder `buildUnifiedCrmReadContext`: param `financialDocuments` (firma +
+  destructuring) e mapping whitelisted nel return
+- fetch della vista `financial_documents_summary` in `dataProviderAi`
+- prompt `unified_crm_answer` aggiornato (enumerazione snapshot + istruzione
+  lessicale fatturato/emissione vs cassa)
+- test anti-leak in `unifiedCrmReadContext.test.ts` (settled/open/settlement
+  assenti dallo snapshot)
+
+Motivazione:
+
+- l'AID del CRM non vedeva i documenti fiscali importati; ora puo rispondere a
+  "quanto ho fatturato" distinguendo emesse/ricevute e sottraendo le note di
+  credito, senza confondere fatturato con incasso
+
+Residuo immediato:
+
+- deploy della Edge Function `unified_crm_answer` sul progetto remoto
+- smoke prod ("quanto ho fatturato nel 2025?" -> NON deve usare "incassato")
+- follow-up opzionale: aggregati `financialsByYear` nel builder per risposte
+  rapide (non implementato in questa slice)
 
 ## Update 2026-04-14 — Fiscal reality layer: schema gap follow-up
 

@@ -4,6 +4,7 @@ import type {
   Contact,
   Client,
   Expense,
+  FinancialDocumentSummary,
   Payment,
   ProjectContact,
   ProjectFinancialRow,
@@ -56,6 +57,7 @@ export const buildAiProviderMethods = (deps: {
         workflowsResponse,
         projectFinancialsResponse,
         clientCommercialPositionsResponse,
+        financialDocumentsResponse,
       ] = await Promise.all([
         deps.baseDataProvider.getOne("configuration", { id: 1 }),
         deps.baseDataProvider.getList<Client>("clients", {
@@ -129,6 +131,14 @@ export const buildAiProviderMethods = (deps: {
             filter: {},
           },
         ),
+        deps.baseDataProvider.getList<FinancialDocumentSummary>(
+          "financial_documents_summary",
+          {
+            pagination: LARGE_PAGE,
+            sort: { field: "issue_date", order: "DESC" },
+            filter: {},
+          },
+        ),
       ]);
 
       const config =
@@ -149,6 +159,7 @@ export const buildAiProviderMethods = (deps: {
         suppliers: suppliersResponse.data,
         tasks: tasksResponse.data,
         workflows: workflowsResponse.data,
+        financialDocuments: financialDocumentsResponse.data,
         semanticRegistry: buildCrmSemanticRegistry(config),
         capabilityRegistry: buildCrmCapabilityRegistry(),
       });

@@ -473,4 +473,87 @@ describe("unifiedCrmReadContext", () => {
       }),
     ]);
   });
+
+  it("maps financial documents to whitelisted snapshot fields and never leaks payment state", () => {
+    const context = buildUnifiedCrmReadContext({
+      clients: [],
+      contacts: [],
+      quotes: [],
+      projects: [],
+      projectContacts: [],
+      services: [],
+      payments: [],
+      expenses: [],
+      tasks: [],
+      financialDocuments: [
+        {
+          id: "doc-1",
+          direction: "outbound",
+          document_type: "customer_invoice",
+          document_number: "FPA 1/25",
+          issue_date: "2025-03-10",
+          total_amount: 1220,
+          taxable_amount: 1000,
+          tax_amount: 220,
+          stamp_amount: 2,
+          client_id: "client-1",
+          client_name: "MARIO ROSSI STUDIO",
+          supplier_name: null,
+          currency_code: "EUR",
+          related_document_number: null,
+          project_names: "Wedding Mario",
+          // payment-state fields that MUST NOT leak into the AI snapshot
+          settled_amount: 500,
+          open_amount: 720,
+          settlement_status: "partial",
+          project_allocations_count: 1,
+          created_at: "2025-03-10T10:00:00.000Z",
+          updated_at: "2025-03-10T10:00:00.000Z",
+        },
+      ],
+      semanticRegistry: buildCrmSemanticRegistry(),
+      capabilityRegistry: buildCrmCapabilityRegistry(),
+      generatedAt: "2026-06-16T10:00:00.000Z",
+    });
+
+    const docs = context.snapshot.financialDocuments;
+    expect(docs).toHaveLength(1);
+
+    const doc = docs[0];
+    // Whitelisted fields present and correctly mapped
+    expect(doc).toEqual({
+      id: "doc-1",
+      documentNumber: "FPA 1/25",
+      documentType: "customer_invoice",
+      direction: "outbound",
+      issueDate: "2025-03-10",
+      totalAmount: 1220,
+      taxableAmount: 1000,
+      stampAmount: 2,
+      clientName: "MARIO ROSSI STUDIO",
+      supplierName: null,
+      currencyCode: "EUR",
+      relatedDocumentNumber: null,
+      projectNames: "Wedding Mario",
+    });
+
+    // Payment-state fields must be absent from the snapshot
+    const keys = Object.keys(doc as Record<string, unknown>);
+    expect(keys).not.toContain("settled_amount");
+    expect(keys).not.toContain("open_amount");
+    expect(keys).not.toContain("settlement_status");
+    expect(keys).not.toContain("settledAmount");
+    expect(keys).not.toContain("openAmount");
+    expect(keys).not.toContain("settlementStatus");
+    // Also ensure no tax_amount / due_date / source_path leakage
+    expect(keys).not.toContain("tax_amount");
+    expect(keys).not.toContain("taxAmount");
+
+    expect(context.snapshot.financialDocumentsCaveat).toContain(
+      "FATTURATO/EMISSIONE",
+    );
+    expect(context.snapshot.financialDocumentsCaveat).toContain(
+      "SOTTRAI le note di credito",
+    );
+  });
 });

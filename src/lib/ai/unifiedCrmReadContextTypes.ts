@@ -258,6 +258,22 @@ export type UnifiedCrmReadContext = {
       actionsSummary: string;
       isActive: boolean;
     }>;
+    financialDocuments: Array<{
+      id: string | number;
+      documentNumber: string;
+      documentType: string;
+      direction: "inbound" | "outbound";
+      issueDate: string;
+      totalAmount: number;
+      taxableAmount: number | null;
+      stampAmount: number | null;
+      clientName: string | null;
+      supplierName: string | null;
+      currencyCode: string;
+      relatedDocumentNumber: string | null;
+      projectNames: string | null;
+    }>;
+    financialDocumentsCaveat: string;
   };
   caveats: string[];
 };

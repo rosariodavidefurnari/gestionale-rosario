@@ -22,6 +22,7 @@ import type {
   Client,
   Contact,
   Expense,
+  FinancialDocumentSummary,
   Payment,
   ProjectContact,
   ProjectFinancialRow,
@@ -170,6 +171,7 @@ export const buildUnifiedCrmReadContext = ({
   suppliers = [],
   tasks = [],
   workflows = [],
+  financialDocuments = [],
   semanticRegistry,
   capabilityRegistry,
   generatedAt = new Date().toISOString(),
@@ -187,6 +189,7 @@ export const buildUnifiedCrmReadContext = ({
   suppliers?: Supplier[];
   tasks?: ClientTask[];
   workflows?: Workflow[];
+  financialDocuments?: FinancialDocumentSummary[];
   semanticRegistry: CrmSemanticRegistry;
   capabilityRegistry: CrmCapabilityRegistry;
   generatedAt?: string;
@@ -568,6 +571,27 @@ export const buildUnifiedCrmReadContext = ({
           actionsSummary: wf.actions.map((a) => describeAction(a)).join("; "),
           isActive: true,
         })),
+      // Whitelisted mapping: NEVER spread `...d`. The FinancialDocumentSummary
+      // type carries settled_amount/open_amount/settlement_status (payment
+      // state) which must NOT leak into the AI snapshot — financial documents
+      // are a billing/issuance fact, not a cash fact.
+      financialDocuments: financialDocuments.map((d) => ({
+        id: d.id,
+        documentNumber: d.document_number,
+        documentType: d.document_type,
+        direction: d.direction,
+        issueDate: d.issue_date,
+        totalAmount: Number(d.total_amount ?? 0),
+        taxableAmount: d.taxable_amount ?? null,
+        stampAmount: d.stamp_amount ?? null,
+        clientName: d.client_name ?? null,
+        supplierName: d.supplier_name ?? null,
+        currencyCode: d.currency_code,
+        relatedDocumentNumber: d.related_document_number ?? null,
+        projectNames: d.project_names ?? null,
+      })),
+      financialDocumentsCaveat:
+        "I documenti fiscali (financialDocuments) sono un dato di FATTURATO/EMISSIONE, non di cassa. Per 'quanto ho fatturato' somma le fatture emesse (direction outbound, documentType *_invoice) e SOTTRAI le note di credito (*_credit_note, memorizzate positive). Non parlare di pagato/incassato/scaduto: lo stato pagamento NON e' disponibile.",
     },
     caveats: [
       "Questo snapshot e' read-only: nessuna scrittura nel CRM parte da questo contesto o dalle risposte AI che lo usano senza una conferma esplicita in un workflow dedicato.",
