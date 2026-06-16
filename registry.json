@@ -835,6 +835,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/invoices/index.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/invoices/financialDocumentHelpers.ts",
           "type": "registry:component"
         },
@@ -843,11 +847,19 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/invoices/FinancialDocumentShow.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/invoices/FinancialDocumentListFilter.tsx",
           "type": "registry:component"
         },
         {
           "path": "src/components/atomic-crm/invoices/FinancialDocumentListContent.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/invoices/FinancialDocumentList.tsx",
           "type": "registry:component"
         },
         {

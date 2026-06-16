@@ -157,6 +157,20 @@ Last updated: 2026-06-16 (Fatture view: pure helpers module financialDocumentHel
   ricevuti + Documenti), assente (box Emesse netto / Ricevuti separati).
   `multiCurrency` → totali per valuta. `data-testid="invoice-summary"`,
   `isPending` → "--", `console.warn` se `total > 1000`.
+- `invoices/FinancialDocumentList.tsx`: wrapper `List` (`title={false}`, sort
+  `issue_date DESC`, perPage 25). Actions: SortButton + ColumnVisibility +
+  Export + (mobile) MobileFilter; NIENTE CreateButton. Layout: MobilePageTitle
+  "Fatture" + SummaryHeader + filtro + content. Empty state "Nessun documento"
+  senza CreateButton. Exporter CSV (numero/data/controparte/tipo/direzione/
+  imponibile/bollo/totale).
+- `invoices/FinancialDocumentShow.tsx`: dettaglio READ-ONLY (`ShowBase`),
+  nessun Edit/Delete. Sezioni: intestazione (numero + badge tipo/direzione +
+  data + totale), controparte (link a clients/suppliers o "Non associata"),
+  importi (imponibile/bollo/IVA/totale), dati fiscali (xml_document_code,
+  related_document_number, valuta, source_path, notes), progetti
+  (project_names). Mai settled/open/settlement.
+- `invoices/index.tsx`: `{ list, show, recordRepresentation: document_number }`
+  (no create/edit → resource read-only).
 
 ---
 
