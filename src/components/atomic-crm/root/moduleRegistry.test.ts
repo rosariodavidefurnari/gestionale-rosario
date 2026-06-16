@@ -64,6 +64,25 @@ describe("moduleRegistry", () => {
     expect(getModuleByResource("clients")?.label).toBe("Clienti");
   });
 
+  it("keeps financial_documents_summary strictly read-only (list + show only)", () => {
+    const fatture = getModuleByResource("financial_documents_summary");
+    expect(fatture).toBeTruthy();
+    if (!fatture) {
+      return;
+    }
+
+    // AI exposes only the read surfaces.
+    expect(fatture.ai?.supportedViews).toEqual(["list", "show"]);
+
+    // No mutation routes are wired: create/edit components must be absent.
+    expect(fatture.components.create).toBeUndefined();
+    expect(fatture.components.edit).toBeUndefined();
+
+    // Read surfaces are present.
+    expect(fatture.components.list).toBeTruthy();
+    expect(fatture.components.show).toBeTruthy();
+  });
+
   it("excludes disabled modules from helper outputs", () => {
     const contacts = getModuleByResource("contacts");
     expect(contacts).toBeTruthy();

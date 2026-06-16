@@ -154,15 +154,18 @@ VALUES
   ('${randomUUID()}', NULL, '${entities.clientId}', '2026-01-10', 'credito_ricevuto', NULL, 0.19, 999, 0, 'Credito fornitore (escluso da spese)', NOW());
 
 -- Inserisce documenti fiscali test (Fatture view: financial_documents_summary)
--- Tutti OUTBOUND, EUR, document_number distinti, controparte = client di test.
+-- Le prime 3 righe sono OUTBOUND, EUR, document_number distinti, controparte = client di test.
 -- Le note di credito sono memorizzate POSITIVE e sottratte lato app per document_type.
--- Atteso (tutti gli anni): netto emesse = 1000 + 500 - 200 = 1.300,00 €
--- Atteso (anno 2025):      netto emesse = 1000 - 200       =   800,00 €
-INSERT INTO financial_documents (id, client_id, direction, document_type, document_number, issue_date, total_amount, taxable_amount, currency_code, created_at, updated_at)
+-- L'ultima riga (FT 2/25) e' OUTBOUND con controparte NULLA (client_id e supplier_id
+-- NULL): deve restare visibile in lista con etichetta "Non associata".
+-- Atteso netto emesse (tutti gli anni): 1000 + 500 - 200 + 100 = 1.400,00 €
+-- Atteso netto emesse (anno 2025):      1000 - 200 + 100       =   900,00 €
+INSERT INTO financial_documents (id, client_id, supplier_id, direction, document_type, document_number, issue_date, total_amount, taxable_amount, currency_code, created_at, updated_at)
 VALUES
-  ('${randomUUID()}', '${entities.clientId}', 'outbound', 'customer_invoice', 'FT 1/25', '2025-03-10', 1000.00, 1000.00, 'EUR', NOW(), NOW()),
-  ('${randomUUID()}', '${entities.clientId}', 'outbound', 'customer_invoice', 'FT 1/24', '2024-06-01', 500.00, 500.00, 'EUR', NOW(), NOW()),
-  ('${randomUUID()}', '${entities.clientId}', 'outbound', 'customer_credit_note', 'NC 1/25', '2025-09-01', 200.00, 200.00, 'EUR', NOW(), NOW());
+  ('${randomUUID()}', '${entities.clientId}', NULL, 'outbound', 'customer_invoice', 'FT 1/25', '2025-03-10', 1000.00, 1000.00, 'EUR', NOW(), NOW()),
+  ('${randomUUID()}', '${entities.clientId}', NULL, 'outbound', 'customer_invoice', 'FT 1/24', '2024-06-01', 500.00, 500.00, 'EUR', NOW(), NOW()),
+  ('${randomUUID()}', '${entities.clientId}', NULL, 'outbound', 'customer_credit_note', 'NC 1/25', '2025-09-01', 200.00, 200.00, 'EUR', NOW(), NOW()),
+  ('${randomUUID()}', NULL, NULL, 'outbound', 'customer_invoice', 'FT 2/25', '2025-04-01', 100.00, 100.00, 'EUR', NOW(), NOW());
 `;
 
   // Esegui SQL via stdin (avoid shell double-quote issues with JSON values)
