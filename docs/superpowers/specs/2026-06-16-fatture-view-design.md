@@ -1,7 +1,7 @@
 # Vista "Fatture" (financial documents) - Design Spec
 
 Data: 2026-06-16
-Stato: draft, in review
+Stato: draft v2 (recepita review esterna), in review utente
 Origine: BR1 dell'assessment `docs/superpowers/2026-06-15-gestionale-assessment.md`
 (finding #5: fatture emesse invisibili nell'app + AI le ignora).
 
@@ -114,8 +114,10 @@ seguendo il pattern dei moduli esistenti.
   - `index.tsx` (`{ list, show, recordRepresentation }`)
 - Colonne lista: Numero · Data · Cliente/Fornitore · Tipo (badge) · Direzione
   (badge) · Imponibile · Bollo · Totale. (`settled/open/status` NON mostrati.)
-- Riepilogo: somma `total_amount` dei documenti del filtro; nota di credito
-  sottratta; mostra anche conteggio. Calcolo in funzione pura testata.
+- Riepilogo: direction-aware (vedi "Regole di calcolo riepilogo"); calcolato sul
+  dataset filtrato COMPLETO (non la pagina) tramite fetch dedicato del set
+  filtrato (pattern simile a `admin/count.tsx`, ma sommando gli importi);
+  funzione di somma pura testata.
 - Dettaglio: tutti i campi, scomposizione Imponibile/Bollo/Totale, link cliente,
   date, note, `xml_document_code`, `related_document_number` per note credito,
   `project_names` se presente. Read-only.
@@ -123,6 +125,39 @@ seguendo il pattern dei moduli esistenti.
   al Promise.all; passare a `buildUnifiedCrmReadContext`; aggiungere il modulo con
   `ai` al registry -> capability registry lo espone. Tipo
   `FinancialDocumentSummary` esteso se serve.
+
+## Regole Di Calcolo Riepilogo
+
+- Le `customer_invoice` (emesse) AUMENTANO il "Totale fatturato".
+- Le `customer_credit_note` (note di credito emesse) DIMINUISCONO il totale
+  fatturato.
+- I documenti RICEVUTI (`supplier_invoice`/`supplier_credit_note`, direzione
+  inbound) NON entrano nel "fatturato": se il filtro li include, vanno in un box
+  separato "Documenti ricevuti", mai sommati al fatturato.
+- Il riepilogo si calcola su TUTTI i record che corrispondono al filtro attivo,
+  NON solo sulla pagina corrente (fetch dedicato del set filtrato; con ~28
+  documenti il fetch completo e' accettabile).
+- Label dinamica per evitare ambiguita':
+  - filtro direzione = Emesse -> "Totale fatturato" (emesse - note credito).
+  - filtro direzione = Ricevute -> "Totale documenti ricevuti".
+  - filtro direzione = Tutte -> due box separati (Emesse netto / Ricevute), NON
+    un unico totale.
+- Mostrare sempre il conteggio documenti del filtro. Opzionale: scomporre
+  "Fatture emesse / Note di credito / Netto".
+
+## Query / Filtering
+
+- Filtro anno: tradotto in intervallo su `issue_date`
+  (`issue_date@gte=YYYY-01-01` e `issue_date@lte=YYYY-12-31`), riusando il
+  pattern `filters/DateRangeFilter` gia' presente. Niente estrazione anno lato
+  UI fragile.
+- Ricerca numero: su `document_number` (e `related_document_number` per
+  collegare le note di credito).
+- Filtro controparte: cerca su `client_name`/`supplier_name`; quando la
+  direzione e' selezionata, mostrare il filtro coerente (Cliente per Emesse,
+  Fornitore per Ricevute); con direzione "Tutte" usare "Controparte" unico.
+- Tutti i filtri passano dal dataProvider (ra-data-postgrest), non da
+  filtraggio client-side post-fetch, per coerenza con paginazione e riepilogo.
 
 ## SOLID
 
@@ -156,8 +191,14 @@ per la sola AI: scartato perche' qui vogliamo UI visibile + AI insieme.
 ## Rischi
 
 - Mostrare `settlement_status` ingannerebbe (allocazioni vuote) -> NON mostrato.
-- Nome resource = nome vista (`financial_documents_summary`) -> path brutto ma
-  interno; label "Fatture". Accettabile; valutare alias se fastidioso.
+- Nome resource = nome vista (`financial_documents_summary`). VERIFICATO su
+  `CRM.tsx:169`: la route ra-core e' `name={module.resource}`, quindi l'URL e'
+  sempre `/<resource>`; il campo `path` del registry serve solo ai link di nav.
+  Quindi NON si puo' mappare `path:"/fatture"` su questa resource senza rompere
+  la nav: `path` DEVE restare `/financial_documents_summary`. Un URL pulito
+  `/fatture` richiederebbe `CustomRoutes` dedicate -> fuori scope v1. Il menu
+  mostra comunque "Fatture" (label) e il dettaglio/sottotitolo chiariscono che
+  include note di credito e documenti ricevuti.
 - Note di credito che gonfiano il "Totale fatturato" -> sottrarle nel calcolo.
 - RLS: la vista e' `security_invoker = on`; l'accesso dipende dalle policy delle
   tabelle sottostanti (`auth.uid() IS NOT NULL`). Verificare che la lettura
@@ -181,9 +222,16 @@ per la sola AI: scartato perche' qui vogliamo UI visibile + AI insieme.
 
 ## Review Spec
 
-Da completare: self-review (placeholder/contraddizioni/scope), poi review
-MULTI-SUPERFICIE + RAG (provider/resource, AI context, UX/mobile, fiscale/totali,
-test), poi review utente, poi piano.
+- v1: self-review fatto.
+- v2: recepita una review esterna (ChatGPT, no repo). Accettati e verificati sul
+  sorgente: riepilogo direction-aware + calcolo su set filtrato completo (pattern
+  `admin/count.tsx`); filtro anno come date-range su `issue_date`
+  (`DateRangeFilter`); filtro "Controparte"; sezioni "Regole di calcolo
+  riepilogo" e "Query/filtering". RESPINTO con verifica: path `/fatture`
+  decouplato dal nome resource (route ra-core = `name`, `CRM.tsx:169`) -> fuori
+  scope v1.
+- Da fare: review MULTI-SUPERFICIE + RAG (provider/resource, AI context,
+  UX/mobile, fiscale/totali, test) sul piano, poi review utente.
 
 ## Review Gate
 
