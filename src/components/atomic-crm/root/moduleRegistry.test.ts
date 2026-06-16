@@ -19,7 +19,7 @@ afterEach(() => {
 
 describe("moduleRegistry", () => {
   it("returns enabled modules and keeps headless modules out of header navigation", () => {
-    expect(getEnabledModules()).toHaveLength(16);
+    expect(getEnabledModules()).toHaveLength(17);
 
     const desktopHeaderResources = getDesktopHeaderModules().map(
       (module) => module.resource,
@@ -33,6 +33,7 @@ describe("moduleRegistry", () => {
       "services",
       "quotes",
       "payments",
+      "financial_documents_summary",
       "expenses",
       "client_tasks",
     ]);
@@ -54,6 +55,11 @@ describe("moduleRegistry", () => {
     expect(aiResources.some((module) => module.resource === "invoicing")).toBe(
       true,
     );
+    expect(
+      aiResources.some(
+        (module) => module.resource === "financial_documents_summary",
+      ),
+    ).toBe(true);
 
     expect(getModuleByResource("clients")?.label).toBe("Clienti");
   });
