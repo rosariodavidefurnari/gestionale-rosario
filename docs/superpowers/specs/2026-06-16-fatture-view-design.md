@@ -25,8 +25,8 @@ quest'anno" l'utente deve andare su Aruba.
 
 ## Evidenze Raccolte (verificate su sorgente + DB live)
 
-- Vista `financial_documents_summary` (def. live verificata): `LEFT JOIN clients`
-  + `LEFT JOIN suppliers`, espone `id, client_id, supplier_id, client_name,
+- Vista `financial_documents_summary` (def. live verificata): fa `LEFT JOIN` su
+  clients e suppliers, espone `id, client_id, supplier_id, client_name,
   supplier_name, direction, xml_document_code, document_type,
   related_document_number, document_number, issue_date, due_date, total_amount,
   taxable_amount, tax_amount, stamp_amount, settled_amount, open_amount,
@@ -38,8 +38,9 @@ quest'anno" l'utente deve andare su Aruba.
   `settled_amount=0`, `open_amount=total`, `settlement_status` = `open`/`overdue`
   per tutti -> lo "stato pagamento" e' INAFFIDABILE finche' non c'e' la
   riconciliazione (BR2). Da NON mostrare in v1.
-- Provider: `dataProvider.ts:65` ha gia' `primaryKeys ... .set("financial_documents_summary", ["id"])`
-  -> la vista e' gia' interrogabile come resource read-only.
+- Provider: `dataProvider.ts:65` registra gia' la PK della vista
+  (`primaryKeys.set("financial_documents_summary", ["id"])`) -> interrogabile
+  come resource read-only.
 - Tipi: `types.ts:208 FinancialDocument`, `:233 FinancialDocumentSummary` esistono
   gia' (da verificare/estendere shape: `supplier_name`, campi settlement).
 - Registrazione resource: `moduleRegistry.ts:30 CrmModuleDefinition` ha
