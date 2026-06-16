@@ -1,10 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 import { AuthMiddleware } from "../_shared/authentication.ts";
+import { isCronAuthorized } from "../_shared/cronAuth.ts";
 import { getBusinessYear, todayISODate } from "../_shared/dateTimezone.ts";
 import { corsHeaders, OptionsMiddleware } from "../_shared/cors.ts";
 import {
   buildDeadlineNotificationMessage,
+  buildFiscalDeadlineKey,
   buildFiscalReminderComputation,
   buildTaskPayloads,
   type FiscalConfig,
@@ -14,7 +16,10 @@ import {
   type PaymentRow,
   type ProjectRow,
 } from "../_shared/fiscalDeadlineCalculation.ts";
-import { notifyOwner } from "../_shared/internalNotifications.ts";
+import {
+  sendInternalEmail,
+  sendWhatsApp,
+} from "../_shared/internalNotifications.ts";
 import { supabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { createErrorResponse } from "../_shared/utils.ts";
 
@@ -123,6 +128,70 @@ async function createMissingTasks(
   return { created, needed: newPayloads.length };
 }
 
+type NotificationChannel = "email" | "whatsapp";
+
+const NOTIFICATION_CHANNELS: NotificationChannel[] = ["email", "whatsapp"];
+
+/**
+ * Returns the deadlines that still need a notification on the given channel,
+ * i.e. those without an existing (deadline_key, channel) marker row.
+ */
+async function selectUnnotifiedDeadlines(
+  imminent: FiscalDeadline[],
+  channel: NotificationChannel,
+): Promise<{ deadline: FiscalDeadline; key: string }[]> {
+  const keyed = imminent.map((deadline) => ({
+    deadline,
+    key: buildFiscalDeadlineKey(deadline),
+  }));
+  const keys = keyed.map((entry) => entry.key);
+
+  const { data: alreadySent, error } = await supabaseAdmin
+    .from("fiscal_reminder_notifications")
+    .select("deadline_key")
+    .eq("channel", channel)
+    .in("deadline_key", keys);
+
+  if (error) {
+    // Fail closed: if we cannot confirm prior sends, skip to avoid spam.
+    console.error("fiscal_deadline_check.notification_lookup_error", {
+      channel,
+      error,
+    });
+    return [];
+  }
+
+  const sentKeys = new Set(
+    (alreadySent ?? []).map(
+      (row: { deadline_key: string }) => row.deadline_key,
+    ),
+  );
+  return keyed.filter((entry) => !sentKeys.has(entry.key));
+}
+
+async function markNotified(
+  deadlineKey: string,
+  channel: NotificationChannel,
+): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("fiscal_reminder_notifications")
+    .insert({ deadline_key: deadlineKey, channel });
+  if (error) {
+    console.error("fiscal_deadline_check.notification_mark_error", {
+      channel,
+      error,
+    });
+  }
+}
+
+/**
+ * Send imminent-deadline notifications idempotently.
+ *
+ * For each channel, only deadlines not yet notified on that channel are sent;
+ * the marker row is written ONLY after a successful send, so a transient
+ * provider failure simply retries next run instead of silencing the alert.
+ * Result: at most one notification per (deadline, channel), never daily spam.
+ */
 async function notifyImminent(
   upcomingDeadlines: FiscalDeadline[],
   hasRealData: boolean,
@@ -130,18 +199,39 @@ async function notifyImminent(
   const imminent = upcomingDeadlines.filter((d) => d.daysUntil <= NOTIFY_DAYS);
   if (imminent.length === 0) return false;
 
-  const message = buildDeadlineNotificationMessage(imminent);
-  const n = imminent.length;
   const qualifier = hasRealData ? "" : " stimate";
-  const subject = `⏰ ${n} scadenz${n === 1 ? "a" : "e"} fiscal${n === 1 ? "e" : "i"}${qualifier} entro ${NOTIFY_DAYS} giorni`;
+  let anySent = false;
 
-  const result = await notifyOwner(subject, message);
-  console.warn("fiscal_deadline_check.notification", {
-    deadlines: n,
-    email: result.email,
-    whatsapp: result.whatsapp,
-  });
-  return result.email.ok || result.whatsapp.ok;
+  for (const channel of NOTIFICATION_CHANNELS) {
+    const pending = await selectUnnotifiedDeadlines(imminent, channel);
+    if (pending.length === 0) continue;
+
+    const deadlines = pending.map((entry) => entry.deadline);
+    const message = buildDeadlineNotificationMessage(deadlines);
+    const n = deadlines.length;
+    const subject = `⏰ ${n} scadenz${n === 1 ? "a" : "e"} fiscal${n === 1 ? "e" : "i"}${qualifier} entro ${NOTIFY_DAYS} giorni`;
+
+    const result =
+      channel === "email"
+        ? await sendInternalEmail(subject, message)
+        : await sendWhatsApp(message);
+
+    console.warn("fiscal_deadline_check.notification", {
+      channel,
+      deadlines: n,
+      ok: result.ok,
+      error: result.error,
+    });
+
+    if (result.ok) {
+      anySent = true;
+      for (const entry of pending) {
+        await markNotified(entry.key, channel);
+      }
+    }
+  }
+
+  return anySent;
 }
 
 const logFiscalWarnings = (warnings: FiscalWarning[]) => {
@@ -207,9 +297,11 @@ async function applyRealObligations(
       }
       return item;
     });
-    const totalAmount = patchedItems.reduce((sum, item) => sum + item.amount, 0);
-    const roundedTotal =
-      Math.round((totalAmount + Number.EPSILON) * 100) / 100;
+    const totalAmount = patchedItems.reduce(
+      (sum, item) => sum + item.amount,
+      0,
+    );
+    const roundedTotal = Math.round((totalAmount + Number.EPSILON) * 100) / 100;
     return { ...deadline, items: patchedItems, totalAmount: roundedTotal };
   });
 
@@ -275,28 +367,38 @@ async function runFiscalDeadlineCheck(): Promise<CheckResult> {
 
 // ── HTTP handler ──────────────────────────────────────────────────────
 
+async function handleFiscalDeadlineCheck(req: Request): Promise<Response> {
+  if (req.method !== "POST") {
+    return createErrorResponse(405, "Method Not Allowed");
+  }
+
+  try {
+    const result = await runFiscalDeadlineCheck();
+
+    console.warn("fiscal_deadline_check.completed", result);
+
+    return new Response(JSON.stringify({ data: result }), {
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  } catch (error) {
+    console.error("fiscal_deadline_check.error", error);
+    return createErrorResponse(
+      500,
+      `Fiscal deadline check failed: ${String(error)}`,
+    );
+  }
+}
+
 Deno.serve(async (req: Request) =>
-  OptionsMiddleware(req, async (req) =>
-    AuthMiddleware(req, async () => {
-      if (req.method !== "POST") {
-        return createErrorResponse(405, "Method Not Allowed");
-      }
+  OptionsMiddleware(req, async (req) => {
+    // Server-to-server (pg_cron) path: exact shared secret, runs with admin
+    // context. Otherwise fall back to the standard user JWT (RS256) middleware.
+    // AuthMiddleware is left untouched for other consumers; anon / wrong / empty
+    // tokens still get 401.
+    if (isCronAuthorized(req)) {
+      return handleFiscalDeadlineCheck(req);
+    }
 
-      try {
-        const result = await runFiscalDeadlineCheck();
-
-        console.warn("fiscal_deadline_check.completed", result);
-
-        return new Response(JSON.stringify({ data: result }), {
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        });
-      } catch (error) {
-        console.error("fiscal_deadline_check.error", error);
-        return createErrorResponse(
-          500,
-          `Fiscal deadline check failed: ${String(error)}`,
-        );
-      }
-    }),
-  ),
+    return AuthMiddleware(req, handleFiscalDeadlineCheck);
+  }),
 );

@@ -14,6 +14,7 @@ Last updated: 2026-06-16 (Fatture view: pre-merge review hardening — determini
 
 ### Recent Updates (cronologico, più recente in alto)
 
+- [2026-06-16 (c)](#update-2026-06-16-c--fiscal-reminder-cron-auth-qw1) — Fiscal reminder cron auth (QW1): `CRON_SHARED_SECRET` server-to-server gate (`_shared/cronAuth.ts`), cron re-schedule migration, idempotent imminent notifications (`fiscal_reminder_notifications` table)
 - [2026-06-16 (b)](#update-2026-06-16-b--fatture-view-pre-merge-review-hardening) — Fatture view pre-merge review hardening: deterministic `document_type@in` filter, multicurrency CombinedSummary, negative-zero guard in formatEur, source_path removed from Show, read-only controllers (moduleRegistry test + e2e /edit guard), orphan-counterpart fixture + anti-leak settlement assertions
 - [2026-06-16](#update-2026-06-16--fatture-view-pure-helpers) — Fatture view: new `invoices/financialDocumentHelpers` module (isCreditNote, signedTotal, summarizeFinancialDocuments, labels, formatEur) + 18 unit tests
 - [2026-04-15](#update-2026-04-15--clientshow-invoice-draft-always-available) — ClientShow: "Genera bozza fattura" button always visible + empty state in `InvoiceDraftDialog` when builder returns no collectable lines
@@ -109,6 +110,70 @@ Last updated: 2026-06-16 (Fatture view: pre-merge review hardening — determini
 - [Nota manutenzione 2026-03-02](#nota-manutenzione-2026-03-02-fix-ci)
 - [Testing Session Log 2026-03-04](#testing-session-log-2026-03-04--e2e-complete-validation)
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
+
+---
+
+## Update 2026-06-16 (c) — Fiscal reminder cron auth (QW1)
+
+**Motivazione**
+- Il cron giornaliero `fiscal-deadline-check-daily` (pg_cron) invocava
+  `fiscal_deadline_check` con `Authorization: Bearer <service_role_key>`, ma la
+  EF è gated da `AuthMiddleware` (JWKS / RS256). Il service role (HS256/opaco)
+  veniva rifiutato ("Unsupported alg") → `401` → zero promemoria fiscali creati,
+  inclusa la scadenza reale 30/06/2026.
+
+**Cosa è cambiato**
+- Nuovo helper puro `supabase/functions/_shared/cronAuth.ts`:
+  - `constantTimeEquals(a, b)` — confronto a tempo costante, false su vuoto o
+    lunghezze diverse; PURO (no `Deno.env` a module-load) → testabile sotto vitest
+  - `isCronAuthorized(req)` — legge `CRON_SHARED_SECRET`; fail-closed (env
+    assente/vuota → false; bearer mancante/vuoto → false); mai logga il secret
+- Wire in `fiscal_deadline_check/index.ts`: `OptionsMiddleware` → se
+  `isCronAuthorized(req)` esegue l'handler con contesto admin, altrimenti
+  `AuthMiddleware(req, handler)`. `AuthMiddleware` NON toccato (altri consumer).
+  Anon / token errato / vuoto → `401`; utente loggato (RS256) invariato.
+- Anti-spam notifiche: `notifyImminent` reso idempotente per
+  `(deadline_key, channel)`. Nuova tabella additiva
+  `fiscal_reminder_notifications (deadline_key, channel) UNIQUE` (migration
+  `20260616182600_fiscal_reminder_notifications.sql`, RLS on, policy
+  `auth.uid() is not null`). La EF invia per-canale solo le scadenze non ancora
+  notificate (chiave da `buildFiscalDeadlineKey`) e scrive il marker SOLO dopo
+  invio riuscito → al massimo 1 notifica per scadenza/canale, mai giornaliera;
+  un fallimento provider riprova al run successivo. I `client_tasks` mantengono
+  la dedup cross-run esistente.
+- Cron re-schedule: migration `20260616182718_fiscal_deadline_cron_shared_secret.sql`
+  fa inviare `Bearer <cron_shared_secret da Vault>`, con `service_role_key` come
+  fallback `coalesce` per replay safety.
+
+**Secret model**
+- `CRON_SHARED_SECRET` = valore random dedicato, NON il service role. Identico
+  byte-per-byte tra: Vault (`cron_shared_secret`), secret della EF, e
+  `supabase/functions/.env` (locale) + `supabase/seed.sql` (Vault locale, valore
+  di test). NON confrontare con `SUPABASE_SERVICE_ROLE_KEY` (inesistente) né con
+  `SB_SECRET_KEY` (opaco).
+
+**Verifiche (locale)**
+- Unit: `cronAuth.test.ts` (7 casi su `constantTimeEquals`) verde.
+- Smoke EF locale: secret corretto → `200` + 4 task (30/06 → 29/06 business day:
+  2 f24 + 2 inps); re-run → 0 nuovi (idempotenza); bearer errato/vuoto/assente
+  → `401`. Provider email/WhatsApp non configurati in locale → 0 marker scritti
+  (fail-safe: marker solo dopo invio riuscito). `md5(Vault cron_shared_secret)`
+  == `md5(env CRON_SHARED_SECRET)`.
+
+**Gate PROD (operatore, non in questo ciclo)**
+- `vault.create_secret('<random>','cron_shared_secret')`;
+  `npx supabase secrets set CRON_SHARED_SECRET=<random> --project-ref qvdmzhyzpyaveniirsmo`;
+  verifica `md5(Vault)==md5(env EF)`; applica migration re-schedule;
+  `npx supabase functions deploy fiscal_deadline_check --project-ref qvdmzhyzpyaveniirsmo`
+  (BE-1/BE-8); smoke prod via `net.http_post` col secret.
+
+**File coinvolti**
+- `supabase/functions/_shared/cronAuth.ts` (+ `.test.ts`)
+- `supabase/functions/fiscal_deadline_check/index.ts`
+- `supabase/migrations/20260616182600_fiscal_reminder_notifications.sql`
+- `supabase/migrations/20260616182718_fiscal_deadline_cron_shared_secret.sql`
+- `supabase/seed.sql` (Vault `cron_shared_secret` locale)
+- `supabase/functions/.env` (gitignored, `CRON_SHARED_SECRET` locale)
 
 ---
 

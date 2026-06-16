@@ -15,6 +15,7 @@ Stato del documento:
 
 ## Changelog
 
+- 2026-06-16: Fiscal reminder cron auth (QW1) — the daily `fiscal-deadline-check-daily` pg_cron job was hitting `fiscal_deadline_check` with `Authorization: Bearer <service_role_key>`, but the Edge Function is gated by `AuthMiddleware` (JWKS / RS256 user JWTs), which rejected the service role token ("Unsupported alg") → `401` → zero reminders created. Fix: new pure helper `supabase/functions/_shared/cronAuth.ts` (`constantTimeEquals` + `isCronAuthorized`, fail-closed: no env secret or no/empty bearer → false; constant-time compare; secret never logged) authenticated with a DEDICATED `CRON_SHARED_SECRET` (random value, NOT the service role). The EF wrap now runs `OptionsMiddleware` → `isCronAuthorized(req) ? handler(admin) : AuthMiddleware(req, handler)` — cron and logged-in user both work, anon/wrong/empty bearer still `401`. `AuthMiddleware` untouched (other consumers unaffected). New migration `20260616182718_fiscal_deadline_cron_shared_secret.sql` re-schedules the cron to send `Bearer <cron_shared_secret from Vault>`, with the legacy `service_role_key` as a `coalesce` fallback for replay safety. Anti-spam: `notifyImminent` was non-idempotent (would email+WhatsApp daily across the 7-day window); new additive table `fiscal_reminder_notifications (deadline_key, channel) UNIQUE` (RLS on, authenticated policy, migration `20260616182600_fiscal_reminder_notifications.sql`) records each sent notification. The EF now sends per-channel only for not-yet-notified deadlines (keyed by the existing `buildFiscalDeadlineKey`) and writes the marker ONLY on a successful send, so a transient provider failure retries next run instead of being silenced. In-app `client_tasks` reminders keep their own cross-run dedup. Local secret seeded in `supabase/functions/.env` (gitignored) + `supabase/seed.sql` (local Vault, test value). PROD secret creation in Vault + EF secret + `npx supabase functions deploy fiscal_deadline_check` are operator-gated and NOT done here. Local smoke: correct secret → `200` + 4 tasks for the 30/06 deadline; re-run → 0 new (idempotent); wrong/empty/missing bearer → `401`; failed local providers wrote 0 notification markers.
 - 2026-06-16: Financial documents (Fatture) exposed to unified AI read context — the `financial_documents_summary` view (issued/received invoices and credit notes) now feeds the AI snapshot. `src/lib/ai/unifiedCrmReadContextTypes.ts` adds `snapshot.financialDocuments` (whitelisted camelCase fields: documentNumber, documentType, direction, issueDate, totalAmount, taxableAmount, stampAmount, clientName, supplierName, currencyCode, relatedDocumentNumber, projectNames) plus `snapshot.financialDocumentsCaveat`. `buildUnifiedCrmReadContext` gains a `financialDocuments` param (default `[]`, added to both the signature type and the destructuring) and maps it in the return with an explicit `.map()` — never a `...d` spread, because `FinancialDocumentSummary` carries `settled_amount` / `open_amount` / `settlement_status` (payment state) that must NOT leak into the AI snapshot (financial documents are a billing/issuance fact, not a cash fact; anti-leak covered by a regression test in `unifiedCrmReadContext.test.ts`). `dataProviderAi` fetches the view (`LARGE_PAGE`, `issue_date DESC`) in the same `Promise.all`. The `unified_crm_answer` prompt enumerates `financialDocuments` and adds a lexical rule: it is fatturato/emissione (not cassa), sum issued invoices and SUBTRACT credit notes, never say paid/collected/overdue about fiscal documents (payment state is unavailable). EF must be deployed separately (`npx supabase functions deploy unified_crm_answer`).
 - 2026-06-14: Fiscal backup RLS hardening — the four manual fiscal backup tables (`fiscal_declarations_backup_20260414`, `fiscal_obligations_backup_20260414`, `fiscal_f24_submissions_backup_20260414`, `fiscal_f24_payment_lines_backup_20260414`) were exposed through the public schema with RLS disabled and anon REST returning `206` plus positive `Content-Range`. Added deterministic guardrails: `scripts/check-fiscal-backup-rls.sql` verifies target table presence, RLS, zero backup policies, and no effective `anon` / `authenticated` privileges; `scripts/check-fiscal-backup-rest-anon.mjs` verifies REST anon denial without reading row bodies (`HEAD`). Applied hardening SQL from `20260614150557_harden_fiscal_backup_rls.sql` via `npx supabase db query --linked -f ...`; then reconciled migration history so the remote now records `20260414192200_fiscal_interests_and_compensation` and `20260614150557_harden_fiscal_backup_rls`. GREEN: metadata check passes; REST anon returns `401` for all four backup tables.
 - 2026-04-15: ClientShow invoice draft always-available + empty state. Removed the `hasCollectableAmount` gate around the "Genera bozza fattura" button in `src/components/atomic-crm/clients/ClientShow.tsx`: the button is now permanently mounted in the client action toolbar. `InvoiceDraftDialog` receives the real `draft` from `buildInvoiceDraftFromClient` unconditionally and decides its rendering branch internally: a new local sub-component `InvoiceDraftEmptyState` renders when `draft === null` or `lineItems.length === 0`, showing a compact dialog with title, explanatory message ("Nessuna voce residua da fatturare per questo cliente" + instructions to recover a previously emitted invoice by removing `invoice_ref` from the affected records), and a single "Chiudi" button. The `?invoiceDraft=true` auto-open `useEffect` no longer depends on `hasCollectableAmount`. `ProjectShow`, `ServiceShow`, `QuoteShow` and the four `buildInvoiceDraftFrom*` builders are intentionally untouched (explicit user scope). No schema, type, migration, or Edge Function changes.
@@ -244,22 +245,41 @@ Check giornaliero schedulato via `pg_cron` + `pg_net` che invoca la Edge Functio
 3. Calcola il calendario di pagamento dell'anno `Y` con la stessa logica pura
    del client-side (`fiscalDeadlines.ts` / `fiscalModel.ts`)
 4. Crea `client_tasks` per le scadenze entro 30 giorni (con deduplicazione)
-5. Manda notifica email + WhatsApp per le scadenze entro 7 giorni
+5. Manda notifica email + WhatsApp per le scadenze entro 7 giorni, in modo
+   idempotente per `(deadline_key, channel)` via la tabella
+   `fiscal_reminder_notifications` (marker scritto solo dopo invio riuscito)
 6. Logga warning strutturati se parte del cash tassabile resta non mappata a un
    profilo ATECO valido (`UNMAPPED_TAX_PROFILE`) senza bloccare il calendario
+
+### Autenticazione cron (server-to-server)
+
+L'invocazione schedulata non può presentare un JWT utente Supabase (RS256 nel
+JWKS), quindi il cron si autentica con un secret dedicato `CRON_SHARED_SECRET`
+(valore random, NON il service role). Nel wrap della EF:
+`OptionsMiddleware` → se `isCronAuthorized(req)` esegue l'handler con contesto
+admin, altrimenti `AuthMiddleware` (utente RS256). Anon / token errato / vuoto →
+`401`. `AuthMiddleware` resta invariato per gli altri consumer. Il secret è
+identico (byte-per-byte) tra Vault (`cron_shared_secret`), secret della EF e
+`supabase/functions/.env`; il cron lo invia come `Bearer`.
 
 ### File coinvolti
 
 - `supabase/functions/_shared/fiscalDeadlineCalculation.ts` — calcolo scadenze (port Deno)
+- `supabase/functions/_shared/cronAuth.ts` — auth server-to-server (`constantTimeEquals`, `isCronAuthorized`)
 - `supabase/functions/fiscal_deadline_check/index.ts` — Edge Function principale
-- `supabase/migrations/20260304184909_fiscal_deadline_cron.sql` — pg_cron + pg_net + schedule
-- `supabase/seed.sql` — Vault secrets per ambiente locale
+- `supabase/migrations/20260304184909_fiscal_deadline_cron.sql` — pg_cron + pg_net + schedule originale
+- `supabase/migrations/20260616182718_fiscal_deadline_cron_shared_secret.sql` — re-schedule con `cron_shared_secret`
+- `supabase/migrations/20260616182600_fiscal_reminder_notifications.sql` — tabella anti-spam notifiche
+- `supabase/seed.sql` — Vault secrets per ambiente locale (`project_url`, `service_role_key`, `cron_shared_secret`)
 
 ### Dipendenze
 
 - Estensioni: `pg_cron`, `pg_net`, Vault (gia' disponibile in Supabase hosted)
-- Secrets in Vault: `project_url`, `service_role_key` (per invocare la Edge Function)
+- Secrets in Vault: `project_url`, `cron_shared_secret` (bearer inviato dal cron;
+  `service_role_key` resta come fallback storico nel `coalesce`)
+- Secret della EF: `CRON_SHARED_SECRET` (deve combaciare con il Vault)
 - `internalNotifications.ts` riusato per email + WhatsApp best-effort
+- Tabella `fiscal_reminder_notifications` per idempotenza notifiche
 
 ### Scadenze coperte (regime forfettario)
 

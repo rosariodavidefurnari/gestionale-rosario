@@ -111,3 +111,12 @@ select vault.create_secret(
   ),
   'service_role_key'
 );
+
+-- Dedicated shared secret the fiscal cron sends as the bearer token. Must be
+-- byte-identical to CRON_SHARED_SECRET in supabase/functions/.env. This is a
+-- LOCAL TEST value only; the real prod secret is created in Vault by the
+-- operator and never committed.
+select vault.create_secret(
+  '819eebd8ffd3d15d35bd661c72c089ef5502f5bfb0f87f2b0cc1d3c5c4fd9345',
+  'cron_shared_secret'
+);
