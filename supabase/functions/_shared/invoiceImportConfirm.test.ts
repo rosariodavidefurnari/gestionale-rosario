@@ -1,5 +1,6 @@
 import {
   buildInvoiceImportConfirmNotes,
+  decideEmittedPaymentReconciliation,
   getInvoiceImportConfirmPaymentDate,
   getInvoiceImportConfirmValidationErrors,
   validateInvoiceImportConfirmPayload,
@@ -121,5 +122,36 @@ describe("invoiceImportConfirm", () => {
         },
       }),
     ).toContain("Modello estrazione: gemini-2.5-pro");
+  });
+});
+
+describe("decideEmittedPaymentReconciliation", () => {
+  it("settles the single expected payment and skips all N import records", () => {
+    const decision = decideEmittedPaymentReconciliation({
+      recordsForInvoiceRef: [{ line: 1 }, { line: 2 }, { line: 3 }],
+      emittedPayment: { id: "pay-emit-1" },
+    });
+    expect(decision).toEqual({
+      action: "settle",
+      paymentIdToSettle: "pay-emit-1",
+      settleFromRecordIndex: 0,
+      skipRecordIndexes: [0, 1, 2],
+    });
+  });
+
+  it("creates (historical path) when there is no emitted payment", () => {
+    const decision = decideEmittedPaymentReconciliation({
+      recordsForInvoiceRef: [{ line: 1 }],
+      emittedPayment: null,
+    });
+    expect(decision).toEqual({ action: "create" });
+  });
+
+  it("creates when there are no records to reconcile", () => {
+    const decision = decideEmittedPaymentReconciliation({
+      recordsForInvoiceRef: [],
+      emittedPayment: { id: "pay-emit-1" },
+    });
+    expect(decision).toEqual({ action: "create" });
   });
 });

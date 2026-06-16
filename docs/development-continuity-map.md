@@ -31,6 +31,11 @@ Superfici toccate finora (Task 0-3):
   FatturaPA, DOM-3).
 - `invoicing/buildInvoiceDraftFrom{Project,Client}.ts` — espongono
   `serviceIds[]`/`expenseIds[]` (esclusi `source_service_id`, DB-8).
+- `supabase/functions/_shared/invoiceImportConfirm.ts` —
+  `decideEmittedPaymentReconciliation` (funzione pura): al re-import, le N righe
+  XML di una fattura emessa dall'app collassano (1 settle + N-1 skip) sul singolo
+  payment atteso; ancora primaria `financial_document_id` -> i payment manuali
+  non vengono toccati.
 
 Sweep ancora da completare (Task 4-8): EF `invoice_emit` + `config.toml`,
 provider `emitInvoice`, `invoice_import_confirm` update-in-place,

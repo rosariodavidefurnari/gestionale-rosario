@@ -439,3 +439,49 @@ export const buildInvoiceImportConfirmNotes = ({
     .filter(Boolean)
     .join("\n");
 };
+
+export type EmittedExpectedPayment = { id: string };
+
+export type EmittedReconciliationDecision =
+  | {
+      action: "settle";
+      paymentIdToSettle: string;
+      settleFromRecordIndex: number;
+      skipRecordIndexes: number[];
+    }
+  | { action: "create" };
+
+/**
+ * Decide how to reconcile the import records sharing one `invoice_ref` against an
+ * existing app-EMITTED expected payment.
+ *
+ * The XML of an invoice emitted by the app expands to N import records (one per
+ * line, see `invoice_import_extract`); they must COLLAPSE onto the single
+ * expected payment created at emit time instead of creating N duplicates.
+ *
+ * - `emittedPayment` present -> SETTLE that one payment (in_attesa -> ricevuto),
+ *   taking the received date from the first record, and skip creating ALL N
+ *   records (collapse N -> 1).
+ * - `emittedPayment` absent -> CREATE (historical path unchanged). The caller
+ *   matches `emittedPayment` ONLY on `payments.financial_document_id IS NOT NULL`
+ *   (primary anchor), so manual `in_attesa` payments with the same invoice_ref
+ *   are never touched here.
+ */
+export const decideEmittedPaymentReconciliation = ({
+  recordsForInvoiceRef,
+  emittedPayment,
+}: {
+  recordsForInvoiceRef: readonly unknown[];
+  emittedPayment: EmittedExpectedPayment | null | undefined;
+}): EmittedReconciliationDecision => {
+  if (!emittedPayment || recordsForInvoiceRef.length === 0) {
+    return { action: "create" };
+  }
+
+  return {
+    action: "settle",
+    paymentIdToSettle: emittedPayment.id,
+    settleFromRecordIndex: 0,
+    skipRecordIndexes: recordsForInvoiceRef.map((_, index) => index),
+  };
+};
