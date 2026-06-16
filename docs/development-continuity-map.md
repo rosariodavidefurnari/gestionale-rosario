@@ -51,11 +51,17 @@ Superfici toccate finora (Task 0-3):
   cerca il payment emesso (ancora `financial_document_id IS NOT NULL`,
   `in_attesa`), e via `decideEmittedPaymentReconciliation` fa 1 settle
   (`in_attesa -> ricevuto`) + N-1 skip. 0 match -> path storico invariato.
+- `invoicing/InvoiceDraftDialog.tsx` + `invoicing/useEmitInvoice.ts` — terza
+  azione "Emetti e scarica XML" nel dialog bozza, gate puro `getInvoiceEmitGate`
+  (solo project/client, no acconto pregresso, billing completo, numero
+  presente), dedup guard WF-14 (`window.confirm` su
+  `financial_documents_summary` per cliente+numero) + UNIQUE server-side, branch
+  mobile `Sheet` (`useIsMobile`). Al successo: scarica XML, notify, refresh.
 
-Sweep ancora da completare (Task 6-8): `InvoiceDraftDialog` azione +
-`useEmitInvoice` + Sheet mobile, stato incasso in `FinancialDocumentShow/List` +
-mobile card, registry (`crmCapabilityRegistry`/`crmSemanticRegistry`) + docs AI,
-E2E smoke emit→re-import. Spec/piano:
+Sweep ancora da completare (Task 7-8): stato incasso in
+`FinancialDocumentShow/List` + mobile card (da payment via
+`financial_document_id`), registry (`crmCapabilityRegistry`/`crmSemanticRegistry`)
++ docs AI, E2E smoke emit→re-import. Spec/piano:
 `docs/superpowers/specs/2026-06-16-invoice-emit-design.md`,
 `docs/superpowers/plans/2026-06-16-invoice-emit.md`.
 

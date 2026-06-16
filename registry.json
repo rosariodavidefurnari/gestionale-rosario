@@ -807,6 +807,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/invoicing/useEmitInvoice.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/invoicing/invoiceDraftXml.ts",
           "type": "registry:component"
         },
