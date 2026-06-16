@@ -319,4 +319,71 @@ describe("buildInvoiceDraftFromProject", () => {
     );
     expect(expenseLine!.unitPrice).toBe(-80);
   });
+
+  it("exposes contributing service and expense ids, excluding km auto-expense", () => {
+    const billableExpense: Expense = {
+      id: "e1",
+      project_id: "project-1",
+      client_id: "client-1",
+      expense_date: "2026-01-10T12:00:00.000Z",
+      expense_type: "materiale",
+      amount: 100,
+      created_at: "2026-01-10T10:00:00.000Z",
+    } as unknown as Expense;
+    const kmAutoExpense: Expense = {
+      id: "e_auto",
+      project_id: "project-1",
+      client_id: "client-1",
+      expense_date: "2026-01-10T12:00:00.000Z",
+      expense_type: "spostamento_km",
+      amount: 20,
+      source_service_id: "s1",
+      created_at: "2026-01-10T10:00:00.000Z",
+    } as unknown as Expense;
+
+    const draft = buildInvoiceDraftFromProject({
+      project: baseProject,
+      client: baseClient,
+      services: [buildService("s1", { fee_shooting: 500 })],
+      expenses: [billableExpense, kmAutoExpense],
+    });
+
+    expect(draft.serviceIds).toEqual(["s1"]);
+    expect(draft.expenseIds).toEqual(["e1"]); // e_auto excluded (source_service_id)
+  });
+
+  it("includes a km-only service (fee 0, km > 0) in serviceIds", () => {
+    const draft = buildInvoiceDraftFromProject({
+      project: baseProject,
+      client: baseClient,
+      services: [
+        buildService("s_km", {
+          fee_shooting: 0,
+          fee_editing: 0,
+          fee_other: 0,
+          km_distance: 100,
+          km_rate: 0.2,
+        }),
+      ],
+    });
+    expect(draft.serviceIds).toEqual(["s_km"]);
+  });
+
+  it("omits ids when the draft has no collectable amount", () => {
+    const draft = buildInvoiceDraftFromProject({
+      project: baseProject,
+      client: baseClient,
+      services: [
+        buildService("s0", {
+          fee_shooting: 0,
+          fee_editing: 0,
+          fee_other: 0,
+          km_distance: 0,
+        }),
+      ],
+    });
+    expect(draft.lineItems).toEqual([]);
+    expect(draft.serviceIds ?? []).toEqual([]);
+    expect(draft.expenseIds ?? []).toEqual([]);
+  });
 });

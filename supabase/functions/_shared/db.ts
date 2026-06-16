@@ -100,6 +100,7 @@ interface PaymentsTable {
   invoice_ref: string | null;
   status: string;
   notes: string | null;
+  financial_document_id: string | null;
   created_at: Date;
 }
 
@@ -112,7 +113,32 @@ interface ExpensesTable {
   amount: number | null;
   description: string | null;
   invoice_ref: string | null;
+  source_service_id: string | null;
   created_at: Date;
+}
+
+interface ServicesTable {
+  id: Generated<string>;
+  project_id: string | null;
+  client_id: string | null;
+  service_date: string;
+  invoice_ref: string | null;
+}
+
+interface FinancialDocumentsTable {
+  id: Generated<string>;
+  client_id: string;
+  direction: string;
+  document_type: string;
+  document_number: string;
+  issue_date: string;
+  due_date: string | null;
+  total_amount: number;
+  taxable_amount: number | null;
+  tax_amount: number | null;
+  stamp_amount: number | null;
+  currency_code: string;
+  notes: string | null;
 }
 
 interface Database {
@@ -124,6 +150,8 @@ interface Database {
   projects: ProjectsTable;
   payments: PaymentsTable;
   expenses: ExpensesTable;
+  services: ServicesTable;
+  financial_documents: FinancialDocumentsTable;
 }
 
 // Deno Postgres Driver for Kysely

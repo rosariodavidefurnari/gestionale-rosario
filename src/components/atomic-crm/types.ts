@@ -199,6 +199,7 @@ export type Payment = {
   method?: "bonifico" | "contanti" | "paypal" | "altro" | null;
   invoice_ref?: string;
   status: "ricevuto" | "in_attesa" | "scaduto";
+  financial_document_id?: Identifier | null;
   proof_url?: string | null;
   notes?: string;
   created_at: string;

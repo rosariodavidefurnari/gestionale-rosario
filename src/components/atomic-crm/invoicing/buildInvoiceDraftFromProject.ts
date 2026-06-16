@@ -1,3 +1,5 @@
+import type { Identifier } from "ra-core";
+
 import {
   calculateKmReimbursement,
   calculateServiceNetValue,
@@ -50,6 +52,7 @@ export const buildInvoiceDraftFromProject = ({
   // no structured "Rif. progetto" field, only free-text descriptions.
   const projectLabel = formatProjectLabel(project);
 
+  const serviceIds: Identifier[] = [];
   const lineItems: InvoiceDraftLineItem[] = projectServices.flatMap(
     (service) => {
       const items: InvoiceDraftLineItem[] = [];
@@ -82,6 +85,11 @@ export const buildInvoiceDraftFromProject = ({
         });
       }
 
+      // A service contributes its id only when it produced at least one line.
+      if (items.length > 0) {
+        serviceIds.push(service.id);
+      }
+
       return items;
     },
   );
@@ -91,6 +99,7 @@ export const buildInvoiceDraftFromProject = ({
   // (identified by `source_service_id`): they mirror a service km and are
   // already represented by the "Rimborso chilometrico" line above — see
   // learning triggers DB-3 and DB-5.
+  const expenseIds: Identifier[] = [];
   for (const expense of expenses.filter(
     (e) =>
       String(e.project_id) === String(project.id) &&
@@ -112,6 +121,7 @@ export const buildInvoiceDraftFromProject = ({
         unitPrice: amount,
         kind: "expense",
       });
+      expenseIds.push(expense.id);
     }
   }
 
@@ -134,9 +144,12 @@ export const buildInvoiceDraftFromProject = ({
     0,
   );
 
+  const hasCollectable = collectableAmount > 0;
   return {
     client,
-    lineItems: collectableAmount > 0 ? lineItems : [],
+    lineItems: hasCollectable ? lineItems : [],
+    serviceIds: hasCollectable ? serviceIds : [],
+    expenseIds: hasCollectable ? expenseIds : [],
     notes: project.notes ?? undefined,
     source: {
       kind: "project",

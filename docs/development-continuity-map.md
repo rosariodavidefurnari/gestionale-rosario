@@ -6,7 +6,39 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-16 (Fatture view: pre-merge review hardening — deterministic type filter, multicurrency summary, read-only controllers)
+Last updated: 2026-06-16 (Emetti fattura: foundation — financial_document_id link, amounts helper, billing gate, builder source ids)
+
+---
+
+## Emetti fattura (invoice_emit) — foundation in corso
+
+Branch `work/invoice-emit` (NON in prod). Obiettivo: un'azione unica dal dialog
+bozza che registra la fattura (`financial_documents` outbound) + crea l'incasso
+ATTESO (`payments` `in_attesa`, cassa-neutro) + marca i sorgenti
+(`services`/`expenses` `invoice_ref`), senza doppio conteggio al re-import XML.
+
+Superfici toccate finora (Task 0-3):
+
+- `supabase/functions/_shared/db.ts` — Kysely types per `financial_documents`,
+  `services`, `payments.financial_document_id`, `expenses.source_service_id`.
+- `supabase/migrations/20260616200000_payments_financial_document_link.sql` —
+  `payments.financial_document_id` FK `ON DELETE SET NULL` (additiva, applicata
+  in locale). Ancora anti-doppione (emit ↔ re-import).
+- `types.ts` — `Payment.financial_document_id`.
+- `invoicing/invoiceDraftTypes.ts` — `computeInvoiceDraftAmounts` (LORDO doc vs
+  NETTO incasso); `InvoiceDraftInput.serviceIds/expenseIds`.
+- `invoicing/invoiceBillingValidation.ts` — `isInvoiceBillingComplete` (gate
+  FatturaPA, DOM-3).
+- `invoicing/buildInvoiceDraftFrom{Project,Client}.ts` — espongono
+  `serviceIds[]`/`expenseIds[]` (esclusi `source_service_id`, DB-8).
+
+Sweep ancora da completare (Task 4-8): EF `invoice_emit` + `config.toml`,
+provider `emitInvoice`, `invoice_import_confirm` update-in-place,
+`InvoiceDraftDialog` azione + Sheet mobile, stato incasso in
+`FinancialDocumentShow/List` + mobile card, registry
+(`crmCapabilityRegistry`/`crmSemanticRegistry`) + docs AI, E2E smoke
+emit→re-import. Spec/piano: `docs/superpowers/specs/2026-06-16-invoice-emit-design.md`,
+`docs/superpowers/plans/2026-06-16-invoice-emit.md`.
 
 ---
 

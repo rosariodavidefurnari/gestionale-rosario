@@ -1,3 +1,5 @@
+import type { Identifier } from "ra-core";
+
 import {
   calculateKmReimbursement,
   calculateServiceNetValue,
@@ -68,6 +70,7 @@ export const buildInvoiceDraftFromClient = ({
   });
 
   const lineItems: InvoiceDraftLineItem[] = [];
+  const serviceIds: Identifier[] = [];
 
   grouped.forEach((groupServices, projectId) => {
     const groupLabel = getGroupLabel({ projectId, projectsById });
@@ -78,6 +81,7 @@ export const buildInvoiceDraftFromClient = ({
     );
 
     sorted.forEach((service) => {
+      let contributed = false;
       const netValue = calculateServiceNetValue(service);
       if (netValue > 0) {
         lineItems.push({
@@ -86,6 +90,7 @@ export const buildInvoiceDraftFromClient = ({
           unitPrice: netValue,
           kind: "service",
         });
+        contributed = true;
       }
 
       const kmValue = calculateKmReimbursement({
@@ -104,6 +109,11 @@ export const buildInvoiceDraftFromClient = ({
           unitPrice: kmValue,
           kind: "km",
         });
+        contributed = true;
+      }
+
+      if (contributed) {
+        serviceIds.push(service.id);
       }
     });
   });
@@ -113,6 +123,7 @@ export const buildInvoiceDraftFromClient = ({
   // (identified by `source_service_id`): they mirror a service km and are
   // already represented by the "Rimborso chilometrico" line above — see
   // learning triggers DB-3 and DB-5.
+  const expenseIds: Identifier[] = [];
   for (const expense of expenses.filter(
     (e) =>
       String(e.client_id) === String(client.id) &&
@@ -141,6 +152,7 @@ export const buildInvoiceDraftFromClient = ({
         unitPrice: amount,
         kind: "expense",
       });
+      expenseIds.push(expense.id);
     }
   }
 
@@ -173,6 +185,8 @@ export const buildInvoiceDraftFromClient = ({
   return {
     client,
     lineItems,
+    serviceIds,
+    expenseIds,
     source: {
       kind: "client",
       id: client.id,

@@ -253,4 +253,37 @@ describe("buildInvoiceDraftFromClient", () => {
 
     expect(draft).toBeNull();
   });
+
+  it("exposes service and expense ids on the non-null draft, excluding km auto-expense", () => {
+    const billableExpense: Expense = {
+      id: "e1",
+      project_id: "project-1",
+      client_id: "client-1",
+      expense_date: "2026-01-10T12:00:00.000Z",
+      expense_type: "materiale",
+      amount: 100,
+      created_at: "2026-01-10T10:00:00.000Z",
+    } as unknown as Expense;
+    const kmAutoExpense: Expense = {
+      id: "e_auto",
+      project_id: "project-1",
+      client_id: "client-1",
+      expense_date: "2026-01-10T12:00:00.000Z",
+      expense_type: "spostamento_km",
+      amount: 20,
+      source_service_id: "s1",
+      created_at: "2026-01-10T10:00:00.000Z",
+    } as unknown as Expense;
+
+    const draft = buildInvoiceDraftFromClient({
+      client: baseClient,
+      projects: baseProjects,
+      services: [buildService("s1", { fee_shooting: 500 })],
+      expenses: [billableExpense, kmAutoExpense],
+    });
+
+    expect(draft).not.toBeNull();
+    expect(draft!.serviceIds).toEqual(["s1"]);
+    expect(draft!.expenseIds).toEqual(["e1"]);
+  });
 });

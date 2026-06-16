@@ -815,6 +815,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/invoicing/invoiceBillingValidation.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/invoicing/buildInvoiceDraftFromService.ts",
           "type": "registry:component"
         },
