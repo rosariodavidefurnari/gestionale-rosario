@@ -1,0 +1,153 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { sql } from "https://esm.sh/kysely@0.27.2";
+
+import { AuthMiddleware, UserMiddleware } from "../_shared/authentication.ts";
+import { corsHeaders, OptionsMiddleware } from "../_shared/cors.ts";
+import { db, CompiledQuery } from "../_shared/db.ts";
+import { getUserSale } from "../_shared/getUserSale.ts";
+import {
+  buildExpectedPaymentInsert,
+  buildFinancialDocumentInsert,
+  validateInvoiceEmitRequest,
+} from "../_shared/invoiceEmit.ts";
+import { createErrorResponse } from "../_shared/utils.ts";
+
+class InvoiceEmitError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "InvoiceEmitError";
+    this.status = status;
+  }
+}
+
+const emitInvoice = async ({
+  req,
+  userId,
+}: {
+  req: Request;
+  userId: string;
+}) => {
+  const result = validateInvoiceEmitRequest(await req.json());
+  if (result.error || !result.data) {
+    return createErrorResponse(400, result.error ?? "Payload non valido");
+  }
+  const request = result.data;
+
+  try {
+    const outcome = await db.transaction().execute(async (trx) => {
+      await trx.executeQuery(CompiledQuery.raw("SET LOCAL ROLE authenticated"));
+      await trx.executeQuery(
+        CompiledQuery.raw(
+          `SELECT set_config('request.jwt.claim.sub', '${userId}', true)`,
+        ),
+      );
+
+      // Idempotency: a custom Deno Kysely driver has no savepoints, so a UNIQUE
+      // violation would abort the whole transaction and a JS catch could not
+      // recover. Pre-flight SELECT on the natural identity BEFORE any write.
+      const existing = await trx
+        .selectFrom("financial_documents")
+        .select(["id"])
+        .where("client_id", "=", request.clientId)
+        .where("direction", "=", "outbound")
+        .where("document_number", "=", request.documentNumber)
+        .where("issue_date", "=", request.issueDate)
+        .executeTakeFirst();
+
+      if (existing) {
+        return {
+          status: "already_emitted" as const,
+          financialDocumentId: existing.id,
+        };
+      }
+
+      const insertedDocument = await trx
+        .insertInto("financial_documents")
+        .values(buildFinancialDocumentInsert(request))
+        .returning(["id"])
+        .executeTakeFirstOrThrow();
+
+      const insertedPayment = await trx
+        .insertInto("payments")
+        .values(buildExpectedPaymentInsert(request, insertedDocument.id))
+        .returning(["id"])
+        .executeTakeFirstOrThrow();
+
+      // Mark the source records as invoiced. The guard (invoice_ref empty) makes
+      // this idempotent and prevents stealing a record already invoiced
+      // elsewhere; the count guard below turns a partial match into a rollback.
+      let servicesMarked = 0;
+      if (request.serviceIds.length > 0) {
+        const updatedServices = await trx
+          .updateTable("services")
+          .set({ invoice_ref: request.documentNumber })
+          .where("id", "in", request.serviceIds)
+          .where(sql<boolean>`(invoice_ref is null or invoice_ref = '')`)
+          .returning(["id"])
+          .execute();
+        servicesMarked = updatedServices.length;
+      }
+
+      let expensesMarked = 0;
+      if (request.expenseIds.length > 0) {
+        const updatedExpenses = await trx
+          .updateTable("expenses")
+          .set({ invoice_ref: request.documentNumber })
+          .where("id", "in", request.expenseIds)
+          .where(sql<boolean>`(invoice_ref is null or invoice_ref = '')`)
+          .where("source_service_id", "is", null)
+          .returning(["id"])
+          .execute();
+        expensesMarked = updatedExpenses.length;
+      }
+
+      const expectedMarked =
+        request.serviceIds.length + request.expenseIds.length;
+      if (servicesMarked + expensesMarked !== expectedMarked) {
+        // Some source rows were already invoiced (stale client draft) -> abort.
+        throw new InvoiceEmitError(
+          409,
+          "Alcuni lavori/spese risultano gia' fatturati: rigenera la bozza e riprova.",
+        );
+      }
+
+      return {
+        status: "emitted" as const,
+        financialDocumentId: insertedDocument.id,
+        paymentId: insertedPayment.id,
+        servicesMarked,
+        expensesMarked,
+      };
+    });
+
+    return new Response(JSON.stringify({ data: outcome }), {
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  } catch (error) {
+    console.error("invoice_emit.error", error);
+    if (error instanceof InvoiceEmitError) {
+      return createErrorResponse(error.status, error.message);
+    }
+    return createErrorResponse(500, "Impossibile emettere la fattura");
+  }
+};
+
+Deno.serve(async (req: Request) =>
+  OptionsMiddleware(req, async (request) =>
+    AuthMiddleware(request, async (authedRequest) =>
+      UserMiddleware(authedRequest, async (_, user) => {
+        const currentUserSale = user ? await getUserSale(user) : null;
+        if (!currentUserSale) {
+          return createErrorResponse(401, "Unauthorized");
+        }
+
+        if (authedRequest.method === "POST") {
+          return emitInvoice({ req: authedRequest, userId: user.id });
+        }
+
+        return createErrorResponse(405, "Method Not Allowed");
+      }),
+    ),
+  ),
+);

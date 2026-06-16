@@ -37,8 +37,16 @@ Superfici toccate finora (Task 0-3):
   payment atteso; ancora primaria `financial_document_id` -> i payment manuali
   non vengono toccati.
 
-Sweep ancora da completare (Task 4-8): EF `invoice_emit` + `config.toml`,
-provider `emitInvoice`, `invoice_import_confirm` update-in-place,
+- `supabase/functions/invoice_emit/index.ts` + `_shared/invoiceEmit.ts` +
+  `config.toml` (`verify_jwt=false`, BE-2) — EF transazionale: pre-flight SELECT
+  idempotente su `financial_documents_identity_unique` (no insert+catch, il
+  driver Deno non ha savepoint), insert documento (LORDO) + payment `in_attesa`
+  (NETTO, cassa-neutro), UPDATE `invoice_ref` su services/expenses con count
+  guard (mismatch -> rollback). Validazione pura rifiuta acconto pregresso
+  (`grossTaxable != netCollectable`) e sorgenti non project/client.
+
+Sweep ancora da completare (Task 5-8): provider `emitInvoice`,
+`invoice_import_confirm` update-in-place (usa `decideEmittedPaymentReconciliation`),
 `InvoiceDraftDialog` azione + Sheet mobile, stato incasso in
 `FinancialDocumentShow/List` + mobile card, registry
 (`crmCapabilityRegistry`/`crmSemanticRegistry`) + docs AI, E2E smoke
