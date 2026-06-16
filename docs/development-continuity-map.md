@@ -153,12 +153,18 @@ Last updated: 2026-06-16 (Fatture view: pre-merge review hardening — determini
   `SB_SECRET_KEY` (opaco).
 
 **Verifiche (locale)**
-- Unit: `cronAuth.test.ts` (7 casi su `constantTimeEquals`) verde.
-- Smoke EF locale: secret corretto → `200` + 4 task (30/06 → 29/06 business day:
-  2 f24 + 2 inps); re-run → 0 nuovi (idempotenza); bearer errato/vuoto/assente
+- Unit: `cronAuth.test.ts` (`constantTimeEquals` + `isCronAuthorized` fail-closed)
+  verde.
+- Smoke EF locale: secret corretto → `200` + 4 task per la scadenza 30/06/2026
+  (2 f24 + 2 inps); re-run → 0 nuovi (idempotenza); bearer errato/vuoto/assente
   → `401`. Provider email/WhatsApp non configurati in locale → 0 marker scritti
   (fail-safe: marker solo dopo invio riuscito). `md5(Vault cron_shared_secret)`
   == `md5(env CRON_SHARED_SECRET)`.
+- Nota data: 30/06/2026 è **martedì**, nessuno shift weekend
+  (`shiftWeekendToNextBusinessDay` sposta solo Sab/Dom). Il `due_date` del task ha
+  porzione-data UTC `2026-06-29` perché è la mezzanotte Europe/Rome del 30/06
+  (`startOfBusinessDayISOString('2026-06-30') = 2026-06-29T22:00:00Z`); la
+  scadenza fiscale resta il 30/06, non va spostata indietro.
 
 **Gate PROD (operatore, non in questo ciclo)**
 - `vault.create_secret('<random>','cron_shared_secret')`;
