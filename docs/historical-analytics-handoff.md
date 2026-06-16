@@ -6,7 +6,19 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-16 (financial documents exposed to unified AI read context)
+Last updated: 2026-06-16 (Emetti fattura: import update-in-place anti double-count, in corso)
+
+## Update 2026-06-16 — Emetti fattura: import update-in-place
+
+Branch `work/invoice-emit` (NON in prod). `invoice_import_confirm` ora riconcilia
+il re-import di una fattura emessa dall'app: raggruppa i payment record per
+(cliente, `invoice_ref`), cerca l'incasso atteso emesso (ancora primaria
+`payments.financial_document_id IS NOT NULL`, `in_attesa`) e via
+`decideEmittedPaymentReconciliation` fa 1 settle (`in_attesa -> ricevuto`) + N-1
+skip, evitando i doppioni. Ramo additivo: 0 match = path storico invariato; i
+payment manuali `in_attesa` (senza `financial_document_id`) non vengono toccati.
+Dettagli e sweep completo: `docs/development-continuity-map.md` (sezione Emetti
+fattura) + `docs/superpowers/plans/2026-06-16-invoice-emit.md`.
 
 ## Update 2026-06-16 — Fatture (financial_documents) visibili al contesto AI
 

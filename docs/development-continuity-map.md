@@ -44,13 +44,19 @@ Superfici toccate finora (Task 0-3):
   (NETTO, cassa-neutro), UPDATE `invoice_ref` su services/expenses con count
   guard (mismatch -> rollback). Validazione pura rifiuta acconto pregresso
   (`grossTaxable != netCollectable`) e sorgenti non project/client.
+- `providers/supabase/dataProviderInvoiceEmit.ts` — metodo provider `emitInvoice`
+  (Provider-First) che invoca l'EF; esposto su `CrmDataProvider`.
+- `supabase/functions/invoice_import_confirm/index.ts` — ramo ADDITIVO
+  update-in-place: raggruppa i payment record per (cliente, `invoice_ref`),
+  cerca il payment emesso (ancora `financial_document_id IS NOT NULL`,
+  `in_attesa`), e via `decideEmittedPaymentReconciliation` fa 1 settle
+  (`in_attesa -> ricevuto`) + N-1 skip. 0 match -> path storico invariato.
 
-Sweep ancora da completare (Task 5-8): provider `emitInvoice`,
-`invoice_import_confirm` update-in-place (usa `decideEmittedPaymentReconciliation`),
-`InvoiceDraftDialog` azione + Sheet mobile, stato incasso in
-`FinancialDocumentShow/List` + mobile card, registry
-(`crmCapabilityRegistry`/`crmSemanticRegistry`) + docs AI, E2E smoke
-emit→re-import. Spec/piano: `docs/superpowers/specs/2026-06-16-invoice-emit-design.md`,
+Sweep ancora da completare (Task 6-8): `InvoiceDraftDialog` azione +
+`useEmitInvoice` + Sheet mobile, stato incasso in `FinancialDocumentShow/List` +
+mobile card, registry (`crmCapabilityRegistry`/`crmSemanticRegistry`) + docs AI,
+E2E smoke emit→re-import. Spec/piano:
+`docs/superpowers/specs/2026-06-16-invoice-emit-design.md`,
 `docs/superpowers/plans/2026-06-16-invoice-emit.md`.
 
 ---

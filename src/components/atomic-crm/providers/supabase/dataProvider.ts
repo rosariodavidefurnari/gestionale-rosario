@@ -30,6 +30,7 @@ import { processConfigLogo, uploadToBucket } from "./storageBucket";
 import { buildAnalyticsProviderMethods } from "./dataProviderAnalytics";
 import { buildAiProviderMethods } from "./dataProviderAi";
 import { buildInvoiceImportProviderMethods } from "./dataProviderInvoiceImport";
+import { buildInvoiceEmitProviderMethods } from "./dataProviderInvoiceEmit";
 import { buildCommunicationsProviderMethods } from "./dataProviderCommunications";
 import { buildTravelProviderMethods } from "./dataProviderTravel";
 import { buildGoogleCalendarProviderMethods } from "./dataProviderGoogleCalendar";
@@ -111,6 +112,9 @@ const invoiceImportMethods = buildInvoiceImportProviderMethods({
   ...sharedDeps,
   getConfiguredInvoiceExtractionModel,
 });
+const invoiceEmitMethods = buildInvoiceEmitProviderMethods({
+  invokeEdgeFunction: invokeAuthenticatedEdgeFunction,
+});
 const commsMethods = buildCommunicationsProviderMethods({
   baseDataProvider: baseDataProvider as DataProvider,
   invokeEdgeFunction: invokeAuthenticatedEdgeFunction,
@@ -130,6 +134,7 @@ const dataProviderWithCustomMethods = {
   ...analyticsMethods,
   ...aiMethods,
   ...invoiceImportMethods,
+  ...invoiceEmitMethods,
   ...commsMethods,
   ...travelMethods,
   ...googleCalendarMethods,

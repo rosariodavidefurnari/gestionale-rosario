@@ -7,9 +7,11 @@ import { db, CompiledQuery } from "../_shared/db.ts";
 import { getUserSale } from "../_shared/getUserSale.ts";
 import {
   buildInvoiceImportConfirmNotes,
+  decideEmittedPaymentReconciliation,
   getInvoiceImportConfirmPaymentDate,
   getInvoiceImportConfirmValidationErrors,
   validateInvoiceImportConfirmPayload,
+  type EmittedReconciliationDecision,
   type InvoiceImportConfirmRecord,
   type InvoiceImportConfirmWorkspace,
 } from "../_shared/invoiceImportConfirm.ts";
@@ -293,6 +295,52 @@ const confirmInvoiceImportDraft = async ({
       const created: CreatedRecord[] = [];
       const skipped: SkippedRecord[] = [];
 
+      // Anti double-count (spec F2): records re-importing an invoice EMITTED by
+      // the app must collapse onto the single expected payment created at emit
+      // time, not create N duplicates. Group payment records by (client, ref);
+      // for each, look up the emitted expected payment by the PRIMARY anchor
+      // financial_document_id (so manual in_attesa payments are never touched).
+      const reconcileKey = (clientId: string, invoiceRef: string) =>
+        `${clientId} ${invoiceRef}`;
+      const emitReconciliation = new Map<
+        string,
+        { decision: EmittedReconciliationDecision; settled: boolean }
+      >();
+      const paymentRecordGroups = new Map<
+        string,
+        { clientId: string; invoiceRef: string; records: InvoiceImportConfirmRecord[] }
+      >();
+      for (const record of payloadResult.data.draft.records) {
+        if (record.resource !== "payments" || !record.invoiceRef || !record.clientId) {
+          continue;
+        }
+        const key = reconcileKey(record.clientId, record.invoiceRef);
+        const group = paymentRecordGroups.get(key) ?? {
+          clientId: record.clientId,
+          invoiceRef: record.invoiceRef,
+          records: [],
+        };
+        group.records.push(record);
+        paymentRecordGroups.set(key, group);
+      }
+      for (const [key, group] of paymentRecordGroups) {
+        const emitted = await trx
+          .selectFrom("payments")
+          .select(["id"])
+          .where("client_id", "=", group.clientId)
+          .where("invoice_ref", "=", group.invoiceRef)
+          .where("status", "=", "in_attesa")
+          .where("financial_document_id", "is not", null)
+          .executeTakeFirst();
+        emitReconciliation.set(key, {
+          decision: decideEmittedPaymentReconciliation({
+            recordsForInvoiceRef: group.records,
+            emittedPayment: emitted ?? null,
+          }),
+          settled: false,
+        });
+      }
+
       for (const record of payloadResult.data.draft.records) {
         ensureRecordIsConfirmable({ record, workspace });
 
@@ -304,6 +352,39 @@ const confirmInvoiceImportDraft = async ({
               400,
               `Il record ${record.invoiceRef ?? record.id} non ha una data pagamento valida.`,
             );
+          }
+
+          // Emit reconciliation (anti double-count): settle the single expected
+          // payment in place and collapse the N XML lines onto it.
+          const reconcile =
+            record.invoiceRef && record.clientId
+              ? emitReconciliation.get(
+                  reconcileKey(record.clientId, record.invoiceRef),
+                )
+              : undefined;
+          if (reconcile && reconcile.decision.action === "settle") {
+            if (!reconcile.settled) {
+              await trx
+                .updateTable("payments")
+                .set({ status: "ricevuto", payment_date: paymentDate })
+                .where("id", "=", reconcile.decision.paymentIdToSettle)
+                .execute();
+              reconcile.settled = true;
+              created.push({
+                resource: "payments",
+                id: reconcile.decision.paymentIdToSettle,
+                invoiceRef: record.invoiceRef ?? null,
+                amount: record.amount,
+              });
+            } else {
+              skipped.push({
+                resource: "payments",
+                reason: `Fattura ${record.invoiceRef} gia' emessa dall'app: riga collassata sull'incasso atteso`,
+                description: record.description,
+                amount: record.amount,
+              });
+            }
+            continue;
           }
 
           const isDuplicate = await checkDuplicatePayment({

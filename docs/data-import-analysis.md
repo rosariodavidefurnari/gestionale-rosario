@@ -1,5 +1,15 @@
 # Analisi Dati Reali — Caso Diego Caltabiano / Gustare Sicilia
 
+> **Nota 2026-06-16 (Emetti fattura / invoice_emit, in corso su `work/invoice-emit`):**
+> `invoice_import_confirm` ha ora un ramo ADDITIVO di riconciliazione: se l'XML
+> re-importato corrisponde a una fattura EMESSA dall'app (match per cliente +
+> `invoice_ref`, ancora primaria `payments.financial_document_id IS NOT NULL`,
+> stato `in_attesa`), invece di creare N payment duplicati aggiorna in-place il
+> singolo incasso atteso (`in_attesa -> ricevuto`) e collassa le N righe
+> (1 settle + N-1 skip). I payment `in_attesa` creati a mano (senza
+> `financial_document_id`) NON vengono toccati. 0 match -> comportamento storico
+> dell'import invariato.
+
 **Stato del documento:** `reference`
 **Scopo:** caso reale di dominio: servizi, tariffe, acconti, CSV e mapping
 operativo del rapporto Diego/Gustare.
