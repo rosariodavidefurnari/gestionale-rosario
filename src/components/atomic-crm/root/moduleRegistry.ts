@@ -17,6 +17,7 @@ import type { RaRecord } from "ra-core";
 import clients from "../clients";
 import contacts from "../contacts";
 import expenses from "../expenses";
+import invoices from "../invoices";
 import payments from "../payments";
 import projects from "../projects";
 import quotes from "../quotes";
@@ -255,6 +256,35 @@ export const crmModules: CrmModuleDefinition[] = [
       supportedViews: ["list", "show", "create", "edit"],
     },
     badge: PaymentOverdueBadge,
+  },
+  {
+    resource: "financial_documents_summary",
+    label: "Fatture",
+    icon: FileText,
+    iconColor: "text-sky-500",
+    path: "/financial_documents_summary",
+    components: toResourceComponents(invoices),
+    nav: {
+      desktop: { header: true, headerOrder: 65 },
+      mobile: {
+        bottomBar: false,
+        bottomBarOrder: 0,
+        altroMenu: true,
+        altroMenuOrder: 55,
+        createMenu: false,
+      },
+    },
+    ai: {
+      label: "Fatture",
+      description:
+        "Documenti fiscali emessi e ricevuti (fatture e note di credito) importati; sola consultazione, dato di fatturato/emissione non di cassa.",
+      routePatterns: [
+        "/#/financial_documents_summary",
+        "/#/financial_documents_summary/:id",
+        "/#/financial_documents_summary/:id/show",
+      ],
+      supportedViews: ["list", "show"],
+    },
   },
   {
     resource: "expenses",

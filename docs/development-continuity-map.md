@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-16 (Fatture view: pure helpers module financialDocumentHelpers + unit tests)
+Last updated: 2026-06-16 (Fatture view: read-only UI layer — list/filters/summary/show + moduleRegistry resource)
 
 ---
 
@@ -171,6 +171,13 @@ Last updated: 2026-06-16 (Fatture view: pure helpers module financialDocumentHel
   (project_names). Mai settled/open/settlement.
 - `invoices/index.tsx`: `{ list, show, recordRepresentation: document_number }`
   (no create/edit → resource read-only).
+- `root/moduleRegistry.ts`: nuovo modulo `financial_documents_summary` (label
+  "Fatture", icona FileText/`text-sky-500`, headerOrder 65, mobile altroMenu
+  order 55, createMenu false). `ai` con supportedViews `["list","show"]` e
+  descrizione "fatturato/emissione non di cassa" → entra nel capability
+  registry via `getAiResourceModules()`. La resource e' read-only per
+  costruzione: `CRM.tsx` passa `edit`/`create` undefined, quindi nessuna route
+  o bottone di modifica viene registrato.
 
 ---
 
