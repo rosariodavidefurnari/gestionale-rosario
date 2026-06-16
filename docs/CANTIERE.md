@@ -66,15 +66,30 @@ Regola pratica:
 
 ## Stato Corrente
 
-Siamo nella fase di impostazione del metodo e del primo ciclo di sicurezza DB.
 Branch corrente:
 
-- `work/fiscal-backup-rls-hardening`
+- `work/fatture-view` (BR1 — vista Fatture)
 
 Obiettivo operativo attivo:
 
-- chiudere il ciclo RLS backup fiscali + riconciliazione migration history con
-  verifiche finali e documenti allineati.
+- BR1: nuova pagina "Fatture" (sola lettura su `financial_documents_summary`,
+  filtri/riepilogo/mobile, AI-aware). Spec scritta e committata, in attesa di
+  review utente -> poi piano (review multi-superficie) -> esecuzione locale
+  prima del remoto.
+
+Chiuso in questa tornata (vedi storico sotto):
+
+- TASK 5 (RLS backup fiscali) e TASK 4 (protezione cancellazioni: FK
+  CASCADE->NO ACTION) IMPLEMENTATI, mergiati in `main` e LIVE su produzione
+  (DB verificato via MCP; frontend Vercel deployment READY su `cb09ba8d`).
+- Assessment esaustivo del gestionale completato:
+  `docs/superpowers/2026-06-15-gestionale-assessment.md` (30 finding
+  prioritizzati, ordine in 6 cicli, "cosa NON fare"). Da qui esce la coda
+  lavori, di cui BR1 e' il primo big-rock scelto.
+- ALLARME APERTO (dall'assessment, NON ancora risolto): i promemoria fiscali
+  sono morti (`fiscal_deadline_check` 401, 0 task creati) e c'e' una scadenza
+  reale 30/06/2026 da ~8.224 EUR senza avviso. Quick-win QW1, da fare appena
+  possibile.
 
 Fatto:
 
@@ -174,69 +189,41 @@ Non fatto:
 
 ## Prossima Azione
 
-Ultimo ciclo chiuso: TASK 4 del brief DB (`gestionale-rifinitura-db_2.md`) —
-Fiscal Cascade Protection (flip FK `CASCADE -> NO ACTION` su
-financial_documents, projects, services, quotes + UX delete pessimistic +
-controllore TDD).
+Attivo: BR1 — vista "Fatture" (sola lettura su `financial_documents_summary`).
+Stato: spec scritta e committata su `work/fatture-view`
+(`docs/superpowers/specs/2026-06-16-fatture-view-design.md`), in attesa di review
+utente. Sequenza: review utente spec -> piano (writing-plans) -> review
+multi-superficie + RAG del piano -> esecuzione LOCALE prima del remoto.
 
-Stato: COMPLETATO su DB e frontend. Implementato e verificato in locale
-(RED/GREEN), poi committato (`2a33a9cf`, branch
-`work/fiscal-backup-rls-hardening`) e APPLICATO AL REMOTO produzione: migration
-applicata via `db query --linked -f` + `migration repair`, GREEN su remoto
-(controllore exit 0), 4 FK = `NO ACTION` verificate via MCP, 0 residui fixture,
-0 orfani. La UX `pessimistic` e' ora live su Vercel production.
+Decisioni BR1 gia' prese: tutti i documenti (filtro direzione/tipo/anno/cliente),
+sola lettura (no create/edit/delete), NIENTE stato pagamento in v1
+(allocazioni vuote -> arriva con BR2), riepilogo "Totale fatturato" del filtro
+(note credito sottratte), AI-aware.
 
-Verifica Vercel production del 2026-06-14:
+Coda lavori (dall'assessment, ordine consigliato): QW1 promemoria fiscali morti
+(URGENTE, scadenza 30/06), QW2 card "Da incassare" (375 vs 6.412), QW3 mobile
+scadenzario+cassa, poi BR1 (in corso), BR2 riconciliazione, bollo (Ciclo 5).
 
-- deployment `dpl_7co7ZQvmkPgMojnVon3rvj1EYa7t` = `READY`;
-- target = `production`;
-- commit = `cb09ba8d3f8463f33b1e9e6611e351a1b39b3a68` su `main`;
-- build `tsc && vite build` completata;
-- alias production `https://gestionale-rosario.vercel.app` risponde `HTTP 200`;
-- runtime logs production `error`/`fatal` ultima ora: nessun log trovato.
+### Ultimo ciclo chiuso: TASK 4 (Fiscal Cascade Protection) — LIVE
 
-Prossimo passo: avviare la Fase 2 roadmap ("Verita' dati remoto vs locale vs
-XML") con spec/piano dedicati prima di toccare dati, schema o flussi fiscali.
-
-Esito RED/GREEN locale:
-
-- RED (FK CASCADE): `scripts/check-cascade-protection.sql` FALLISCE (exit 3,
-  "DELETE client NON bloccata").
-- migration `20260614185413_harden_cascade_protection_fiscal.sql` applicata in
-  locale (atomica BEGIN/COMMIT).
-- GREEN (FK NO ACTION): controllore PASSA (exit 0), anti-doppia-FK 0 righe,
-  gate per-FK `confdeltype='a'` su tutte e 4.
-- orfani su REMOTO = 0 su tutte e 4 le relazioni (ADD CONSTRAINT validera').
-
-Artefatti TASK 4:
-
-- spec: `docs/superpowers/specs/2026-06-14-fiscal-cascade-protection-design.md` (v2)
-- piano: `docs/superpowers/plans/2026-06-14-fiscal-cascade-protection.md`
-- controllore: `scripts/check-cascade-protection.sql` +
-  `npm run security:check:cascade-protection`
-- migration: `supabase/migrations/20260614185413_harden_cascade_protection_fiscal.sql`
-- UX: `src/components/admin/delete-button.tsx` (prop `mutationMode`),
-  `ClientShow`/`ProjectShow` (pessimistic + `misc/blockedDeleteOnError.ts` + test),
-  E2E `clients.complete`/`projects.complete` aggiornati al caso "bloccato".
-
-Review fatte (multi-superficie, ogni revisore con RAG, claim verificati sul sorgente):
-
-- review spec: BLOCK -> risolto in v2 (12 finding chiusi)
-- review piano: FLAG -> risolto (delete-button esteso con prop mutationMode;
-  `error.body.code` non `error.code`; apply via `db query --linked -f` +
-  `migration repair`; check anti doppia-FK; branch RED/GREEN default)
-- review post-implementazione: BLOCK -> risolto (E2E aggiornati al contratto
-  pessimistic; messaggi blocco estesi a pagamenti/spese; CANTIERE allineato;
-  controllore rinforzato con gate per-FK)
+FK `CASCADE -> NO ACTION` su financial_documents/projects/services/quotes + UX
+delete pessimistic. Mergiato in `main` (`cb09ba8d`) e live: DB verificato via MCP
+(4 FK `NO ACTION`, 0 orfani), Vercel production `READY`, alias `HTTP 200`.
+Artefatti: spec/piano `2026-06-14-fiscal-cascade-protection*`, migration
+`20260614185413_harden_cascade_protection_fiscal.sql`, controllore
+`scripts/check-cascade-protection.sql` (`security:check:cascade-protection`),
+UX `delete-button.tsx` + `misc/blockedDeleteOnError.ts`. 3 review
+multi-superficie con RAG (spec BLOCK, piano FLAG, impl BLOCK), tutte risolte.
 
 Guardrail di processo aggiunto: hook `UserPromptSubmit` in `.claude/settings.json`
 (RAG attivo + review multi-superficie obbligatori) + trigger `WF-15` in
 `.claude/rules/learning.md`.
 
-La Fase 2 roadmap ("Verita' dati remoto vs locale vs XML") e' la prossima azione
-operativa. TASK 5 del brief (RLS backup fiscali) e' gia' chiuso.
+TASK 5 (RLS backup) e TASK 4 (cascade protection) chiusi e live. Prossima azione:
+BR1 (vista Fatture, in corso). Fase 2 roadmap ("Verita' dati remoto vs locale vs
+XML") resta piu' avanti nella coda.
 
-Stato verifiche finali:
+Stato verifiche finali ultimo ciclo (TASK 4):
 
 - `npm run security:check:fiscal-backups` passa
 - `npm run security:check:fiscal-backups:rest` passa
@@ -248,11 +235,19 @@ Stato verifiche finali:
 
 Tema:
 
-- prossimo ciclo: Fase 2 roadmap ("Verita' dati remoto vs locale vs XML").
-- TASK 4 Fiscal Cascade Protection: chiuso su DB remoto e frontend Vercel.
-- TASK 5 RLS backup fiscali: chiuso.
+- ATTIVO: BR1 — vista "Fatture" (sola lettura su `financial_documents_summary`),
+  branch `work/fatture-view`, spec in attesa di review utente.
+- chiusi e live: TASK 4 (cascade protection) e TASK 5 (RLS backup).
 
-Artefatti:
+Artefatti BR1:
+
+- assessment sorgente coda lavori:
+  `docs/superpowers/2026-06-15-gestionale-assessment.md`
+- spec BR1:
+  `docs/superpowers/specs/2026-06-16-fatture-view-design.md`
+- piano BR1: da creare (writing-plans) dopo review utente spec.
+
+Artefatti storici (cicli chiusi):
 
 - roadmap:
   `docs/gestionale-roadmap-generale.md`
