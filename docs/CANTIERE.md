@@ -73,9 +73,20 @@ Branch corrente:
 Obiettivo operativo attivo:
 
 - BR1: nuova pagina "Fatture" (sola lettura su `financial_documents_summary`,
-  filtri/riepilogo/mobile, AI-aware). Spec scritta e committata, in attesa di
-  review utente -> poi piano (review multi-superficie) -> esecuzione locale
-  prima del remoto.
+  filtri/riepilogo/mobile, AI-aware). Spec v2.1 + piano v2 (2 review esterne + 1
+  review piano multi-superficie, tutte risolte). ESECUZIONE in corso,
+  subagent-driven, in LOCALE sul branch `work/fatture-view`.
+- Stato esecuzione: Task 1-8 FATTI e committati (8 commit atomici, da `7a414510`
+  a `203edb39`): helper+test, INVOICE_COLUMNS, lista read-only (no bulk), filtri
+  (selettore Anno), riepilogo direction-aware (set filtrato completo), wrapper +
+  show read-only + index, registry (resource read-only + AI capability), AI
+  context (snapshot.financialDocuments whitelisted + caveat + prompt EF
+  aggiornato + 3 doc continuity nel commit). Branch verde: typecheck 0, build ok,
+  522/522 unit test.
+- DA FARE: Task 9 E2E smoke (+ fixtures financial_documents in test-data-controller);
+  review IMPLEMENTAZIONE multi-superficie + RAG; poi step REMOTI/gated: deploy EF
+  `unified_crm_answer` (BE-1, ref qvdmzhyzpyaveniirsmo) e merge in `main` (Vercel)
+  con verifica online. La UI legge una VISTA esistente: nessuna migration/DB.
 
 Chiuso in questa tornata (vedi storico sotto):
 
