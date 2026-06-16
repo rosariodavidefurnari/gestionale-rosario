@@ -1,6 +1,87 @@
-import { describe, it, expect } from "vitest";
+// @vitest-environment jsdom
+import { describe, it, expect, vi, afterEach } from "vitest";
 
-import { buildEmitConfirmMessage, getInvoiceEmitGate } from "./useEmitInvoice";
+import type { InvoiceDraftInput } from "./invoiceDraftTypes";
+import {
+  buildEmitConfirmMessage,
+  getInvoiceEmitGate,
+  runEmitInvoice,
+  type EmitInvoiceDeps,
+} from "./useEmitInvoice";
+
+const draftFixture = (): InvoiceDraftInput =>
+  ({
+    client: { id: "c1", name: "Cliente" },
+    source: { kind: "project", id: "p1", label: "Progetto" },
+    lineItems: [
+      {
+        description: "Servizio",
+        quantity: 1,
+        unitPrice: 1000,
+        kind: "service",
+      },
+    ],
+    serviceIds: ["s1"],
+    expenseIds: [],
+  }) as unknown as InvoiceDraftInput;
+
+describe("runEmitInvoice", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("emits with amounts derived from the draft when no duplicate exists", async () => {
+    const emitInvoice = vi
+      .fn()
+      .mockResolvedValue({ status: "emitted", financialDocumentId: "fd1" });
+    const getList = vi.fn().mockResolvedValue({ data: [], total: 0 });
+    const deps = { getList, emitInvoice } as unknown as EmitInvoiceDeps;
+
+    const outcome = await runEmitInvoice(deps, draftFixture(), {
+      documentNumber: "FT-1",
+      issueDate: "2026-06-17",
+    });
+
+    expect(getList).toHaveBeenCalledWith(
+      "financial_documents_summary",
+      expect.objectContaining({
+        filter: {
+          "client_id@eq": "c1",
+          "document_number@eq": "FT-1",
+          "direction@eq": "outbound",
+        },
+      }),
+    );
+    expect(emitInvoice).toHaveBeenCalledWith({
+      clientId: "c1",
+      source: { kind: "project", id: "p1" },
+      documentNumber: "FT-1",
+      issueDate: "2026-06-17",
+      grossTaxable: 1000,
+      stampAmount: 2,
+      grossTotal: 1002,
+      netCollectable: 1000,
+      serviceIds: ["s1"],
+      expenseIds: [],
+    });
+    expect(outcome.status).toBe("emitted");
+  });
+
+  it("returns cancelled and does NOT emit when the user declines the duplicate confirm", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    const emitInvoice = vi.fn();
+    const getList = vi
+      .fn()
+      .mockResolvedValue({ data: [{ id: "x" }], total: 1 });
+    const deps = { getList, emitInvoice } as unknown as EmitInvoiceDeps;
+
+    const outcome = await runEmitInvoice(deps, draftFixture(), {
+      documentNumber: "FT-1",
+      issueDate: "2026-06-17",
+    });
+
+    expect(outcome).toEqual({ status: "cancelled" });
+    expect(emitInvoice).not.toHaveBeenCalled();
+  });
+});
 
 describe("buildEmitConfirmMessage", () => {
   it("mentions the document number and asks to confirm", () => {

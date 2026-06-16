@@ -83,6 +83,7 @@ const emitInvoice = async ({
           .updateTable("services")
           .set({ invoice_ref: request.documentNumber })
           .where("id", "in", request.serviceIds)
+          .where("client_id", "=", request.clientId)
           .where(sql<boolean>`(invoice_ref is null or invoice_ref = '')`)
           .returning(["id"])
           .execute();
@@ -95,6 +96,7 @@ const emitInvoice = async ({
           .updateTable("expenses")
           .set({ invoice_ref: request.documentNumber })
           .where("id", "in", request.expenseIds)
+          .where("client_id", "=", request.clientId)
           .where(sql<boolean>`(invoice_ref is null or invoice_ref = '')`)
           .where("source_service_id", "is", null)
           .returning(["id"])

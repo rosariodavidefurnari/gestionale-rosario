@@ -308,10 +308,18 @@ const confirmInvoiceImportDraft = async ({
       >();
       const paymentRecordGroups = new Map<
         string,
-        { clientId: string; invoiceRef: string; records: InvoiceImportConfirmRecord[] }
+        {
+          clientId: string;
+          invoiceRef: string;
+          records: InvoiceImportConfirmRecord[];
+        }
       >();
       for (const record of payloadResult.data.draft.records) {
-        if (record.resource !== "payments" || !record.invoiceRef || !record.clientId) {
+        if (
+          record.resource !== "payments" ||
+          !record.invoiceRef ||
+          !record.clientId
+        ) {
           continue;
         }
         const key = reconcileKey(record.clientId, record.invoiceRef);
@@ -324,21 +332,27 @@ const confirmInvoiceImportDraft = async ({
         paymentRecordGroups.set(key, group);
       }
       for (const [key, group] of paymentRecordGroups) {
+        // STATUS-AGNOSTIC match (spec F2): no status filter, so a payment already
+        // settled to 'ricevuto' by a previous re-import is still recognized and a
+        // SECOND re-import re-settles it (idempotent) instead of duplicating it.
         const emitted = await trx
           .selectFrom("payments")
           .select(["id"])
           .where("client_id", "=", group.clientId)
           .where("invoice_ref", "=", group.invoiceRef)
-          .where("status", "=", "in_attesa")
           .where("financial_document_id", "is not", null)
-          .executeTakeFirst();
-        emitReconciliation.set(key, {
-          decision: decideEmittedPaymentReconciliation({
-            recordsForInvoiceRef: group.records,
-            emittedPayment: emitted ?? null,
-          }),
-          settled: false,
+          .execute();
+        const decision = decideEmittedPaymentReconciliation({
+          recordsForInvoiceRef: group.records,
+          emittedPayments: emitted,
         });
+        if (decision.action === "ambiguous") {
+          throw new InvoiceImportConfirmError(
+            409,
+            `Piu' fatture emesse con numero ${group.invoiceRef} per lo stesso cliente: riconciliazione impossibile, intervenire manualmente.`,
+          );
+        }
+        emitReconciliation.set(key, { decision, settled: false });
       }
 
       for (const record of payloadResult.data.draft.records) {
@@ -364,9 +378,14 @@ const confirmInvoiceImportDraft = async ({
               : undefined;
           if (reconcile && reconcile.decision.action === "settle") {
             if (!reconcile.settled) {
+              // Settle = received: use the document's real date, NOT the
+              // in_attesa due_date (which would attribute cash to the wrong
+              // fiscal year under the cash basis). Fallback to the computed
+              // paymentDate only if the document date is missing.
+              const settleDate = record.documentDate ?? paymentDate;
               await trx
                 .updateTable("payments")
-                .set({ status: "ricevuto", payment_date: paymentDate })
+                .set({ status: "ricevuto", payment_date: settleDate })
                 .where("id", "=", reconcile.decision.paymentIdToSettle)
                 .execute();
               reconcile.settled = true;

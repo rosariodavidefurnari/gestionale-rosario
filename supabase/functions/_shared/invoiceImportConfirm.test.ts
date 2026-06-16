@@ -129,7 +129,7 @@ describe("decideEmittedPaymentReconciliation", () => {
   it("settles the single expected payment and skips all N import records", () => {
     const decision = decideEmittedPaymentReconciliation({
       recordsForInvoiceRef: [{ line: 1 }, { line: 2 }, { line: 3 }],
-      emittedPayment: { id: "pay-emit-1" },
+      emittedPayments: [{ id: "pay-emit-1" }],
     });
     expect(decision).toEqual({
       action: "settle",
@@ -139,10 +139,20 @@ describe("decideEmittedPaymentReconciliation", () => {
     });
   });
 
+  it("still settles when the only match is already 'ricevuto' (second re-import idempotent)", () => {
+    // The caller's query is STATUS-AGNOSTIC: an already-settled payment is still
+    // returned, so a second re-import re-settles it instead of creating a dup.
+    const decision = decideEmittedPaymentReconciliation({
+      recordsForInvoiceRef: [{ line: 1 }],
+      emittedPayments: [{ id: "pay-emit-1" }],
+    });
+    expect(decision.action).toBe("settle");
+  });
+
   it("creates (historical path) when there is no emitted payment", () => {
     const decision = decideEmittedPaymentReconciliation({
       recordsForInvoiceRef: [{ line: 1 }],
-      emittedPayment: null,
+      emittedPayments: [],
     });
     expect(decision).toEqual({ action: "create" });
   });
@@ -150,8 +160,16 @@ describe("decideEmittedPaymentReconciliation", () => {
   it("creates when there are no records to reconcile", () => {
     const decision = decideEmittedPaymentReconciliation({
       recordsForInvoiceRef: [],
-      emittedPayment: { id: "pay-emit-1" },
+      emittedPayments: [{ id: "pay-emit-1" }],
     });
     expect(decision).toEqual({ action: "create" });
+  });
+
+  it("is ambiguous (no guess) when more than one emitted payment matches", () => {
+    const decision = decideEmittedPaymentReconciliation({
+      recordsForInvoiceRef: [{ line: 1 }],
+      emittedPayments: [{ id: "pay-emit-1" }, { id: "pay-emit-2" }],
+    });
+    expect(decision).toEqual({ action: "ambiguous", matchCount: 2 });
   });
 });

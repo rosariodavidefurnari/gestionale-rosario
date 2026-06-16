@@ -19,7 +19,10 @@ skip, evitando i doppioni. Ramo additivo: 0 match = path storico invariato; i
 payment manuali `in_attesa` (senza `financial_document_id`) non vengono toccati.
 Registry AI allineati: `crmCapabilityRegistry.generate_invoice_draft` (ora cita
 l'azione "Emetti e scarica XML") e `crmSemanticRegistry` (riconciliazione import
-anti doppio conteggio). Dettagli e sweep completo:
+anti doppio conteggio). Fix post review impl (BLOCK chiusa, provati su DB
+locale): match riconciliazione STATUS-AGNOSTIC (2 re-import = 1 solo payment),
+errore esplicito se >1 match, data settle = documentDate reale, prompt extract
+"fattura emessa -> sempre payments". Dettagli e sweep completo:
 `docs/development-continuity-map.md` (sezione Emetti fattura) +
 `docs/superpowers/plans/2026-06-16-invoice-emit.md`.
 

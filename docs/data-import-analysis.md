@@ -9,6 +9,15 @@
 > (1 settle + N-1 skip). I payment `in_attesa` creati a mano (senza
 > `financial_document_id`) NON vengono toccati. 0 match -> comportamento storico
 > dell'import invariato.
+>
+> **Fix post review impl (BLOCK chiusa, provati su DB locale):** il match e'
+> STATUS-AGNOSTIC (niente filtro `status='in_attesa'`) -> un SECONDO re-import
+> dello stesso XML emesso ri-settla lo stesso payment (idempotente), non crea
+> doppioni; se >1 payment emesso matcha (client+invoice_ref) -> errore esplicito
+> 409 (no guess); la data di settle usa `record.documentDate` reale (non la
+> `dueDate` del ramo in_attesa, che attribuirebbe la cassa all'anno fiscale
+> sbagliato); prompt extract rinforzato: una fattura EMESSA dal titolare e'
+> SEMPRE `resource='payments'`, mai `services`.
 
 **Stato del documento:** `reference`
 **Scopo:** caso reale di dominio: servizi, tariffe, acconti, CSV e mapping

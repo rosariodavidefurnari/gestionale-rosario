@@ -61,58 +61,69 @@ export type EmitInvoiceOutcome =
   | { status: "cancelled" }
   | { status: "emitted" | "already_emitted"; result: EmitInvoiceResult };
 
+/** Minimal dataProvider surface needed to emit (injectable for tests). */
+export type EmitInvoiceDeps = Pick<CrmDataProvider, "getList" | "emitInvoice">;
+
+/**
+ * Pure async orchestration (no React) so it is unit-testable with a mock
+ * dataProvider: dedup guard (window.confirm vs existing outbound doc) then
+ * emitInvoice with amounts derived from `computeInvoiceDraftAmounts`.
+ */
+export const runEmitInvoice = async (
+  dataProvider: EmitInvoiceDeps,
+  draft: InvoiceDraftInput,
+  { documentNumber, issueDate }: { documentNumber: string; issueDate: string },
+): Promise<EmitInvoiceOutcome> => {
+  const clientId = String(draft.client.id);
+
+  const existing = await dataProvider.getList("financial_documents_summary", {
+    pagination: { page: 1, perPage: 1 },
+    sort: { field: "issue_date", order: "DESC" },
+    filter: {
+      "client_id@eq": clientId,
+      "document_number@eq": documentNumber,
+      "direction@eq": "outbound",
+    },
+  });
+  if (
+    existing.total &&
+    existing.total > 0 &&
+    !window.confirm(buildEmitConfirmMessage(documentNumber))
+  ) {
+    return { status: "cancelled" };
+  }
+
+  const amounts = computeInvoiceDraftAmounts(draft.lineItems);
+  const result = await dataProvider.emitInvoice({
+    clientId,
+    source: {
+      kind: draft.source.kind as "project" | "client",
+      id: String(draft.source.id),
+    },
+    documentNumber,
+    issueDate,
+    grossTaxable: amounts.grossTaxable,
+    stampAmount: amounts.stampDuty,
+    grossTotal: amounts.grossTotal,
+    netCollectable: amounts.netCollectable,
+    serviceIds: (draft.serviceIds ?? []).map(String),
+    expenseIds: (draft.expenseIds ?? []).map(String),
+  });
+
+  return { status: result.status, result };
+};
+
 export const useEmitInvoice = () => {
   const dataProvider = useDataProvider<CrmDataProvider>();
   const [isEmitting, setIsEmitting] = useState(false);
 
   const emit = async (
     draft: InvoiceDraftInput,
-    {
-      documentNumber,
-      issueDate,
-    }: { documentNumber: string; issueDate: string },
+    opts: { documentNumber: string; issueDate: string },
   ): Promise<EmitInvoiceOutcome> => {
     setIsEmitting(true);
     try {
-      const clientId = String(draft.client.id);
-
-      const existing = await dataProvider.getList(
-        "financial_documents_summary",
-        {
-          pagination: { page: 1, perPage: 1 },
-          sort: { field: "issue_date", order: "DESC" },
-          filter: {
-            "client_id@eq": clientId,
-            "document_number@eq": documentNumber,
-          },
-        },
-      );
-      if (
-        existing.total &&
-        existing.total > 0 &&
-        !window.confirm(buildEmitConfirmMessage(documentNumber))
-      ) {
-        return { status: "cancelled" };
-      }
-
-      const amounts = computeInvoiceDraftAmounts(draft.lineItems);
-      const result = await dataProvider.emitInvoice({
-        clientId,
-        source: {
-          kind: draft.source.kind as "project" | "client",
-          id: String(draft.source.id),
-        },
-        documentNumber,
-        issueDate,
-        grossTaxable: amounts.grossTaxable,
-        stampAmount: amounts.stampDuty,
-        grossTotal: amounts.grossTotal,
-        netCollectable: amounts.netCollectable,
-        serviceIds: (draft.serviceIds ?? []).map(String),
-        expenseIds: (draft.expenseIds ?? []).map(String),
-      });
-
-      return { status: result.status, result };
+      return await runEmitInvoice(dataProvider, draft, opts);
     } finally {
       setIsEmitting(false);
     }

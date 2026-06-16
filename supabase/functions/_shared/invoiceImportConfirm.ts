@@ -449,38 +449,45 @@ export type EmittedReconciliationDecision =
       settleFromRecordIndex: number;
       skipRecordIndexes: number[];
     }
-  | { action: "create" };
+  | { action: "create" }
+  | { action: "ambiguous"; matchCount: number };
 
 /**
- * Decide how to reconcile the import records sharing one `invoice_ref` against an
- * existing app-EMITTED expected payment.
+ * Decide how to reconcile the import records sharing one `invoice_ref` against
+ * the app-EMITTED expected payments matched by the PRIMARY anchor
+ * (`payments.financial_document_id IS NOT NULL` + client + invoice_ref). The
+ * match must be STATUS-AGNOSTIC (spec F2): a payment already settled to
+ * `ricevuto` by a previous re-import must still be recognized, otherwise a
+ * SECOND re-import of the same emitted XML would create a duplicate payment
+ * (double-counted cash).
  *
  * The XML of an invoice emitted by the app expands to N import records (one per
- * line, see `invoice_import_extract`); they must COLLAPSE onto the single
- * expected payment created at emit time instead of creating N duplicates.
+ * line); they COLLAPSE onto the single expected payment.
  *
- * - `emittedPayment` present -> SETTLE that one payment (in_attesa -> ricevuto),
- *   taking the received date from the first record, and skip creating ALL N
- *   records (collapse N -> 1).
- * - `emittedPayment` absent -> CREATE (historical path unchanged). The caller
- *   matches `emittedPayment` ONLY on `payments.financial_document_id IS NOT NULL`
- *   (primary anchor), so manual `in_attesa` payments with the same invoice_ref
- *   are never touched here.
+ * - 0 emitted payments -> CREATE (historical path unchanged; manual `in_attesa`
+ *   payments without `financial_document_id` are never matched here).
+ * - exactly 1 -> SETTLE it and skip creating ALL N records. Re-settling an
+ *   already-`ricevuto` payment is idempotent (no duplicate).
+ * - >1 -> AMBIGUOUS: do NOT guess, the caller must raise an explicit error.
  */
 export const decideEmittedPaymentReconciliation = ({
   recordsForInvoiceRef,
-  emittedPayment,
+  emittedPayments,
 }: {
   recordsForInvoiceRef: readonly unknown[];
-  emittedPayment: EmittedExpectedPayment | null | undefined;
+  emittedPayments: readonly EmittedExpectedPayment[] | null | undefined;
 }): EmittedReconciliationDecision => {
-  if (!emittedPayment || recordsForInvoiceRef.length === 0) {
+  const matches = emittedPayments ?? [];
+  if (matches.length === 0 || recordsForInvoiceRef.length === 0) {
     return { action: "create" };
+  }
+  if (matches.length > 1) {
+    return { action: "ambiguous", matchCount: matches.length };
   }
 
   return {
     action: "settle",
-    paymentIdToSettle: emittedPayment.id,
+    paymentIdToSettle: matches[0].id,
     settleFromRecordIndex: 0,
     skipRecordIndexes: recordsForInvoiceRef.map((_, index) => index),
   };

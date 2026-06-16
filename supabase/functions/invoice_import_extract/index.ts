@@ -60,10 +60,10 @@ REGOLA FONDAMENTALE: se un documento contiene una tabella o un elenco con piu' r
 
 REGOLA CLASSIFICAZIONE — la piu' importante:
 - Il titolare del CRM ha P.IVA 01309870861 (Rosario Furnari)
-- Se il documento e' EMESSO dal titolare (cedente/prestatore con P.IVA 01309870861) → \`resource = "payments"\` (e' un incasso atteso)
+- Se il documento e' una FATTURA/nota EMESSA dal titolare (cedente/prestatore con P.IVA 01309870861) → \`resource = "payments"\` (e' un incasso atteso). Questo vale SEMPRE per una fattura emessa, ANCHE se le righe descrivono servizi/prestazioni: una fattura emessa e' un incasso, MAI \`services\`. Non riclassificarla come \`services\` per via del contenuto delle righe.
 - Se il documento e' RICEVUTO dal titolare (cessionario/committente con P.IVA 01309870861, oppure il cedente e' un altro soggetto) → \`resource = "expenses"\` (e' un costo)
-- Se il documento e' un riepilogo lavori/prestazioni svolte dal titolare → \`resource = "services"\`
-- In caso di dubbio, guarda chi e' il cedente/prestatore: se e' il titolare e' un incasso, se e' un altro e' una spesa
+- \`resource = "services"\` SOLO per un riepilogo lavori interno NON fiscale (es. CSV/foglio di lavorazioni svolte), MAI per una fattura/FatturaPA emessa
+- In caso di dubbio, guarda chi e' il cedente/prestatore: se e' il titolare ed e' una fattura e' un incasso (payments), se il cedente e' un altro e' una spesa (expenses)
 
 REGOLA IMPORTI — dipende dal tipo di record:
 - Per \`resource = "payments"\` (fatture EMESSE dal titolare, incassi): usa l'importo IMPONIBILE (netto, senza IVA). Il titolare e' forfettario e non addebita IVA, quindi il netto e' il suo compenso reale
