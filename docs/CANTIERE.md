@@ -68,25 +68,34 @@ Regola pratica:
 
 Branch corrente:
 
-- `work/fatture-view` (BR1 — vista Fatture)
+- `main` (BR1 mergiato e shippato; branch `work/fatture-view` integrato)
 
 Obiettivo operativo attivo:
 
-- BR1: nuova pagina "Fatture" (sola lettura su `financial_documents_summary`,
-  filtri/riepilogo/mobile, AI-aware). Spec v2.1 + piano v2 (2 review esterne + 1
-  review piano multi-superficie, tutte risolte). ESECUZIONE in corso,
-  subagent-driven, in LOCALE sul branch `work/fatture-view`.
-- Stato esecuzione: Task 1-8 FATTI e committati (8 commit atomici, da `7a414510`
-  a `203edb39`): helper+test, INVOICE_COLUMNS, lista read-only (no bulk), filtri
-  (selettore Anno), riepilogo direction-aware (set filtrato completo), wrapper +
-  show read-only + index, registry (resource read-only + AI capability), AI
-  context (snapshot.financialDocuments whitelisted + caveat + prompt EF
-  aggiornato + 3 doc continuity nel commit). Branch verde: typecheck 0, build ok,
-  522/522 unit test.
-- DA FARE: Task 9 E2E smoke (+ fixtures financial_documents in test-data-controller);
-  review IMPLEMENTAZIONE multi-superficie + RAG; poi step REMOTI/gated: deploy EF
-  `unified_crm_answer` (BE-1, ref qvdmzhyzpyaveniirsmo) e merge in `main` (Vercel)
-  con verifica online. La UI legge una VISTA esistente: nessuna migration/DB.
+- Nessun ciclo implementativo aperto. Prossimo: scegliere dalla coda assessment
+  (`docs/superpowers/2026-06-15-gestionale-assessment.md`). URGENTE: QW1
+  (promemoria fiscali morti, scadenza 30/06).
+
+Chiuso in questa tornata: BR1 — vista "Fatture" SHIPPED e LIVE su produzione.
+
+- Spec v2.1 + piano v2: 3 review (2 esterne ChatGPT, review piano e review
+  IMPLEMENTAZIONE multi-superficie), tutte con RAG e risolte.
+- Esecuzione subagent-driven (12 commit, `7a414510`..`49fd44be`): helper+test,
+  lista read-only, filtri (Tipo `@in` deterministico, selettore Anno), riepilogo
+  direction-aware + multivaluta (set filtrato completo), show read-only, registry
+  (resource read-only + AI capability), AI context
+  (snapshot.financialDocuments whitelisted + caveat), prompt EF aggiornato,
+  E2E smoke + controllori read-only.
+- Verde: typecheck 0, build, 526 unit, E2E smoke. Review impl FLAG -> fix
+  applicati (filtro `@in`, multivaluta, anti-leak settlement, route edit
+  irraggiungibile, fixture controparte nulla).
+- SHIP: EF `unified_crm_answer` deployata su prod; smoke AI PASSATO
+  (fatturato netto 2025 = 1.300, nota credito sottratta, niente lessico di cassa);
+  merge in `main` (`bdacd886`); Vercel Production `success`, alias
+  `gestionale-rosario.vercel.app` HTTP 200. DB intatto (legge la vista
+  `financial_documents_summary`, nessuna migration).
+- Nota tech-debt (non BR1): 13 file con drift prettier pre-esistente su main
+  (dashboard/invoicing/provider/fiscal) -> pulizia separata.
 
 Chiuso in questa tornata (vedi storico sotto):
 
