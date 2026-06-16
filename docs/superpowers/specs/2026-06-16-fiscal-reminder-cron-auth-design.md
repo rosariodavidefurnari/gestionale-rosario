@@ -5,6 +5,51 @@ Stato: draft, in review
 Origine: QW1 dell'assessment `docs/superpowers/2026-06-15-gestionale-assessment.md`
 (finding #1, critical: promemoria fiscali morti).
 
+## REVISIONE v2 (post review multi-superficie + RAG) — AUTORITATIVA
+
+Dove confligge col corpo sotto, vince questa. La review ha trovato 3 errori
+critici nella v1; corretti qui (claim verificati su prod).
+
+- Vault NON stale (v1 SBAGLIATA): verificato via md5 (read-only, mai il valore)
+  che `vault.decrypted_secrets('service_role_key')` == service role CORRENTE
+  (`ref=qvdmzhyzpyaveniirsmo`, `role=service_role`, exp 2036). NON ruotare il
+  Vault: e' una credenziale valida. Il 401 e' solo il gate JWKS, non scadenza.
+- Env/key-space (v1 SBAGLIATA): NON confrontare con `SUPABASE_SERVICE_ROLE_KEY`
+  (inesistente nel repo) ne' con `SB_SECRET_KEY` (formato opaco `sb_secret_`,
+  `supabaseAdmin.ts:6`). Il cron manda un JWT HS256: spazi-chiave diversi -> il
+  confronto fallirebbe sempre.
+- APPROCCIO CORRETTO: secret DEDICATO `CRON_SHARED_SECRET` (valore random,
+  NON il service role). Va messo, byte-identico, in: (a) Vault prod
+  (`vault.create_secret`), (b) secret remoto della EF
+  (`npx supabase secrets set CRON_SHARED_SECRET=... --project-ref qvdmzhyzpyaveniirsmo`),
+  (c) `supabase/functions/.env` locale, (d) `supabase/seed.sql` (Vault locale).
+  Verifica pre-deploy: `md5(Vault CRON_SHARED_SECRET) == md5(env EF)`.
+- La migration del cron va aggiornata (re-schedule) per inviare
+  `Authorization: Bearer <CRON_SHARED_SECRET da Vault>` invece di service_role.
+- Helper sicuro: `Deno.env.get("CRON_SHARED_SECRET")` assente/vuota -> ritorna
+  SEMPRE false (mai autorizzare); token mancante/vuoto -> false PRIMA del
+  compare; confronto a tempo costante su valori non vuoti di pari lunghezza;
+  MAI loggare/restituire il secret. Ordine: service-role-check PRIMA, poi
+  fallback `AuthMiddleware` (utente RS256) senza passare il token cron a jose.
+- Scope: estrarre `constantTimeEquals(a,b)` puro (testabile vitest); modificare
+  SOLO `fiscal_deadline_check/index.ts` (+ nuovo helper in `_shared`); NON
+  toccare `AuthMiddleware` per gli altri consumer. Niente framework cron-auth.
+- NOTIFICHE (rischio attivato dal fix): `notifyImminent` (`index.ts:126-145`)
+  NON e' idempotente -> una volta sbloccato il cron, il blocco 30/06/2026
+  manderebbe email+WhatsApp OGNI GIORNO dal 23/06 al 30/06. In-scope minimo:
+  aggiungere un marker "notified" per-deadline (o limitare a 1/giorno per
+  deadline) PRIMA di andare GREEN su prod, altrimenti spam. NON shippare in
+  silenzio.
+- DEDUP task: il 30/06 ha 4 obblighi (2 f24 + 2 inps). RED/GREEN deve asserire
+  4 task distinti al run1 e 0 nuovi al run2 (idempotenza cross-run gia'
+  presente; nessuna valanga arretrati: finestra 30gg).
+- Deploy: `npx supabase functions deploy fiscal_deadline_check --project-ref
+  qvdmzhyzpyaveniirsmo` (BE-1/BE-8). config.toml gia' ok (verify_jwt=false).
+  Continuity: >=1 doc continuity nel commit (product-doc-sync); +architecture.md
+  e development-continuity-map.md se si aggiunge la migration cron.
+- Nota RAG: una review ha smascherato un'allucinazione RAG ("AuthMiddleware
+  accetta il service_role" = FALSO) -> ogni claim va verificato sul sorgente.
+
 ## Problema
 
 Il cron `fiscal-deadline-check-daily` (pg_cron, `0 7 * * *`, attivo su prod) gira
