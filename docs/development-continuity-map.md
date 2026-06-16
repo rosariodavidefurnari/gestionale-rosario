@@ -135,6 +135,11 @@ Last updated: 2026-06-16 (Fatture view: pure helpers module financialDocumentHel
   direzione e valuta, applica `roundFiscalOutput` ai totali finali
 - Nessuna surface esistente modificata; nessun sweep obbligatorio
 
+**Layer UI (read-only) — in costruzione**
+- `misc/columnDefinitions.ts`: aggiunto `INVOICE_COLUMNS` (number, date,
+  counterpart, type, direction, taxable, stamp, total) — stessa shape di
+  `PAYMENT_COLUMNS`, riusato da column visibility/resize della lista Fatture
+
 ---
 
 ## Update 2026-04-15 — Invoice draft: project name prefix in service descriptions

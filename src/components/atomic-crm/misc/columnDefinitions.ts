@@ -15,6 +15,17 @@ export const PAYMENT_COLUMNS: ColumnDef[] = [
   { key: "status", label: "Stato", exportKey: "stato" },
 ];
 
+export const INVOICE_COLUMNS: ColumnDef[] = [
+  { key: "number", label: "Numero", exportKey: "numero" },
+  { key: "date", label: "Data", exportKey: "data" },
+  { key: "counterpart", label: "Controparte", exportKey: "controparte" },
+  { key: "type", label: "Tipo", exportKey: "tipo" },
+  { key: "direction", label: "Direzione", exportKey: "direzione" },
+  { key: "taxable", label: "Imponibile", exportKey: "imponibile" },
+  { key: "stamp", label: "Bollo", exportKey: "bollo" },
+  { key: "total", label: "Totale", exportKey: "totale" },
+];
+
 export const EXPENSE_COLUMNS: ColumnDef[] = [
   { key: "date", label: "Data", exportKey: "data" },
   { key: "type", label: "Tipo", exportKey: "tipo" },
