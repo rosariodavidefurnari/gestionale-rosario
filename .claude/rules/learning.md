@@ -69,6 +69,7 @@
 | **DB**       | DB-8  | Builder che unisce services+expenses → skip source_service_id |
 | **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
 | **Workflow** | WF-15 | Lavoro rischioso → RAG attivo + review multi-superficie |
+| **Workflow** | WF-16 | CI check → `gh -R fork` (default punta a upstream)  |
 | **Backend**  | BE-9  | EF Calendar timed → usa timestamp service |
 
 ---
@@ -550,6 +551,21 @@ superfici nascoste (consumer, registry, helper, cascate, lifecycle) che grep da
 solo perde. Saltarla per risparmiare token e' la causa radice degli errori
 cross-file. Il guardrail e' anche eseguibile come hook `UserPromptSubmit` in
 `.claude/settings.json` (inietta il mandato a ogni turno).
+
+### WF-16: CI check -> usare `gh -R rosariodavidefurnari/gestionale-rosario`
+
+**Quando**: dopo un `git push`, controllo il CI con `gh run list` / `gh run view`
+/ `gh api`
+**Fare**: passare SEMPRE `-R rosariodavidefurnari/gestionale-rosario` (il fork
+reale, = `origin`). `gh` senza `-R` risolve il repo dal contesto e su questo
+clone sceglie `upstream` = `marmelab/atomic-crm` (l'upstream Atomic CRM), non il
+fork. Per le API: `gh api repos/rosariodavidefurnari/gestionale-rosario/...`.
+**Perché**: il 2026-06-16, dopo aver pushato QW1 su `origin`
+(`rosariodavidefurnari/gestionale-rosario`), `gh run list` mostrava solo run
+`pull_request` di `marmelab/atomic-crm` e nessun run per il mio commit ->
+sembrava che il push non avesse triggerato CI. In realta' il push era andato a
+buon fine e il run `Check | push | success` esisteva sul fork. Il remote
+`upstream` -> marmelab confonde tutti i comandi `gh` privi di `-R`.
 
 ---
 

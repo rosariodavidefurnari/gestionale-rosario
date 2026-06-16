@@ -73,10 +73,30 @@ Branch corrente:
 Obiettivo operativo attivo:
 
 - Nessun ciclo implementativo aperto. Prossimo: scegliere dalla coda assessment
-  (`docs/superpowers/2026-06-15-gestionale-assessment.md`). URGENTE: QW1
-  (promemoria fiscali morti, scadenza 30/06).
+  (`docs/superpowers/2026-06-15-gestionale-assessment.md`). Coda residua: QW2
+  (card "Da incassare"), QW3 (mobile scadenzario+cassa), BR2 (riconciliazione),
+  bollo (Ciclo 5).
 
-Chiuso in questa tornata: BR1 — vista "Fatture" SHIPPED e LIVE su produzione.
+Chiuso in questa tornata: QW1 — promemoria fiscali rianimati, SHIPPED e LIVE.
+
+- Root cause: il cron `fiscal-deadline-check-daily` mandava `Bearer
+  <service_role HS256>`, ma l'EF verifica via JWKS RS256 -> 401 "Unsupported
+  alg" -> 0 promemoria (verificato su prod `net._http_response`).
+- Fix: secret dedicato `CRON_SHARED_SECRET` (Vault + EF, NON service_role; Vault
+  service_role NON ruotato perche' valido), helper `_shared/cronAuth.ts`
+  fail-closed (gate `isCronAuthorized` else `AuthMiddleware`), notifiche
+  idempotenti (marker `fiscal_reminder_notifications` scritto solo dopo invio
+  riuscito, max 1 per `(deadline_key, channel)` -> no spam giornaliero).
+- Review: spec v2 (BLOCK chiusa: no Vault rotation, key-space, anti-spam) +
+  impl multi-superficie + RAG (FLAG chiusa: test `isCronAuthorized`, doc 30/06
+  no-shift, `.env.example`). Tutte con RAG verificato sul sorgente.
+- Smoke PROD: secret -> `200`, run1 4 task reali 30/06/2026 (2 f24 + 2 inps),
+  run2 0 (idempotente), 0 notifiche (14gg > NOTIFY 7gg), bearer errato -> 401.
+- SHIP: 2 migration (`db push`, history allineata), EF deployata
+  (`qvdmzhyzpyaveniirsmo`), merge `main` (`e817934f`), CI `Check | push |
+  success` sul fork. Vault `cron_shared_secret` creato (md5 == EF env).
+
+Chiuso nelle tornate precedenti: BR1 — vista "Fatture" SHIPPED e LIVE.
 
 - Spec v2.1 + piano v2: 3 review (2 esterne ChatGPT, review piano e review
   IMPLEMENTAZIONE multi-superficie), tutte con RAG e risolte.
@@ -106,10 +126,9 @@ Chiuso in questa tornata (vedi storico sotto):
   `docs/superpowers/2026-06-15-gestionale-assessment.md` (30 finding
   prioritizzati, ordine in 6 cicli, "cosa NON fare"). Da qui esce la coda
   lavori, di cui BR1 e' il primo big-rock scelto.
-- ALLARME APERTO (dall'assessment, NON ancora risolto): i promemoria fiscali
-  sono morti (`fiscal_deadline_check` 401, 0 task creati) e c'e' una scadenza
-  reale 30/06/2026 da ~8.224 EUR senza avviso. Quick-win QW1, da fare appena
-  possibile.
+- ALLARME RISOLTO (QW1, 2026-06-16): i promemoria fiscali erano morti
+  (`fiscal_deadline_check` 401, 0 task) per la scadenza reale 30/06/2026.
+  Ora il cron autentica con `CRON_SHARED_SECRET`, smoke prod 200 + 4 task creati.
 
 Fatto:
 
@@ -209,20 +228,22 @@ Non fatto:
 
 ## Prossima Azione
 
-Attivo: BR1 — vista "Fatture" (sola lettura su `financial_documents_summary`).
-Stato: spec scritta e committata su `work/fatture-view`
-(`docs/superpowers/specs/2026-06-16-fatture-view-design.md`), in attesa di review
-utente. Sequenza: review utente spec -> piano (writing-plans) -> review
-multi-superficie + RAG del piano -> esecuzione LOCALE prima del remoto.
+Nessun ciclo aperto. QW1 e BR1 chiusi e live. Scegliere il prossimo dalla coda
+assessment (`docs/superpowers/2026-06-15-gestionale-assessment.md`).
 
-Decisioni BR1 gia' prese: tutti i documenti (filtro direzione/tipo/anno/cliente),
-sola lettura (no create/edit/delete), NIENTE stato pagamento in v1
-(allocazioni vuote -> arriva con BR2), riepilogo "Totale fatturato" del filtro
-(note credito sottratte), AI-aware.
+Coda lavori residua (ordine consigliato): QW2 card "Da incassare" (375 vs
+6.412), QW3 mobile scadenzario+cassa, BR2 riconciliazione pagamenti/allocazioni,
+bollo (Ciclo 5). Per ognuno: spec -> review -> piano -> review multi-superficie +
+RAG -> esecuzione LOCALE prima del remoto.
 
-Coda lavori (dall'assessment, ordine consigliato): QW1 promemoria fiscali morti
-(URGENTE, scadenza 30/06), QW2 card "Da incassare" (375 vs 6.412), QW3 mobile
-scadenzario+cassa, poi BR1 (in corso), BR2 riconciliazione, bollo (Ciclo 5).
+### Ultimo ciclo chiuso: QW1 (Fiscal Reminder Cron Auth) — LIVE
+
+Cron `fiscal-deadline-check-daily` autentica ora con `CRON_SHARED_SECRET`
+dedicato (Vault + EF, NON service_role). Helper `_shared/cronAuth.ts`
+fail-closed, notifiche idempotenti (`fiscal_reminder_notifications`). Smoke prod:
+secret -> 200, 4 task reali 30/06/2026, idempotente, 0 spam, bearer errato 401.
+Migration `20260616182600` + `20260616182718`, EF deployata, merge `main`
+(`e817934f`), CI verde sul fork. Vault `service_role_key` NON ruotato (valido).
 
 ### Ultimo ciclo chiuso: TASK 4 (Fiscal Cascade Protection) — LIVE
 
@@ -255,9 +276,9 @@ Stato verifiche finali ultimo ciclo (TASK 4):
 
 Tema:
 
-- ATTIVO: BR1 — vista "Fatture" (sola lettura su `financial_documents_summary`),
-  branch `work/fatture-view`, spec in attesa di review utente.
-- chiusi e live: TASK 4 (cascade protection) e TASK 5 (RLS backup).
+- Nessun ciclo attivo.
+- chiusi e live: QW1 (cron auth promemoria fiscali), BR1 (vista Fatture),
+  TASK 4 (cascade protection), TASK 5 (RLS backup).
 
 Artefatti BR1:
 
