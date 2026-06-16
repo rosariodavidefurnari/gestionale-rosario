@@ -16,6 +16,85 @@ Vincoli forti (dalla spec): READ-ONLY (no create/edit/delete, no checkbox bulk);
 
 ---
 
+## REVISIONE v2 — Correzioni obbligatorie (review multi-superficie 2026-06-16)
+
+Sezione AUTORITATIVA: dove confligge col corpo sotto, vince questa. Tutti i claim
+verificati sul sorgente.
+
+CRITICAL (bloccanti):
+
+- C1 (type AI): `UnifiedCrmReadContext` vive in
+  `src/lib/ai/unifiedCrmReadContextTypes.ts` (chiave `snapshot: {}` a chiavi
+  fisse). Aggiungerlo ai file modificati. Estendere `snapshot` con
+  `financialDocuments: Array<{ id; document_number; document_type; direction;
+  issue_date; total_amount; taxable_amount; stamp_amount; client_name;
+  supplier_name; currency_code; related_document_number; project_names }>` (SOLO
+  questi campi, DENTRO `snapshot`: i consumer leggono `context.snapshot.*`). Nel
+  builder aggiungere `financialDocuments` al TIPO della firma E al DESTRUCTURING
+  dei param (default `[]`) E al return dentro `snapshot`. Step NON condizionale.
+- C2 (prompt EF + deploy): il criterio AI fiscale non e' realizzabile senza
+  toccare `supabase/functions/unified_crm_answer/prompt.ts` (oggi enumera la
+  snapshot, 0 menzione fatturato/cassa). Task 8b obbligatorio: in prompt.ts (1)
+  aggiungere `financialDocuments` all'elenco contenuti snapshot; (2) istruzione
+  lessicale: "financialDocuments = dato di FATTURATO/EMISSIONE (documenti
+  emessi/ricevuti), NON di cassa; per 'quanto ho fatturato' somma le emesse e
+  SOTTRAI le note di credito; non usare mai pagato/incassato/da incassare/scaduto;
+  lo stato pagamento NON e' disponibile". Poi DEPLOY EF:
+  `npx supabase functions deploy unified_crm_answer --project-ref qvdmzhyzpyaveniirsmo`
+  (BE-1/BE-8) + smoke prod ("quanto ho fatturato nel 2025?" -> NON usa
+  "incassato"). Belt-and-suspenders: nel builder mettere un campo nota/`caveat`
+  dentro la sezione financialDocuments. La frase "nessun deploy" vale SOLO per il
+  DB; l'EF va deployata.
+- C3 (continuity gate): toccando `src/lib/ai/unifiedCrmReadContext.ts` e
+  `supabase/functions/unified_crm_answer/` scatta la regola `ai-analytics-domain`
+  (`scripts/check-continuity.mjs:154-182`): il commit DEVE includere i 3 docs
+  `docs/historical-analytics-handoff.md`, `docs/historical-analytics-backlog.md`,
+  `docs/architecture.md` (oltre a `development-continuity-map.md`). AI + EF + i 3
+  docs in UN SOLO commit. Eseguire `node scripts/check-continuity.mjs` (staged)
+  prima del commit.
+
+IMPORTANT:
+
+- I1: `FinancialDocumentSummaryHeader` legge `filterValues` dallo STESSO
+  `useListContext` della lista (non stato proprio), stessi `filterDefaultValues`
+  e sort, gestisce `isPending` ("--"/skeleton), `console.warn` se
+  `total > perPage`. E2E: dopo filtro il totale del riepilogo cambia.
+- I2 + formato euro: `formatEur` usa il formato repo a SUFFISSO
+  (`${n.toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2})} €`
+  per EUR; `${v} ${code}` altrove), NON "EUR 1000". `data-testid="invoice-summary"`
+  sull'header. Fixture E2E deterministiche: 2025 customer_invoice 1000,00; 2024
+  customer_invoice 500,00; 2025 customer_credit_note 200,00 (positivo) -> netto
+  2025 = 800,00; totale = 1.300,00. L'E2E asserisce dentro `invoice-summary` la
+  stringa esatta "800,00 €" col filtro anno 2025.
+- I3: il filtro "Anno" NON e' il `DateRangeFilter` libero. Usare un selettore Anno
+  = `FilterBadge` per anno (deriva gli anni dai dati) che setta
+  `issue_date@gte=YYYY-01-01` + `issue_date@lte=YYYY-12-31`. Testabile (E2E clicca
+  badge "2025"). Eventuale `DateRangeFilter` "Periodo" libero solo in aggiunta.
+
+MINOR:
+
+- M1: in `summarizeFinancialDocuments` usare `roundFiscalOutput` da
+  `../dashboard/roundFiscalOutput`, non il rounding inline.
+- M2: unit test `formatEur` (`expect(formatEur(1000)).toBe("1.000,00 €")` + valuta
+  diversa).
+- M3: mapping snapshot AI con `.map()` ai SOLI campi whitelisted, MAI spread
+  `...d` (il type ha settled/open/settlement required) + test che asserisce
+  l'ASSENZA di quelle chiavi nello snapshot.
+- M4: seed E2E rispetta colonne/vincoli reali
+  (`UNIQUE(client_id,direction,document_number,issue_date)`, `total_amount>=0
+  NOT NULL`, `direction='outbound'`, `currency_code='EUR'`, document_number
+  distinti, credit_note total positivo, allocazioni vuote).
+- M5: assenza Modifica/Elimina/stato pagamento con `toHaveCount(0)` DOPO
+  `toHaveURL(/.../show$/)` + un `toBeVisible` su un campo presente.
+
+Validati CORRETTI (nessuna azione): wiring resource read-only
+(`toResourceComponents` puro cast; create/edit undefined non registra
+route/bottoni — pattern `client_tasks`); capability registry auto da
+`getAiResourceModules()`; fallback filtro per id (OR cross-colonna non
+supportato); money facts prod (netto 40.813,21 EUR, credit note +200, 0 inbound).
+
+---
+
 ## File Structure
 
 Nuovi (`src/components/atomic-crm/invoices/`):
