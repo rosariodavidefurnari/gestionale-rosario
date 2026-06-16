@@ -1,7 +1,7 @@
 # Vista "Fatture" (financial documents) - Design Spec
 
 Data: 2026-06-16
-Stato: draft v2.1 (recepita 2a review esterna + verifica money facts), in review utente
+Stato: draft v2.1 (2a review esterna + money facts verificati), in review utente
 Origine: BR1 dell'assessment `docs/superpowers/2026-06-15-gestionale-assessment.md`
 (finding #5: fatture emesse invisibili nell'app + AI le ignora).
 
