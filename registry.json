@@ -835,6 +835,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/invoices/financialDocumentHelpers.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/filters/FilterHelpers.tsx",
           "type": "registry:component"
         },

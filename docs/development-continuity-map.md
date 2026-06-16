@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-14 (Fiscal Cascade Protection: FK CASCADE->NO ACTION on financial_documents/projects/services/quotes + pessimistic delete UX)
+Last updated: 2026-06-16 (Fatture view: pure helpers module financialDocumentHelpers + unit tests)
 
 ---
 
@@ -14,6 +14,7 @@ Last updated: 2026-06-14 (Fiscal Cascade Protection: FK CASCADE->NO ACTION on fi
 
 ### Recent Updates (cronologico, più recente in alto)
 
+- [2026-06-16](#update-2026-06-16--fatture-view-pure-helpers) — Fatture view: new `invoices/financialDocumentHelpers` module (isCreditNote, signedTotal, summarizeFinancialDocuments, labels, formatEur) + 18 unit tests
 - [2026-04-15](#update-2026-04-15--clientshow-invoice-draft-always-available) — ClientShow: "Genera bozza fattura" button always visible + empty state in `InvoiceDraftDialog` when builder returns no collectable lines
 - [2026-04-14](#update-2026-04-14--fiscal-reality-layer-interest--compensation-support) — Fiscal reality layer: explicit F24 interests (`1668` / `DPPI`) + submission `compensation_credit`
 - [2026-04-02 (f)](#update-2026-04-02-f--fiscal-reality-layer-mobile-parity) — Fiscal reality layer mobile parity: responsive dialogs (Sheet on mobile), fiscal buttons + dialogs wired in MobileAnnualDashboard
@@ -107,6 +108,32 @@ Last updated: 2026-06-14 (Fiscal Cascade Protection: FK CASCADE->NO ACTION on fi
 - [Nota manutenzione 2026-03-02](#nota-manutenzione-2026-03-02-fix-ci)
 - [Testing Session Log 2026-03-04](#testing-session-log-2026-03-04--e2e-complete-validation)
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
+
+---
+
+## Update 2026-06-16 — Fatture view: pure helpers
+
+**Motivazione**
+- Avvio del modulo `invoices/` per la vista read-only "Fatture" sulla view
+  `financial_documents_summary`. Questo task crea solo le funzioni pure e i
+  test; nessuna UI, nessuna migration, nessun provider change.
+
+**File creati**
+- `src/components/atomic-crm/invoices/financialDocumentHelpers.ts` — helper
+  puri: `isCreditNote`, `signedTotal`, `documentTypeLabel`, `directionLabel`,
+  `formatEur`, `summarizeFinancialDocuments`; tipi esportati:
+  `CurrencyTotals`, `DirectionSummary`, `FinancialDocumentsSummary`
+- `src/components/atomic-crm/invoices/financialDocumentHelpers.test.ts` — 18
+  unit test Vitest (tutti GREEN)
+
+**Note implementative**
+- Le note di credito sono memorizzate con `total_amount` POSITIVO nel DB;
+  `signedTotal` usa `Math.abs` + inversione per evitare doppia negazione
+- `formatEur` non usa `Intl.NumberFormat("it-IT")` per ICU parziale in
+  Node.js; usa `en-US` + swap separatori (split su `.`, replace `,` → `.`)
+- `summarizeFinancialDocuments` accumula `signedTotal`/`signedTaxable` per
+  direzione e valuta, applica `roundFiscalOutput` ai totali finali
+- Nessuna surface esistente modificata; nessun sweep obbligatorio
 
 ---
 
