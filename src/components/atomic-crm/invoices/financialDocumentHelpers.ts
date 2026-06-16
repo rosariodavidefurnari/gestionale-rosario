@@ -125,6 +125,41 @@ export function formatEur(n: number, currency = "EUR"): string {
   return currency === "EUR" ? `${itIT} €` : `${itIT} ${currency}`;
 }
 
+/**
+ * Collection state of a financial document derived from its LINKED payments
+ * (via `payments.financial_document_id`), NOT from the dead `settlement_status`
+ * column (which depends on `financial_document_cash_allocations`, never written).
+ *
+ * - no linked payments -> neutral "—" (historical imported docs have no link)
+ * - all linked payments received -> "Incassata"
+ * - any overdue -> "Scaduta"
+ * - any pending -> "Da incassare"
+ * - mixed -> "Parziale"
+ */
+export type DocumentCollectionState = {
+  label: string;
+  tone: "neutral" | "pending" | "settled" | "overdue";
+};
+
+export function deriveDocumentCollectionState(
+  payments: { status: string }[] | null | undefined,
+): DocumentCollectionState {
+  if (!payments || payments.length === 0) {
+    return { label: "—", tone: "neutral" };
+  }
+  if (payments.every((p) => p.status === "ricevuto")) {
+    return { label: "Incassata", tone: "settled" };
+  }
+  // Mixed: at least one received but not all -> partially collected.
+  if (payments.some((p) => p.status === "ricevuto")) {
+    return { label: "Parziale", tone: "pending" };
+  }
+  if (payments.some((p) => p.status === "scaduto")) {
+    return { label: "Scaduta", tone: "overdue" };
+  }
+  return { label: "Da incassare", tone: "pending" };
+}
+
 // ---------------------------------------------------------------------------
 // Aggregation
 // ---------------------------------------------------------------------------

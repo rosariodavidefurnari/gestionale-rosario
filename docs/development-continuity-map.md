@@ -57,11 +57,20 @@ Superfici toccate finora (Task 0-3):
   presente), dedup guard WF-14 (`window.confirm` su
   `financial_documents_summary` per cliente+numero) + UNIQUE server-side, branch
   mobile `Sheet` (`useIsMobile`). Al successo: scarica XML, notify, refresh.
+- `invoices/financialDocumentHelpers.ts` + `FinancialDocumentShow.tsx` — helper
+  puro `deriveDocumentCollectionState` (da payments collegati via
+  `financial_document_id`, NON da `settlement_status` morto) + badge incasso
+  nella pagina dettaglio (Incassata/Da incassare/Parziale/Scaduta; nascosto per
+  i documenti storici senza payment collegato).
 
-Sweep ancora da completare (Task 7-8): stato incasso in
-`FinancialDocumentShow/List` + mobile card (da payment via
-`financial_document_id`), registry (`crmCapabilityRegistry`/`crmSemanticRegistry`)
-+ docs AI, E2E smoke emit→re-import. Spec/piano:
+Follow-up immediato (Task 7b): replicare il badge incasso anche nella LIST
+desktop (`FinancialDocumentListContent` + `INVOICE_COLUMNS`) e nella card mobile
+con fetch bulk `financial_document_id@in` (no N+1) — lo Show ha gia' parita'
+desktop/mobile.
+
+Sweep ancora da completare (Task 8): registry
+(`crmCapabilityRegistry`/`crmSemanticRegistry`) + docs AI, E2E smoke
+emit→re-import + review impl multi-superficie + prod gated. Spec/piano:
 `docs/superpowers/specs/2026-06-16-invoice-emit-design.md`,
 `docs/superpowers/plans/2026-06-16-invoice-emit.md`.
 

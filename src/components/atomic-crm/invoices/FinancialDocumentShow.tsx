@@ -1,4 +1,4 @@
-import { ShowBase, useShowContext } from "ra-core";
+import { ShowBase, useShowContext, useGetList, type Identifier } from "ra-core";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -8,14 +8,42 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { formatBusinessDate } from "@/lib/dateTimezone";
 import { cn } from "@/lib/utils";
 
-import type { FinancialDocumentSummary } from "../types";
+import type { FinancialDocumentSummary, Payment } from "../types";
 import { ErrorMessage } from "../misc/ErrorMessage";
 import { MobileBackButton } from "../misc/MobileBackButton";
 import {
+  deriveDocumentCollectionState,
   documentTypeLabel,
   directionLabel,
   formatEur,
 } from "./financialDocumentHelpers";
+
+const COLLECTION_TONE_CLASS: Record<string, string> = {
+  pending: "text-amber-700 bg-amber-50 border-amber-200",
+  settled: "text-emerald-700 bg-emerald-50 border-emerald-200",
+  overdue: "text-red-700 bg-red-50 border-red-200",
+};
+
+/**
+ * Collection-state badge derived from the payments LINKED to this document via
+ * `financial_document_id` (not the dead `settlement_status`). Hidden for
+ * historical documents that have no linked payment (neutral state).
+ */
+const CollectionBadge = ({ documentId }: { documentId: Identifier }) => {
+  const { data, isPending } = useGetList<Payment>("payments", {
+    pagination: { page: 1, perPage: 100 },
+    sort: { field: "payment_date", order: "DESC" },
+    filter: { "financial_document_id@eq": documentId },
+  });
+  if (isPending) return null;
+  const state = deriveDocumentCollectionState(data ?? []);
+  if (state.tone === "neutral") return null;
+  return (
+    <Badge variant="outline" className={cn(COLLECTION_TONE_CLASS[state.tone])}>
+      {state.label}
+    </Badge>
+  );
+};
 
 export const FinancialDocumentShow = () => (
   <ShowBase>
@@ -114,6 +142,7 @@ const FinancialDocumentShowContent = () => {
                 >
                   {directionLabel(record.direction)}
                 </Badge>
+                <CollectionBadge documentId={record.id} />
                 {record.issue_date && (
                   <span className="flex items-center gap-1">
                     <Calendar className="size-3" />

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  deriveDocumentCollectionState,
   isCreditNote,
   signedTotal,
   documentTypeLabel,
@@ -8,6 +9,48 @@ import {
   summarizeFinancialDocuments,
 } from "./financialDocumentHelpers";
 import type { FinancialDocumentSummary } from "../types";
+
+describe("deriveDocumentCollectionState", () => {
+  it("is neutral when there are no linked payments (historical doc)", () => {
+    expect(deriveDocumentCollectionState([])).toEqual({
+      label: "—",
+      tone: "neutral",
+    });
+    expect(deriveDocumentCollectionState(null)).toEqual({
+      label: "—",
+      tone: "neutral",
+    });
+  });
+
+  it("is 'Da incassare' for a single expected payment (just emitted)", () => {
+    expect(deriveDocumentCollectionState([{ status: "in_attesa" }])).toEqual({
+      label: "Da incassare",
+      tone: "pending",
+    });
+  });
+
+  it("is 'Incassata' once the linked payment is received", () => {
+    expect(deriveDocumentCollectionState([{ status: "ricevuto" }])).toEqual({
+      label: "Incassata",
+      tone: "settled",
+    });
+  });
+
+  it("flags overdue", () => {
+    expect(deriveDocumentCollectionState([{ status: "scaduto" }]).tone).toBe(
+      "overdue",
+    );
+  });
+
+  it("is 'Parziale' for a mix of received and pending", () => {
+    expect(
+      deriveDocumentCollectionState([
+        { status: "ricevuto" },
+        { status: "in_attesa" },
+      ]),
+    ).toEqual({ label: "Parziale", tone: "pending" });
+  });
+});
 
 // Defaults for optional fields — kept separate to stay under complexity limit.
 const DOC_DEFAULTS: Omit<
