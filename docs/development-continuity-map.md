@@ -149,6 +149,14 @@ Last updated: 2026-06-16 (Fatture view: pure helpers module financialDocumentHel
   `%_invoice` / `%_credit_note`), anno (FilterBadge per anno derivato dai dati
   → `issue_date@gte/@lte`), controparte (`FilterPopover` su clients →
   `client_id@eq`), numero (`document_number@ilike`).
+- `invoices/FinancialDocumentSummaryHeader.tsx`: riepilogo direction-aware sul
+  set filtrato COMPLETO. Legge `filterValues`/`sort` dallo STESSO
+  `useListContext` della lista, rifà un `useGetList` (perPage 1000) e somma con
+  `summarizeFinancialDocuments`. Rendering per `direction@eq`: outbound
+  (Totale fatture emesse + Imponibile + Documenti), inbound (Totale documenti
+  ricevuti + Documenti), assente (box Emesse netto / Ricevuti separati).
+  `multiCurrency` → totali per valuta. `data-testid="invoice-summary"`,
+  `isPending` → "--", `console.warn` se `total > 1000`.
 
 ---
 
