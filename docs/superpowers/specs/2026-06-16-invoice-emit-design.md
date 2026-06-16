@@ -7,6 +7,113 @@ una fattura?"). Oggi serve un giro a 3 passi: bozza -> Aruba -> ri-import XML.
 Input: mappa superfici multi-superficie + RAG (DeepWiki rigenerato su `main`
 b1c9d223) verificata sul sorgente reale.
 
+## REVISIONE v2 (post review multi-superficie + RAG) — AUTORITATIVA
+
+Dove confligge col corpo sotto, vince questa. La review (5 revisori, RAG +
+sorgente) ha trovato 4 buchi di design (BLOCK) + regressioni nascoste; corretti
+qui, ogni claim riverificato sul sorgente.
+
+- **F1 — Contratto EF con ID sorgente espliciti.** `InvoiceDraftLineItem` =
+  `{description, quantity, unitPrice, kind?}`, NON porta gli id
+  (`invoiceDraftTypes.ts:24-43`). Quindi l'EF NON puo' dedurre quali
+  `services`/`expenses` marcare dalle lineItems. Decisione: il builder
+  (`buildInvoiceDraftFrom{Project,Client}`) espone `serviceIds[]` e
+  `expenseIds[]` espliciti; `expenseIds` ESCLUDE le righe con
+  `source_service_id` (km auto da trigger — DB-8). Il provider li passa all'EF.
+  Un modulo puro condiviso + test di parita' garantisce che gli id corrispondano
+  esattamente alle lineItems.
+- **F2 — Anti-doppio-conteggio (il cuore).** `checkDuplicatePayment`
+  (`invoice_import_confirm/index.ts:69-84`) matcha `client_id + payment_date +
+  amount + status + payment_type + project_id + invoice_ref` in AND. Emit crea
+  `in_attesa`/netto/due_date; il re-import porta `ricevuto`/lordo/data reale ->
+  NESSUN match -> doppione. Decisione: ramo ADDITIVO in `invoice_import_confirm`
+  PRIMA del path esistente: cerca un payment emesso dall'app con
+  `(client_id + invoice_ref + status='in_attesa')` IGNORANDO amount/status/date;
+  se esattamente 1 -> **update-in-place** (`in_attesa -> ricevuto` +
+  `payment_date` reale + collega `financial_document_id` se mancante) e
+  **collassa** le N righe del re-import su quel singolo payment atteso (non crea
+  nuovi payment per quella fattura); se >1 -> errore esplicito (non indovinare);
+  se 0 -> comportamento storico invariato. Ancora primaria preferita:
+  `payments.financial_document_id`.
+- **F3 — Importi: LORDO documento vs NETTO da incassare.**
+  `computeInvoiceDraftTotals` somma anche la riga negativa "Pagamenti gia
+  ricevuti" (`buildInvoiceDraftFromProject.ts:124-127`), quindi `taxableAmount`
+  = netto residuo, NON imponibile lordo. Decisione: nuovo helper
+  `computeInvoiceDraftAmounts` che ritorna SEPARATAMENTE:
+  `grossTaxable` (somma SOLO righe service+km+expense, `kind != payment` e
+  `!= stamp_duty`), `stampDuty`, `grossTotal = grossTaxable + stampDuty`,
+  `netCollectable` (= include la riga payment negativa). In
+  `financial_documents`: `taxable_amount = grossTaxable`,
+  `total_amount = grossTotal`, `stamp_amount = stampDuty`. In `payments`:
+  `amount = netCollectable`. Mai scrivere il netto nel documento.
+- **F4 — `project_financials` NON deve regredire.** La vista ha lo switch
+  `payment_semantics_basis` (`legacy_payments` vs `foundation`): inserire in
+  `financial_document_project_allocations` farebbe passare il progetto a
+  `foundation` -> `total_paid` letto dalle cash allocations (che NON scriviamo)
+  -> `balance_due` gonfiato (collide con QW2). Decisione: l'emit NON crea
+  `financial_document_project_allocations` ne' cash allocations (rimosso lo step
+  4). `project_financials` entra tra le superfici a rischio + controllore RED
+  (total_paid/balance_due invariati post-emit).
+- **F5 — FK `payments.financial_document_id` = `ON DELETE SET NULL`** + indice
+  (`CREATE INDEX IF NOT EXISTS`). Cancellare un documento NON deve cancellare
+  l'incasso reale (solo slega). Corretta la frase errata "FK gia NO ACTION".
+- **F6 — Bottone Emetti solo per `source.kind in ('project','client')`** dentro
+  il branch non-vuoto del dialog. Quote/service sono non-obiettivi e non hanno
+  `invoice_ref` marcabile; `ClientShow` apre il dialog anche con draft null.
+  Controllore UI: bottone assente su quote/service e su draft vuoto.
+- **F7 — Stato incasso in Fatture derivato dal payment** (via
+  `financial_document_id`), NON da `settlement_status` (dipende da
+  `financial_document_cash_allocations`, tabella morta -> direbbe sempre "non
+  pagata"). Minimo: in `FinancialDocumentShow/List` mostrare lo stato d'incasso
+  dal payment collegato quando il link esiste; non mostrare falsi "non saldata".
+  Nello stesso ciclo, non rimandato muto.
+- **F9 — Nomenclatura.** Non esiste resource `invoices`: e'
+  `financial_documents_summary` (view read-only, guard
+  `moduleRegistry.test.ts:67-84`) + `invoicing` (bozze headless). Leggere cosi'
+  ovunque sotto.
+- **F10 — `payment_type` CHECK ha 5 valori** (`acconto, saldo, parziale,
+  rimborso_spese, rimborso`); usare `saldo`. `'rimborso'` nei CASE delle view e'
+  drift/codice morto (nota fuori scope).
+- **F11 — Date server-side via helper** (`_shared/dateTimezone.ts`
+  `todayISODate()`/`toISODate()`), mai `toISOString().slice(0,10)` o
+  `new Date('YYYY-MM-DD')` (WF-8/WF-10), incluso il confine d'anno del
+  progressivo; smoke cross-timezone.
+- **F12 — Bollo €2.** L'incasso atteso = imponibile (`netCollectable` su base
+  imponibile); il bonifico reale e' imponibile + €2 -> delta €2 = residuo noto,
+  rimandato a BR2 (assessment #15). Dichiararlo, non sorprendere l'utente.
+
+### Controllori v2 (MONEY/FISCAL TDD — RED reale, poi GREEN)
+
+1. emit + re-import stesso XML => **1 solo payment** (match per
+   `financial_document_id`/`invoice_ref` ignora status/amount/date; collasso
+   N->1). RED: oggi `checkDuplicatePayment` crea il doppione.
+2. dopo emit, `buildFiscalYearEstimate` e `analytics_yearly_cash_inflow`
+   dell'anno **invariati** (payment `in_attesa`).
+3. dopo emit, `project_financials.total_paid`/`balance_due` del progetto
+   **invariati** (niente allocations).
+4. dopo emit, `buildInvoiceDraftFrom*` sullo stesso source =>
+   `collectableAmount <= 0` (anti ri-fatturazione, via `invoice_ref` marcato).
+5. service km + expense auto => **1 sola riga km** marcata (DB-8;
+   `expenseIds` esclude `source_service_id`).
+6. `financial_documents`: `taxable_amount=grossTaxable`,
+   `total_amount=grossTotal`; `payment.amount=netCollectable` (con acconto
+   pregresso i due valori DIFFERISCONO).
+7. acconto+saldo: emettere una fattura con acconto gia' ricevuto => documento
+   lordo corretto, incasso atteso = solo il residuo.
+8. doppia emissione (doppio click / retry) => idempotente:
+   `financial_documents_identity_unique` blocca il secondo; guard server, non
+   solo `window.confirm`.
+9. annullo fattura emessa: OUT OF SCOPE dichiarato; rimedio manuale documentato
+   (nessuna UI di storno in questo ciclo).
+10. gate XML: emit bloccato se issuer (businessProfile) o client billing
+    incompleti (DOM-3); stringhe via `sanitizeLatinForFatturaPA` (DOM-7).
+
+Invariato (gia' verificato OK): cassa-neutra (`in_attesa` escluso da
+`fiscalModel`/`analytics_yearly_cash_inflow`/`project_financials`), idempotenza
+via `financial_documents_identity_unique`, blueprint EF (transaction + `SET
+LOCAL ROLE authenticated`), migration additiva replayable, builder gia' DB-8-safe
+per la bozza.
+
 ## Problema
 
 Oggi non esiste un'azione "emetti fattura". Il modulo `invoicing/` costruisce
