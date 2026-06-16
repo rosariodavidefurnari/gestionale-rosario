@@ -6,7 +6,20 @@
 incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 `canonical`.
 
-Last updated: 2026-06-16 (financial documents exposed to unified AI read context)
+Last updated: 2026-06-17 (Emetti fattura: registry AI aggiornati + follow-up 7b)
+
+## Update 2026-06-17 — Emetti fattura: registry AI + follow-up
+
+Branch `work/invoice-emit` (NON in prod). Aggiornati i registry semantici:
+`crmCapabilityRegistry` (`generate_invoice_draft` ora descrive anche l'azione
+"Emetti e scarica XML" che scrive `financial_documents` + payment atteso +
+`invoice_ref`) e `crmSemanticRegistry` (l'import riconcilia in-place le fatture
+gia emesse dall'app, anti doppio conteggio). Follow-up aperti:
+- **Task 7b**: badge stato incasso anche nella LIST desktop + card mobile
+  (fetch bulk `financial_document_id@in`); lo Show ce l'ha gia.
+- **v2**: emissione con acconto pregresso, quote/singolo service come sorgenti,
+  storno/annullo fattura, ricablaggio `settlement_status` su payments, delta
+  bollo €2 come residuo.
 
 ## Update 2026-06-16 — Fatture nel contesto AI unificato
 

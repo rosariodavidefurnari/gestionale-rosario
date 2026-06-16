@@ -17,8 +17,11 @@ il re-import di una fattura emessa dall'app: raggruppa i payment record per
 `decideEmittedPaymentReconciliation` fa 1 settle (`in_attesa -> ricevuto`) + N-1
 skip, evitando i doppioni. Ramo additivo: 0 match = path storico invariato; i
 payment manuali `in_attesa` (senza `financial_document_id`) non vengono toccati.
-Dettagli e sweep completo: `docs/development-continuity-map.md` (sezione Emetti
-fattura) + `docs/superpowers/plans/2026-06-16-invoice-emit.md`.
+Registry AI allineati: `crmCapabilityRegistry.generate_invoice_draft` (ora cita
+l'azione "Emetti e scarica XML") e `crmSemanticRegistry` (riconciliazione import
+anti doppio conteggio). Dettagli e sweep completo:
+`docs/development-continuity-map.md` (sezione Emetti fattura) +
+`docs/superpowers/plans/2026-06-16-invoice-emit.md`.
 
 ## Update 2026-06-16 — Fatture (financial_documents) visibili al contesto AI
 

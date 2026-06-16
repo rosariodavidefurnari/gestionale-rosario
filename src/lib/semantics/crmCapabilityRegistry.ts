@@ -359,7 +359,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "generate_invoice_draft",
       label: "Genera bozza fattura interna",
       description:
-        "Apre una superficie operativa gia approvata (servizio, progetto, cliente o preventivo) dove il bottone dedicato genera la bozza fattura PDF come riferimento interno per compilare Aruba, senza scritture DB.",
+        "Apre una superficie operativa gia approvata (servizio, progetto, cliente o preventivo). Il bottone bozza genera il PDF/XML come riferimento interno per Aruba SENZA scritture DB. Per progetto e cliente il dialog espone anche l'azione 'Emetti e scarica XML' che, in transazione, registra la fattura (financial_documents outbound), crea l'incasso ATTESO (payments in_attesa, cassa-neutro) e marca services/expenses come fatturati (invoice_ref).",
       sourceFile: "src/components/atomic-crm/invoicing/InvoiceDraftDialog.tsx",
       actsOn: ["services", "projects", "clients", "quotes"],
       requiredFields: ["client_id", "line_items"],
