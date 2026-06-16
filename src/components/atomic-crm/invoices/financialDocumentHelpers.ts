@@ -101,11 +101,18 @@ export function directionLabel(
  *   formatEur(50, "USD")   → "50,00 USD"
  */
 export function formatEur(n: number, currency = "EUR"): string {
+  // Normalize negative zero so rounded results never render as "-0,00 €".
+  // Covers the literal -0 and any value whose magnitude rounds to 0.00
+  // (e.g. -0.0001), which the en-US formatter would otherwise print as
+  // "-0.00".
+  const rounded = Math.round((n + Number.EPSILON) * 100) / 100;
+  const safe = Object.is(rounded, -0) || rounded === 0 ? 0 : n;
+
   // Step 1: format with en-US → "1,000.00"
   const enUS = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(n);
+  }).format(safe);
 
   // Step 2: swap separators en-US → it-IT
   // en-US uses "," as thousands separator and "." as decimal separator.

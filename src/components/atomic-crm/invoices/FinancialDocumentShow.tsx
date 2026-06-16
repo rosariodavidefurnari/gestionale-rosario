@@ -177,7 +177,6 @@ const FinancialDocumentShowContent = () => {
           {/* Fiscal data */}
           {(record.xml_document_code ||
             record.related_document_number ||
-            record.source_path ||
             record.notes ||
             record.currency_code) && (
             <>
@@ -202,9 +201,6 @@ const FinancialDocumentShowContent = () => {
                   )}
                   {record.currency_code && (
                     <FiscalRow label="Valuta" value={record.currency_code} />
-                  )}
-                  {record.source_path && (
-                    <FiscalRow label="Origine" value={record.source_path} />
                   )}
                 </div>
                 {record.notes && (

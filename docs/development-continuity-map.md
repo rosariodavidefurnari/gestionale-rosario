@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-16 (Fatture view: read-only UI layer — list/filters/summary/show + moduleRegistry resource)
+Last updated: 2026-06-16 (Fatture view: pre-merge review hardening — deterministic type filter, multicurrency summary, read-only controllers)
 
 ---
 
@@ -14,6 +14,7 @@ Last updated: 2026-06-16 (Fatture view: read-only UI layer — list/filters/summ
 
 ### Recent Updates (cronologico, più recente in alto)
 
+- [2026-06-16 (b)](#update-2026-06-16-b--fatture-view-pre-merge-review-hardening) — Fatture view pre-merge review hardening: deterministic `document_type@in` filter, multicurrency CombinedSummary, negative-zero guard in formatEur, source_path removed from Show, read-only controllers (moduleRegistry test + e2e /edit guard), orphan-counterpart fixture + anti-leak settlement assertions
 - [2026-06-16](#update-2026-06-16--fatture-view-pure-helpers) — Fatture view: new `invoices/financialDocumentHelpers` module (isCreditNote, signedTotal, summarizeFinancialDocuments, labels, formatEur) + 18 unit tests
 - [2026-04-15](#update-2026-04-15--clientshow-invoice-draft-always-available) — ClientShow: "Genera bozza fattura" button always visible + empty state in `InvoiceDraftDialog` when builder returns no collectable lines
 - [2026-04-14](#update-2026-04-14--fiscal-reality-layer-interest--compensation-support) — Fiscal reality layer: explicit F24 interests (`1668` / `DPPI`) + submission `compensation_credit`
@@ -167,7 +168,8 @@ Last updated: 2026-06-16 (Fatture view: read-only UI layer — list/filters/summ
   nessun Edit/Delete. Sezioni: intestazione (numero + badge tipo/direzione +
   data + totale), controparte (link a clients/suppliers o "Non associata"),
   importi (imponibile/bollo/IVA/totale), dati fiscali (xml_document_code,
-  related_document_number, valuta, source_path, notes), progetti
+  related_document_number, valuta, notes; `source_path` rimosso — path di
+  import interno fuori whitelist, vedi update 2026-06-16 (b)), progetti
   (project_names). Mai settled/open/settlement.
 - `invoices/index.tsx`: `{ list, show, recordRepresentation: document_number }`
   (no create/edit → resource read-only).
@@ -178,6 +180,64 @@ Last updated: 2026-06-16 (Fatture view: read-only UI layer — list/filters/summ
   registry via `getAiResourceModules()`. La resource e' read-only per
   costruzione: `CRM.tsx` passa `edit`/`create` undefined, quindi nessuna route
   o bottone di modifica viene registrato.
+
+---
+
+## Update 2026-06-16 (b) — Fatture view: pre-merge review hardening
+
+**Motivazione**
+- Review multi-superficie sulla BR1 "Vista Fatture" prima del merge. Sei
+  finding da chiudere senza cambiare il contratto read-only ne' la semantica
+  fiscale (note di credito sottratte, cassa-aware a monte nella view).
+
+**Fix applicati**
+- **Filtro Tipo deterministico** (`FinancialDocumentListFilter.tsx`): il
+  toggle "Fattura"/"Nota di credito" usava `document_type@ilike` con pattern
+  `%_invoice` / `%_credit_note`, fragile perche' matcha l'underscore per
+  coincidenza. Sostituito con `document_type@in` =
+  `(customer_invoice,supplier_invoice)` /
+  `(customer_credit_note,supplier_credit_note)`. `ra-data-postgrest`
+  (`urlBuilder.js`, operatore `in` in allowlist) rende il valore `(a,b)` come
+  query PostgREST `document_type=in.(a,b)`. Toggle invariato (riclic rimuove la
+  chiave, un solo tipo attivo alla volta).
+- **CombinedSummary multicurrency** (`FinancialDocumentSummaryHeader.tsx`): la
+  vista "Tutte" (default) sommava valute diverse in un unico € ignorando
+  `multiCurrency` (Outbound/Inbound avevano gia' la guardia). Ora
+  `CombinedSummary` riceve `multiCurrency` e, se true, rende i totali PER
+  VALUTA riusando il blocco `ByCurrency` per ciascuna direzione. Comportamento
+  invariato con una sola valuta.
+- **Negative-zero in `formatEur`** (`financialDocumentHelpers.ts`): un netto
+  che si azzera (es. nota di credito == fattura) o un residuo negativo che
+  arrotonda a 0 poteva rendere `-0,00 €`. Aggiunta normalizzazione: il valore
+  viene arrotondato a 2 decimali e, se `Object.is(rounded, -0)` o
+  `rounded === 0`, si formatta `0`. Coperto da unit test (`formatEur(-0)`,
+  `formatEur(-0.0001)`).
+- **`source_path` rimosso dallo Show** (`FinancialDocumentShow.tsx`): la riga
+  "Origine" esponeva un path interno di import, fuori dalla whitelist dei campi
+  spec. Rimossa dal blocco "Dati fiscali" e dalla condizione di rendering.
+- **Read-only blindato (controllori)**:
+  - `root/moduleRegistry.test.ts`: nuovo test che asserisce
+    `financial_documents_summary.ai.supportedViews === ["list","show"]` e che
+    `components.create` / `components.edit` siano `undefined`.
+  - `tests/e2e/invoices.smoke.spec.ts`: navigando a `.../<id>/edit` react-admin
+    fa fallback alla lista (nessuna route edit registrata); lo smoke verifica
+    assenza di bottone "Salva", che nessuna textbox contenga il numero
+    documento e che la toolbar lista ("Esporta") sia presente.
+- **Fixture controparte nulla + anti-leak settlement** (smoke +
+  `test-data-controller.ts`): aggiunta una `financial_documents` OUTBOUND con
+  `client_id`/`supplier_id` NULL (`FT 2/25`, 100,00 EUR). Lo smoke verifica che
+  resti visibile con etichetta "Non associata". Nuovi totali deterministici:
+  netto emesse tutti gli anni = **1.400,00 €**, 2025 = **900,00 €** (righe 4 /
+  3). Aggiunte assert anti-leak sullo `main` dello Show: nessun match per
+  `saldat/scadut/da incassare/parziale/aperto/residuo`.
+- **Robustezza E2E**: `data-testid="invoice-filter-sidebar"` sul contenitore
+  sidebar filtri desktop (sostituisce il selettore fragile `.shrink-0.w-56`);
+  viewport desktop fissato (`1280x800`) nel test.
+
+**Verifiche**
+- `npx tsc --noEmit` → 0; full vitest 526 passed (+4 nuovi); smoke
+  `invoices.smoke.spec.ts` verde; membership `IN (...)` verificata via SQL
+  deterministico (seleziona esattamente i 2 tipi fattura / 2 tipi nota).
 
 ---
 

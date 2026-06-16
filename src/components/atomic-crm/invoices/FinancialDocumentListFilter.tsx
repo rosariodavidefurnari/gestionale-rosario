@@ -42,7 +42,10 @@ const typeChoices = [
 
 /* ---- Desktop sidebar ---- */
 export const FinancialDocumentListFilter = () => (
-  <div className="shrink-0 w-56 order-last hidden md:block">
+  <div
+    data-testid="invoice-filter-sidebar"
+    className="shrink-0 w-56 order-last hidden md:block"
+  >
     <FinancialDocumentFilterContent />
   </div>
 );
@@ -143,23 +146,28 @@ const FinancialDocumentFilterContent = () => {
     }
   };
 
-  const typePattern = (id: string) =>
-    id === "invoice" ? "%_invoice" : "%_credit_note";
+  // Deterministic enum membership instead of a fragile @ilike suffix match.
+  // ra-data-postgrest renders `document_type@in` = "(a,b)" to the PostgREST
+  // query `document_type=in.(a,b)`. Both directions (customer_/supplier_)
+  // are listed explicitly, so the filter never relies on coincidental
+  // underscore matching.
+  const typeInList = (id: string) =>
+    id === "invoice"
+      ? "(customer_invoice,supplier_invoice)"
+      : "(customer_credit_note,supplier_credit_note)";
 
   const toggleType = (id: string) => {
-    // document_type values share the "_invoice" / "_credit_note" suffix
-    // (customer_/supplier_). A trailing @ilike pattern matches both directions.
-    const pattern = typePattern(id);
-    if (filterValues["document_type@ilike"] === pattern) {
-      const { "document_type@ilike": _, ...rest } = filterValues;
+    const inList = typeInList(id);
+    if (filterValues["document_type@in"] === inList) {
+      const { "document_type@in": _, ...rest } = filterValues;
       setFilters(rest);
     } else {
-      setFilters({ ...filterValues, "document_type@ilike": pattern });
+      setFilters({ ...filterValues, "document_type@in": inList });
     }
   };
 
   const isTypeActive = (id: string) =>
-    filterValues["document_type@ilike"] === typePattern(id);
+    filterValues["document_type@in"] === typeInList(id);
 
   const toggleYear = (year: string) => {
     const gte = `${year}-01-01`;

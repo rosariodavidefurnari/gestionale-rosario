@@ -104,22 +104,46 @@ const InboundSummary = ({
 const CombinedSummary = ({
   outbound,
   inbound,
+  multiCurrency,
 }: {
   outbound: DirectionSummary;
   inbound: DirectionSummary;
-}) => (
-  <div className="flex flex-wrap items-center gap-x-10 gap-y-4">
-    <StatBox
-      label="Emesse (netto)"
-      value={formatEur(outbound.netTotal)}
-      emphasis
-    />
-    <StatBox label="Documenti emessi" value={String(outbound.count)} />
-    <Separator orientation="vertical" className="h-10 hidden sm:block" />
-    <StatBox label="Ricevuti" value={formatEur(inbound.netTotal)} emphasis />
-    <StatBox label="Documenti ricevuti" value={String(inbound.count)} />
-  </div>
-);
+  multiCurrency: boolean;
+}) => {
+  if (multiCurrency) {
+    // Different currencies must not be summed into a single €. Render
+    // per-currency totals for each direction (reusing ByCurrency).
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-x-10 gap-y-2">
+          <span className="text-xs text-muted-foreground">Emesse (netto)</span>
+          <ByCurrency dir={outbound} />
+          <StatBox label="Documenti emessi" value={String(outbound.count)} />
+        </div>
+        <Separator />
+        <div className="flex flex-wrap items-center gap-x-10 gap-y-2">
+          <span className="text-xs text-muted-foreground">Ricevuti</span>
+          <ByCurrency dir={inbound} />
+          <StatBox label="Documenti ricevuti" value={String(inbound.count)} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-10 gap-y-4">
+      <StatBox
+        label="Emesse (netto)"
+        value={formatEur(outbound.netTotal)}
+        emphasis
+      />
+      <StatBox label="Documenti emessi" value={String(outbound.count)} />
+      <Separator orientation="vertical" className="h-10 hidden sm:block" />
+      <StatBox label="Ricevuti" value={formatEur(inbound.netTotal)} emphasis />
+      <StatBox label="Documenti ricevuti" value={String(inbound.count)} />
+    </div>
+  );
+};
 
 export const FinancialDocumentSummaryHeader = () => {
   const { filterValues, sort } = useListContext<FinancialDocumentSummary>();
@@ -165,6 +189,7 @@ export const FinancialDocumentSummaryHeader = () => {
           <CombinedSummary
             outbound={summary.outbound}
             inbound={summary.inbound}
+            multiCurrency={summary.multiCurrency}
           />
         )}
       </CardContent>

@@ -169,6 +169,16 @@ describe("formatEur", () => {
   it('formatEur(50, "USD") === "50,00 USD"', () => {
     expect(formatEur(50, "USD")).toBe("50,00 USD");
   });
+
+  it('formatEur(-0) === "0,00 €" (no negative zero)', () => {
+    expect(formatEur(-0)).toBe("0,00 €");
+  });
+
+  it('formatEur(-0.0001) === "0,00 €" (negative residual rounds to 0, no "-0,00 €")', () => {
+    // A tiny negative residual (e.g. credit note net == invoice) rounds to 0
+    // and must never render with a minus sign.
+    expect(formatEur(-0.0001)).toBe("0,00 €");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -256,5 +266,52 @@ describe("summarizeFinancialDocuments", () => {
     expect(result.multiCurrency).toBe(true);
     expect(result.outbound.byCurrency["EUR"].netTotal).toBe(1000);
     expect(result.outbound.byCurrency["USD"].netTotal).toBe(500);
+  });
+
+  it("vista 'Tutte' con EUR+USD su entrambe le direzioni → multiCurrency=true, byCurrency separato per direzione", () => {
+    const docs = [
+      doc({
+        direction: "outbound",
+        document_type: "customer_invoice",
+        document_number: "F1",
+        issue_date: "2025-01-01",
+        total_amount: 1000,
+        taxable_amount: 1000,
+        currency_code: "EUR",
+      }),
+      doc({
+        direction: "outbound",
+        document_type: "customer_invoice",
+        document_number: "F2",
+        issue_date: "2025-02-01",
+        total_amount: 500,
+        taxable_amount: 500,
+        currency_code: "USD",
+      }),
+      doc({
+        direction: "inbound",
+        document_type: "supplier_invoice",
+        document_number: "SF1",
+        issue_date: "2025-03-01",
+        total_amount: 300,
+        taxable_amount: 300,
+        currency_code: "EUR",
+      }),
+      doc({
+        direction: "inbound",
+        document_type: "supplier_invoice",
+        document_number: "SF2",
+        issue_date: "2025-04-01",
+        total_amount: 120,
+        taxable_amount: 120,
+        currency_code: "USD",
+      }),
+    ];
+    const result = summarizeFinancialDocuments(docs);
+    expect(result.multiCurrency).toBe(true);
+    expect(result.outbound.byCurrency["EUR"].netTotal).toBe(1000);
+    expect(result.outbound.byCurrency["USD"].netTotal).toBe(500);
+    expect(result.inbound.byCurrency["EUR"].netTotal).toBe(300);
+    expect(result.inbound.byCurrency["USD"].netTotal).toBe(120);
   });
 });
