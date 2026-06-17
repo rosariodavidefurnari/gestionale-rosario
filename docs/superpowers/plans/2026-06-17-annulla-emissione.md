@@ -18,6 +18,63 @@ read-only resource preservato. Niente schema nuovo (nessuna migration).
 
 ---
 
+## REVISIONE v2 (post review piano multi-superficie + RAG) — AUTORITATIVA
+
+Dove confligge col corpo sotto, vince questa. 4 review FLAG concordi; chiudo 4
+important + 7 minor. (RAG snapshot stale pre-emit/void: claim riverificati su
+sorgente.)
+
+- **P1 — Guard allocations via SQL raw (NON Kysely tipato).**
+  `financial_document_project_allocations`/`financial_document_cash_allocations`
+  NON sono nell'interface `Database` (`_shared/db.ts:150-161`): un
+  `selectFrom('...allocations')` tipato romperebbe `deno check`. Il COUNT guard
+  (Task 2 step 5) usa `CompiledQuery.raw`/`sql\`\`` come l'emit
+  (`invoice_emit/index.ts:39-43`). Riga 84 del piano ("i tipi gia' coprono") e'
+  errata SOLO per le allocations; financial_documents/payments/services/expenses
+  sono coperti.
+- **P2 — Controllore TOCTOU #6 = test SQL deterministico, non unit puro.** Il
+  pool EF e' single-connection (`db.ts:256 Pool(...,1)`): la race intra-tx non e'
+  riproducibile; la race reale e' tra 2 sessioni, serializzata dal `FOR UPDATE`
+  (l'UPDATE→ricevuto di `invoice_import_confirm:386-390` si blocca). Riformulare
+  #6: inserire un 2° payment `ricevuto` linkato PRIMA del DELETE e verificare
+  `deleted.length !== payments.length` → throw → rollback (oppure test a 2
+  sessioni DB con FOR UPDATE che blocca). VIETATO un unit test su funzione pura
+  per il TOCTOU (DETERMINISTIC + MONEY/FISCAL TDD).
+- **P3 — Estrarre `runVoidInvoice` (come `runEmitInvoice`), test OBBLIGATORIO.**
+  Niente orchestrazione inlined nel componente (Task 4): estrarre in
+  `useEmitInvoice.ts` (o nuovo `useVoidInvoice.ts`) `runVoidInvoice(deps, record,
+  { confirm })` puro-async con deps iniettabili + hook `useVoidInvoice`, e unit
+  test sui 4 rami (cancelled / voided / already_voided / error). Nel componente
+  solo wiring. Specchia `useEmitInvoice.ts:64-114`.
+- **P4 — `useRefresh()` + invalidazione cache + sweep esteso.**
+  `voidEmittedInvoice` e' metodo provider custom (non mutation ra-core) → NON
+  invalida le cache: senza `useRefresh()` i lavori restano "Fatturato" in cache
+  (proprio il sintomo da eliminare). Chiamare `useRefresh()` PRIMA del redirect
+  (pattern `QuickPaymentDialog.tsx:86,199`, `InvoiceDraftDialog.tsx:96,160`).
+  Sweep (Task 5) esteso: badge fatturato `services` (lista/show/mobile),
+  `expenses`, `payments`/collection badge, `SupplierFinancialSection` (benigno
+  per outbound). Browser-check WF-17: dopo void, Registro Lavori → "Da fatturare"
+  e incasso atteso assente da Pagamenti SENZA reload manuale.
+
+### Minor (chiudere)
+
+- `canVoidEmittedInvoice` firma POSITIONAL `(doc, linkedPayments)` (la spec usa
+  object-style: vince il piano); `FinancialDocumentSummary` e' structural-
+  compatible con `VoidableDoc`.
+- RED test `stato_inatteso`: status sintetico fuori-CHECK (es. `parziale`) →
+  `{ok:false, reason:'stato_inatteso'}` (DB-1, branch non morto in test).
+- Controllore km (DB-8): emit→void su service `km>0` → `service.invoice_ref`
+  NULL, expense `source_service_id` INTATTA, nessuna doppia riga.
+- Gate UI durante loading: hoistare anche `isPending` → bottone disabled/skeleton
+  (no flicker da gate su `[]`).
+- Controllore ambiguita' #4: assert che i lavori della 2ª fattura omonima restino
+  INTATTI (no storno parziale).
+- `already_voided`: scelta fail-safe deliberata (gia' annullata vs id
+  inesistente) per single-user; log EF opzionale.
+- Path corretto `src/components/atomic-crm/dashboard/fiscalModel.ts`.
+
+---
+
 ## Task 1 — Pure `canVoidEmittedInvoice` (+ test)
 
 **Files:** create `supabase/functions/_shared/invoiceVoid.ts` (+ `.test.ts`).
