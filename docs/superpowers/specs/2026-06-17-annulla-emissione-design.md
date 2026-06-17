@@ -8,6 +8,91 @@ legale/irreversibile avviene su Aruba (SDI), NON nel gestionale. Oggi pero'
 "Emetti fattura" crea record che dalla UI NON si possono annullare → porta a
 senso unico.
 
+## REVISIONE v2 (post review multi-superficie + RAG) — AUTORITATIVA
+
+Dove confligge col corpo sotto, vince questa. La review (5 revisori, RAG +
+sorgente; ha anche smascherato un'allucinazione RAG su `fiscalModel`) ha trovato
+4 critical convergenti, corretti qui, ogni claim riverificato su file:line.
+
+- **V1 — `scaduto` e' cassa-neutro e VOIDABILE (non solo `in_attesa`).**
+  `fiscalModel.ts:217,546` fanno `if (payment.status !== "ricevuto") continue`:
+  quindi `scaduto` NON e' in cassa (come `in_attesa`), ed e' proprio lo scenario
+  tipico (fattura sbagliata mai pagata, ora scaduta). Regola corretta: void
+  ammesso se TUTTI i payment collegati ∈ `{in_attesa, scaduto}`; **RIFIUTO 409
+  solo se esiste UN payment `ricevuto`** (incasso reale). Corregge l'incoerenza
+  interna del corpo (riga 72 vs 76/88).
+- **V2 — Un-mark deterministico (no doppia fatturazione).** L'identita' e'
+  `UNIQUE(client_id, direction, document_number, issue_date)`
+  (`financial_documents_foundation.sql:31`): `document_number` da solo NON e'
+  unico. Un-mark `invoice_ref = document_number AND client_id` potrebbe
+  scollegare i lavori di una SECONDA fattura omonima. Fix: PRIMA dello storno,
+  guard `COUNT(*)` su `financial_documents` outbound con stesso
+  `client_id + document_number`; se `>1` → **409 "numero fattura ambiguo"** (non
+  indovinare). Se esattamente 1 (quella in storno), l'un-mark per
+  `invoice_ref + client_id` e' sicuro. Un-mark `expenses` deve mirrorare
+  `source_service_id IS NULL` (DB-8) come fa l'emit.
+- **V3 — DELETE fail-closed + lock (TOCTOU).** Il driver Kysely Deno non ha
+  savepoint e `invoice_import_confirm` settla `ricevuto` senza `FOR UPDATE`:
+  finestra in cui il void cancella un incasso reale. Fix: a inizio tx
+  `SELECT ... FOR UPDATE` su documento e payment; tutte le verifiche PRIMA di
+  ogni DELETE; il DELETE payment e' `WHERE financial_document_id = id AND status
+  IN ('in_attesa','scaduto') RETURNING id`; confronto count cancellati vs attesi
+  → se diverge **rollback** (qualcuno ha incassato nel frattempo). Controllore
+  RED che settla `ricevuto` tra guard e delete.
+- **V4 — Guard cascade allocations.** `financial_documents` ha `ON DELETE
+  CASCADE` verso `financial_document_project_allocations` (`:36`) e
+  `financial_document_cash_allocations` (`:61`). Oggi benigno (emit non scrive
+  allocazioni) ma invariante latente: pre-delete `COUNT(*)=0` su ENTRAMBE →
+  **409** se `>0` (non cancellare allocazioni a cascata). Controllore RED con
+  allocazione fittizia.
+
+### Correzioni IMPORTANT
+
+- **Decisione unica `canVoidEmittedInvoice({document, linkedPayments})`** pura,
+  usata SIA dalla UI SIA dall'EF (no drift). Rami: outbound + customer_invoice +
+  tutti i payment ∈ {in_attesa,scaduto} → ok; almeno un `ricevuto`/mixed →
+  reject; 0 payment (storica/importata) → reject; inbound/credit_note → reject.
+- **Gating UI**: sollevare il fetch dei payment nel parent
+  `FinancialDocumentShowContent` (oggi vive DENTRO `CollectionBadge`,
+  `FinancialDocumentShow.tsx:32-46`) e riusare lo stesso dato; il bottone compare
+  solo se `canVoidEmittedInvoice` ok.
+- **UI placement + mobile (WF-17)**: `PaymentShow:65` NON mappa 1:1 — su
+  `FinancialDocumentShow` lo slot destro dell'header e' occupato dal Totale
+  (`:154-161`) e c'e' `mb-28 md:mb-2` (`:121`). Bottone in una RIGA/sezione
+  dedicata del Card, full-width, variante destructive, sopra l'area `mb-28`;
+  verifica esplicita su desktop E mobile.
+- **Path/risorsa corretti**: il file e' `invoices/FinancialDocumentShow.tsx`
+  (NON `invoicing/`); la resource UI e' la VIEW `financial_documents_summary`
+  (read-only), l'EF opera sulla TABELLA `financial_documents`.
+- **Idempotenza**: documento gia' annullato/inesistente → ritorno
+  `{status:"already_voided"}` 200 (non 500). Controllore doppio-void.
+- **config.toml** `[functions.invoice_void] verify_jwt=false` nello stesso commit
+  (BE-2); deploy manuale `--project-ref qvdmzhyzpyaveniirsmo` (BE-1/BE-8).
+
+### Note (MINOR)
+
+- `UPDATE services` riattiva il trigger `sync_service_km_expense` (no-op
+  idempotente, non tocca `invoice_ref`) — atteso.
+- Riga rischi "neutro": vero per la cassa FISCALE; il forecast
+  (`pendingPaymentDrilldowns`) perde l'atteso — effetto VOLUTO dello storno.
+- DELETE id-scoped su `financial_document_id`, MAI per `invoice_ref`; ordine
+  payment→documento corretto vs FK `ON DELETE SET NULL`.
+- Read-only preservato (azione di dominio, non CRUD): `moduleRegistry.test.ts`
+  resta verde → citarlo come controllore di non-regressione.
+
+### Controllori v2 (MONEY/FISCAL — RED prima)
+
+1. `canVoidEmittedInvoice` puro: tutti i rami sopra.
+2. EF/E2E: emit → void → 0 financial_documents, 0 payments per quel ref, lavori
+   tornano "Da fatturare".
+3. void rifiutato 409 se UN payment `ricevuto`; **ammesso** se `scaduto`.
+4. due fatture outbound omonime stesso cliente → void → **409 ambiguo** (nessun
+   lavoro dell'altra fattura toccato).
+5. allocazione fittizia presente → void → 409.
+6. TOCTOU: payment settato `ricevuto` tra guard e delete → rollback (0 cancellati).
+7. dopo void, `buildFiscalYearEstimate`/`analytics_yearly_cash_inflow` invariati.
+8. read-only `moduleRegistry.test.ts` verde; doppio-void → already_voided 200.
+
 ## Problema
 
 `invoice_emit` crea, in transazione: 1 riga `financial_documents` (outbound,
