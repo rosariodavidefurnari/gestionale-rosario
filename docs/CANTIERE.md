@@ -228,13 +228,35 @@ Non fatto:
 
 ## Prossima Azione
 
-Nessun ciclo aperto. QW1 e BR1 chiusi e live. Scegliere il prossimo dalla coda
-assessment (`docs/superpowers/2026-06-15-gestionale-assessment.md`).
+Nessun ciclo aperto. "Emetti fattura", QW1 e BR1 chiusi e live. Scegliere il
+prossimo dalla coda assessment (`docs/superpowers/2026-06-15-gestionale-assessment.md`).
 
 Coda lavori residua (ordine consigliato): QW2 card "Da incassare" (375 vs
 6.412), QW3 mobile scadenzario+cassa, BR2 riconciliazione pagamenti/allocazioni,
 bollo (Ciclo 5). Per ognuno: spec -> review -> piano -> review multi-superficie +
 RAG -> esecuzione LOCALE prima del remoto.
+
+Follow-up aperti di "Emetti fattura" (documentati in development-continuity-map +
+backlog): Task 7b badge incasso in LIST desktop + card mobile (tocca infra
+colonne); rigenerazione completa tipi `_shared/db.ts` (drift services insert in
+invoice_import_confirm); test E2E Playwright del doppio re-import (oggi smoke
+manuale ripetibile); v2 acconto pregresso / quote-service come sorgenti /
+storno; delta bollo €2 come residuo (BR2).
+
+### Ultimo ciclo chiuso: Emetti fattura (invoice_emit) — LIVE
+
+Azione "Emetti e scarica XML" dal dialog bozza (progetto/cliente): registra
+`financial_documents` (outbound) + crea incasso ATTESO `payments` (`in_attesa`,
+cassa-neutro) + marca `services`/`expenses` (`invoice_ref`) + scarica XML
+FatturaPA, in un'unica transazione (EF `invoice_emit`, pre-flight idempotente,
+count guard). Re-import dell'XML emesso: riconciliazione STATUS-AGNOSTIC ancorata
+a `payments.financial_document_id` -> ri-settla lo stesso incasso, NIENTE
+doppioni (provato in PROD: emit -> re-import x2 = 1 doc + 1 payment ricevuto,
+poi cleanup). 3 review multi-superficie + RAG (spec/piano/impl, ogni ciclo una
+BLOCK reale chiusa). Migration additiva `20260616200000`
+(`payments.financial_document_id` FK ON DELETE SET NULL) su prod; EF
+`invoice_emit` + `invoice_import_confirm` + `invoice_import_extract` deployate
+(ref `qvdmzhyzpyaveniirsmo`); merge `main` (`1eaef0d0`), CI verde sul fork.
 
 ### Ultimo ciclo chiuso: QW1 (Fiscal Reminder Cron Auth) — LIVE
 
