@@ -38,7 +38,7 @@
 | **Dominio**  | DOM-2 | Forfettario ≠ regime ordinario            |
 | **Config**   | CFG-1 | Nuova configurazione → 3 file obbligatori |
 | **Workflow** | WF-1  | Aggiorno continuity-map → aggiorna indice |
-| **Workflow** | WF-2  | CI prettier fail su file da subagent      |
+| **Workflow** | WF-2  | prettier drift .ts/.tsx → root-cause risolta (lint-staged+CI) |
 | **Workflow** | WF-3  | Destructuring param → verificare completo |
 | **Workflow** | WF-4  | Aggiorno file sistema → sweep incrociata  |
 | **Workflow** | WF-5  | E2E test → valida sistema, non adattare   |
@@ -454,11 +454,14 @@ giusta è di tooling, non un workaround con tipi finti o import riscritti.
 **Fare**: aggiornare Navigation Map in cima + `Last updated:`
 **Perché**: senza indice, il documento da 1100+ righe è innavigabile
 
-### WF-2: CI prettier fail su file da subagent
+### WF-2: prettier drift su .ts/.tsx — causa radice RISOLTA (2026-06-17)
 
-**Quando**: file creati da Agent tool non passano prettier in CI
-**Fare**: `npx prettier --check` sui file nuovi PRIMA del push
-**Perché**: lint-staged formatta solo i file staged, i subagent possono avere formatting diverso
+**Quando**: vedo il check `Prettier` CI rosso o `npm run prettier` con `[warn]` su file `.ts/.tsx`
+**Fare**: NON inseguire i singoli file a mano. Il sistema ora previene il drift alla radice:
+- `.lintstagedrc` esegue `prettier --write` ANCHE su `*.{js,jsx,mjs,ts,tsx}` (era solo `eslint --fix` → i TS non venivano mai formattati al commit);
+- CI `check.yml` ha uno step `npm run prettier` BLOCCANTE (prima era `lint-action` continue-on-error → drift silenzioso);
+- se serve azzerare drift residuo: `npm run prettier:apply` (write) + verifica `npm run prettier` (check).
+**Perché**: per mesi i file TS sono driftati perché lint-staged li passava solo a `eslint --fix`, mentre il CI faceva `prettier --check` sui .ts → mismatch sistematico, mascherato dal check CI non-bloccante. Fix provato con probe TS prettier-dirty (lint-staged ora lo formatta). Dettagli canonici in `docs/development-continuity-map.md` (sezione "Tooling: formatting & lint enforcement").
 
 ### WF-3: Destructuring param → verificare completezza
 

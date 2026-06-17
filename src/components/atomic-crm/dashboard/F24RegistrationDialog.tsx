@@ -82,7 +82,9 @@ export const F24RegistrationDialog = ({
     // actual obligation IDs. Since the view layer merges them, we pass the
     // remaining amount as the suggested payment.
     return deadlineView.items
-      .filter((item) => item.source === "obligation" && item.remainingAmount > 0)
+      .filter(
+        (item) => item.source === "obligation" && item.remainingAmount > 0,
+      )
       .map((item) => ({
         // We don't have obligation_id in the view item, so we'll need to resolve
         // it. For now we store the component key — obligation lookup happens at submit.
@@ -292,12 +294,13 @@ export const F24RegistrationDialog = ({
               />
               <p className="text-xs text-muted-foreground">
                 Se l&apos;F24 usa un credito in compensazione, inseriscilo qui.
-                Il saldo delega reale sara&apos;: righe selezionate meno credito.
+                Il saldo delega reale sara&apos;: righe selezionate meno
+                credito.
               </p>
               {!compensationCreditValid && (
                 <p className="text-xs text-destructive">
-                  Il credito deve essere maggiore o uguale a zero e non puo&apos;
-                  superare il totale delle righe selezionate.
+                  Il credito deve essere maggiore o uguale a zero e non
+                  puo&apos; superare il totale delle righe selezionate.
                 </p>
               )}
             </div>

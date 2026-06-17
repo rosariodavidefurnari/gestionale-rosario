@@ -225,9 +225,7 @@ const MobileAnnualDashboard = () => {
         open={showDichiarazione}
         onOpenChange={setShowDichiarazione}
         taxYear={declarationTaxYear}
-        estimatedSubstituteTax={
-          data?.fiscal?.fiscalKpis.stimaImpostaAnnuale
-        }
+        estimatedSubstituteTax={data?.fiscal?.fiscalKpis.stimaImpostaAnnuale}
         estimatedInps={data?.fiscal?.fiscalKpis.stimaInpsAnnuale}
       />
       <F24RegistrationDialog
@@ -317,7 +315,8 @@ const MobileFiscalKpis = ({
               </p>
               {nextDeadlineView.totalPaid > 0 && (
                 <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
-                  {formatCurrencyPrecise(nextDeadlineView.totalPaid)} già versati
+                  {formatCurrencyPrecise(nextDeadlineView.totalPaid)} già
+                  versati
                 </p>
               )}
             </>

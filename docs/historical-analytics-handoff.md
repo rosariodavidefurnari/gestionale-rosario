@@ -6,7 +6,12 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-16 (Emetti fattura: import update-in-place anti double-count, in corso)
+Last updated: 2026-06-17 (Tooling: prettier root-cause fix + sweep; dashboard files formatting-only, zero behavior change)
+
+> **Nota tooling (2026-06-17):** i file `dashboard/` toccati nel commit dello
+> sweep prettier sono cambiati SOLO nel formato (nessun cambiamento di
+> capability AI/analytics/dashboard). Causa radice + enforcement in
+> `docs/architecture.md` e `docs/development-continuity-map.md`.
 
 ## Update 2026-06-16 — Emetti fattura: import update-in-place
 

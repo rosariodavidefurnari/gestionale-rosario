@@ -106,7 +106,9 @@ export const DichiarazioneEntryDialog = ({
 
   // Divergence warnings (>30% from CRM estimate)
   const taxDivergence =
-    numTax != null && estimatedSubstituteTax != null && estimatedSubstituteTax > 0
+    numTax != null &&
+    estimatedSubstituteTax != null &&
+    estimatedSubstituteTax > 0
       ? Math.abs(numTax - estimatedSubstituteTax) / estimatedSubstituteTax
       : null;
 
@@ -209,9 +211,7 @@ export const DichiarazioneEntryDialog = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="decl-prior-tax">
-          Acconti imposta già versati (€)
-        </Label>
+        <Label htmlFor="decl-prior-tax">Acconti imposta già versati (€)</Label>
         <Input
           id="decl-prior-tax"
           type="number"
@@ -224,9 +224,7 @@ export const DichiarazioneEntryDialog = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="decl-prior-inps">
-          Acconti INPS già versati (€)
-        </Label>
+        <Label htmlFor="decl-prior-inps">Acconti INPS già versati (€)</Label>
         <Input
           id="decl-prior-inps"
           type="number"
@@ -273,21 +271,22 @@ export const DichiarazioneEntryDialog = ({
     </div>
   );
 
-  const footerButtons = !loadingExisting && blockedCount === 0 ? (
-    <>
-      <Button
-        variant="outline"
-        onClick={() => onOpenChange(false)}
-        disabled={saving}
-      >
-        Annulla
-      </Button>
-      <Button onClick={handleSubmit} disabled={!isValid || saving}>
-        {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-        {isEdit ? "Aggiorna" : "Salva"} e genera obbligazioni
-      </Button>
-    </>
-  ) : null;
+  const footerButtons =
+    !loadingExisting && blockedCount === 0 ? (
+      <>
+        <Button
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+          disabled={saving}
+        >
+          Annulla
+        </Button>
+        <Button onClick={handleSubmit} disabled={!isValid || saving}>
+          {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          {isEdit ? "Aggiorna" : "Salva"} e genera obbligazioni
+        </Button>
+      </>
+    ) : null;
 
   if (isMobile) {
     return (

@@ -24,14 +24,15 @@ const completeIssuer = (): BusinessProfile => ({
   beneficiaryName: "",
 });
 
-const completeClient = (): Client => ({
-  id: "c1",
-  name: "Gustare Sicilia",
-  vat_number: "05928320820",
-  billing_address_street: "Via Etnea 100",
-  billing_postal_code: "95100",
-  billing_city: "Catania",
-}) as unknown as Client;
+const completeClient = (): Client =>
+  ({
+    id: "c1",
+    name: "Gustare Sicilia",
+    vat_number: "05928320820",
+    billing_address_street: "Via Etnea 100",
+    billing_postal_code: "95100",
+    billing_city: "Catania",
+  }) as unknown as Client;
 
 describe("isInvoiceBillingComplete", () => {
   it("ok when issuer and client carry every mandatory XML field", () => {
@@ -44,13 +45,25 @@ describe("isInvoiceBillingComplete", () => {
   });
 
   it("accepts client with fiscal_code instead of vat_number", () => {
-    const client = { ...completeClient(), vat_number: undefined, fiscal_code: "RSSMRA..." } as unknown as Client;
-    expect(isInvoiceBillingComplete({ client, issuer: completeIssuer() }).ok).toBe(true);
+    const client = {
+      ...completeClient(),
+      vat_number: undefined,
+      fiscal_code: "RSSMRA...",
+    } as unknown as Client;
+    expect(
+      isInvoiceBillingComplete({ client, issuer: completeIssuer() }).ok,
+    ).toBe(true);
   });
 
   it("accepts client with billing_name instead of name", () => {
-    const client = { ...completeClient(), name: "", billing_name: "Gustare Srl" } as unknown as Client;
-    expect(isInvoiceBillingComplete({ client, issuer: completeIssuer() }).ok).toBe(true);
+    const client = {
+      ...completeClient(),
+      name: "",
+      billing_name: "Gustare Srl",
+    } as unknown as Client;
+    expect(
+      isInvoiceBillingComplete({ client, issuer: completeIssuer() }).ok,
+    ).toBe(true);
   });
 
   it("flags missing issuer P.IVA", () => {
@@ -61,14 +74,21 @@ describe("isInvoiceBillingComplete", () => {
   });
 
   it("flags client without any fiscal identity", () => {
-    const client = { ...completeClient(), vat_number: undefined, fiscal_code: undefined } as unknown as Client;
+    const client = {
+      ...completeClient(),
+      vat_number: undefined,
+      fiscal_code: undefined,
+    } as unknown as Client;
     const r = isInvoiceBillingComplete({ client, issuer: completeIssuer() });
     expect(r.ok).toBe(false);
     expect(r.missing.join(" ")).toMatch(/P\.IVA o codice fiscale cliente/i);
   });
 
   it("flags incomplete client billing address", () => {
-    const client = { ...completeClient(), billing_city: undefined } as unknown as Client;
+    const client = {
+      ...completeClient(),
+      billing_city: undefined,
+    } as unknown as Client;
     const r = isInvoiceBillingComplete({ client, issuer: completeIssuer() });
     expect(r.ok).toBe(false);
     expect(r.missing.join(" ")).toMatch(/indirizzo cliente/i);

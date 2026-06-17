@@ -290,7 +290,16 @@ const DeadlineRow = ({
 
 const STATUS_BADGE_CONFIG: Record<
   FiscalDeadlineItemStatus,
-  { label: string; variant: "secondary" | "default" | "outline" | "destructive" | "success" | "warning" }
+  {
+    label: string;
+    variant:
+      | "secondary"
+      | "default"
+      | "outline"
+      | "destructive"
+      | "success"
+      | "warning";
+  }
 > = {
   estimated: { label: "Stimato", variant: "secondary" },
   due: { label: "Da dichiarazione", variant: "default" },
@@ -369,7 +378,6 @@ const DeadlinesCardFromViews = ({
         {lowPriority.length > 0 && (
           <LowPriorityViewSection deadlines={lowPriority} />
         )}
-
       </CardContent>
     </Card>
   );
@@ -430,9 +438,7 @@ const DeadlineViewRow = ({
         <div className="flex items-center gap-2 text-sm">
           <Badge variant={urgencyVariant}>{countdownText}</Badge>
           <span className="font-medium">{formattedDate}</span>
-          <span className="text-muted-foreground">
-            &mdash; {view.label}
-          </span>
+          <span className="text-muted-foreground">&mdash; {view.label}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="font-semibold text-sm">

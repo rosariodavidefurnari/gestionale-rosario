@@ -5,9 +5,18 @@
 Fork di Atomic CRM personalizzato per gestire l'attività professionale
 di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
+> **Tooling/formatting (2026-06-17):** risolta la causa radice del drift prettier
+> ricorrente — `.lintstagedrc` ora esegue `prettier --write` anche su
+> `*.{ts,tsx}` (prima solo `eslint --fix`), `check.yml` ha uno step
+> `npm run prettier` BLOCCANTE, e uno sweep `prettier:apply` ha azzerato il drift
+> sull'intero repo. I file `dashboard/`, `providers/`, `_shared/` toccati nel
+> commit dello sweep sono cambiati SOLO nel formato: zero impatto architetturale o
+> comportamentale (tsc 0, 608 unit verdi). Dettagli in
+> `development-continuity-map.md`.
+
 Stato del documento:
 
-- `canonical` — ultimo aggiornamento: 2026-06-14
+- `canonical` — ultimo aggiornamento: 2026-06-17
 - descrive la fotografia implementativa ad alto livello
 - le vecchie "sessioni" citate nel file sono indizi storici, non la fonte
   primaria della verita' operativa se entrano in conflitto con codice o

@@ -95,12 +95,12 @@ describe("buildObligationsFromDeclaration", () => {
       const decl = makeDeclaration({ total_substitute_tax: 257.53 });
       const obligations = buildObligationsFromDeclaration(decl);
 
-      expect(
-        obligations.some((o) => o.component === "imposta_acconto_1"),
-      ).toBe(true);
-      expect(
-        obligations.some((o) => o.component === "imposta_acconto_2"),
-      ).toBe(true);
+      expect(obligations.some((o) => o.component === "imposta_acconto_1")).toBe(
+        true,
+      );
+      expect(obligations.some((o) => o.component === "imposta_acconto_2")).toBe(
+        true,
+      );
     });
   });
 
@@ -122,12 +122,12 @@ describe("buildObligationsFromDeclaration", () => {
       const decl = makeDeclaration({ total_substitute_tax: 100 });
       const obligations = buildObligationsFromDeclaration(decl);
 
-      expect(
-        obligations.some((o) => o.component === "imposta_acconto_1"),
-      ).toBe(false);
-      expect(
-        obligations.some((o) => o.component === "imposta_acconto_2"),
-      ).toBe(false);
+      expect(obligations.some((o) => o.component === "imposta_acconto_1")).toBe(
+        false,
+      );
+      expect(obligations.some((o) => o.component === "imposta_acconto_2")).toBe(
+        false,
+      );
     });
 
     it("treats exactly 51.65 as single acconto (lower boundary inclusive)", () => {
@@ -146,9 +146,9 @@ describe("buildObligationsFromDeclaration", () => {
       expect(
         obligations.some((o) => o.component === "imposta_acconto_unico"),
       ).toBe(true);
-      expect(
-        obligations.some((o) => o.component === "imposta_acconto_1"),
-      ).toBe(false);
+      expect(obligations.some((o) => o.component === "imposta_acconto_1")).toBe(
+        false,
+      );
     });
   });
 
@@ -226,9 +226,9 @@ describe("buildObligationsFromDeclaration", () => {
       });
       const obligations = buildObligationsFromDeclaration(decl);
 
-      expect(
-        obligations.some((o) => o.component === "imposta_saldo"),
-      ).toBe(false);
+      expect(obligations.some((o) => o.component === "imposta_saldo")).toBe(
+        false,
+      );
     });
   });
 
@@ -241,9 +241,9 @@ describe("buildObligationsFromDeclaration", () => {
       });
       const obligations = buildObligationsFromDeclaration(decl);
 
-      expect(
-        obligations.some((o) => o.component === "imposta_saldo"),
-      ).toBe(false);
+      expect(obligations.some((o) => o.component === "imposta_saldo")).toBe(
+        false,
+      );
     });
 
     it("clamps inps_saldo to 0 when prior advances exceed total (zero-obligation not generated)", () => {
@@ -254,19 +254,22 @@ describe("buildObligationsFromDeclaration", () => {
       });
       const obligations = buildObligationsFromDeclaration(decl);
 
-      expect(
-        obligations.some((o) => o.component === "inps_saldo"),
-      ).toBe(false);
+      expect(obligations.some((o) => o.component === "inps_saldo")).toBe(false);
     });
   });
 
   describe("source and declaration_id", () => {
     it("all obligations have source = 'auto_generated'", () => {
-      const decl = makeDeclaration({ total_substitute_tax: 500, total_inps: 300 });
+      const decl = makeDeclaration({
+        total_substitute_tax: 500,
+        total_inps: 300,
+      });
       const obligations = buildObligationsFromDeclaration(decl);
 
       expect(obligations.length).toBeGreaterThan(0);
-      expect(obligations.every((o) => o.source === "auto_generated")).toBe(true);
+      expect(obligations.every((o) => o.source === "auto_generated")).toBe(
+        true,
+      );
     });
 
     it("all obligations carry the declaration_id", () => {
@@ -274,9 +277,9 @@ describe("buildObligationsFromDeclaration", () => {
       const obligations = buildObligationsFromDeclaration(decl);
 
       expect(obligations.length).toBeGreaterThan(0);
-      expect(obligations.every((o) => o.declaration_id === "decl-abc-123")).toBe(
-        true,
-      );
+      expect(
+        obligations.every((o) => o.declaration_id === "decl-abc-123"),
+      ).toBe(true);
     });
   });
 
@@ -300,24 +303,37 @@ describe("buildObligationsFromDeclaration", () => {
 
   describe("tax_year drives payment_year = T+1", () => {
     it("uses tax_year + 1 as payment_year for all generated obligations", () => {
-      const decl = makeDeclaration({ tax_year: 2023, total_substitute_tax: 500 });
+      const decl = makeDeclaration({
+        tax_year: 2023,
+        total_substitute_tax: 500,
+      });
       const obligations = buildObligationsFromDeclaration(decl);
 
       expect(obligations.every((o) => o.payment_year === 2024)).toBe(true);
-      expect(obligations.some((o) => o.due_date.startsWith("2024-"))).toBe(true);
+      expect(obligations.some((o) => o.due_date.startsWith("2024-"))).toBe(
+        true,
+      );
     });
   });
 
   describe("non-rateized obligations only", () => {
     it("all obligations have installment_number = null", () => {
-      const decl = makeDeclaration({ total_substitute_tax: 500, total_inps: 300 });
+      const decl = makeDeclaration({
+        total_substitute_tax: 500,
+        total_inps: 300,
+      });
       const obligations = buildObligationsFromDeclaration(decl);
 
-      expect(obligations.every((o) => o.installment_number === null)).toBe(true);
+      expect(obligations.every((o) => o.installment_number === null)).toBe(
+        true,
+      );
     });
 
     it("all obligations have installment_total = null", () => {
-      const decl = makeDeclaration({ total_substitute_tax: 500, total_inps: 300 });
+      const decl = makeDeclaration({
+        total_substitute_tax: 500,
+        total_inps: 300,
+      });
       const obligations = buildObligationsFromDeclaration(decl);
 
       expect(obligations.every((o) => o.installment_total === null)).toBe(true);

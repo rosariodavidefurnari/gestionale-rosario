@@ -45,8 +45,12 @@ jobs:
               with:
                   eslint: true
                   eslint_args: "**/*.{mjs,ts,tsx}"
-                  prettier: true
-                  prettier_args: "--config ./.prettierrc.json \"**/*.{js,json,ts,tsx,css,md,html}\""
+
+            # Blocking gate: lint-action only annotates (continue-on-error) and
+            # let prettier drift accumulate silently. This step FAILS the job on
+            # any drift, so unformatted code can never merge again.
+            - name: 💅 Prettier (blocking)
+              run: npm run prettier
 
     test:
         name: 🔎 Test

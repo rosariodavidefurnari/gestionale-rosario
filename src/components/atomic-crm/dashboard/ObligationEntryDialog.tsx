@@ -105,8 +105,7 @@ export const ObligationEntryDialog = ({
   }
 
   const numAmount = amount === "" ? null : Number(amount);
-  const numYear =
-    competenceYear === "" ? null : Number(competenceYear);
+  const numYear = competenceYear === "" ? null : Number(competenceYear);
 
   const isValid =
     component !== "" &&
@@ -148,9 +147,7 @@ export const ObligationEntryDialog = ({
 
       onOpenChange(false);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Errore nel salvataggio",
-      );
+      setError(err instanceof Error ? err.message : "Errore nel salvataggio");
     } finally {
       setSaving(false);
     }

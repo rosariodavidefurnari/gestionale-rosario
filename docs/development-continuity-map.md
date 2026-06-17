@@ -6,7 +6,35 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-17 (invoice_void: pivot FK financial_document_id su services/expenses — un-mark simmetrico all'emit, twin-guard rimosso, controllore e2e committato)
+Last updated: 2026-06-17 (Tooling: prettier root-cause fix + sweep; invoice_void SHIPPED)
+
+---
+
+## Tooling: formatting & lint enforcement (prettier)
+
+Causa radice del drift prettier ricorrente trovata e risolta il 2026-06-17:
+`.lintstagedrc` eseguiva `prettier --write` SOLO su `*.{json,css,md,html}`, mentre
+i `*.{js,jsx,mjs,ts,tsx}` ricevevano solo `eslint --fix`. Quindi ogni file TS/TSX
+non passava da prettier al commit, mentre il CI faceva `prettier --check` sui
+.ts/.tsx → drift garantito, e il check CI era `continue-on-error` (lint-action)
+quindi si accumulava in silenzio.
+
+Fix solido (deterministico, provato):
+
+- `.lintstagedrc`: `*.{js,jsx,mjs,ts,tsx}` ora esegue `["eslint --fix", "prettier --write"]`
+  (prettier come formattatore finale). Provato con probe TS prettier-dirty →
+  lint-staged lo formatta.
+- `.github/workflows/check.yml`: rimosso il prettier non-bloccante da
+  `lint-action`, aggiunto step `npm run prettier` BLOCCANTE → drift non può più
+  mergiare.
+- sweep una-tantum `npm run prettier:apply` su tutto il repo → 0 drift
+  (`npm run prettier` verde). I 15 file toccati (dashboard/provider/_shared +
+  test) sono cambiati SOLO nel formato: tsc 0, 608 unit verdi.
+
+Gate locali: `make lint` (eslint + `npm run prettier`) e il pre-commit
+`lint-staged`. Cmd di emergenza: `npm run prettier:apply` (write) /
+`npm run prettier` (check). Lezione registrata in `.claude/rules/learning.md`
+(WF-2).
 
 ---
 

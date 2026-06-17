@@ -45,12 +45,18 @@ describe("validateInvoiceEmitRequest", () => {
   });
 
   it("rejects a missing document number", () => {
-    const r = validateInvoiceEmitRequest({ ...validPayload(), documentNumber: "  " });
+    const r = validateInvoiceEmitRequest({
+      ...validPayload(),
+      documentNumber: "  ",
+    });
     expect(r.error).toMatch(/numero fattura/i);
   });
 
   it("rejects an invalid issue date", () => {
-    const r = validateInvoiceEmitRequest({ ...validPayload(), issueDate: "16/06/2026" });
+    const r = validateInvoiceEmitRequest({
+      ...validPayload(),
+      issueDate: "16/06/2026",
+    });
     expect(r.error).toMatch(/data emissione/i);
   });
 

@@ -59,7 +59,13 @@ export const useFiscalReality = ({
       enrichedPaymentLines,
       todayIso,
     });
-  }, [estimatedDeadlines, obligations, enrichedPaymentLines, todayIso, isLoading]);
+  }, [
+    estimatedDeadlines,
+    obligations,
+    enrichedPaymentLines,
+    todayIso,
+    isLoading,
+  ]);
 
   const resolvedObligations = obligations ?? [];
   const resolvedPaymentLines = enrichedPaymentLines ?? [];
@@ -67,9 +73,7 @@ export const useFiscalReality = ({
   const totalOpenObligations = useMemo(() => {
     if (deadlineViews == null) return 0;
     return deadlineViews.reduce((sum, view) => {
-      return (
-        sum + view.items.reduce((s, item) => s + item.remainingAmount, 0)
-      );
+      return sum + view.items.reduce((s, item) => s + item.remainingAmount, 0);
     }, 0);
   }, [deadlineViews]);
 

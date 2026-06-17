@@ -1,4 +1,8 @@
-import type { FiscalDeclaration, FiscalObligation, FiscalF24PaymentLineEnriched } from "../../dashboard/fiscalRealityTypes";
+import type {
+  FiscalDeclaration,
+  FiscalObligation,
+  FiscalF24PaymentLineEnriched,
+} from "../../dashboard/fiscalRealityTypes";
 import type { ObligationDraft } from "../../dashboard/buildObligationsFromDeclaration";
 import { buildObligationsFromDeclaration } from "../../dashboard/buildObligationsFromDeclaration";
 import { supabase } from "./supabase";
@@ -101,9 +105,7 @@ export const buildFiscalRealityProviderMethods = () => ({
       .maybeSingle();
 
     if (result.error) {
-      throw new Error(
-        `getFiscalDeclaration: ${result.error.message}`,
-      );
+      throw new Error(`getFiscalDeclaration: ${result.error.message}`);
     }
     return result.data as FiscalDeclaration | null;
   },
@@ -143,9 +145,7 @@ export const buildFiscalRealityProviderMethods = () => ({
 
   // ── Obligations ──────────────────────────────────────────────────────────
 
-  async getFiscalObligations(
-    paymentYear: number,
-  ): Promise<FiscalObligation[]> {
+  async getFiscalObligations(paymentYear: number): Promise<FiscalObligation[]> {
     const data = throwOnError(
       await supabase
         .from("fiscal_obligations")
@@ -161,11 +161,7 @@ export const buildFiscalRealityProviderMethods = () => ({
     draft: ObligationDraft,
   ): Promise<FiscalObligation> {
     const data = throwOnError(
-      await supabase
-        .from("fiscal_obligations")
-        .insert(draft)
-        .select()
-        .single(),
+      await supabase.from("fiscal_obligations").insert(draft).select().single(),
       "createFiscalObligation",
     );
     return data as FiscalObligation;
@@ -251,9 +247,7 @@ export const buildFiscalRealityProviderMethods = () => ({
       "getEnrichedPaymentLinesForYear (obligations)",
     );
 
-    const obligationIds = (obligations ?? []).map(
-      (o: { id: string }) => o.id,
-    );
+    const obligationIds = (obligations ?? []).map((o: { id: string }) => o.id);
     if (obligationIds.length === 0) return [];
 
     // Step 2: Get enriched payment lines for those obligation IDs
@@ -309,10 +303,7 @@ export const buildFiscalRealityProviderMethods = () => ({
     // Delete safe obligations
     if (safeIds.length > 0) {
       throwOnError(
-        await supabase
-          .from("fiscal_obligations")
-          .delete()
-          .in("id", safeIds),
+        await supabase.from("fiscal_obligations").delete().in("id", safeIds),
         "regenerateDeclarationObligations (delete safe)",
       );
     }
@@ -358,10 +349,7 @@ export const buildFiscalRealityProviderMethods = () => ({
       // Delete what we can, but report blocked
       if (safeIds.length > 0) {
         throwOnError(
-          await supabase
-            .from("fiscal_obligations")
-            .delete()
-            .in("id", safeIds),
+          await supabase.from("fiscal_obligations").delete().in("id", safeIds),
           "deleteFiscalDeclaration (delete safe obligations)",
         );
       }
@@ -371,10 +359,7 @@ export const buildFiscalRealityProviderMethods = () => ({
     // All clear — delete obligations then declaration
     if (safeIds.length > 0) {
       throwOnError(
-        await supabase
-          .from("fiscal_obligations")
-          .delete()
-          .in("id", safeIds),
+        await supabase.from("fiscal_obligations").delete().in("id", safeIds),
         "deleteFiscalDeclaration (delete all obligations)",
       );
     }

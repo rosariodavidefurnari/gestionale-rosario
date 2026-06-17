@@ -6,7 +6,15 @@
 incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 `canonical`.
 
-Last updated: 2026-06-17 (Emetti fattura: registry AI aggiornati + follow-up 7b)
+Last updated: 2026-06-17 (Tooling: prettier root-cause fix + sweep; dashboard formatting-only)
+
+## Update 2026-06-17 — Tooling: prettier drift risolto alla radice
+
+Sweep `prettier:apply` su tutto il repo + fix `.lintstagedrc` (prettier anche
+su `*.{ts,tsx}`) + step CI `npm run prettier` BLOCCANTE. I file `dashboard/`
+toccati dallo sweep sono cambiati SOLO nel formato: nessun impatto su
+capability AI/analytics. Dettagli canonici in `docs/architecture.md` e
+`docs/development-continuity-map.md`.
 
 ## Update 2026-06-17 — Emetti fattura: registry AI + follow-up
 

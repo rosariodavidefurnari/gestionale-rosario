@@ -75,7 +75,11 @@ export const validateInvoiceEmitRequest = (
   const grossTotal = Number(p.grossTotal);
   const netCollectable = Number(p.netCollectable);
 
-  if (![grossTaxable, stampAmount, grossTotal, netCollectable].every(Number.isFinite)) {
+  if (
+    ![grossTaxable, stampAmount, grossTotal, netCollectable].every(
+      Number.isFinite,
+    )
+  ) {
     return { error: "Importi non validi" };
   }
   if (grossTaxable < 0 || stampAmount < 0) {

@@ -9,7 +9,12 @@ import {
 describe("computeInvoiceDraftAmounts", () => {
   it("computes gross document amount and stamp with no prior payment", () => {
     const lineItems: InvoiceDraftLineItem[] = [
-      { description: "Servizio", quantity: 1, unitPrice: 1000, kind: "service" },
+      {
+        description: "Servizio",
+        quantity: 1,
+        unitPrice: 1000,
+        kind: "service",
+      },
       { description: "Km", quantity: 1, unitPrice: 100, kind: "km" },
     ];
     const a = computeInvoiceDraftAmounts(lineItems);
@@ -22,7 +27,12 @@ describe("computeInvoiceDraftAmounts", () => {
 
   it("separates gross document amount from net collectable with a prior payment", () => {
     const lineItems: InvoiceDraftLineItem[] = [
-      { description: "Servizio", quantity: 1, unitPrice: 1000, kind: "service" },
+      {
+        description: "Servizio",
+        quantity: 1,
+        unitPrice: 1000,
+        kind: "service",
+      },
       { description: "Km", quantity: 1, unitPrice: 100, kind: "km" },
       {
         description: "Pagamenti gia ricevuti",
@@ -62,7 +72,12 @@ describe("computeInvoiceDraftAmounts", () => {
 
   it("leaves computeInvoiceDraftTotals (XML basis) unchanged", () => {
     const lineItems: InvoiceDraftLineItem[] = [
-      { description: "Servizio", quantity: 1, unitPrice: 1000, kind: "service" },
+      {
+        description: "Servizio",
+        quantity: 1,
+        unitPrice: 1000,
+        kind: "service",
+      },
       {
         description: "Pagamenti gia ricevuti",
         quantity: 1,

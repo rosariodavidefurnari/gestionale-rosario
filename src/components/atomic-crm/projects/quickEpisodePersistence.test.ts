@@ -107,9 +107,9 @@ describe("quickEpisodePersistence", () => {
     // end > start.
     expect(payload.service_date).toMatch(/^2026-04-1[01]T/);
     expect(payload.service_end).toMatch(/^2026-04-1[01]T/);
-    expect(
-      new Date(payload.service_end!).getTime(),
-    ).toBeGreaterThan(new Date(payload.service_date).getTime());
+    expect(new Date(payload.service_end!).getTime()).toBeGreaterThan(
+      new Date(payload.service_date).getTime(),
+    );
   });
 
   it("omits service_end when blank in the input (degenerate but valid)", () => {

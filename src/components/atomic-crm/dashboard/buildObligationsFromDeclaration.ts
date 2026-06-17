@@ -1,5 +1,8 @@
 import type { FiscalDeadlineComponent } from "./fiscalModelTypes";
-import type { FiscalDeclaration, FiscalObligationSource } from "./fiscalRealityTypes";
+import type {
+  FiscalDeclaration,
+  FiscalObligationSource,
+} from "./fiscalRealityTypes";
 import { roundFiscalOutput } from "./roundFiscalOutput";
 import { shiftWeekendToNextBusinessDay } from "@/lib/dateTimezone";
 
