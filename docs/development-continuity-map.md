@@ -10,9 +10,14 @@ Last updated: 2026-06-17 (invoice_void: pivot FK financial_document_id su servic
 
 ---
 
-## Annulla emissione (invoice_void) — in corso
+## Annulla emissione (invoice_void) — SHIPPED (LIVE in prod)
 
-Branch `work/invoice-void`. Azione reversibile per annullare una fattura emessa
+Mergiato in `main` (`31e938e8`) e LIVE: migration `20260617120000` su prod via
+`db push`, EF `invoice_emit`+`invoice_void` deployate (`qvdmzhyzpyaveniirsmo`),
+smoke prod emit→void GREEN (service reale ripristinato NULL/NULL, 0 residui),
+CI run `success`, Vercel prod alias HTTP 200. WF-17 browser desktop+mobile 2/2.
+
+Azione reversibile per annullare una fattura emessa
 dall'app (registro, NON Aruba/SDI): cancella documento + incasso atteso + ripulisce
 `invoice_ref` sui lavori (tornano "Da fatturare"). Money/fatture → spec v2 + piano
 v2 (3 review: spec FLAG→v2, piano FLAG→v2, ognuna con RAG).

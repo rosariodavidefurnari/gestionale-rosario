@@ -1,7 +1,7 @@
 # Cantiere Gestionale Rosario
 
 Stato del documento: working
-Ultimo aggiornamento: 2026-06-14
+Ultimo aggiornamento: 2026-06-17
 
 ## Scopo
 
@@ -68,16 +68,22 @@ Regola pratica:
 
 Branch corrente:
 
-- `work/invoice-void` (ciclo "Annulla emissione" in corso, NON ancora in prod)
+- `main` (invoice_void mergiato `31e938e8` e SHIPPED; branch `work/invoice-void`
+  integrato)
 
 Obiettivo operativo attivo:
 
-- **invoice_void ("Annulla emissione")** — rende reversibile l'emissione. Codice
-  e controllore committati e VERDI in locale; restano: re-review impl focalizzata
-  sui surface cambiati, browser desktop+mobile (WF-17), prod gated (OK utente).
-  Spec/piano: `docs/superpowers/specs|plans/2026-06-17-annulla-emissione*`.
-  Coda dopo: QW2 (card "Da incassare"), QW3 (mobile scadenzario+cassa), BR2
-  (riconciliazione), bollo (Ciclo 5).
+- Nessun ciclo implementativo aperto. invoice_void ("Annulla emissione") chiuso e
+  LIVE. Prossimo: scegliere dalla coda assessment
+  (`docs/superpowers/2026-06-15-gestionale-assessment.md`). Coda residua: QW2
+  (card "Da incassare"), QW3 (mobile scadenzario+cassa), BR2 (riconciliazione),
+  bollo (Ciclo 5).
+
+- Tech-debt aperto (separato): drift prettier su 15 file pre-esistenti su main
+  (dashboard/invoicing/provider/fiscal) -> check `Prettier` di `lint-action`
+  rosso ma NON bloccante (continue-on-error; run conclusion `success`). Pulizia
+  separata: bloccata dal continuity-check cross-dominio, da fare con i doc
+  companion dovuti.
 
 Chiuso in questa tornata: QW1 — promemoria fiscali rianimati, SHIPPED e LIVE.
 
@@ -230,42 +236,41 @@ Non fatto:
 
 ## Prossima Azione
 
-Ciclo aperto: **invoice_void** su branch `work/invoice-void`. Prossimi step in
-ordine: (1) re-review impl focalizzata sui surface cambiati dal pivot FK (RAG +
-sorgente); (2) browser desktop+mobile (WF-17) sul flusso reale; (3) commit unico
-(codice + docs + learning) e prod gated con OK utente (vedi sotto). NON andare in
-prod senza verde locale + browser + OK utente.
+Nessun ciclo aperto. invoice_void, "Emetti fattura", QW1 e BR1 chiusi e live.
+Scegliere il prossimo dalla coda assessment
+(`docs/superpowers/2026-06-15-gestionale-assessment.md`): QW2 card "Da incassare",
+QW3 mobile scadenzario+cassa, BR2 riconciliazione, bollo (Ciclo 5). Per ognuno:
+spec -> review -> piano -> review multi-superficie + RAG -> esecuzione LOCALE
+prima del remoto.
 
-### Ciclo in corso: invoice_void (Annulla emissione)
+### Ultimo ciclo chiuso: invoice_void (Annulla emissione) — LIVE
 
-Stato: codice + controllore committati e VERDI in locale; review impl FLAG
-chiusa con pivot architetturale (vedi spec/piano v3). Cosa fa: azione di dominio
-reversibile su `FinancialDocumentShow` (EF transazionale `invoice_void`) che
-cancella documento + incasso atteso e riporta lavori/spese a "Da fatturare".
-Mai cancella un incasso `ricevuto` (409); mai tocca Aruba/SDI.
+Azione di dominio reversibile su `FinancialDocumentShow` (EF transazionale
+`invoice_void`): cancella documento + incasso atteso e riporta lavori/spese a
+"Da fatturare". Mai cancella un incasso `ricevuto` (409); mai tocca Aruba/SDI.
 
-Pivot post-review (FLAG, 2/4 revisori, veri positivi):
+Pivot post review impl (FLAG, 2 veri positivi):
 
-- **A** mancava controllore committato sul money path → aggiunto
-  `tests/e2e/invoice-void.smoke.spec.ts` (EF reali via HTTP + assert REST), 4/4.
+- **A** mancava controllore committato sul money path → `tests/e2e/invoice-void.smoke.spec.ts`
+  (EF reali via HTTP + assert REST), 5/5: happy+FK-link, refuse-collected 409,
+  idempotent, FK-scoped over-clear+DB-8, allocations-guard 409 + no-CASCADE.
 - **B** over-clear: un-mark per `invoice_ref` string → reso SIMMETRICO all'emit
-  per FK. Nuova colonna `financial_document_id` su `services`+`expenses`
-  (migration `20260617120000`, no backfill: prod ha 0 fatture app-emesse), emit
-  la popola, void smarca per FK. Rimosso il twin-guard (cade il falso-409
-  `issue_date`). Storici/omonimi (FK NULL) mai toccati; km da trigger esclusi.
+  per FK `financial_document_id` su `services`+`expenses` (migration
+  `20260617120000`, no backfill: prod ha 0 fatture app-emesse). emit la popola,
+  void smarca per FK; twin-guard rimosso (cade il falso-409 `issue_date`).
+  Storici/omonimi (FK NULL) mai toccati; km da trigger esclusi (DB-8).
+- WF-17 browser (UI smoke desktop+mobile 2/2, 0 console errors); fix
+  `handleVoid` redirect-first (niente refetch del doc cancellato).
 
-Verde locale: 608 unit, e2e controller 4/4, tsc 0, deno check 0, prettier OK.
-Drift ambiente risolto: `realtime-js` 2.108.2 (richiede `@supabase/phoenix`
-assente) → `npm ci` ripristina l'albero lockato 2.90.1 (sblocca vite/e2e).
+SHIP: migration `20260617120000` su prod via `db push` (history allineata,
+registrata); EF `invoice_emit`+`invoice_void` deployate (`qvdmzhyzpyaveniirsmo`);
+smoke prod emit→void GREEN (service reale ripristinato NULL/NULL, 0 residui);
+merge `main` (`31e938e8`), CI run `success`, Vercel prod alias HTTP 200.
+Re-review impl 4 revisori + RAG, FLAG chiusa col 5° controllore.
 
-Prod gated (solo con OK utente): `npx supabase db push` (migration FK additiva)
-+ deploy EF `invoice_emit` e `invoice_void` (ref `qvdmzhyzpyaveniirsmo`, BE-1/BE-8)
-+ smoke prod emit→void + cleanup, poi merge `main`.
+### Cicli chiusi e live precedenti
 
-### Cicli chiusi e live
-
-"Emetti fattura", QW1 e BR1 chiusi e live. Coda dopo invoice_void: scegliere dalla
-coda assessment (`docs/superpowers/2026-06-15-gestionale-assessment.md`).
+"Emetti fattura", QW1 e BR1 chiusi e live.
 
 Coda lavori residua (ordine consigliato): QW2 card "Da incassare" (375 vs
 6.412), QW3 mobile scadenzario+cassa, BR2 riconciliazione pagamenti/allocazioni,

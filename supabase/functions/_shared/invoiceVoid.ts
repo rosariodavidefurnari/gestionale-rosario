@@ -24,7 +24,10 @@ export const canVoidEmittedInvoice = (
   doc: VoidableDoc,
   linkedPayments: readonly VoidablePayment[],
 ): CanVoidResult => {
-  if (doc.direction !== "outbound" || doc.document_type !== "customer_invoice") {
+  if (
+    doc.direction !== "outbound" ||
+    doc.document_type !== "customer_invoice"
+  ) {
     return { ok: false, reason: "non_supportata" };
   }
   if (linkedPayments.length === 0) {
@@ -41,12 +44,10 @@ export const canVoidEmittedInvoice = (
 
 export const voidReasonMessage = (reason: string): string =>
   ({
-    incassata:
-      "Fattura gia' incassata: scollega prima l'incasso, poi annulla.",
+    incassata: "Fattura gia' incassata: scollega prima l'incasso, poi annulla.",
     non_app_emessa:
       "Questa fattura non e' stata emessa dall'app: non e' annullabile da qui.",
     non_supportata:
       "Solo le fatture cliente emesse dall'app sono annullabili da qui.",
-    stato_inatteso:
-      "Stato incasso non gestito: intervenire manualmente.",
+    stato_inatteso: "Stato incasso non gestito: intervenire manualmente.",
   })[reason] ?? "Annullamento non consentito.";

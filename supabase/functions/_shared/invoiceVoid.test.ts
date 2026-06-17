@@ -10,7 +10,9 @@ const outboundInvoice = {
 describe("canVoidEmittedInvoice", () => {
   it("ok when all linked payments are in_attesa", () => {
     expect(
-      canVoidEmittedInvoice(outboundInvoice, [{ id: "p1", status: "in_attesa" }]),
+      canVoidEmittedInvoice(outboundInvoice, [
+        { id: "p1", status: "in_attesa" },
+      ]),
     ).toEqual({ ok: true });
   });
 
