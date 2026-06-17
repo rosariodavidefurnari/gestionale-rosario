@@ -81,7 +81,10 @@ const emitInvoice = async ({
       if (request.serviceIds.length > 0) {
         const updatedServices = await trx
           .updateTable("services")
-          .set({ invoice_ref: request.documentNumber })
+          .set({
+            invoice_ref: request.documentNumber,
+            financial_document_id: insertedDocument.id,
+          })
           .where("id", "in", request.serviceIds)
           .where("client_id", "=", request.clientId)
           .where(sql<boolean>`(invoice_ref is null or invoice_ref = '')`)
@@ -94,7 +97,10 @@ const emitInvoice = async ({
       if (request.expenseIds.length > 0) {
         const updatedExpenses = await trx
           .updateTable("expenses")
-          .set({ invoice_ref: request.documentNumber })
+          .set({
+            invoice_ref: request.documentNumber,
+            financial_document_id: insertedDocument.id,
+          })
           .where("id", "in", request.expenseIds)
           .where("client_id", "=", request.clientId)
           .where(sql<boolean>`(invoice_ref is null or invoice_ref = '')`)

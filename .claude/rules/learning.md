@@ -67,6 +67,7 @@
 | **DB**       | DB-6  | Payload servizi figli → eredita client_id |
 | **DB**       | DB-7  | F24 reali → interessi e compensazioni     |
 | **DB**       | DB-8  | Builder che unisce services+expenses → skip source_service_id |
+| **DB**       | DB-9  | EF marca per id → UNDO smarca per id/FK, mai per string |
 | **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
 | **Workflow** | WF-15 | Lavoro rischioso → RAG attivo + review multi-superficie |
 | **Workflow** | WF-16 | CI check → `gh -R fork` (default punta a upstream)  |
@@ -239,6 +240,31 @@ Ogni km veniva contato due volte nella bozza fattura, gonfiando il
 netto a pagare e rischiando fatture reali emesse con importi sbagliati.
 Questo pattern si ripete ogni volta che qualcuno sposta un invariant in un
 DB trigger senza aggiornare i consumer downstream (vedi anche DB-5).
+
+### DB-9: un'azione che MARCA record per id -> la sua UNDO deve SMARCARE per id/FK, mai per stringa libera
+
+**Quando**: scrivo o modifico una coppia mark/un-mark (emit/void, link/unlink,
+assegna/revoca) dove l'azione "mark" agisce su `id IN (...)` ma l'UNDO deriva il
+set da una colonna **free-text** (`invoice_ref`, codice, label) con `WHERE
+field = <valore>`
+**Fare**: rendere l'un-mark SIMMETRICO al mark. Persistere il legame con una FK
+dedicata (es. `financial_document_id` su `services`/`expenses`, popolata dall'EF
+che marca) e smarcare per quella FK (`WHERE financial_document_id = <docId>`),
+azzerando anche la free-text. Mai smarcare per la stringa libera: e' editabile
+dall'utente e scritta da writer storici/import, quindi l'UNDO colpirebbe righe
+omonime estranee (corruzione dato). Niente backfill cieco per stringa: se in prod
+non esistono righe legacy del nuovo flow (verificare con una query, es.
+`payments_linked=0`), la FK parte NULL su tutto lo storico e l'UNDO non lo tocca.
+Aggiungere un controllore che dimostra che una riga omonima con la stessa stringa
+ma FK NULL NON viene toccata.
+**Perche'**: il 2026-06-17 `invoice_void` smarcava per `invoice_ref =
+document_number AND client_id`. `invoice_ref` e' free-text (`ServiceInputs`) e
+portato da import storici (`FPR n/23`): un void poteva riportare a "Da fatturare"
+lavori/spese storici estranei, e il twin-guard per `document_number` (senza
+`issue_date`, mentre la UNIQUE lo include) dava falso-409 su `1/2024`+`1/2025`.
+Fix: FK `financial_document_id` simmetrica all'emit, twin-guard rimosso. Stesso
+spirito di DB-5/DB-8: spostare un invariant senza rendere simmetrico il rovescio
+e' la causa radice.
 
 ---
 

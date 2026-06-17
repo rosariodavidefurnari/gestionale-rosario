@@ -117,6 +117,8 @@ interface ExpensesTable {
   invoice_ref: string | null;
   source_service_id: string | null;
   supplier_id?: string | null;
+  // Set by invoice_emit, un-marked by invoice_void (by id, not invoice_ref).
+  financial_document_id?: string | null;
   created_at: Generated<Date>;
 }
 
@@ -129,6 +131,8 @@ interface ServicesTable {
   all_day?: boolean | null;
   is_taxable?: boolean | null;
   invoice_ref: string | null;
+  // Set by invoice_emit, un-marked by invoice_void (by id, not invoice_ref).
+  financial_document_id?: string | null;
 }
 
 interface FinancialDocumentsTable {

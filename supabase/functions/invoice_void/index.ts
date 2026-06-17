@@ -43,17 +43,11 @@ const voidInvoice = async ({
         ),
       );
 
-      // Lock the document (idempotent: missing -> already voided).
+      // Lock the document (idempotent: missing -> already voided). The un-mark is
+      // by financial_document_id (= documentId), so we only need the gate fields.
       const doc = await trx
         .selectFrom("financial_documents")
-        .select([
-          "id",
-          "client_id",
-          "direction",
-          "document_type",
-          "document_number",
-          "issue_date",
-        ])
+        .select(["direction", "document_type"])
         .where("id", "=", documentId)
         .forUpdate()
         .executeTakeFirst();
@@ -79,23 +73,6 @@ const voidInvoice = async ({
         throw new InvoiceVoidError(409, voidReasonMessage(decision.reason));
       }
 
-      // Ambiguity guard: document_number is NOT unique on its own (identity is
-      // client+direction+number+issue_date). Refuse if >1 outbound doc shares
-      // (client, number) so the invoice_ref un-mark can't hit the wrong invoice.
-      const twin = await sql<{ c: number }>`
-        select count(*)::int as c
-        from public.financial_documents
-        where client_id = ${doc.client_id}
-          and direction = 'outbound'
-          and document_number = ${doc.document_number}
-      `.execute(trx);
-      if ((twin.rows[0]?.c ?? 0) > 1) {
-        throw new InvoiceVoidError(
-          409,
-          `Numero fattura ambiguo: piu' fatture con lo stesso numero per questo cliente. Annullare manualmente.`,
-        );
-      }
-
       // Allocations guard (raw SQL: these tables are not in the Kysely Database
       // type). Refuse if any allocation hangs off the document (ON DELETE
       // CASCADE would silently drop them).
@@ -112,22 +89,22 @@ const voidInvoice = async ({
         );
       }
 
-      // Un-mark source records (back to "Da fatturare"). Mirror the emit's
-      // scope: expenses exclude trigger-generated km rows (source_service_id, DB-8).
+      // Un-mark source records (back to "Da fatturare") by the emit-set link, not
+      // by the free-text invoice_ref string: this is exactly symmetric to the
+      // emit (which marks by id) and can never touch historical/homonym rows
+      // (financial_document_id IS NULL). km trigger-rows are excluded for free
+      // (emit never sets the FK on source_service_id rows, DB-8).
       const unmarkedServices = await trx
         .updateTable("services")
-        .set({ invoice_ref: null })
-        .where("invoice_ref", "=", doc.document_number)
-        .where("client_id", "=", doc.client_id)
+        .set({ invoice_ref: null, financial_document_id: null })
+        .where("financial_document_id", "=", documentId)
         .returning(["id"])
         .execute();
 
       const unmarkedExpenses = await trx
         .updateTable("expenses")
-        .set({ invoice_ref: null })
-        .where("invoice_ref", "=", doc.document_number)
-        .where("client_id", "=", doc.client_id)
-        .where("source_service_id", "is", null)
+        .set({ invoice_ref: null, financial_document_id: null })
+        .where("financial_document_id", "=", documentId)
         .returning(["id"])
         .execute();
 

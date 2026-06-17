@@ -14,7 +14,32 @@ DELETE + guard) invocata da provider `voidEmittedInvoice`, bottone destructive s
 
 **Regole:** MONEY/FISCAL TDD (RED prima), BE-2 (config.toml), BE-1/BE-8 (deploy
 manuale ref `qvdmzhyzpyaveniirsmo`), DB-8, WF-17 (browser desktop+mobile),
-read-only resource preservato. Niente schema nuovo (nessuna migration).
+read-only resource preservato.
+
+---
+
+## REVISIONE v3 (post review IMPLEMENTAZIONE) — AUTORITATIVA
+
+Vince su v2 e sul corpo. La review impl ha imposto 2 fix (dettaglio nella spec
+v3). Effetti sul piano:
+
+- **Schema (cambia "niente migration nuova"):** migration
+  `20260617120000_invoice_billing_link.sql` aggiunge `financial_document_id`
+  (FK nullable `ON DELETE SET NULL`, indicizzata) a `services` + `expenses`.
+  Additiva, replayable, **no backfill** (prod ha 0 fatture app-emesse). Deploy
+  prod include `npx supabase db push`.
+- **Un-mark per FK, non per string:** `invoice_emit` setta la FK sulle righe che
+  marca; `invoice_void` smarca per `financial_document_id = documentId` (azzera
+  `invoice_ref` + FK). Rimosso il twin-guard (P-V2/V2): non piu' necessario, e
+  sparisce il falso-409 `issue_date`. `_shared/db.ts` + `types.ts` allineati.
+- **Controllore committato (chiude il FLAG-A):**
+  `tests/e2e/invoice-void.smoke.spec.ts` (EF reali via HTTP + assert REST), 4
+  casi verdi: happy+FK-link, refuse-collected 409, idempotent, FK-scoped
+  over-clear+DB-8. Sostituisce/realizza i controllori #2/#3/#4/#6 del piano come
+  test committato e ripetibile (`npm run test:e2e -- tests/e2e/invoice-void.smoke.spec.ts`).
+- **Drift ambiente risolto:** `realtime-js` era driftato a 2.108.2 (richiede
+  `@supabase/phoenix` assente) bloccando vite/e2e; `npm ci` ha ripristinato
+  l'albero lockato (2.90.1). Lockfile = verita'.
 
 ---
 

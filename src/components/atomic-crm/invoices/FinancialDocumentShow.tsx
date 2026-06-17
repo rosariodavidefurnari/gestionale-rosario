@@ -3,7 +3,6 @@ import {
   useShowContext,
   useGetList,
   useNotify,
-  useRefresh,
   useRedirect,
 } from "ra-core";
 import { Badge } from "@/components/ui/badge";
@@ -125,7 +124,6 @@ const FinancialDocumentShowContent = () => {
     useShowContext<FinancialDocumentSummary>();
   const isMobile = useIsMobile();
   const notify = useNotify();
-  const refresh = useRefresh();
   const redirect = useRedirect();
   const { voidInvoice, isVoiding } = useVoidInvoice();
 
@@ -156,14 +154,17 @@ const FinancialDocumentShowContent = () => {
           ),
       });
       if (outcome.status === "cancelled") return;
+      // Redirect FIRST: the document is now deleted, so leaving this Show page
+      // before anything refetches avoids a getOne on the missing row (ra-data
+      // -postgrest "Cannot coerce to single JSON object"). The Fatture list and
+      // Registro Lavori refetch fresh on navigation — no global refresh() needed.
+      redirect("list", "financial_documents_summary");
       notify(
         outcome.status === "already_voided"
           ? "Fattura gia' annullata."
           : "Fattura annullata: lavori tornati Da fatturare, incasso atteso rimosso.",
         { type: "success" },
       );
-      refresh();
-      redirect("list", "financial_documents_summary");
     } catch (e) {
       notify(
         e instanceof Error ? e.message : "Impossibile annullare la fattura.",

@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-16 (Emetti fattura: foundation — financial_document_id link, amounts helper, billing gate, builder source ids)
+Last updated: 2026-06-17 (invoice_void: pivot FK financial_document_id su services/expenses — un-mark simmetrico all'emit, twin-guard rimosso, controllore e2e committato)
 
 ---
 
@@ -23,11 +23,21 @@ v2 (3 review: spec FLAG→v2, piano FLAG→v2, ognuna con RAG).
   `non_supportata` (inbound/credit note), `stato_inatteso`. + `voidReasonMessage`.
 - `supabase/functions/invoice_void/index.ts` + `config.toml`
   (`verify_jwt=false`) — EF transazionale: `FOR UPDATE` su doc+payment, guard
-  ambiguita' (>1 doc outbound stesso client+numero → 409), guard allocations
-  (raw SQL su `financial_document_{project,cash}_allocations` → 409), un-mark
-  services/expenses (expenses esclude `source_service_id`, DB-8), DELETE
-  fail-closed payment `status IN (in_attesa,scaduto)` + count check → rollback
-  (TOCTOU), DELETE documento, idempotente `already_voided`.
+  allocations (raw SQL su `financial_document_{project,cash}_allocations` → 409),
+  un-mark services/expenses **per FK `financial_document_id = documentId`**
+  (azzera `invoice_ref` + FK; simmetrico all'emit by-id), DELETE fail-closed
+  payment `status IN (in_attesa,scaduto)` + count check → rollback (TOCTOU),
+  DELETE documento, idempotente `already_voided`. **v3 (post review impl)**: il
+  twin-guard per `document_number` e' stato RIMOSSO — l'un-mark per FK rende
+  impossibile colpire fatture omonime, quindi cade anche il falso-409 quando la
+  UNIQUE include `issue_date` (`1/2024`+`1/2025`).
+- `supabase/migrations/20260617120000_invoice_billing_link.sql` — FK
+  `financial_document_id` (nullable, `ON DELETE SET NULL`, indicizzata) su
+  `services` + `expenses`. Additiva, replayable, **no backfill** (prod ha 0
+  fatture app-emesse). `invoice_emit/index.ts` la popola sulle stesse righe che
+  marca; `_shared/db.ts` + `types.ts` (Service/Expense) allineati. Righe storiche
+  /omonime (FK NULL) mai toccate dal void; km da trigger (`source_service_id`)
+  escluse gratis (l'emit non setta mai la FK su quelle righe, DB-8).
 - `providers/supabase/dataProviderInvoiceEmit.ts` — metodo `voidEmittedInvoice`.
 - `invoices/useVoidInvoice.ts` (+test) — `runVoidInvoice` puro (confirm iniettato)
   + hook; `invoices/invoiceVoidRules.ts` (+test) — `canVoidInvoiceFromPayments`
@@ -39,9 +49,16 @@ v2 (3 review: spec FLAG→v2, piano FLAG→v2, ognuna con RAG).
   `voidEmittedInvoice` → notify + `useRefresh()` + redirect lista. read-only
   resource preservato (azione di dominio, non CRUD). Copy confine Aruba.
 
-Da completare (controllori + gate): controllori TOCTOU (SQL) + km (DB-8) via
-smoke locale DB, browser desktop+mobile (WF-17), review impl multi-superficie +
-RAG, prod gated (deploy `invoice_void`). NB: storno NON in capability registry AI
+Controllore committato (chiude il FLAG-A della review impl):
+`tests/e2e/invoice-void.smoke.spec.ts` — chiama le EF reali via HTTP sul Supabase
+locale e asserisce lo stato DB via REST. 4 casi verdi: happy+FK-link,
+refuse-collected 409, idempotent already_voided, FK-scoped (over-clear + DB-8).
+Run: `npm run test:e2e -- tests/e2e/invoice-void.smoke.spec.ts`. + test puri
+`invoiceVoid` 7/7, `useVoidInvoice` 4/4, `invoiceVoidRules` 4/4.
+
+Da completare (gate): re-review impl focalizzata sui surface del pivot FK (RAG +
+sorgente), browser desktop+mobile (WF-17), prod gated (`db push` migration FK +
+deploy `invoice_emit`+`invoice_void`). NB: storno NON in capability registry AI
 (azione manuale distruttiva, non AI-driven). Spec/piano:
 `docs/superpowers/specs/2026-06-17-annulla-emissione-design.md`,
 `docs/superpowers/plans/2026-06-17-annulla-emissione.md`.

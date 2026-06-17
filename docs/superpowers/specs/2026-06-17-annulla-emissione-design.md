@@ -8,6 +8,44 @@ legale/irreversibile avviene su Aruba (SDI), NON nel gestionale. Oggi pero'
 "Emetti fattura" crea record che dalla UI NON si possono annullare → porta a
 senso unico.
 
+## REVISIONE v3 (post review IMPLEMENTAZIONE multi-superficie + RAG) — AUTORITATIVA
+
+Vince su v2 e sul corpo dove confligge. La review impl (4 revisori, RAG +
+sorgente) ha alzato **FLAG** con 2 IMPORTANT convergenti (2/4 revisori), entrambi
+veri positivi verificati su file:line:
+
+- **A — mancava un controllore eseguibile COMMITTATO sul money/fiscal path.** I
+  test puri coprivano solo il decider/orchestrazione; il corpo transazionale
+  reale (fail-closed delete, un-mark, idempotenza, refuse-if-collected) non aveva
+  controllore committato (lo smoke manuale non basta per MONEY/FISCAL TDD +
+  EXECUTABLE GUARDRAILS). **Fix**: `tests/e2e/invoice-void.smoke.spec.ts` —
+  controllore committato che chiama le EF reali via HTTP sul Supabase locale e
+  asserisce lo stato DB via REST. 4 casi: happy+FK-link, refuse-collected 409,
+  idempotent already_voided, FK-scoped (over-clear + DB-8). Verde 4/4.
+- **B — over-clear: un-mark per `invoice_ref` string piu' largo dell'emit by-id.**
+  `invoice_ref` e' free-text (writer storici: `FPR n/23` con `source_service_id`
+  NULL, `invoice_import_confirm`); il twin-guard contava SENZA `issue_date`
+  (UNIQUE lo include) → falso 409 su `1/2024`+`1/2025`. **Fix (pivot
+  architetturale)**: l'un-mark diventa SIMMETRICO all'emit, per id/FK, non per
+  string:
+  - nuova colonna `financial_document_id` su `services` + `expenses` (migration
+    `20260617120000_invoice_billing_link.sql`): FK nullable `ON DELETE SET NULL`,
+    indicizzata. **Nessun backfill** — prod ha 0 fatture app-emesse (verificato:
+    `payments_linked=0`); ogni riga marcata esistente e' storica e deve restare
+    intatta.
+  - `invoice_emit` setta la FK sulle STESSE righe che marca (by-id);
+  - `invoice_void` smarca per `financial_document_id = documentId` (azzera
+    `invoice_ref` + FK). Rimosso il match per string E il twin-guard (non piu'
+    necessario → cade pure il falso-409 `issue_date`). Le righe storiche/omonime
+    (FK NULL) non vengono MAI toccate; le km da trigger (`source_service_id`)
+    sono escluse gratis (l'emit non setta mai la FK su quelle righe, DB-8).
+  - `types.ts` (Service/Expense) e `_shared/db.ts` (Kysely) allineati.
+
+Restano valide da v2: gate `canVoidEmittedInvoice` (payments), allocations-guard
+409, fail-closed delete + `FOR UPDATE` (TOCTOU), idempotenza already_voided,
+config.toml + deploy gated. Cambia SOLO il meccanismo di un-mark (FK, non string)
+e sparisce il twin-guard.
+
 ## REVISIONE v2 (post review multi-superficie + RAG) — AUTORITATIVA
 
 Dove confligge col corpo sotto, vince questa. La review (5 revisori, RAG +

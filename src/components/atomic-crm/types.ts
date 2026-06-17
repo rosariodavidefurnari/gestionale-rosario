@@ -177,6 +177,8 @@ export type Service = {
   trip_mode?: "one_way" | "round_trip" | null;
   location?: string;
   invoice_ref?: string;
+  // Set by invoice_emit when billed; cleared by invoice_void. Backend-managed.
+  financial_document_id?: Identifier | null;
   google_event_id?: string | null;
   google_event_link?: string | null;
   notes?: string;
@@ -340,6 +342,8 @@ export type Expense = {
   markup_percent?: number;
   description?: string;
   invoice_ref?: string;
+  // Set by invoice_emit when billed; cleared by invoice_void. Backend-managed.
+  financial_document_id?: Identifier | null;
   proof_url?: string | null;
   created_at: string;
   updated_at?: string;
