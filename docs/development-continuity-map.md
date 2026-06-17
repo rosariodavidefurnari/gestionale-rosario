@@ -10,6 +10,34 @@ Last updated: 2026-06-16 (Emetti fattura: foundation — financial_document_id l
 
 ---
 
+## Annulla emissione (invoice_void) — in corso
+
+Branch `work/invoice-void`. Azione reversibile per annullare una fattura emessa
+dall'app (registro, NON Aruba/SDI): cancella documento + incasso atteso + ripulisce
+`invoice_ref` sui lavori (tornano "Da fatturare"). Money/fatture → spec v2 + piano
+v2 (3 review: spec FLAG→v2, piano FLAG→v2, ognuna con RAG).
+
+- `supabase/functions/_shared/invoiceVoid.ts` (+test) — `canVoidEmittedInvoice`
+  (decisione condivisa UI+EF): ok se payment tutti `in_attesa`/`scaduto`;
+  rifiuta `incassata` (un `ricevuto`), `non_app_emessa` (0 payment link),
+  `non_supportata` (inbound/credit note), `stato_inatteso`. + `voidReasonMessage`.
+- `supabase/functions/invoice_void/index.ts` + `config.toml`
+  (`verify_jwt=false`) — EF transazionale: `FOR UPDATE` su doc+payment, guard
+  ambiguita' (>1 doc outbound stesso client+numero → 409), guard allocations
+  (raw SQL su `financial_document_{project,cash}_allocations` → 409), un-mark
+  services/expenses (expenses esclude `source_service_id`, DB-8), DELETE
+  fail-closed payment `status IN (in_attesa,scaduto)` + count check → rollback
+  (TOCTOU), DELETE documento, idempotente `already_voided`.
+- `providers/supabase/dataProviderInvoiceEmit.ts` — metodo `voidEmittedInvoice`.
+
+Da completare (Task 4-5 + controllori): UI bottone destructive su
+`FinancialDocumentShow` (fetch payment sollevato + `canVoidEmittedInvoice` gate +
+`useRefresh` + redirect, mobile WF-17), `runVoidInvoice`/`useVoidInvoice`
+estratto+testato, controllori TOCTOU (SQL) + km (DB-8), sweep + registry,
+browser desktop+mobile, prod gated. Spec/piano:
+`docs/superpowers/specs/2026-06-17-annulla-emissione-design.md`,
+`docs/superpowers/plans/2026-06-17-annulla-emissione.md`.
+
 ## Registro lavori — friction quick-wins (ponte fattura + badge fatturato)
 
 Branch `work/registro-lavori-friction`. Riduce l'attrito del flusso reale

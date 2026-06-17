@@ -59,3 +59,45 @@ describe("emitInvoice provider method", () => {
     await expect(emitInvoice(baseRequest())).rejects.toThrow();
   });
 });
+
+describe("voidEmittedInvoice provider method", () => {
+  it("posts the documentId to invoice_void and returns its data", async () => {
+    const invokeEdgeFunction = vi.fn().mockResolvedValue({
+      data: {
+        data: {
+          status: "voided",
+          servicesUnmarked: 2,
+          expensesUnmarked: 0,
+          paymentsDeleted: 1,
+        },
+      },
+      error: null,
+    });
+    const { voidEmittedInvoice } = buildInvoiceEmitProviderMethods({
+      invokeEdgeFunction,
+    });
+    const result = await voidEmittedInvoice("fd-1");
+
+    expect(invokeEdgeFunction).toHaveBeenCalledWith("invoice_void", {
+      method: "POST",
+      body: { documentId: "fd-1" },
+    });
+    expect(result).toEqual({
+      status: "voided",
+      servicesUnmarked: 2,
+      expensesUnmarked: 0,
+      paymentsDeleted: 1,
+    });
+  });
+
+  it("throws a readable error when the edge function fails", async () => {
+    const invokeEdgeFunction = vi.fn().mockResolvedValue({
+      data: null,
+      error: new Error("boom"),
+    });
+    const { voidEmittedInvoice } = buildInvoiceEmitProviderMethods({
+      invokeEdgeFunction,
+    });
+    await expect(voidEmittedInvoice("fd-1")).rejects.toThrow();
+  });
+});

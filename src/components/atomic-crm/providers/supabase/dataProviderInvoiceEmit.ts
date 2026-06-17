@@ -25,6 +25,15 @@ export type EmitInvoiceResult =
     }
   | { status: "already_emitted"; financialDocumentId: string };
 
+export type VoidInvoiceResult =
+  | {
+      status: "voided";
+      servicesUnmarked: number;
+      expensesUnmarked: number;
+      paymentsDeleted: number;
+    }
+  | { status: "already_voided" };
+
 export const buildInvoiceEmitProviderMethods = (deps: {
   invokeEdgeFunction: InvokeEdgeFunction;
 }) => ({
@@ -42,6 +51,27 @@ export const buildInvoiceEmitProviderMethods = (deps: {
         await extractEdgeFunctionErrorMessage(
           error,
           "Impossibile emettere la fattura.",
+        ),
+      );
+    }
+
+    return data.data;
+  },
+
+  async voidEmittedInvoice(documentId: string): Promise<VoidInvoiceResult> {
+    const { data, error } = await deps.invokeEdgeFunction<{
+      data: VoidInvoiceResult;
+    }>("invoice_void", {
+      method: "POST",
+      body: { documentId },
+    });
+
+    if (!data || error) {
+      console.error("voidEmittedInvoice.error", error);
+      throw new Error(
+        await extractEdgeFunctionErrorMessage(
+          error,
+          "Impossibile annullare la fattura.",
         ),
       );
     }

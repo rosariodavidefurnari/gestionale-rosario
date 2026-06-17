@@ -181,6 +181,8 @@ verify_jwt = false
 verify_jwt = false
 [functions.invoice_emit]
 verify_jwt = false
+[functions.invoice_void]
+verify_jwt = false
 [functions.unified_crm_answer]
 verify_jwt = false
 [functions.travel_route_estimate]
