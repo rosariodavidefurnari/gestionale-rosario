@@ -29,12 +29,20 @@ v2 (3 review: spec FLAG→v2, piano FLAG→v2, ognuna con RAG).
   fail-closed payment `status IN (in_attesa,scaduto)` + count check → rollback
   (TOCTOU), DELETE documento, idempotente `already_voided`.
 - `providers/supabase/dataProviderInvoiceEmit.ts` — metodo `voidEmittedInvoice`.
+- `invoices/useVoidInvoice.ts` (+test) — `runVoidInvoice` puro (confirm iniettato)
+  + hook; `invoices/invoiceVoidRules.ts` (+test) — `canVoidInvoiceFromPayments`
+  (mirror frontend del decisore EF, come `dateTimezone`, solo per il gate del
+  bottone; l'EF resta l'autorita').
+- `invoices/FinancialDocumentShow.tsx` — fetch payment SOLLEVATO al content
+  (CollectionBadge ora riceve `payments` prop), bottone destructive "Annulla
+  emissione" (visibile solo se `canVoidInvoiceFromPayments`), `window.confirm` →
+  `voidEmittedInvoice` → notify + `useRefresh()` + redirect lista. read-only
+  resource preservato (azione di dominio, non CRUD). Copy confine Aruba.
 
-Da completare (Task 4-5 + controllori): UI bottone destructive su
-`FinancialDocumentShow` (fetch payment sollevato + `canVoidEmittedInvoice` gate +
-`useRefresh` + redirect, mobile WF-17), `runVoidInvoice`/`useVoidInvoice`
-estratto+testato, controllori TOCTOU (SQL) + km (DB-8), sweep + registry,
-browser desktop+mobile, prod gated. Spec/piano:
+Da completare (controllori + gate): controllori TOCTOU (SQL) + km (DB-8) via
+smoke locale DB, browser desktop+mobile (WF-17), review impl multi-superficie +
+RAG, prod gated (deploy `invoice_void`). NB: storno NON in capability registry AI
+(azione manuale distruttiva, non AI-driven). Spec/piano:
 `docs/superpowers/specs/2026-06-17-annulla-emissione-design.md`,
 `docs/superpowers/plans/2026-06-17-annulla-emissione.md`.
 

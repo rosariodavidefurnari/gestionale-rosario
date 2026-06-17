@@ -1,8 +1,23 @@
-import { ShowBase, useShowContext, useGetList, type Identifier } from "ra-core";
+import {
+  ShowBase,
+  useShowContext,
+  useGetList,
+  useNotify,
+  useRefresh,
+  useRedirect,
+} from "ra-core";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, User, FileText, Building2, FolderOpen } from "lucide-react";
+import {
+  Calendar,
+  User,
+  FileText,
+  Building2,
+  FolderOpen,
+  Ban,
+} from "lucide-react";
 import { Link } from "react-router";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatBusinessDate } from "@/lib/dateTimezone";
@@ -17,6 +32,8 @@ import {
   directionLabel,
   formatEur,
 } from "./financialDocumentHelpers";
+import { canVoidInvoiceFromPayments } from "./invoiceVoidRules";
+import { useVoidInvoice } from "./useVoidInvoice";
 
 const COLLECTION_TONE_CLASS: Record<string, string> = {
   pending: "text-amber-700 bg-amber-50 border-amber-200",
@@ -29,14 +46,8 @@ const COLLECTION_TONE_CLASS: Record<string, string> = {
  * `financial_document_id` (not the dead `settlement_status`). Hidden for
  * historical documents that have no linked payment (neutral state).
  */
-const CollectionBadge = ({ documentId }: { documentId: Identifier }) => {
-  const { data, isPending } = useGetList<Payment>("payments", {
-    pagination: { page: 1, perPage: 100 },
-    sort: { field: "payment_date", order: "DESC" },
-    filter: { "financial_document_id@eq": documentId },
-  });
-  if (isPending) return null;
-  const state = deriveDocumentCollectionState(data ?? []);
+const CollectionBadge = ({ payments }: { payments: Payment[] }) => {
+  const state = deriveDocumentCollectionState(payments);
   if (state.tone === "neutral") return null;
   return (
     <Badge variant="outline" className={cn(COLLECTION_TONE_CLASS[state.tone])}>
@@ -113,9 +124,53 @@ const FinancialDocumentShowContent = () => {
   const { record, isPending, error } =
     useShowContext<FinancialDocumentSummary>();
   const isMobile = useIsMobile();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const redirect = useRedirect();
+  const { voidInvoice, isVoiding } = useVoidInvoice();
+
+  // Lifted payment fetch (shared by the collection badge + the void gate; no
+  // double fetch). Enabled only once the document is loaded.
+  const { data: payments } = useGetList<Payment>(
+    "payments",
+    {
+      pagination: { page: 1, perPage: 100 },
+      sort: { field: "payment_date", order: "DESC" },
+      filter: { "financial_document_id@eq": record?.id },
+    },
+    { enabled: !!record?.id },
+  );
 
   if (error) return <ErrorMessage />;
   if (isPending || !record) return null;
+
+  const linkedPayments = payments ?? [];
+  const canVoid = canVoidInvoiceFromPayments(record, linkedPayments);
+
+  const handleVoid = async () => {
+    try {
+      const outcome = await voidInvoice(String(record.id), {
+        confirm: () =>
+          window.confirm(
+            `Annulli la fattura ${record.document_number}? I lavori torneranno "Da fatturare" e l'incasso atteso sara' rimosso. L'XML eventualmente gia' caricato su Aruba NON viene toccato.`,
+          ),
+      });
+      if (outcome.status === "cancelled") return;
+      notify(
+        outcome.status === "already_voided"
+          ? "Fattura gia' annullata."
+          : "Fattura annullata: lavori tornati Da fatturare, incasso atteso rimosso.",
+        { type: "success" },
+      );
+      refresh();
+      redirect("list", "financial_documents_summary");
+    } catch (e) {
+      notify(
+        e instanceof Error ? e.message : "Impossibile annullare la fattura.",
+        { type: "error" },
+      );
+    }
+  };
 
   return (
     <div className="mt-4 mb-28 md:mb-2 flex flex-col gap-4 px-4 md:px-0">
@@ -142,7 +197,7 @@ const FinancialDocumentShowContent = () => {
                 >
                   {directionLabel(record.direction)}
                 </Badge>
-                <CollectionBadge documentId={record.id} />
+                <CollectionBadge payments={linkedPayments} />
                 {record.issue_date && (
                   <span className="flex items-center gap-1">
                     <Calendar className="size-3" />
@@ -256,6 +311,29 @@ const FinancialDocumentShowContent = () => {
                   Progetti
                 </h6>
                 <p className="text-sm">{record.project_names}</p>
+              </div>
+            </>
+          )}
+
+          {/* Annulla emissione (solo fatture app-emesse non incassate) */}
+          {canVoid && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="w-full"
+                  disabled={isVoiding}
+                  onClick={handleVoid}
+                >
+                  <Ban className="mr-1 h-4 w-4" />
+                  {isVoiding ? "Annullamento..." : "Annulla emissione"}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  I lavori tornano "Da fatturare" e l'incasso atteso viene
+                  rimosso. L'XML su Aruba non viene toccato.
+                </p>
               </div>
             </>
           )}
