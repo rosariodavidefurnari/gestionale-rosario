@@ -70,6 +70,7 @@
 | **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
 | **Workflow** | WF-15 | Lavoro rischioso → RAG attivo + review multi-superficie |
 | **Workflow** | WF-16 | CI check → `gh -R fork` (default punta a upstream)  |
+| **Workflow** | WF-17 | Lavoro anti-frizione UX → RAG + browser desktop E mobile |
 | **Backend**  | BE-9  | EF Calendar timed → usa timestamp service |
 
 ---
@@ -566,6 +567,25 @@ fork. Per le API: `gh api repos/rosariodavidefurnari/gestionale-rosario/...`.
 sembrava che il push non avesse triggerato CI. In realta' il push era andato a
 buon fine e il run `Check | push | success` esisteva sul fork. Il remote
 `upstream` -> marmelab confonde tutti i comandi `gh` privi di `-R`.
+
+### WF-17: Lavoro anti-frizione UX -> RAG + visione browser desktop E mobile
+
+**Quando**: sto lavorando per ridurre la frizione d'uso del gestionale (nuove
+azioni, badge, navigazione, cambio stati, flussi cross-superficie) o comunque
+qualsiasi modifica che cambia cosa vede/fa l'utente nelle pagine
+**Fare**: oltre a RAG + verifica sorgente, NON dichiarare "fatto" senza aver
+guardato l'interfaccia REALE nel browser in DUE viewport: desktop E cellulare
+(`set_viewport mobile` o lo strumento glance/playwright). Cliccare il flusso
+vero (navigazione, apertura dialog, toggle) — non solo leggere lo snapshot — e
+verificare che l'azione esista, sia raggiungibile e leggibile su entrambe le
+dimensioni, con 0 errori console. La prova della frizione e' "lo vedo e ci
+clicco su desktop e mobile", non "passa il typecheck".
+**Perché**: l'obiettivo dichiarato dall'utente (2026-06-17) e' ELIMINARE la
+frizione d'uso; un fix puo' passare tsc/test/review ed essere comunque scomodo o
+nascosto (CTA fuori viewport mobile, dead-end silenzioso, badge illeggibile).
+Solo la visione browser su entrambe le viewport lo dimostra. L'utente ha imposto
+esplicitamente: "costringiti a usare RAG e visione dell'interfaccia da browser
+(desktop e cellulare)".
 
 ---
 
