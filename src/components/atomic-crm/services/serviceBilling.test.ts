@@ -25,17 +25,15 @@ describe("isServiceBilled", () => {
 });
 
 describe("getServiceBillingState", () => {
-  it("'Fatturato' when billed", () => {
-    expect(getServiceBillingState(svc("FT-1"))).toEqual({
-      label: "Fatturato",
-      tone: "settled",
-    });
+  it("'Fatturato' (emerald) when billed", () => {
+    const state = getServiceBillingState(svc("FT-1"));
+    expect(state.label).toBe("Fatturato");
+    expect(state.className).toContain("emerald");
   });
-  it("'Da fatturare' when not billed", () => {
-    expect(getServiceBillingState(svc())).toEqual({
-      label: "Da fatturare",
-      tone: "pending",
-    });
+  it("'Da fatturare' (amber) when not billed", () => {
+    const state = getServiceBillingState(svc());
+    expect(state.label).toBe("Da fatturare");
+    expect(state.className).toContain("amber");
   });
 });
 

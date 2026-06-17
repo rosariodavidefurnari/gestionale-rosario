@@ -27,6 +27,12 @@ navigazione, nessuna migration/EF/scrittura nuova.
   (parita' mobile, UI-7); `ServiceListFilter.tsx` — filtro "Stato fatturazione"
   -> "Da fatturare" via `invoice_ref@is: null` (pattern da taskFilters).
 
+Fix post review impl (FLAG chiusa): `ServiceInputs` `invoice_ref` ora
+`parse=(v)=>v||null` (niente piu' `''`, il filtro `@is:null` resta corretto);
+`ProjectShow` apre la bozza su `?invoiceDraft=true` anche senza importo (mostra
+`InvoiceDraftEmptyState`, niente vicolo cieco dal ponte); `getServiceBillingState`
+espone `className` (single source colore, usato dalle 3 superfici, no drift).
+
 Spec: `docs/superpowers/specs/2026-06-17-registro-lavori-friction-quickwins-design.md`.
 Origine: diagnosi frizione UX (workflow `whah0a0sf`). Follow-up dalla diagnosi
 (ancora aperti): tocco unico "Incassato" in Pagamenti + mobile (tocca soldi ->

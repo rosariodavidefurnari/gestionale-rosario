@@ -11,15 +11,19 @@ export const isServiceBilled = (
 
 export type ServiceBillingState = {
   label: string;
-  tone: "settled" | "pending";
+  /** Badge color classes — single source so the 3 surfaces don't drift. */
+  className: string;
 };
+
+const BILLED_CLASS = "text-emerald-700 bg-emerald-50 border-emerald-200";
+const UNBILLED_CLASS = "text-amber-700 bg-amber-50 border-amber-200";
 
 export const getServiceBillingState = (
   service: Pick<Service, "invoice_ref">,
 ): ServiceBillingState =>
   isServiceBilled(service)
-    ? { label: "Fatturato", tone: "settled" }
-    : { label: "Da fatturare", tone: "pending" };
+    ? { label: "Fatturato", className: BILLED_CLASS }
+    : { label: "Da fatturare", className: UNBILLED_CLASS };
 
 /**
  * Bridge target: from a service (registro lavori) navigate to its project's

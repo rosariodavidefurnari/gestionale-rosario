@@ -1,5 +1,12 @@
 # Architettura Referenti CRM
 
+> Nota 2026-06-17 (registro lavori friction): `ProjectShow` apre la bozza
+> fattura su `?invoiceDraft=true` anche quando il progetto non ha importo
+> fatturabile (mostra `InvoiceDraftEmptyState` invece di un vicolo cieco), per
+> supportare il ponte "Emetti la fattura del progetto" che parte da un servizio
+> del registro lavori. Solo comportamento di apertura del dialog; nessun
+> cambio al dominio clienti/referenti/progetti.
+
 **Stato del documento:** `canonical`
 **Scopo:** fonte primaria per il dominio referenti e le relazioni
 `clients + contacts + project_contacts`.

@@ -129,11 +129,7 @@ const ServiceHeader = ({ record }: { record: Service }) => {
           </Badge>
           <Badge
             variant="outline"
-            className={
-              isServiceBilled(record)
-                ? "text-emerald-700 bg-emerald-50 border-emerald-200"
-                : "text-amber-700 bg-amber-50 border-amber-200"
-            }
+            className={getServiceBillingState(record).className}
           >
             {getServiceBillingState(record).label}
           </Badge>

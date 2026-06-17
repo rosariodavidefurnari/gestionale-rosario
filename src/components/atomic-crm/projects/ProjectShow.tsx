@@ -125,10 +125,13 @@ const ProjectHeader = ({ record }: { record: Project }) => {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    if (searchParams.get("invoiceDraft") === "true" && hasCollectableAmount) {
+    // Open whenever the bridge requested it: if the project has nothing left to
+    // bill, the dialog shows InvoiceDraftEmptyState (the draft prop is null
+    // below) instead of a silent dead-end on arrival from a service.
+    if (searchParams.get("invoiceDraft") === "true") {
       setInvoiceDraftOpen(true);
     }
-  }, [hasCollectableAmount, location.search]);
+  }, [location.search]);
 
   return (
     <div className="flex flex-col gap-3">

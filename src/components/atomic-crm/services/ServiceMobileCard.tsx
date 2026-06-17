@@ -6,7 +6,7 @@ import type { Service } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { formatDateRange } from "../misc/formatDateRange";
 import { calculateServiceNetValue } from "@/lib/semantics/crmSemanticRegistry";
-import { getServiceBillingState, isServiceBilled } from "./serviceBilling";
+import { getServiceBillingState } from "./serviceBilling";
 
 const eur = (n: number) =>
   n ? n.toLocaleString("it-IT", { minimumFractionDigits: 2 }) : "--";
@@ -50,11 +50,7 @@ export const ServiceMobileCard = ({
       <div className="flex items-center justify-between gap-2">
         <Badge
           variant="outline"
-          className={
-            isServiceBilled(service)
-              ? "text-emerald-700 bg-emerald-50 border-emerald-200"
-              : "text-amber-700 bg-amber-50 border-amber-200"
-          }
+          className={getServiceBillingState(service).className}
         >
           {getServiceBillingState(service).label}
         </Badge>

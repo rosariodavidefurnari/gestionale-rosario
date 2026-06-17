@@ -40,7 +40,7 @@ import { useColumnVisibility } from "@/hooks/useColumnVisibility";
 import { useResizableColumns } from "@/hooks/useResizableColumns";
 import { SERVICE_COLUMNS } from "../misc/columnDefinitions";
 import { ServiceMobileCard } from "./ServiceMobileCard";
-import { isServiceBilled } from "./serviceBilling";
+import { getServiceBillingState, isServiceBilled } from "./serviceBilling";
 
 const eur = (n: number) =>
   n ? n.toLocaleString("it-IT", { minimumFractionDigits: 2 }) : "--";
@@ -305,9 +305,9 @@ const ServiceRow = ({
         {!isServiceBilled(service) ? (
           <Badge
             variant="outline"
-            className="ml-2 text-amber-700 bg-amber-50 border-amber-200 align-middle"
+            className={`ml-2 align-middle ${getServiceBillingState(service).className}`}
           >
-            Da fatturare
+            {getServiceBillingState(service).label}
           </Badge>
         ) : null}
       </TableCell>
