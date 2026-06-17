@@ -6,8 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { EditButton } from "@/components/admin/edit-button";
 import { DeleteButton } from "@/components/admin/delete-button";
-import { Calendar, MapPin, FileText, ExternalLink } from "lucide-react";
-import { Link, useLocation } from "react-router";
+import { Calendar, MapPin, FileText, ExternalLink, Send } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Service } from "../types";
@@ -22,6 +22,11 @@ import {
 import { InvoiceDraftDialog } from "../invoicing/InvoiceDraftDialog";
 import { buildInvoiceDraftFromService } from "../invoicing/buildInvoiceDraftFromService";
 import { hasInvoiceDraftCollectableAmount } from "../invoicing/invoiceDraftTypes";
+import {
+  buildProjectInvoiceEmitPath,
+  getServiceBillingState,
+  isServiceBilled,
+} from "./serviceBilling";
 
 const eur = (n: number) =>
   n.toLocaleString("it-IT", { minimumFractionDigits: 2 });
@@ -75,6 +80,7 @@ const ServiceShowContent = () => {
 const ServiceHeader = ({ record }: { record: Service }) => {
   const [invoiceDraftOpen, setInvoiceDraftOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { data: project } = useGetOne(
     "projects",
     { id: record.project_id! },
@@ -121,6 +127,16 @@ const ServiceHeader = ({ record }: { record: Service }) => {
           >
             {record.is_taxable === false ? "Non tassabile" : "Tassabile"}
           </Badge>
+          <Badge
+            variant="outline"
+            className={
+              isServiceBilled(record)
+                ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                : "text-amber-700 bg-amber-50 border-amber-200"
+            }
+          >
+            {getServiceBillingState(record).label}
+          </Badge>
           <span className="flex items-center gap-1">
             <Calendar className="size-3" />
             {formatDateRange(
@@ -163,6 +179,19 @@ const ServiceHeader = ({ record }: { record: Service }) => {
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
+        {record.project_id && !isServiceBilled(record) ? (
+          <Button
+            type="button"
+            size="sm"
+            className="bg-emerald-700 hover:bg-emerald-800"
+            onClick={() =>
+              navigate(buildProjectInvoiceEmitPath(record.project_id!))
+            }
+          >
+            <Send className="mr-1 h-4 w-4" />
+            Emetti la fattura del progetto
+          </Button>
+        ) : null}
         {hasCollectableAmount ? (
           <Button
             type="button"

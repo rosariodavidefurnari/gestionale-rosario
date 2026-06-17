@@ -251,6 +251,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/services/serviceBilling.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/services/index.tsx",
           "type": "registry:component"
         },

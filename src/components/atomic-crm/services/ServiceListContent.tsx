@@ -23,6 +23,7 @@ import {
   Code,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 import type { Client, Service } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
@@ -39,6 +40,7 @@ import { useColumnVisibility } from "@/hooks/useColumnVisibility";
 import { useResizableColumns } from "@/hooks/useResizableColumns";
 import { SERVICE_COLUMNS } from "../misc/columnDefinitions";
 import { ServiceMobileCard } from "./ServiceMobileCard";
+import { isServiceBilled } from "./serviceBilling";
 
 const eur = (n: number) =>
   n ? n.toLocaleString("it-IT", { minimumFractionDigits: 2 }) : "--";
@@ -300,6 +302,14 @@ const ServiceRow = ({
             service.all_day,
           )}
         </Link>
+        {!isServiceBilled(service) ? (
+          <Badge
+            variant="outline"
+            className="ml-2 text-amber-700 bg-amber-50 border-amber-200 align-middle"
+          >
+            Da fatturare
+          </Badge>
+        ) : null}
       </TableCell>
       <TableCell className={cv("client", "text-sm text-muted-foreground")}>
         {service.client_id ? (

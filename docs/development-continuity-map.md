@@ -10,6 +10,29 @@ Last updated: 2026-06-16 (Emetti fattura: foundation — financial_document_id l
 
 ---
 
+## Registro lavori — friction quick-wins (ponte fattura + badge fatturato)
+
+Branch `work/registro-lavori-friction`. Riduce l'attrito del flusso reale
+(registro lavori -> fattura, salto preventivo). Frontend-only, read-only +
+navigazione, nessuna migration/EF/scrittura nuova.
+
+- `services/serviceBilling.ts` (+test) — helper puri: `isServiceBilled`
+  (`invoice_ref` non vuoto), `getServiceBillingState` (Fatturato/Da fatturare),
+  `buildProjectInvoiceEmitPath` (`/projects/<id>/show?invoiceDraft=true`).
+- `services/ServiceShow.tsx` — ponte "Emetti la fattura del progetto" (visibile
+  se `project_id && !isServiceBilled`) -> naviga alla bozza progetto (dove c'e'
+  l'azione Emetti, source=project) + badge Fatturato/Da fatturare.
+- `services/ServiceListContent.tsx` — badge inline "Da fatturare" (no nuova
+  colonna resizable); `ServiceMobileCard.tsx` — badge Fatturato/Da fatturare
+  (parita' mobile, UI-7); `ServiceListFilter.tsx` — filtro "Stato fatturazione"
+  -> "Da fatturare" via `invoice_ref@is: null` (pattern da taskFilters).
+
+Spec: `docs/superpowers/specs/2026-06-17-registro-lavori-friction-quickwins-design.md`.
+Origine: diagnosi frizione UX (workflow `whah0a0sf`). Follow-up dalla diagnosi
+(ancora aperti): tocco unico "Incassato" in Pagamenti + mobile (tocca soldi ->
+TDD); "scaduto" calcolato a vista ovunque; azioni rapide stato progetto/
+preventivo; progetto come contenitore; mobile nav.
+
 ## Emetti fattura (invoice_emit) — foundation in corso
 
 Branch `work/invoice-emit` (NON in prod). Obiettivo: un'azione unica dal dialog

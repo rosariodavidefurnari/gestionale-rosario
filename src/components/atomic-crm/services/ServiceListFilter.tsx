@@ -205,6 +205,27 @@ const ServiceFilterContent = () => {
       )}
 
       <FilterSection
+        icon={<FileText className="size-4" />}
+        label="Stato fatturazione"
+      >
+        <FilterBadge
+          label="Da fatturare"
+          isActive={filterValues["invoice_ref@is"] === null}
+          onToggle={() => {
+            if (filterValues["invoice_ref@is"] === null) {
+              const { "invoice_ref@is": _, ...rest } = filterValues;
+              setFilters(rest);
+            } else {
+              setFilters({
+                ...filterValues,
+                "invoice_ref@is": null as unknown as string,
+              });
+            }
+          }}
+        />
+      </FilterSection>
+
+      <FilterSection
         icon={<Clapperboard className="size-4" />}
         label="Tipo servizio"
       >
