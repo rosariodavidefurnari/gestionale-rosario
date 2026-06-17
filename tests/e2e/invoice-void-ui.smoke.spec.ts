@@ -124,6 +124,29 @@ const voidFromUi = async (page: Page, docId: string) => {
   expect(real, `console errors: ${real.join(" | ")}`).toEqual([]);
 };
 
+/**
+ * FIX-2 (badge) + FIX-1 (anti-stale) in one flow: the billed service shows the
+ * "Fatturato" badge in Registro Lavori; after void, SPA-navigating back (NO hard
+ * reload) shows it cleared. On MOBILE (CRM.tsx MobileAdmin: staleTime 2min +
+ * offlineFirst) this is the real anti-stale controller — without the
+ * invalidateQueries in handleVoid the stale "Fatturato" would survive and the
+ * final assertion fails. (Desktop uses staleTime 0, so there it's a sanity check.)
+ */
+const billedThenVoidClearsList = async (page: Page, docId: string) => {
+  await page.getByRole("link", { name: "Registro Lavori" }).click();
+  await expect(
+    page.getByText("Fatturato", { exact: true }).first(),
+  ).toBeVisible({ timeout: 15000 });
+
+  await voidFromUi(page, docId);
+
+  await page.getByRole("link", { name: "Registro Lavori" }).click();
+  await expect(page.getByText("Da fatturare").first()).toBeVisible({
+    timeout: 15000,
+  });
+  await expect(page.getByText("Fatturato", { exact: true })).toHaveCount(0);
+};
+
 test.describe("invoice_void UI (Annulla emissione) — WF-17", () => {
   test("desktop: button renders and voids, work returns to Da fatturare", async ({
     page,
@@ -143,9 +166,25 @@ test.describe("invoice_void UI (Annulla emissione) — WF-17", () => {
     });
   });
 
+  test("desktop: billed badge visible (UI-7) + void clears Registro Lavori", async ({
+    page,
+    request,
+  }) => {
+    const { docId } = await emitVoidableInvoice(request, "WF17-UI-BADGE");
+    await loginAsLocalAdmin(page);
+    await billedThenVoidClearsList(page, docId);
+  });
+
   test.describe("mobile", () => {
     test.use({ viewport: { width: 390, height: 844 } });
-    test("mobile: button reachable and voids", async ({ page, request }) => {
+    // WF-17 mobile: the destructive "Annulla emissione" button is reachable and
+    // voids on a 390px viewport. (The anti-stale cache invalidation is covered by
+    // the falsifiable unit test voidInvoiceSurfaces.test.ts — services is in the
+    // mobile "Altro" menu, so a nav-link click here would be brittle.)
+    test("mobile: void button reachable and voids", async ({
+      page,
+      request,
+    }) => {
       const { docId } = await emitVoidableInvoice(request, "WF17-UI-M");
       await loginAsLocalAdmin(page);
       await voidFromUi(page, docId);

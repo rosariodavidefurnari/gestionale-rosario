@@ -851,6 +851,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/invoices/voidInvoiceSurfaces.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/invoices/useVoidInvoice.ts",
           "type": "registry:component"
         },

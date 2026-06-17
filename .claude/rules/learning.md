@@ -72,6 +72,7 @@
 | **Workflow** | WF-15 | Lavoro rischioso → RAG attivo + review multi-superficie |
 | **Workflow** | WF-16 | CI check → `gh -R fork` (default punta a upstream)  |
 | **Workflow** | WF-17 | Lavoro anti-frizione UX → RAG + browser desktop E mobile |
+| **Workflow** | WF-18 | Mutation che cambia stato derivato → invalida TUTTE le superfici consumanti |
 | **Backend**  | BE-9  | EF Calendar timed → usa timestamp service |
 
 ---
@@ -615,6 +616,28 @@ nascosto (CTA fuori viewport mobile, dead-end silenzioso, badge illeggibile).
 Solo la visione browser su entrambe le viewport lo dimostra. L'utente ha imposto
 esplicitamente: "costringiti a usare RAG e visione dell'interfaccia da browser
 (desktop e cellulare)".
+
+### WF-18: una mutation che cambia stato derivato -> invalida TUTTE le superfici consumanti (simmetrico al create)
+
+**Quando**: aggiungo/modifico un flow che MUTA dati da cui altre superfici cached
+derivano stato (es. void/delete di una fattura -> services "Fatturato", dashboard
+"Da incassare", ProjectShow balance), specie se il path "create" gemello fa gia'
+un refresh.
+**Fare**: dopo la mutation invalidare TUTTE le query consumanti
+(`queryClient.invalidateQueries({queryKey:[resource]})` per ogni risorsa
+derivata), simmetrico a cio' che fa il create. Estrarre l'elenco in una funzione
+pura testabile e scrivere un controllore FALSIFICABILE (rimuovere una risorsa ->
+test rosso). ATTENZIONE: NON invalidare il getOne di un record CANCELLATO (rifetch
+-> ra-data-postgrest "Cannot coerce to single JSON object"); per le liste usare un
+predicate `queryKey[1]==='getList'`. Il controllore e2e desktop NON basta:
+`DesktopAdmin` usa `staleTime:0` (rifetcha sempre, falso negativo); la regressione
+stale vive su `MobileAdmin` (`staleTime 2min` + `offlineFirst`, CRM.tsx) -> il
+controllore deve girare li' o essere un unit test sul QueryClient.
+**Perche'**: il 2026-06-17 avevo tolto `refresh()` da `handleVoid` (per killare un
+console-error sul getOne del doc cancellato), lasciando ServiceList/dashboard
+stale fino a 2 min su mobile. Un test desktop passava comunque (staleTime 0):
+falso negativo che viola EXECUTABLE GUARDRAILS. Fix: `invalidateVoidedInvoiceSurfaces`
+puro + unit test falsificabile (`voidInvoiceSurfaces.test.ts`).
 
 ---
 

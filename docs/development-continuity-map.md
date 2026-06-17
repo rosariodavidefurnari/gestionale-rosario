@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-17 (Tooling: prettier root-cause fix + sweep; invoice_void SHIPPED)
+Last updated: 2026-06-17 (invoice_void audit post-ship: FIX-1 cache invalidation + FIX-2 badge parity UI-7; prettier root-cause; invoice_void SHIPPED)
 
 ---
 
@@ -44,6 +44,25 @@ Mergiato in `main` (`31e938e8`) e LIVE: migration `20260617120000` su prod via
 `db push`, EF `invoice_emit`+`invoice_void` deployate (`qvdmzhyzpyaveniirsmo`),
 smoke prod emit→void GREEN (service reale ripristinato NULL/NULL, 0 residui),
 CI run `success`, Vercel prod alias HTTP 200. WF-17 browser desktop+mobile 2/2.
+
+**Audit post-ship (RAG re-embeddato + 4 revisori, 2026-06-17)** — cassa fiscale
+CLEAN (emit/void cassa-neutri); 5 superfici sfuggite (veri positivi). Chiusi qui:
+
+- **FIX-1 (cache stale post-void)**: `handleVoid` ora chiama
+  `invalidateVoidedInvoiceSurfaces(queryClient)` (`invoices/voidInvoiceSurfaces.ts`,
+  +test falsificabile) — invalida services/expenses/payments/project_financials +
+  `financial_documents_summary` getList, MAI il getOne del doc cancellato (evita
+  il coerce-error). Senza, su mobile (staleTime 2min + offlineFirst) ServiceList/
+  dashboard restavano "Fatturato"/pending. Simmetrico al `refresh()` dell'emit.
+- **FIX-2 (parita' badge UI-7)**: `ServiceListContent` rende il badge billing
+  INCONDIZIONATAMENTE (era nascosto sui fatturati su desktop, mostrato su mobile)
+  → desktop = mobile via `getServiceBillingState`.
+
+Follow-up accodati (audit): FIX-3+4 riconciliazione incasso atteso (QuickPayment
+ignora `financial_document_id` + emit non assorbe in_attesa pre-esistenti →
+doppio conteggio "Da incassare", money-TDD); IMPORTANT-5 AI (capability registry
+non conosce void, snapshot pendingPayments non collega balance_due); MINOR (bollo
+€2, import-dopo-void re-link services, ExpenseList badge/filter).
 
 Azione reversibile per annullare una fattura emessa
 dall'app (registro, NON Aruba/SDI): cancella documento + incasso atteso + ripulisce

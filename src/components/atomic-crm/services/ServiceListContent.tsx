@@ -40,7 +40,7 @@ import { useColumnVisibility } from "@/hooks/useColumnVisibility";
 import { useResizableColumns } from "@/hooks/useResizableColumns";
 import { SERVICE_COLUMNS } from "../misc/columnDefinitions";
 import { ServiceMobileCard } from "./ServiceMobileCard";
-import { getServiceBillingState, isServiceBilled } from "./serviceBilling";
+import { getServiceBillingState } from "./serviceBilling";
 
 const eur = (n: number) =>
   n ? n.toLocaleString("it-IT", { minimumFractionDigits: 2 }) : "--";
@@ -302,14 +302,14 @@ const ServiceRow = ({
             service.all_day,
           )}
         </Link>
-        {!isServiceBilled(service) ? (
-          <Badge
-            variant="outline"
-            className={`ml-2 align-middle ${getServiceBillingState(service).className}`}
-          >
-            {getServiceBillingState(service).label}
-          </Badge>
-        ) : null}
+        {/* Always show the billing state (Fatturato/Da fatturare), like the
+            mobile card — desktop previously hid it for billed rows (UI-7 drift). */}
+        <Badge
+          variant="outline"
+          className={`ml-2 align-middle ${getServiceBillingState(service).className}`}
+        >
+          {getServiceBillingState(service).label}
+        </Badge>
       </TableCell>
       <TableCell className={cv("client", "text-sm text-muted-foreground")}>
         {service.client_id ? (

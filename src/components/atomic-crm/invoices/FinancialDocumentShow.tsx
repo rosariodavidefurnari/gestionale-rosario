@@ -5,6 +5,7 @@ import {
   useNotify,
   useRedirect,
 } from "ra-core";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,6 +34,7 @@ import {
 } from "./financialDocumentHelpers";
 import { canVoidInvoiceFromPayments } from "./invoiceVoidRules";
 import { useVoidInvoice } from "./useVoidInvoice";
+import { invalidateVoidedInvoiceSurfaces } from "./voidInvoiceSurfaces";
 
 const COLLECTION_TONE_CLASS: Record<string, string> = {
   pending: "text-amber-700 bg-amber-50 border-amber-200",
@@ -125,6 +127,7 @@ const FinancialDocumentShowContent = () => {
   const isMobile = useIsMobile();
   const notify = useNotify();
   const redirect = useRedirect();
+  const queryClient = useQueryClient();
   const { voidInvoice, isVoiding } = useVoidInvoice();
 
   // Lifted payment fetch (shared by the collection badge + the void gate; no
@@ -156,8 +159,8 @@ const FinancialDocumentShowContent = () => {
       if (outcome.status === "cancelled") return;
       // Redirect FIRST: the document is now deleted, so leaving this Show page
       // before anything refetches avoids a getOne on the missing row (ra-data
-      // -postgrest "Cannot coerce to single JSON object"). The Fatture list and
-      // Registro Lavori refetch fresh on navigation — no global refresh() needed.
+      // -postgrest "Cannot coerce to single JSON object"). The Fatture list
+      // refetches fresh on navigation.
       redirect("list", "financial_documents_summary");
       notify(
         outcome.status === "already_voided"
@@ -165,6 +168,12 @@ const FinancialDocumentShowContent = () => {
           : "Fattura annullata: lavori tornati Da fatturare, incasso atteso rimosso.",
         { type: "success" },
       );
+      // Refresh every surface that derived state from the voided invoice so it
+      // doesn't serve stale cache (mobile: staleTime 2min + offlineFirst) — back
+      // to "Da fatturare", "Da incassare" drops the removed expected payment.
+      // Pure + tested in voidInvoiceSurfaces.test.ts (incl. the getOne exclusion
+      // that avoids re-fetching the deleted doc).
+      invalidateVoidedInvoiceSurfaces(queryClient);
     } catch (e) {
       notify(
         e instanceof Error ? e.message : "Impossibile annullare la fattura.",
