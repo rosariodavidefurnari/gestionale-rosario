@@ -75,6 +75,7 @@
 | **Workflow** | WF-16 | CI check → `gh -R fork` (default punta a upstream)  |
 | **Workflow** | WF-17 | Lavoro anti-frizione UX → RAG + browser desktop E mobile |
 | **Workflow** | WF-18 | Mutation che cambia stato derivato → invalida TUTTE le superfici consumanti |
+| **Workflow** | WF-19 | E2E/browser/smoke → crea dati demo deterministici + cleanup sistematico (try/finally, 0 leftover) |
 | **Backend**  | BE-9  | EF Calendar timed → usa timestamp service |
 
 ---
@@ -693,6 +694,33 @@ console-error sul getOne del doc cancellato), lasciando ServiceList/dashboard
 stale fino a 2 min su mobile. Un test desktop passava comunque (staleTime 0):
 falso negativo che viola EXECUTABLE GUARDRAILS. Fix: `invalidateVoidedInvoiceSurfaces`
 puro + unit test falsificabile (`voidInvoiceSurfaces.test.ts`).
+
+### WF-19: E2E / browser / smoke che richiede uno stato dati -> crea dati demo deterministici e PULISCILI sistematicamente
+
+**Quando**: un test e2e, uno smoke (locale o prod) o una verifica browser WF-17
+ha bisogno di uno stato che non esiste nel dataset (es. un `payment` `in_attesa`
+con `financial_document_id`, una fattura emessa, un progetto con una certa
+condizione)
+**Fare**: NON appoggiarsi a dati reali del dominio e NON lasciare residui. Pattern
+obbligatorio:
+- **Setup** deterministico e idempotente, con marker riconoscibile (es.
+  `DEMO-<scope>-<ts>`): crea le entita' usa-e-getta necessarie (rispettando gli
+  invarianti: es. `km_distance:0` per non innescare il trigger km, `client_type`/
+  `category` NOT NULL, ecc.). Usa il Supabase LOCALE per la creazione; su PROD solo
+  letture (mai creare dati demo in produzione).
+- **Asserzioni** sul comportamento reale.
+- **Teardown in `finally`** (eseguito SEMPRE, anche se le asserzioni falliscono):
+  cancella in ordine inverso (payment/doc -> service -> project -> client ->
+  eventuale smoke user; usa l'azione di dominio inversa se esiste, es.
+  `invoice_void`). POI **verifica 0 leftover** con una query sul marker
+  (`like 'DEMO-%'` -> 0 righe). Nessun residuo nel DB.
+**Perche'**: il 2026-06-19 l'utente ha imposto "per test e2e fatti bene crei dati
+demo che poi pulisci sistematicamente". Lo smoke prod FIX-4
+(`prod-smoke-fix4.mjs`) gia' usava setup -> assert -> `finally` cleanup -> verifica
+0 leftover, ed e' il pattern di riferimento. Dati demo lasciati nel DB inquinano
+dashboard/fiscale/AI e rendono i test non deterministici (un run sporca il
+successivo). Il cleanup va nel `finally`, non in coda al happy-path, o un fallimento
+intermedio lascia spazzatura.
 
 ---
 

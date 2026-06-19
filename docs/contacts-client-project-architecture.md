@@ -226,6 +226,13 @@ Semantica:
   su >1 atteso collegato il dialog chiede "quale fattura" (picker). Consumer
   unico `ProjectShow` → parità desktop/mobile automatica (UI-7). Dettagli e
   controllori in `development-continuity-map.md` (FIX-3+4).
+- Gemello su `/payments/create` (form generico, FIX-3 gemello scope A): la card
+  `ExpectedPaymentOrphanHint` in `PaymentInputs` AVVISA (non blocca) quando
+  registrare un incasso qui orfanerebbe un atteso emesso del progetto, e indirizza
+  all'Incasso rapido del progetto (che salda). Display-only, create-only (nascosta
+  in `PaymentEdit`); riusa `wouldOrphanExpectedPayment` (delega al decider).
+  Client/quote "crea pagamento" sono handoff a `/payments/create` → ereditano
+  l'avviso. Scope C (saldo reale nel form) rimandato.
 
 Impatto architetturale:
 

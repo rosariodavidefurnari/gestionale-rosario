@@ -1,9 +1,17 @@
-import { required, minValue, useGetList, useGetOne } from "ra-core";
+import {
+  required,
+  minValue,
+  useGetList,
+  useGetOne,
+  useRecordContext,
+} from "ra-core";
 import { useEffect, useMemo } from "react";
-import { useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import { useFormContext, useFormState, useWatch } from "react-hook-form";
+import { AlertTriangle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { TextInput } from "@/components/admin/text-input";
 import { SelectInput } from "@/components/admin/select-input";
@@ -30,7 +38,12 @@ import {
   shouldAutoApplySuggestedPaymentAmount,
   shouldClearProjectForClient,
   shouldClearQuoteForClient,
+  buildProjectShowPath,
 } from "./paymentLinking";
+import {
+  wouldOrphanExpectedPayment,
+  type ExpectedPaymentCandidate,
+} from "../projects/quickPaymentReconciliation";
 import { toOptionalIdentifier } from "../quotes/quoteProjectLinking";
 import { buildNameSearchFilter } from "../misc/referenceSearch";
 import { buildQuotePaymentsSummary } from "../quotes/quotePaymentsSummary";
@@ -236,6 +249,7 @@ const PaymentDetailInputs = () => (
       validate={required()}
       helperText={false}
     />
+    <ExpectedPaymentOrphanHint />
     <TextInput source="notes" label="Note" multiline helperText={false} />
     <CloudinaryUploadInput
       source="proof_url"
@@ -252,6 +266,95 @@ const formatCurrency = (value: number) =>
     currency: "EUR",
     minimumFractionDigits: 2,
   });
+
+const toNum = (v: unknown) => {
+  const n = typeof v === "number" ? v : Number(v ?? 0);
+  return Number.isFinite(n) ? n : 0;
+};
+
+/**
+ * FIX-3 gemello (scope A): on /payments/create, warn (do NOT block) when
+ * recording a collection would ORPHAN an emit-linked expected payment for the
+ * project — the user should settle it from the project's Incasso rapido (which
+ * reconciles, FIX-3) instead of creating a duplicate. Display-only: never writes
+ * the form. Create-only (F1): hidden in PaymentEdit. Reuses the decider via
+ * `wouldOrphanExpectedPayment` (no second source of truth).
+ */
+export const ExpectedPaymentOrphanHint = () => {
+  const record = useRecordContext();
+  const projectId = useWatch({ name: "project_id" });
+  const status = useWatch({ name: "status" });
+  const paymentType = useWatch({ name: "payment_type" });
+
+  const { data: linkedExpected } = useGetList<Payment>(
+    "payments",
+    {
+      filter: {
+        "project_id@eq": String(projectId),
+        "status@eq": "in_attesa",
+        "financial_document_id@not.is": null,
+      },
+      pagination: { page: 1, perPage: 100 },
+    },
+    { enabled: !!projectId && !record },
+  );
+
+  // F1: create only — in edit mode `record` is defined, never warn there.
+  if (record) return null;
+  if (!projectId) return null;
+
+  const candidates: ExpectedPaymentCandidate[] = (linkedExpected ?? []).map(
+    (p) => ({
+      id: p.id,
+      amount: toNum(p.amount),
+      status: p.status,
+      financial_document_id: p.financial_document_id ?? null,
+    }),
+  );
+
+  if (
+    !wouldOrphanExpectedPayment(candidates, {
+      status: String(status ?? ""),
+      payment_type: String(paymentType ?? ""),
+    })
+  ) {
+    return null;
+  }
+
+  const linked = candidates.filter(
+    (c) => c.status === "in_attesa" && c.financial_document_id != null,
+  );
+  const atRisk = linked.reduce((max, c) => Math.max(max, c.amount), 0);
+  const multiple = linked.length > 1;
+  const projectPath = buildProjectShowPath(projectId);
+
+  return (
+    <Alert className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+      <AlertTriangle className="h-4 w-4" />
+      <AlertTitle>
+        {multiple
+          ? "Questo progetto ha già fatture con incasso atteso"
+          : "Questa fattura ha già un incasso atteso"}
+      </AlertTitle>
+      <AlertDescription className="flex flex-col gap-2">
+        <span className="text-2xl font-bold tabular-nums text-amber-900 dark:text-amber-200">
+          {formatCurrency(atRisk)}
+        </span>
+        <span>
+          Registrare qui creerebbe un doppione. Salda direttamente dal progetto.
+        </span>
+        {projectPath ? (
+          <Link
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+            to={projectPath}
+          >
+            Vai al progetto e salda
+          </Link>
+        ) : null}
+      </AlertDescription>
+    </Alert>
+  );
+};
 
 const QuotePaymentSuggestionCard = () => {
   const location = useLocation();

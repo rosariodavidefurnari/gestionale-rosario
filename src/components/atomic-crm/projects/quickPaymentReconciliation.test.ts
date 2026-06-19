@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   decideQuickPaymentTarget,
+  wouldOrphanExpectedPayment,
   type ExpectedPaymentCandidate,
 } from "./quickPaymentReconciliation";
 
@@ -87,5 +88,33 @@ describe("decideQuickPaymentTarget", () => {
         draft({ payment_type: "parziale" }),
       ),
     ).toEqual({ action: "settle", paymentId: "p1" });
+  });
+});
+
+describe("wouldOrphanExpectedPayment", () => {
+  it("true when recording a collection would settle/ambiguate an emit-linked expected payment", () => {
+    expect(wouldOrphanExpectedPayment([exp("p1")], draft())).toBe(true); // settle
+    expect(wouldOrphanExpectedPayment([exp("p1"), exp("p2")], draft())).toBe(
+      true,
+    ); // ambiguous
+  });
+
+  it("false when creating here would NOT orphan (no candidate / not collection / non-absorbable)", () => {
+    expect(wouldOrphanExpectedPayment([], draft())).toBe(false);
+    expect(
+      wouldOrphanExpectedPayment(
+        [exp("p1", { financial_document_id: null })],
+        draft(),
+      ),
+    ).toBe(false);
+    expect(
+      wouldOrphanExpectedPayment([exp("p1")], draft({ status: "in_attesa" })),
+    ).toBe(false);
+    expect(
+      wouldOrphanExpectedPayment(
+        [exp("p1")],
+        draft({ payment_type: "rimborso_spese" }),
+      ),
+    ).toBe(false);
   });
 });
