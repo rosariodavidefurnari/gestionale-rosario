@@ -68,22 +68,19 @@ Regola pratica:
 
 Branch corrente:
 
-- `main` (invoice_void mergiato `31e938e8` e SHIPPED; branch `work/invoice-void`
-  integrato)
+- `main`. Shippati e LIVE: invoice_void (`31e938e8`), prettier root-cause +
+  sweep (`eeb342fb`), audit-fix FIX-1+2 (`700bc0be`). Lavorare in chat nuova:
+  partire da QUI (questo blocco e' autosufficiente).
 
-Obiettivo operativo attivo:
+Obiettivo operativo attivo: **FIX-3+4 — riconciliazione incasso atteso** (money).
+Spec v2 + piano v2 PRONTI (plan review BLOCK chiusa). Prossimo = **IMPL** (vedi
+"Prossima Azione"). Dopo: QW2 (card "Da incassare", spec+piano gia' pronti), poi
+coda audit (IMPORTANT-5 AI, MINOR).
 
-- Nessun ciclo implementativo aperto. invoice_void ("Annulla emissione") chiuso e
-  LIVE. Prossimo: scegliere dalla coda assessment
-  (`docs/superpowers/2026-06-15-gestionale-assessment.md`). Coda residua: QW2
-  (card "Da incassare"), QW3 (mobile scadenzario+cassa), BR2 (riconciliazione),
-  bollo (Ciclo 5).
-
-- Tech-debt aperto (separato): drift prettier su 15 file pre-esistenti su main
-  (dashboard/invoicing/provider/fiscal) -> check `Prettier` di `lint-action`
-  rosso ma NON bloccante (continue-on-error; run conclusion `success`). Pulizia
-  separata: bloccata dal continuity-check cross-dominio, da fare con i doc
-  companion dovuti.
+- Prettier: tech-debt CHIUSO. Root-cause risolta (`.lintstagedrc` formatta i TS,
+  CI step `npm run prettier` BLOCCANTE) + sweep repo-wide a 0 drift; CI
+  "Prettier (blocking)" verde. Vedi `docs/development-continuity-map.md` sezione
+  "Tooling: formatting & lint enforcement".
 
 Chiuso in questa tornata: QW1 — promemoria fiscali rianimati, SHIPPED e LIVE.
 
@@ -236,12 +233,54 @@ Non fatto:
 
 ## Prossima Azione
 
-Nessun ciclo aperto. invoice_void, "Emetti fattura", QW1 e BR1 chiusi e live.
-Scegliere il prossimo dalla coda assessment
-(`docs/superpowers/2026-06-15-gestionale-assessment.md`): QW2 card "Da incassare",
-QW3 mobile scadenzario+cassa, BR2 riconciliazione, bollo (Ciclo 5). Per ognuno:
-spec -> review -> piano -> review multi-superficie + RAG -> esecuzione LOCALE
-prima del remoto.
+**Ciclo attivo: FIX-3+4 — riconciliazione incasso atteso. Prossimo step = IMPL
+(subagent-driven TDD, RED-first).**
+
+Spec v2: `docs/superpowers/specs/2026-06-17-expected-payment-reconciliation-design.md`
+Piano v2: `docs/superpowers/plans/2026-06-17-expected-payment-reconciliation.md`
+(LEGGERE i blocchi "REVISIONE v2 AUTORITATIVA" in entrambi — vincono sul corpo.)
+
+Problema (da audit post-ship, cassa fiscale CLEAN): l'incasso ATTESO creato da
+`invoice_emit` (payment `in_attesa` con `financial_document_id`) non viene
+riconciliato → doppio conteggio in `pendingPaymentsTotal` ("Da incassare").
+Decisioni di business LOCKED dall'utente:
+
+- **FIX-3** Incasso rapido (`QuickPaymentDialog`) SALDA l'atteso collegato
+  (`status->ricevuto`, `payment_date` reale, MAI null) invece di creare; >1 atteso
+  collegato → AMBIGUOUS = picker "quale fattura"; incasso parziale → aggiorna
+  `amount`, residuo via `balance_due`. **GATE `payment_type`**: salda solo
+  saldo/acconto/parziale, mai rimborso (B1).
+- **FIX-4** `invoice_emit` ASSORBE un `in_attesa` manuale pre-esistente con match
+  preciso (amount±cent + tipo assorbibile + **solo `source.kind==='project'`**,
+  scope `project_id`; client-level = create, out-of-scope v1 — B2).
+- Bersaglio = `pendingPaymentsTotal` (NON `balance_due`, che conta solo ricevuto).
+  SYSTEM-FIRST: riuso match per `financial_document_id`
+  (`decideEmittedPaymentReconciliation`). VP5 foundation-basis NON applicabile
+  (view single-source dal 20260401).
+
+Ordine impl (piano v2): decider puri `decideQuickPaymentTarget` +
+`decideEmitExpectedPayment` (RED-first, test reali) -> QuickPaymentDialog wiring
+(useGetList candidati `{"financial_document_id@not.is": null}` + useUpdate settle)
+-> `invoice_emit` EF absorb (SELECT FOR UPDATE + UPDATE returning+count-guard) ->
+RTL component test (assert update non create) + e2e (estendere
+`invoice-void.smoke.spec.ts`) -> review impl multi-superficie + RAG -> browser
+WF-17 desktop+mobile (OBBLIGATORIO) -> **PROD GATED (OK utente)**: deploy EF
+`invoice_emit --project-ref qvdmzhyzpyaveniirsmo` (BE-1/BE-8), FIX-3 e' frontend
+(Vercel al merge), smoke prod emit->incasso = 1 pagamento.
+
+Gate di processo: RAG attivo + review multi-superficie + browser desktop/mobile +
+niente prod senza verde locale e OK utente.
+
+### Fatto in questa tornata (audit ciclo fatturazione, 2026-06-17)
+
+- RAG re-embeddato su snapshot corrente (`eeb342fb`); audit 4 revisori: **cassa
+  fiscale CLEAN**, 5 superfici sfuggite (veri positivi).
+- **FIX-1** (void lasciava stale services/dashboard su mobile) + **FIX-2** (badge
+  "Fatturato" anche su desktop, UI-7) SHIPPATI: `700bc0be`, CI verde, Vercel.
+  Controllore falsificabile `voidInvoiceSurfaces.test.ts` (WF-18).
+- Coda audit dopo FIX-3+4: IMPORTANT-5 (AI capability registry non conosce void +
+  snapshot pendingPayments non collega balance_due), MINOR (bollo €2,
+  import-dopo-void re-link services, ExpenseList badge/filter, flussi gemelli I5).
 
 ### Ultimo ciclo chiuso: invoice_void (Annulla emissione) — LIVE
 
