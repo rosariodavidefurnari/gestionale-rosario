@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useListContext, type Exporter } from "ra-core";
+import { useListContext, useDataProvider, type Exporter } from "ra-core";
 import { downloadCSVItalian } from "@/lib/downloadCsvItalian";
 import { CreateButton } from "@/components/admin/create-button";
 import { ExportButton } from "@/components/admin/export-button";
@@ -8,7 +8,8 @@ import { SortButton } from "@/components/admin/sort-button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useColumnVisibility } from "@/hooks/useColumnVisibility";
 
-import type { Client } from "../types";
+import type { Client, ClientCommercialPosition } from "../types";
+import type { CrmDataProvider } from "../providers/supabase/dataProvider";
 import { getClientDistinctBillingName } from "./clientBilling";
 import { ClientListContent } from "./ClientListContent";
 import { ClientListFilter, ClientMobileFilter } from "./ClientListFilter";
@@ -22,9 +23,26 @@ export const ClientList = () => {
     "clients",
     CLIENT_COLUMNS,
   );
+  const dataProvider = useDataProvider<CrmDataProvider>();
 
   const exporter: Exporter<Client> = useCallback(
     async (records) => {
+      // Outstanding balance per client from the canonical view (same source as
+      // the list column / ClientShow). Full-view fetch (no @in string), Map by
+      // String(client_id). Included only when the "Da saldare" column is
+      // visible (filterExportRow keys off visible exportKeys).
+      const { data: positions } =
+        await dataProvider.getList<ClientCommercialPosition>(
+          "client_commercial_position",
+          {
+            pagination: { page: 1, perPage: 1000 },
+            sort: { field: "client_name", order: "ASC" },
+            filter: {},
+          },
+        );
+      const balanceByClient = new Map(
+        positions.map((p) => [String(p.client_id), Number(p.balance_due)]),
+      );
       const rows = records.map((client) =>
         filterExportRow(
           {
@@ -46,6 +64,7 @@ export const ClientList = () => {
             codice_destinatario: client.billing_sdi_code ?? "",
             pec: client.billing_pec ?? "",
             fonte: client.source ?? "",
+            da_saldare: balanceByClient.get(String(client.id)) ?? 0,
             note: client.notes ?? "",
           },
           visibleKeys,
@@ -54,7 +73,7 @@ export const ClientList = () => {
       );
       downloadCSVItalian(rows, "clienti");
     },
-    [visibleKeys, columns],
+    [visibleKeys, columns, dataProvider],
   );
 
   return (

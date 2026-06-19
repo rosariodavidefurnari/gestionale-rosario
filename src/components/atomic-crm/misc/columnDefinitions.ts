@@ -66,6 +66,7 @@ export const CLIENT_COLUMNS: ColumnDef[] = [
   { key: "phone", label: "Telefono", exportKey: "telefono" },
   { key: "email", label: "Email", exportKey: "email" },
   { key: "source", label: "Fonte", exportKey: "fonte" },
+  { key: "balance_due", label: "Da saldare", exportKey: "da_saldare" },
 ];
 
 export const CONTACT_COLUMNS: ColumnDef[] = [

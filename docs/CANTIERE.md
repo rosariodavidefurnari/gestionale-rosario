@@ -267,11 +267,35 @@ Non fatto:
 
 ## Prossima Azione
 
-**QW3 — SHIPPED e LIVE (`df78f9cb` su `main`, CI success sul fork, prod alias
-HTTP 200). Niente in sospeso. Prossimo big-rock consigliato: BR2** (collegare
-incassi↔fatture, test-first). Scope C resta gated (emissione da app non ancora
-in uso). Per ogni nuovo lavoro: spec → review → piano → review → impl TDD →
-review impl → browser WF-17, con gate spec→codice deciso dall'utente.
+**#19 — colonna "Da saldare" in lista clienti: spec + review spec + piano +
+review piano FATTI. GATE UTENTE APERTO (nessun codice finché l'utente non dà il
+via).** Scelto dall'utente come front sicuro (rimandato Ciclo 2 fiscale,
+rischioso). Riusa `client_commercial_position.balance_due` (canonico, validato in
+QW2), frontend-only, zero DB/EF/migration.
+
+- Spec: `docs/superpowers/specs/2026-06-19-client-list-da-saldare-column-design.md`.
+  Piano: `docs/superpowers/plans/2026-06-19-client-list-da-saldare-column.md`.
+- Decisione design (impeccable, register=product): colonna dedicata allineata a
+  destra (scannabile, stile Linear/Stripe), non badge inline; mobile = riga in
+  `ClientMobileCard` (UI-7). Helper puro `formatClientBalanceCell`.
+- Review spec: 2 revisori (frontend = PASS; data/TDD/export = FLAG → risolte),
+  con RAG :8001 + verifica sorgente. Correzioni HIGH: vista è `clients LEFT JOIN`
+  (ogni cliente ha riga, "—" = `balance_due=0`, non Map-miss); export riusa il
+  fetch full-view (NO `@in` non verificato); Map key `String(client.id)`;
+  controllore export-field-survival + valore euro reale.
+- Caveat noto (R5/AC8): l'utente ha probabilmente una pref colonne `clients`
+  salvata → la colonna spedirà nascosta; toggle una volta post-deploy.
+- Prossimo SOLO dopo go utente: impl TDD (helper RED→GREEN, colonna, mobile,
+  export) → review impl multi-superficie + RAG → browser WF-17 desktop+mobile →
+  commit unico.
+
+Ciclo 2 fiscale (DIFFERITO su scelta utente): #3 imposta sostitutiva deduce INPS
+stimato non-versato (vs regola cassa), #4 INPS sotto-stimata, #13 formula
+duplicata client+EF (`fiscalModel.ts` + `_shared/fiscalDeadlineCalculation.ts`).
+HIGH severity, money reale, intrecciato col layer dichiarazioni reali → spec
+dedicata + grounding prod quando si riprende.
+
+Fronti coda: BR2 (incassi↔fatture), Scope C (gated), Fase 2.
 
 Storico QW3 (ciclo chiuso):
 

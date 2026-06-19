@@ -6,7 +6,35 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-19 (QW3 parità mobile: `MobileAnnualDashboard` ora rende `DashboardCashFlowCard` + `DashboardDeadlineTracker` come desktop, current-year-gated; view-only UI-7, component test + e2e mobile, 2+2 review PASS, WF-17 0 console errors)
+Last updated: 2026-06-19 (#19 colonna "Da saldare" in lista clienti: residuo per-cliente da `client_commercial_position.balance_due`, desktop colonna + mobile card UI-7, export esteso, helper puro + e2e, 2+2 review PASS, WF-17 0 console errors)
+
+---
+
+## Colonna "Da saldare" in lista clienti (#19) — branch `feat/client-list-da-saldare`
+
+La lista clienti non mostrava il residuo per-cliente (si apriva ogni
+`ClientShow`). Ora una colonna "Da saldare" (desktop, ultima, allineata a destra)
++ riga valore in `ClientMobileCard` (UI-7), sorgente = vista canonica
+`client_commercial_position.balance_due` (stessa fonte di `ClientFinancialSummary`
+e della card QW2, nessun ricalcolo — SYSTEM-FIRST).
+
+- `ClientListContent` legge la vista via `useGetList` (perPage 1000, stessi
+  params di `useDashboardData` → cache React Query condivisa), Map per
+  `String(client_id)`; "—" = `balance_due===0` (la vista è `clients LEFT JOIN`,
+  ogni cliente ha una riga).
+- Helper puro `clientBalanceCell.ts` (`formatClientBalanceCell`): segno-aware
+  (rosso "Da saldare" / blu "Credito cliente" / muted "—"), `Math.abs`.
+- `CLIENT_COLUMNS` + `{exportKey:"da_saldare"}` → column-visibility + resizable +
+  export; exporter CSV fetcha la vista (full-view, no `@in`) e include il campo
+  solo a colonna visibile (`filterExportRow`).
+- `ClientFinancialSummary` NON refactorata (zero → `€ 0,00` diverge da "—" per
+  design; la verità è il numero, non il formatter).
+- Sweep: list desktop + mobile card + columnDefinitions + export. Sort/filter per
+  `balance_due` fuori scope (campo vista). Caveat R5/AC8: colonna nascosta se
+  esiste pref colonne `clients` salvata → toggle una volta.
+- Controllori: `clientBalanceCell.test.ts`, `clientExportBalance.test.ts`,
+  `tests/e2e/client-list-balance.smoke.spec.ts` (valore seed reale 2984,50).
+- Spec/piano: `docs/superpowers/specs|plans/2026-06-19-client-list-da-saldare-column*`.
 
 ---
 
