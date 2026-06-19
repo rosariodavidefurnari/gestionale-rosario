@@ -68,9 +68,10 @@ Regola pratica:
 
 Branch corrente:
 
-- `main`. Tutto shippato e LIVE. Ultimi merge: QW3 `df78f9cb`, health check
-  `6d77adde`, FIX-3-gemello `15e39713`, IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`,
-  FIX-3+4 `7c7ec1c1`. Lavorare in chat nuova: partire da QUI (autosufficiente).
+- `main`. Tutto shippato e LIVE. Ultimi merge: #19 lista clienti `d6abf3f4`,
+  QW3 `df78f9cb`, health check `6d77adde`, FIX-3-gemello `15e39713`,
+  IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`, FIX-3+4 `7c7ec1c1`. Lavorare in chat
+  nuova: partire da QUI (autosufficiente).
 
 Obiettivo operativo attivo: **NESSUNO**. Stato pulito, CI verde, prod sano
 (`npm run health:financial` = PASS: Da incassare € 7.131,37/3 clienti; cassa
@@ -78,6 +79,10 @@ Obiettivo operativo attivo: **NESSUNO**. Stato pulito, CI verde, prod sano
 
 Shippato e LIVE in questa lunga sessione (tutto su `main`, CI verde, Vercel):
 
+- **#19** colonna "Da saldare" lista clienti (`d6abf3f4`): residuo per-cliente da
+  `client_commercial_position.balance_due`, colonna desktop + riga mobile (UI-7),
+  export esteso. Frontend-only, helper puro + e2e, 2+2 review PASS, WF-17 0
+  errori console. Caveat: se nascosta da pref colonne, toggle una volta.
 - **QW3** parità mobile (`df78f9cb`): `MobileAnnualDashboard` ora rende
   `DashboardCashFlowCard` (cassa 30gg) + `DashboardDeadlineTracker` (scadenzario)
   come desktop, current-year-gated. Frontend-only (UI-7), CI success sul fork,
@@ -267,27 +272,28 @@ Non fatto:
 
 ## Prossima Azione
 
-**#19 — colonna "Da saldare" in lista clienti: spec + review spec + piano +
-review piano FATTI. GATE UTENTE APERTO (nessun codice finché l'utente non dà il
-via).** Scelto dall'utente come front sicuro (rimandato Ciclo 2 fiscale,
-rischioso). Riusa `client_commercial_position.balance_due` (canonico, validato in
-QW2), frontend-only, zero DB/EF/migration.
+**#19 — colonna "Da saldare" in lista clienti: SHIPPED e LIVE (`d6abf3f4` su
+`main`, CI success sul fork, prod alias HTTP 200). Niente in sospeso.** Front
+sicuro completato (Ciclo 2 fiscale resta DIFFERITO). Prossimo consigliato: BR2
+(incassi↔fatture) oppure Ciclo 2 fiscale (vedi sotto). Per ogni nuovo lavoro:
+spec → review → piano → review → impl TDD → review impl → browser WF-17, gate
+spec→codice deciso dall'utente.
 
-- Spec: `docs/superpowers/specs/2026-06-19-client-list-da-saldare-column-design.md`.
-  Piano: `docs/superpowers/plans/2026-06-19-client-list-da-saldare-column.md`.
-- Decisione design (impeccable, register=product): colonna dedicata allineata a
-  destra (scannabile, stile Linear/Stripe), non badge inline; mobile = riga in
-  `ClientMobileCard` (UI-7). Helper puro `formatClientBalanceCell`.
-- Review spec: 2 revisori (frontend = PASS; data/TDD/export = FLAG → risolte),
-  con RAG :8001 + verifica sorgente. Correzioni HIGH: vista è `clients LEFT JOIN`
-  (ogni cliente ha riga, "—" = `balance_due=0`, non Map-miss); export riusa il
-  fetch full-view (NO `@in` non verificato); Map key `String(client.id)`;
-  controllore export-field-survival + valore euro reale.
-- Caveat noto (R5/AC8): l'utente ha probabilmente una pref colonne `clients`
-  salvata → la colonna spedirà nascosta; toggle una volta post-deploy.
-- Prossimo SOLO dopo go utente: impl TDD (helper RED→GREEN, colonna, mobile,
-  export) → review impl multi-superficie + RAG → browser WF-17 desktop+mobile →
-  commit unico.
+- Cosa: colonna desktop "Da saldare" (ultima, destra, `tabular-nums`) + riga in
+  `ClientMobileCard` (UI-7), da `client_commercial_position.balance_due`
+  (canonico, no ricalcolo). Helper puro `clientBalanceCell.ts`. Export CSV esteso
+  (`da_saldare`, full-view fetch, no `@in`). Frontend-only.
+- Review: spec 2 (frontend PASS; data/TDD FLAG→risolte) + impl 2 (entrambi PASS),
+  RAG :8001 + sorgente. Verde: typecheck/lint/build, 657 unit, e2e
+  `client-list-balance.smoke` (valore reale 2984,50). WF-17 desktop+mobile 0
+  errori console.
+- Caveat post-deploy (R5/AC8): se la colonna è nascosta (pref colonne `clients`
+  salvata), attivarla una volta da `ColumnVisibilityButton`.
+- Follow-up LOW (non bloccanti, dai reviewer): se i clienti superano 1000 (cap
+  perPage) un cliente oltre il cap mostrerebbe "—" pur avendo saldo; due
+  formatter `eur` (helper + `ClientFinancialSummary`) — promuovere a util
+  condivisa solo se nasce una 3ª superficie.
+- Spec/piano: `docs/superpowers/specs|plans/2026-06-19-client-list-da-saldare-column*`.
 
 Ciclo 2 fiscale (DIFFERITO su scelta utente): #3 imposta sostitutiva deduce INPS
 stimato non-versato (vs regola cassa), #4 INPS sotto-stimata, #13 formula
