@@ -76,6 +76,7 @@
 | **Workflow** | WF-17 | Lavoro anti-frizione UX → RAG + browser desktop E mobile |
 | **Workflow** | WF-18 | Mutation che cambia stato derivato → invalida TUTTE le superfici consumanti |
 | **Workflow** | WF-19 | E2E/browser/smoke → crea dati demo deterministici + cleanup sistematico (try/finally, 0 leftover) |
+| **Workflow** | WF-20 | Assert valuta/numero formattato → grouping-agnostico (Node small-ICU vs browser) |
 | **Backend**  | BE-9  | EF Calendar timed → usa timestamp service |
 
 ---
@@ -721,6 +722,24 @@ demo che poi pulisci sistematicamente". Lo smoke prod FIX-4
 dashboard/fiscale/AI e rendono i test non deterministici (un run sporca il
 successivo). Il cleanup va nel `finally`, non in coda al happy-path, o un fallimento
 intermedio lascia spazzatura.
+
+### WF-20: assert su valuta/numeri formattati -> grouping-agnostico (Node small-ICU vs browser full-ICU)
+
+**Quando**: scrivo un test (unit Vitest/jsdom O e2e Playwright) che asserisce una
+stringa di valuta o numero formattato con `toLocaleString("it-IT", ...)` /
+`Intl.NumberFormat` (es. "2.984,50 €")
+**Fare**: NON asserire la stringa col separatore delle migliaia hardcoded. Usare
+un match grouping-agnostico: regex con dot opzionale (`/2\.?984,50/`) oppure
+asserire solo decimali + simbolo (`/984,50\s*€/`), o usare valori < 1000 che non
+attivano il raggruppamento. Per e2e ancorare al simbolo/colonna per non matchare
+testo estraneo.
+**Perche'**: il 2026-06-19 (#19 colonna "Da saldare") sia il test unit sia l'e2e
+fallivano asserendo `"2.984,50"`: l'ICU di Node (jsdom) e della Chromium di
+Playwright in questo ambiente NON applica il separatore delle migliaia e produce
+`"2984,50 €"`, mentre il Chrome reale dell'utente (full-ICU) produce
+`"2.984,50 €"`. Un assert con il punto hardcoded e' verde in un ambiente e rosso
+nell'altro, pur essendo il codice corretto (WF-5: il sistema produceva il valore
+giusto). Il display in produzione e' corretto; solo l'assertion era fragile.
 
 ---
 
