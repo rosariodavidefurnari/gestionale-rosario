@@ -68,23 +68,44 @@ Regola pratica:
 
 Branch corrente:
 
-- `main`. Shippati e LIVE: invoice_void (`31e938e8`), prettier root-cause +
-  sweep (`eeb342fb`), audit-fix FIX-1+2 (`700bc0be`). Lavorare in chat nuova:
-  partire da QUI (questo blocco e' autosufficiente).
+- `main`. Tutto shippato e LIVE. Ultimi merge: health check `6d77adde`,
+  FIX-3-gemello `15e39713`, IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`,
+  FIX-3+4 `7c7ec1c1`. Lavorare in chat nuova: partire da QUI (autosufficiente).
 
-Obiettivo operativo attivo: **NESSUNO** — FIX-3+4, QW2 e FIX-3-gemello
-(/payments/create avviso anti-doppione, scope A) SHIPPED e LIVE.
-FIX-3-gemello: branch `fix/payment-create-orphan-hint`, frontend-only, card
-`ExpectedPaymentOrphanHint` (display-only, create-only, riusa
-`wouldOrphanExpectedPayment`); 3 review spec + 5 piano/trasversali + 3 impl
-(mutation-tested) PASS, code RAG :8001 + prose RAG :8002 anti-drift coerente,
-WF-17 desktop+mobile con dati demo + cleanup (WF-19, 0 leftover). Scope C (settle
-reale nel form) rimandato a quando l'emissione da app è in uso.
-QW2 (card "Da incassare" reale): branch `fix/da-incassare-card`, frontend-only,
-3 review PASS + 2 FLAG TDD chiuse (F1 controllore B2 falsificabile, F2 sottotitolo
-puro+test), WF-17 desktop+mobile, grounding prod read-only Σ=7.131,37. Prossimo:
-QW3 (mobile scadenzario+cassa) o IMPORTANT-5 (descrizione `quick_payment` registry
-AI, incompleta non falsa — micro-fix). Vedi "Prossima Azione".
+Obiettivo operativo attivo: **NESSUNO**. Stato pulito, CI verde, prod sano
+(`npm run health:financial` = PASS: Da incassare € 7.131,37/3 clienti; cassa
+2023→2026 6.273/13.740/24.954/7.689; reminders vivi 4/4; 0 emit-linked; INV1-4 OK).
+
+Shippato e LIVE in questa lunga sessione (tutto su `main`, CI verde, Vercel):
+
+- **FIX-3+4** riconciliazione incasso atteso (`7c7ec1c1`): QuickPayment SALDA
+  l'atteso collegato + invoice_emit ASSORBE l'atteso manuale (EF deployata,
+  smoke prod GREEN). Decider `quickPaymentReconciliation.ts` + `_shared/invoiceEmit.ts`.
+- **QW2** card "Da incassare" reale (`7d9a5f05`): da `pendingPaymentsTotal` (375) a
+  Σ max(0,`client_commercial_position.balance_due`) cumulativo. Frontend-only.
+- **IMPORTANT-5** (`a19f51f9`): descrizione AI `quick_payment` allineata (settle).
+- **FIX-3-gemello** /payments/create (`15e39713`, scope A): card avviso
+  `ExpectedPaymentOrphanHint` (display-only, create-only, riusa
+  `wouldOrphanExpectedPayment`). Scope C (settle reale nel form) RIMANDATO a quando
+  l'emissione da app è in uso reale (oggi esposizione prod = 0 fatture app-emesse).
+- **Health check** (`6d77adde`): `npm run health:financial` read-only ripetibile.
+
+## Regole di processo ATTIVE (questa fase — rispettare in chat nuova)
+
+- **Gate spec→codice = decisione UTENTE** per ogni lavoro non banale: creare
+  spec, review spec, piano, review piano, MA NON scrivere codice finché l'utente
+  non dà il via esplicito. (Imposto su /payments/create, vale come default.)
+- **RAG combinati, entrambi**: code RAG :8001 (codice) + prose RAG :8002
+  (docs/prosa, indice `gestionale-docs` GIA' COSTRUITO — corpus
+  `~/deepwiki-prose-corpus/gestionale-docs`, re-embed dopo modifiche docs).
+  Disciplina corpus: codice solo in :8001, prosa solo in :8002, MAI incrociati.
+- **Review non risparmiate**: multi-superficie + multi-competenza + trasversali,
+  ognuna con RAG + verifica sorgente reale; impl review mutation-tested.
+- **E2E/browser (WF-19)**: creare dati demo deterministici + cleanup sistematico
+  in `finally` → 0 leftover. WF-17: browser desktop+mobile, 0 errori console.
+- **Non ignorare errori/warning/cose storte** incontrati per strada.
+- Il lavoro è stato sproporzionato vs valore su feature a esposizione zero:
+  preferire fronti con impatto reale/quotidiano.
 
 - Prettier: tech-debt CHIUSO. Root-cause risolta (`.lintstagedrc` formatta i TS,
   CI step `npm run prettier` BLOCCANTE) + sweep repo-wide a 0 drift; CI
@@ -242,13 +263,28 @@ Non fatto:
 
 ## Prossima Azione
 
-**FIX-3+4 SHIPPED e LIVE. Prossimo ciclo = QW2 (card "Da incassare").**
+**Tutto il ciclo riconciliazione + QW2 + health check SHIPPED e LIVE. Niente in
+sospeso.** Prossimo big-rock consigliato = **QW3 (mobile scadenzario + cassa)**:
+valore quotidiano reale, dati gia' esistenti (scadenze fiscali + cash flow),
+mobile-first. Fare: spec → review spec → piano → review piano → impl TDD → review
+impl → browser WF-17, con **gate spec→codice deciso dall'utente** (vedi "Regole di
+processo ATTIVE" in Stato Corrente).
 
-Spec v2: `docs/superpowers/specs/2026-06-17-expected-payment-reconciliation-design.md`
-Piano v2: `docs/superpowers/plans/2026-06-17-expected-payment-reconciliation.md`
-(blocchi "REVISIONE v2 AUTORITATIVA" vincono sul corpo.)
+Coda lavori (ordine consigliato, ognuno spec→review→piano→review→impl):
+- **QW3** mobile scadenzario + cassa (consigliato).
+- **Scope C** /payments/create settle reale — SOLO quando l'emissione fatture da
+  app sara' in uso reale (oggi esposizione 0); spec gia' pronta
+  `docs/superpowers/specs/2026-06-19-payment-create-reconciliation-design.md`.
+- **BR2** riconciliazione pagamenti/allocazioni + delta bollo €2.
+- **Fase 2** "Verita' dati remoto vs locale vs XML".
 
-SHIP completato:
+Storno NON in capability registry AI (follow-up minore). Le 2 "storte" dev-only
+note (StartPage setState non riproducibile, HMR localhost/127) NON valgono il
+fix finche' non riproducibili.
+
+--- (sotto: storico SHIP cicli chiusi, non azione corrente) ---
+
+SHIP completato (storico FIX-3+4):
 
 - EF `invoice_emit` deployata su prod (`qvdmzhyzpyaveniirsmo`, FIX-4); FIX-3 e'
   frontend (Vercel auto-deploy al merge).
