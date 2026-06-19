@@ -27,6 +27,8 @@ import { MobileContent } from "../layout/MobileContent";
 import type { CrmDataProvider } from "../providers/types";
 import { DashboardHistorical } from "./DashboardHistorical";
 import { DashboardAnnualAiSummaryCard } from "./DashboardAnnualAiSummaryCard";
+import { DashboardCashFlowCard } from "./DashboardCashFlowCard";
+import { DashboardDeadlineTracker } from "./DashboardDeadlineTracker";
 import { DashboardFiscalWarnings } from "./DashboardFiscalWarnings";
 import { DichiarazioneEntryDialog } from "./DichiarazioneEntryDialog";
 import { F24RegistrationDialog } from "./F24RegistrationDialog";
@@ -181,6 +183,14 @@ const MobileAnnualDashboard = () => {
         outstandingReceivables={outstandingReceivables}
         compact
       />
+      {/* Cash flow forecast + operational deadline tracker: parity with
+          DashboardAnnual (current-year only). cashFlowForecast is already null
+          for past years (dashboardModel), the isCurrentYear guard mirrors the
+          desktop gate explicitly. */}
+      {isCurrentYear && data.cashFlowForecast && (
+        <DashboardCashFlowCard forecast={data.cashFlowForecast} />
+      )}
+      {isCurrentYear && <DashboardDeadlineTracker alerts={data.alerts} />}
       {data.fiscal && (
         <>
           {isCurrentYear && (

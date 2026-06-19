@@ -263,15 +263,36 @@ Non fatto:
 
 ## Prossima Azione
 
-**Tutto il ciclo riconciliazione + QW2 + health check SHIPPED e LIVE. Niente in
-sospeso.** Prossimo big-rock consigliato = **QW3 (mobile scadenzario + cassa)**:
-valore quotidiano reale, dati gia' esistenti (scadenze fiscali + cash flow),
-mobile-first. Fare: spec → review spec → piano → review piano → impl TDD → review
-impl → browser WF-17, con **gate spec→codice deciso dall'utente** (vedi "Regole di
-processo ATTIVE" in Stato Corrente).
+**QW3 — IMPLEMENTATO e VERDE su branch `feat/qw3-mobile-scadenzario-cassa`.
+Ciclo completo eseguito; in attesa solo di push + CI + (merge) Vercel.**
+
+- Diagnosi (verificata su sorgente): `MobileAnnualDashboard` NON rendeva
+  `DashboardCashFlowCard` (previsione cassa 30gg, #12) né `DashboardDeadlineTracker`
+  ("Cosa devi fare", scadenzario, #11). Desktop le rende current-year-gated
+  (`DashboardAnnual.tsx:128-132`). Dati già lato mobile
+  (`useDashboardData` → `cashFlowForecast`/`alerts`). Parità UI-7, view-only.
+- Fix: 1 file prodotto (`MobileDashboard.tsx`, +2 import +2 render condizionati,
+  gating identico al desktop) + component test `MobileDashboard.parity.test.tsx`
+  (falsificabile, gating current/past year) + smoke e2e
+  `tests/e2e/mobile-dashboard-parity.smoke.spec.ts` (390px prima del login,
+  mobile shell + entrambe le card + "Scaduti"/"Incassato"). Zero
+  provider/EF/migration.
+- Review: spec 2 revisori (frontend PASS; TDD FLAG→risolto) + impeccable `adapt`;
+  impl 2 revisori (frontend/mobile PASS; TDD PASS, falsificabilità provata per
+  MUTAZIONE: tolto wiring→RED, ripristinato). Tutte code RAG :8001 + sorgente.
+- Verde: typecheck 0, lint 0, build, 650 unit, e2e mobile verde. WF-17 browser
+  desktop+mobile: 0 errori console, layout pulito a 390px (summary scadenzario
+  "Approccio Bambino" leggibile; riga scaduto tappabile, nome truncato come il
+  componente desktop → accettato, no redesign).
+- Spec/piano: `docs/superpowers/specs|plans/2026-06-19-qw3-mobile-scadenzario-cassa*`.
+- Follow-up opzionale (LOW, non bloccante): nessun assert sull'importo cassa REALE
+  su mobile nello smoke (il seed condiviso ha pagamenti tutti passati → inflows=0;
+  toccare il seed = blast radius oltre QW3). Coperto dal data-flow del component test.
 
 Coda lavori (ordine consigliato, ognuno spec→review→piano→review→impl):
-- **QW3** mobile scadenzario + cassa (consigliato).
+
+- **QW3** mobile scadenzario + cassa — IN CORSO: spec+piano pronti e revisionati,
+  gate utente aperto (vedi sopra).
 - **Scope C** /payments/create settle reale — SOLO quando l'emissione fatture da
   app sara' in uso reale (oggi esposizione 0); spec gia' pronta
   `docs/superpowers/specs/2026-06-19-payment-create-reconciliation-design.md`.

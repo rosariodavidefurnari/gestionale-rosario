@@ -6,7 +6,34 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-19 (QW2 card "Da incassare" reale: Σ balance_due cumulativo da client_commercial_position invece di pendingPaymentsTotal; frontend-only, 3 review PASS, WF-17 + grounding prod 7.131,37)
+Last updated: 2026-06-19 (QW3 parità mobile: `MobileAnnualDashboard` ora rende `DashboardCashFlowCard` + `DashboardDeadlineTracker` come desktop, current-year-gated; view-only UI-7, component test + e2e mobile, 2+2 review PASS, WF-17 0 console errors)
+
+---
+
+## Parità mobile scadenzario + cassa (QW3) — branch `feat/qw3-mobile-scadenzario-cassa`
+
+`MobileAnnualDashboard` (`MobileDashboard.tsx`) non rendeva due card già presenti
+su `DashboardAnnual` per l'anno corrente: `DashboardCashFlowCard` (previsione cassa
+30gg) e `DashboardDeadlineTracker` (scadenzario "Cosa devi fare"). I dati erano già
+disponibili lato mobile (`useDashboardData` → `cashFlowForecast`/`alerts`): mancava
+solo il wiring (UI-7, finding #11+#12 dell'assessment).
+
+- Wiring in `MobileDashboard.tsx` dopo `DashboardKpiCards`, prima del blocco fiscale.
+  Gating identico al desktop: `isCurrentYear && data.cashFlowForecast` per la cassa,
+  `isCurrentYear` per lo scadenzario (`cashFlowForecast` è già `null` per gli anni
+  passati — guard ridondante ma esplicito).
+- Riuso verbatim dei componenti (già mobile-first): zero nuovi componenti, nessun
+  prop `compact`, niente provider/EF/migration (smallest correct layer).
+- Sweep consumer: `DashboardCashFlowCard`/`DashboardDeadlineTracker` ora hanno 2
+  consumer ciascuno (`DashboardAnnual` desktop + `MobileDashboard`), in parità.
+- Controllori: `MobileDashboard.parity.test.tsx` (component, gating current/past
+  year, falsificabile mutation-proven) + `tests/e2e/mobile-dashboard-parity.smoke.spec.ts`
+  (viewport 390px prima del login, mobile shell + entrambe le card + "Scaduti"/"Incassato").
+- impeccable `adapt`: port di parità, non redesign. Note browser-only (non bloccanti):
+  touch target riga scaduto `Button size=sm` h-8 (32px < 44px ideale, ma app-wide e
+  tappabile); nome cliente truncato sotto pressione larghezza (degrada a truncation,
+  non overflow). Eventuali ritocchi responsive solo se rotti — non lo sono (WF-17).
+- Spec/piano: `docs/superpowers/specs|plans/2026-06-19-qw3-mobile-scadenzario-cassa*`.
 
 ---
 
