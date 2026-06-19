@@ -92,6 +92,15 @@ export const useDashboardData = (year?: number) => {
     queryFn: () => dataProvider.getFiscalDeclaration(year as number),
     enabled: year != null,
   });
+  // Dichiarazione reale del basis-year precedente (anno-2). Se CHIUSA, il saldo
+  // dell'anno selezionato sottrae gli ACCONTI REALI versati (derivati dalla sua
+  // competenza) invece di quelli STIMATI dalla formula -> fix understatement saldo.
+  // queryKey coerente con gli altri consumer -> react-query dedup.
+  const priorBasisDeclarationQuery = useQuery({
+    queryKey: ["fiscal-declaration", year != null ? year - 2 : null],
+    queryFn: () => dataProvider.getFiscalDeclaration((year as number) - 2),
+    enabled: year != null,
+  });
   const contributiVersatiCassa = useMemo(() => {
     const obligations = fiscalObligationsQuery.data;
     const lines = fiscalPaymentLinesQuery.data;
@@ -155,6 +164,7 @@ export const useDashboardData = (year?: number) => {
       year,
       contributiVersatiCassa,
       declaration: fiscalDeclarationQuery.data ?? null,
+      priorBasisDeclaration: priorBasisDeclarationQuery.data ?? null,
     });
   }, [
     clientsQuery.data,
@@ -162,6 +172,7 @@ export const useDashboardData = (year?: number) => {
     expensesQuery.data,
     fiscalConfig,
     fiscalDeclarationQuery.data,
+    priorBasisDeclarationQuery.data,
     paymentsQuery.data,
     projectsQuery.data,
     quotesQuery.data,

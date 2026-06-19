@@ -39,6 +39,7 @@ import { roundFiscalOutput } from "./roundFiscalOutput";
 import { computeForfettarioTax } from "./fiscalFormula";
 import { getAliquotaGs } from "./aliquotaGs";
 import { applyDefinitiveDeclaration } from "./applyDefinitiveDeclaration";
+import { resolvePriorAdvanceScheduleInput } from "./resolvePriorAdvanceScheduleInput";
 import type { FiscalDeclaration } from "./fiscalRealityTypes";
 
 // Re-export types for backward compatibility
@@ -391,6 +392,7 @@ export const buildFiscalModel = ({
   year,
   contributiVersatiCassa,
   declaration,
+  priorBasisDeclaration,
 }: {
   services: Service[];
   expenses: Expense[];
@@ -412,6 +414,12 @@ export const buildFiscalModel = ({
    * stima. `total_inps` non viene mai toccato (DOM-8).
    */
   declaration?: FiscalDeclaration | null;
+  /**
+   * Dichiarazione reale del basis-year precedente (currentYear-2). Se CHIUSA,
+   * gli acconti sottratti dal saldo vengono derivati da essa (reali) invece che
+   * dalla stima-formula. Assente/aperta -> fallback stima (comportamento storico).
+   */
+  priorBasisDeclaration?: FiscalDeclaration | null;
 }): FiscalModel => {
   const todayIso = todayISODate();
   const nowYear = Number(todayIso.slice(0, 4));
@@ -534,7 +542,13 @@ export const buildFiscalModel = ({
     paymentYear: currentYear,
     basisEstimate: previousYearEstimate.scheduleInput,
     priorAdvancePlan: buildAdvancePlanFromEstimate({
-      estimate: twoYearsBackEstimate.scheduleInput,
+      // Prior advances = acconti actually paid for the basis year, derived from the
+      // REAL closed (currentYear-2) declaration when available, else the formula
+      // estimate. Fixes the 2026 saldo understatement.
+      estimate: resolvePriorAdvanceScheduleInput(
+        twoYearsBackEstimate.scheduleInput,
+        priorBasisDeclaration,
+      ),
     }),
     annoInizioAttivita: fiscalConfig.annoInizioAttivita,
     inferredActivityStartYear: inferActivityStartYearFromPayments(payments),

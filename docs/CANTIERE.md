@@ -75,7 +75,15 @@ Branch corrente:
 
 Obiettivo operativo attivo: **NESSUNO**. Stato pulito, CI verde, prod sano.
 
-Ultimo lavoro (2026-06-20) — guardrail "obblighi certificati" + pulizia righe-spazzatura
+Ultimo lavoro (2026-06-20b) — saldo scadenzario sui ACCONTI REALI. La card "Scadenze
+fiscali" mostrava `7.941,49 €` sottostimando (sottraeva acconti STIMATI). Helper puro
+`resolvePriorAdvanceScheduleInput`: se la dichiarazione anno-2 è chiusa, deriva gli acconti
+dalla sua competenza (riusa D3), altrimenti fallback. Builder condivisi intatti (parità
+verde), desktop+mobile via `useDashboardData`. Prod 2026: saldo INPS 2.839→3.571, totale
+`~8.840` (non 7.941). 700 unit + e2e fiscal verdi, RAG :8001 multi-lente PASS. Gate aperto:
+EF reminder ancora sulla stima (DOM-5 due-layer).
+
+Lavoro precedente (2026-06-20) — guardrail "obblighi certificati" + pulizia righe-spazzatura
 fiscali. La card "Scadenze fiscali" mostrava un falso `11.100,60 €` "Da dichiarazione" per
 il 2026: 6 `fiscal_obligations` proiezioni hand-inserite il 2026-04-14 (metodo "aliquota
 effettiva" rigettato, `declaration_id` NULL/zero-totals, 0 F24). Fatto: DELETE prod delle 6

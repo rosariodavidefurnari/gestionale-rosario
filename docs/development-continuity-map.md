@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-20 (guardrail obblighi certificati: card scadenze + EF reminder + provider `getFiscalDeclarations`; pulizia 6 righe-spazzatura fiscali prod; sweep multi-superficie via RAG)
+Last updated: 2026-06-20 (saldo scadenzario usa acconti REALI da dichiarazione anno-2 chiusa via `resolvePriorAdvanceScheduleInput`: card 7.941→~8.840 su prod, desktop+mobile, parità intatta; + guardrail obblighi certificati + pulizia 6 righe-spazzatura fiscali)
 
 ---
 

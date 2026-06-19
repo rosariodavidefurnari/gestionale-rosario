@@ -72,6 +72,7 @@
 | **DB**       | DB-9  | EF marca per id → UNDO smarca per id/FK, mai per string |
 | **DB**       | DB-10 | Incasso atteso da emit → riconcilia per FK, mai duplicare |
 | **DB**       | DB-11 | Lettore di fiscal_obligations → filtra CERTIFICATI (proiezione ≠ reale) |
+| **DB**       | DB-12 | Saldo scadenzario → acconti REALI da dichiarazione anno-2, non stima |
 | **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
 | **Workflow** | WF-15 | Lavoro rischioso → RAG attivo + review multi-superficie |
 | **Workflow** | WF-16 | CI check → `gh -R fork` (default punta a upstream)  |
@@ -346,6 +347,23 @@ si spacciavano per "Da dichiarazione" e gonfiavano la card scadenze a un falso
 `useDashboardData`) trattavano la presenza della riga come dato reale; il RAG ha
 trovato la EF e `useDashboardData` che grep da solo perdeva. Cugino di DOM-4 (stato
 semantico != `array.length`).
+
+### DB-12: il SALDO dello scadenzario sottrae gli ACCONTI REALI (dichiarazione anno-2 chiusa), non la stima
+
+**Quando**: tocco il saldo fiscale dello scadenzario (`buildFiscalModel` / `buildFiscalPaymentSchedule`
+/ `priorAdvancePlan`), o la card "Scadenze fiscali" sottostima il "da versare"
+**Fare**: gli acconti sottratti dal saldo dell'anno Y sono il % della tassa CERTIFICATA di Y-2,
+NON la stima-formula. Derivarli dalla dichiarazione `currentYear-2` quando è CHIUSA
+(`isDeclarationClosed`) via `resolvePriorAdvanceScheduleInput` (riusa `definitiveInpsCompetenza`
+= `total_inps − prior_advances_inps`, `definitiveImposta` = `total_substitute_tax`), fallback alla
+stima se assente/aperta. Cambiare SOLO l'input a `buildAdvancePlanFromEstimate`, mai i builder
+condivisi → `fiscalParity.test.ts` resta verde. `total_inps` solo letto (DOM-8). Il caller fetcha
+`["fiscal-declaration", year-2]`; un solo hook (`useDashboardData`) copre desktop+mobile (UI-7).
+**Perché**: il 2026-06-20 la card 2026 mostrava `7.941,49 €` sottraendo acconti STIMATI 2.235 INPS
+(la formula sovrastimava il 2024) invece dei reali 1.503,09 versati nel 2025 → saldo INPS 2.839
+invece di 3.571, totale ~1.000 € troppo basso. Il vero (~8.840) si ottiene riusando la
+dichiarazione 2024 reale di cui la card D3 già si fida. L'EF reminder resta sulla stima → due-layer
+DOM-5 da allineare a parte.
 
 ---
 

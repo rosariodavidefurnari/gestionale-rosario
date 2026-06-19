@@ -143,6 +143,7 @@ export const buildDashboardModel = ({
   year,
   contributiVersatiCassa,
   declaration,
+  priorBasisDeclaration,
 }: {
   payments: Payment[];
   quotes: Quote[];
@@ -155,6 +156,8 @@ export const buildDashboardModel = ({
   contributiVersatiCassa?: number;
   /** D3: dichiarazione reale del commercialista per l'anno selezionato. */
   declaration?: FiscalDeclaration | null;
+  /** Dichiarazione reale del basis-year precedente (anno-2) per gli acconti reali del saldo. */
+  priorBasisDeclaration?: FiscalDeclaration | null;
 }): DashboardModel => {
   const todayIso = todayISODate();
   const nowYear = Number(todayIso.slice(0, 4));
@@ -622,6 +625,7 @@ export const buildDashboardModel = ({
         year: selectedYear,
         contributiVersatiCassa,
         declaration,
+        priorBasisDeclaration,
       })
     : null;
 

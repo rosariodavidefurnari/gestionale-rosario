@@ -6,6 +6,7 @@ import {
   buildFiscalPaymentSchedule,
 } from "./fiscalDeadlines";
 import { buildFiscalModel } from "./fiscalModel";
+import type { FiscalDeclaration } from "./fiscalRealityTypes";
 import type {
   Client,
   Expense,
@@ -900,5 +901,86 @@ describe("fiscal payment schedule", () => {
       schedule.deadlines.find((deadline) => deadline.label === "2° Acconto")
         ?.date,
     ).toBe("2025-12-01");
+  });
+});
+
+describe("buildFiscalModel — saldo subtracts REAL paid acconti (closed prior-year declaration)", () => {
+  const getInpsSaldo = (
+    model: ReturnType<typeof buildFiscalModel>,
+  ): number | null => {
+    for (const deadline of model.schedule.deadlines) {
+      const item = deadline.items.find((i) => i.component === "inps_saldo");
+      if (item) return item.amount;
+    }
+    return null;
+  };
+
+  // Real AdE 2024 declaration: total_inps 3667.40 (cycle) − prior_advances 1788.40
+  // = 1879 competence; imposta 233. Acconti paid in 2025 = 80%×1879 = 1503.2.
+  const closed2024: FiscalDeclaration = {
+    id: "decl-2024",
+    tax_year: 2024,
+    total_substitute_tax: 233,
+    total_inps: 3667.4,
+    prior_advances_substitute_tax: 429,
+    prior_advances_inps: 1788.4,
+    notes: null,
+    created_at: "2026-04-02T00:00:00Z",
+    updated_at: "2026-04-02T00:00:00Z",
+    user_id: "user-1",
+  };
+
+  const baseInput = () => {
+    const clients: Client[] = [baseClient({ id: 1 })];
+    const projects: Project[] = [
+      baseProject({ id: 1, client_id: 1, category: "produzione_tv" }),
+    ];
+    // 2025 cash = 20000 (basis year). 2024 cash = 0 -> formula prior advance = 0,
+    // so the difference isolates exactly the REAL advance from the declaration.
+    const payments: Payment[] = [
+      basePayment({
+        id: 1,
+        client_id: 1,
+        project_id: 1,
+        amount: 20000,
+        status: "ricevuto",
+        payment_date: "2025-06-01T00:00:00.000Z",
+      }),
+    ];
+    return {
+      services: [] satisfies Service[],
+      expenses: [] satisfies Expense[],
+      payments,
+      quotes: [] satisfies Quote[],
+      projects,
+      clients,
+      fiscalConfig,
+      year: 2026,
+    };
+  };
+
+  it("subtracts the REAL advance (1503.2) from the saldo instead of the drift-prone formula estimate", () => {
+    const input = baseInput();
+    const saldoWithout = getInpsSaldo(buildFiscalModel(input));
+    const saldoWith = getInpsSaldo(
+      buildFiscalModel({ ...input, priorBasisDeclaration: closed2024 }),
+    );
+
+    expect(saldoWithout).not.toBeNull();
+    expect(saldoWith).not.toBeNull();
+    // 2024 cash = 0 -> formula advance = 0 -> saldoWithout = full competence.
+    // Closed 2024 declaration -> REAL advance 80%×1879 = 1503.2 subtracted.
+    expect((saldoWithout as number) - (saldoWith as number)).toBeCloseTo(
+      1503.2,
+      1,
+    );
+    expect(saldoWith as number).toBeLessThan(saldoWithout as number);
+  });
+
+  it("falls back to the formula estimate when no prior-year declaration is present (byte-for-byte unchanged)", () => {
+    const input = baseInput();
+    expect(getInpsSaldo(buildFiscalModel(input))).toEqual(
+      getInpsSaldo(buildFiscalModel({ ...input, priorBasisDeclaration: null })),
+    );
   });
 });

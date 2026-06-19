@@ -6,7 +6,22 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-20 (guardrail obblighi certificati: card scadenze + EF reminder; pulizia 6 righe-spazzatura fiscali prod; sweep RAG multi-superficie)
+Last updated: 2026-06-20 (saldo scadenzario sui ACCONTI REALI dalla dichiarazione anno-2 chiusa: card 7.941→~8.840, desktop+mobile, parità intatta; + guardrail obblighi certificati + pulizia spazzatura)
+
+## Update 2026-06-20 (b) — Saldo scadenzario sui ACCONTI REALI (card 7.941 → ~8.840)
+
+La card "Scadenze fiscali" mostrava `7.941,49 €` sottostimando: il saldo sottraeva acconti
+STIMATI (formula su anno-2) invece degli acconti REALI versati nel 2025 (1.503,09 INPS + 233
+imposta). Fix: helper puro `resolvePriorAdvanceScheduleInput` — se la dichiarazione
+(`currentYear-2`) è CHIUSA, deriva gli acconti dalla sua competenza (riusa `definitiveInpsCompetenza`/
+`definitiveImposta` di D3), altrimenti fallback alla stima. `buildFiscalModel` lo usa per il
+`priorAdvancePlan`; i builder condivisi INTOCCATI → `fiscalParity.test.ts` verde. `useDashboardData`
+fetcha `["fiscal-declaration", year-2]` → copre desktop+mobile (stesso hook, UI-7). Prod 2026: saldo
+INPS `2.839 → 3.571`, totale `~8.840`. DOM-8 (`total_inps` solo letto), clamp `≥0`, INERTE per anni con
+obblighi certificati (il reale prevale). Controllori: `resolvePriorAdvanceScheduleInput.test.ts` (3) +
+integrazione `fiscalModel.test.ts` (`saldoWithout − saldoWith ≈ 1503,2`). Review RAG :8001 multi-lente
+(fiscale/parità/TDD) + sorgente, PASS. 700 unit verdi, e2e fiscal desktop+mobile verde.
+APERTO: EF `_shared/fiscalDeadlineCalculation` (reminder) ancora sulla stima → DOM-5 due-layer (backlog).
 
 ## Update 2026-06-20 — Guardrail "obblighi certificati": stop alle proiezioni-fantasma "Da dichiarazione"
 

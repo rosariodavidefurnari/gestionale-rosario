@@ -6,7 +6,19 @@
 incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 `canonical`.
 
-Last updated: 2026-06-20 (guardrail obblighi certificati SHIPPED su card+EF; follow-up `useDashboardData` switch + deploy EF aperti)
+Last updated: 2026-06-20 (saldo scadenzario sui ACCONTI REALI SHIPPED, card ~8.840; + guardrail obblighi certificati)
+
+## Update 2026-06-20 (b) — Saldo da ACCONTI REALI: SHIPPED (card ~8.840)
+
+DONE — la card scadenze sottrae ora gli acconti REALI (dichiarazione anno-2 chiusa) invece della
+stima-formula: `7.941 → ~8.840` su prod. Helper puro `resolvePriorAdvanceScheduleInput`, builder
+condivisi intatti (parità verde), desktop+mobile via `useDashboardData`. Chiude il follow-up
+"allineamento stima→acconti reali" della tornata precedente.
+
+APERTO (next): EF `_shared/fiscalDeadlineCalculation` (reminder server-side) ancora sulla stima
+formula → portare lo stesso `priorBasisDeclaration` (fetch year-2 lato Deno) per allineare i
+promemoria alla card (DOM-5 due-layer). + `useDashboardData:102` length-switch deduzione-cassa
+(invariato, separato). + imposta cassa-vs-competenza (~85 € residui, secondario).
 
 ## Update 2026-06-20 — Guardrail "obblighi certificati" (card scadenze + EF reminder)
 
