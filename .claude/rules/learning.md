@@ -78,6 +78,7 @@
 | **Workflow** | WF-18 | Mutation che cambia stato derivato → invalida TUTTE le superfici consumanti |
 | **Workflow** | WF-19 | E2E/browser/smoke → crea dati demo deterministici + cleanup sistematico (try/finally, 0 leftover) |
 | **Workflow** | WF-20 | Assert valuta/numero formattato → grouping-agnostico (Node small-ICU vs browser) |
+| **Workflow** | WF-21 | E2E "tool rotto" → MCP browser ≠ Playwright del progetto, NON deferire |
 | **Backend**  | BE-9  | EF Calendar timed → usa timestamp service |
 
 ---
@@ -751,6 +752,26 @@ Playwright in questo ambiente NON applica il separatore delle migliaia e produce
 `"2.984,50 €"`. Un assert con il punto hardcoded e' verde in un ambiente e rosso
 nell'altro, pur essendo il codice corretto (WF-5: il sistema produceva il valore
 giusto). Il display in produzione e' corretto; solo l'assertion era fragile.
+
+### WF-21: E2E "tool rotto" -> distingui MCP browser dal Playwright DEL PROGETTO, non deferire
+
+**Quando**: sto per deferire/saltare un E2E dichiarando "browser/chromium rotto"
+o rinviarlo a dopo per un problema di tooling browser
+**Fare**: distinguere la fonte. L'MCP browser (glance / playwright MCP) e il
+Playwright DEL PROGETTO (`make test-e2e` / `npx playwright test`, chromium in
+`~/Library/Caches/ms-playwright/`) sono INDIPENDENTI: un MCP rotto NON impedisce
+`npx playwright test`. Girare l'E2E reale del progetto contro lo stack locale
+(vite :5173 + supabase :55321 up). Se manca il browser del progetto:
+`npx playwright install chromium`. L'oracolo dev'essere PRECISO, derivato dal
+seed reale attraverso la formula reale (WF-5), non un match vago.
+**Perche'**: il 2026-06-19 ho deferito l'E2E della formula INPS dicendo
+"chromium MCP rotto" e ho dichiarato "fatto" senza E2E -> l'utente si e'
+incazzato ("se lo strumento che ti serve e' rotto lo aggiusti"). In realta'
+chromium-1208 del progetto funzionava: l'E2E (`fiscal-estimate.smoke.spec.ts`)
+gira in ~7s e valida desktop+mobile INPS 650,71 / imposta 92,26 / accantona
+61,91 dal seed deterministico (cassa 3200 -> reddito 2496 -> formula reale).
+Deferire un controllore per un tool sbagliato-diagnosticato viola EXECUTABLE
+GUARDRAILS e MONEY/FISCAL TDD.
 
 ---
 
