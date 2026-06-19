@@ -68,8 +68,8 @@ Regola pratica:
 
 Branch corrente:
 
-- `main`. Tutto shippato e LIVE. Ultimi merge: health check `6d77adde`,
-  FIX-3-gemello `15e39713`, IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`,
+- `main`. Tutto shippato e LIVE. Ultimi merge: QW3 `df78f9cb`, health check
+  `6d77adde`, FIX-3-gemello `15e39713`, IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`,
   FIX-3+4 `7c7ec1c1`. Lavorare in chat nuova: partire da QUI (autosufficiente).
 
 Obiettivo operativo attivo: **NESSUNO**. Stato pulito, CI verde, prod sano
@@ -78,6 +78,10 @@ Obiettivo operativo attivo: **NESSUNO**. Stato pulito, CI verde, prod sano
 
 Shippato e LIVE in questa lunga sessione (tutto su `main`, CI verde, Vercel):
 
+- **QW3** parità mobile (`df78f9cb`): `MobileAnnualDashboard` ora rende
+  `DashboardCashFlowCard` (cassa 30gg) + `DashboardDeadlineTracker` (scadenzario)
+  come desktop, current-year-gated. Frontend-only (UI-7), CI success sul fork,
+  prod alias HTTP 200. Component test + e2e mobile; WF-17 0 errori console.
 - **FIX-3+4** riconciliazione incasso atteso (`7c7ec1c1`): QuickPayment SALDA
   l'atteso collegato + invoice_emit ASSORBE l'atteso manuale (EF deployata,
   smoke prod GREEN). Decider `quickPaymentReconciliation.ts` + `_shared/invoiceEmit.ts`.
@@ -263,8 +267,13 @@ Non fatto:
 
 ## Prossima Azione
 
-**QW3 — IMPLEMENTATO e VERDE su branch `feat/qw3-mobile-scadenzario-cassa`.
-Ciclo completo eseguito; in attesa solo di push + CI + (merge) Vercel.**
+**QW3 — SHIPPED e LIVE (`df78f9cb` su `main`, CI success sul fork, prod alias
+HTTP 200). Niente in sospeso. Prossimo big-rock consigliato: BR2** (collegare
+incassi↔fatture, test-first). Scope C resta gated (emissione da app non ancora
+in uso). Per ogni nuovo lavoro: spec → review → piano → review → impl TDD →
+review impl → browser WF-17, con gate spec→codice deciso dall'utente.
+
+Storico QW3 (ciclo chiuso):
 
 - Diagnosi (verificata su sorgente): `MobileAnnualDashboard` NON rendeva
   `DashboardCashFlowCard` (previsione cassa 30gg, #12) né `DashboardDeadlineTracker`
@@ -291,8 +300,7 @@ Ciclo completo eseguito; in attesa solo di push + CI + (merge) Vercel.**
 
 Coda lavori (ordine consigliato, ognuno spec→review→piano→review→impl):
 
-- **QW3** mobile scadenzario + cassa — IN CORSO: spec+piano pronti e revisionati,
-  gate utente aperto (vedi sopra).
+- **QW3** mobile scadenzario + cassa — ✅ SHIPPED e LIVE (`df78f9cb`).
 - **Scope C** /payments/create settle reale — SOLO quando l'emissione fatture da
   app sara' in uso reale (oggi esposizione 0); spec gia' pronta
   `docs/superpowers/specs/2026-06-19-payment-create-reconciliation-design.md`.
