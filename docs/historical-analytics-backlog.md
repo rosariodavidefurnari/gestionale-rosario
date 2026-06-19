@@ -6,7 +6,17 @@
 incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 `canonical`.
 
-Last updated: 2026-06-17 (Tooling: prettier root-cause fix + sweep; dashboard formatting-only)
+Last updated: 2026-06-19 (QW2 card "Da incassare" reale SHIPPED; AI metric cumulativo aggiunto)
+
+## Update 2026-06-19 — QW2 card "Da incassare" reale (DONE)
+
+Card KPI dashboard: da `pendingPaymentsTotal` (375 su prod) a Σ max(0,
+`client_commercial_position.balance_due`) cumulativo (~7.1k reale). Frontend-only,
+fonte canonica cassa-aware (no seconda verità). AI annuale allineata
+(`outstanding_receivables_total`). Dettagli in `architecture.md` +
+`development-continuity-map.md` + handoff. Coda residua: QW3 (mobile
+scadenzario+cassa), BR2 (riconciliazione pagamenti/allocazioni), IMPORTANT-5
+(descrizione `quick_payment` registry AI, incompleta non falsa), bollo €2.
 
 ## Update 2026-06-17 — Tooling: prettier drift risolto alla radice
 

@@ -18,6 +18,7 @@ import {
 } from "./dashboardModel";
 import { DashboardNetAvailabilityCard } from "./DashboardNetAvailabilityCard";
 import type { FiscalKpis } from "./fiscalModel";
+import { formatOpenClientsSubtitle } from "@/lib/analytics/outstandingReceivables";
 
 export const DashboardKpiCards = ({
   kpis,
@@ -26,6 +27,7 @@ export const DashboardKpiCards = ({
   compact,
   fiscalKpis = null,
   totalOpenObligations,
+  outstandingReceivables,
 }: {
   kpis: DashboardKpis;
   meta: DashboardMeta;
@@ -33,6 +35,7 @@ export const DashboardKpiCards = ({
   compact?: boolean;
   fiscalKpis?: FiscalKpis | null;
   totalOpenObligations?: number;
+  outstandingReceivables: { total: number; count: number };
 }) => (
   <div
     className={`grid grid-cols-1 sm:grid-cols-2 ${compact ? "gap-3" : "xl:grid-cols-5 gap-4"}`}
@@ -44,8 +47,8 @@ export const DashboardKpiCards = ({
       totalOpenObligations={totalOpenObligations}
     />
 
-    {/* ── Pagamenti da ricevere ── */}
-    <PendingPaymentsCard kpis={kpis} />
+    {/* ── Da incassare (residuo reale cumulativo) ── */}
+    <PendingPaymentsCard outstandingReceivables={outstandingReceivables} />
 
     {/* ── Lavoro mese ── */}
     <MonthlyRevenueCard kpis={kpis} meta={meta} />
@@ -60,11 +63,13 @@ export const DashboardKpiCards = ({
 
 /* ─────────────────────────────────────────────────────── */
 
-const PendingPaymentsCard = ({ kpis }: { kpis: DashboardKpis }) => {
-  const received = kpis.cashReceivedNet;
-  const pending = kpis.pendingPaymentsTotal;
-  const total = received + pending;
-  const pct = total > 0 ? Math.round((received / total) * 100) : 0;
+const PendingPaymentsCard = ({
+  outstandingReceivables,
+}: {
+  outstandingReceivables: { total: number; count: number };
+}) => {
+  const { total, count } = outstandingReceivables;
+  const subtitle = formatOpenClientsSubtitle(count);
 
   return (
     <Card className="gap-3 py-4">
@@ -73,25 +78,12 @@ const PendingPaymentsCard = ({ kpis }: { kpis: DashboardKpis }) => {
         <Clock3 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
       </CardHeader>
       <CardContent className="px-4 space-y-2">
+        {/* Approccio Bambino: un concetto = un numero grande (residuo reale,
+            cumulativo su tutti gli anni), niente barra. */}
         <div className="text-2xl font-bold text-amber-700 dark:text-amber-300 tabular-nums">
-          {formatCurrency(pending)}
+          {formatCurrency(total)}
         </div>
-        <p className="text-xs text-muted-foreground">
-          {kpis.pendingPaymentsCount} pagamenti in attesa
-        </p>
-        {/* Progress bar */}
-        <div className="space-y-1">
-          <div className="h-2 rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full rounded-full bg-emerald-500 transition-all"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-          <p className="text-[11px] text-muted-foreground text-center tabular-nums">
-            {formatCompactCurrency(received)} incassati su{" "}
-            {formatCompactCurrency(total)} ({pct}%)
-          </p>
-        </div>
+        <p className="text-xs text-muted-foreground">{subtitle}</p>
       </CardContent>
     </Card>
   );

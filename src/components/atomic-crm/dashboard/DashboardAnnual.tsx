@@ -57,7 +57,8 @@ export const DashboardAnnual = () => {
   const currentYear = Number(todayISODate().slice(0, 4));
   useRealtimeInvalidation(REALTIME_TABLES);
   const [selectedYear, setSelectedYear] = useState(currentYear);
-  const { data, isPending, error, refetch } = useDashboardData(selectedYear);
+  const { data, outstandingReceivables, isPending, error, refetch } =
+    useDashboardData(selectedYear);
   const isCurrentYear = data?.isCurrentYear ?? selectedYear === currentYear;
   const dataProvider = useDataProvider<CrmDataProvider>();
 
@@ -121,6 +122,7 @@ export const DashboardAnnual = () => {
         totalOpenObligations={
           deadlineViews != null ? totalOpenObligations : undefined
         }
+        outstandingReceivables={outstandingReceivables}
       />
 
       {isCurrentYear && data.cashFlowForecast && (

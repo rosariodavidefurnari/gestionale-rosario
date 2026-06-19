@@ -6,7 +6,22 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-17 (Tooling: prettier root-cause fix + sweep; dashboard files formatting-only, zero behavior change)
+Last updated: 2026-06-19 (QW2 card "Da incassare": nuovo metric AI `outstanding_receivables_total` cumulativo, `pending_payments_total` relabeled; frontend-only, no EF deploy)
+
+## Update 2026-06-19 — QW2: AI annual metric `outstanding_receivables_total`
+
+Branch `fix/da-incassare-card`. La card "Da incassare" ora usa il residuo reale
+cumulativo Σ max(0, `client_commercial_position.balance_due`) (non più
+`pendingPaymentsTotal`). Per coerenza AI (B2, no seconda verità),
+`buildAnnualOperationsContext` accetta `{outstandingReceivablesTotal}` e aggiunge il
+metric `outstanding_receivables_total` (basis `receivable`, cumulativo) + un caveat
+che lo distingue da `pending_payments_total`. **`pending_payments_total` MANTIENE il
+suo id** (la EF `supabase/functions/_shared/annualOperationsAiGuidance.ts` lo legge
+per id, `.value`), cambia solo la label. La fonte del metric è la STESSA della card
+(`dataProviderAnalyticsContext` fetcha `client_commercial_position`). Quindi
+**frontend-only, NESSUN deploy EF**. Controllore B2 falsificabile:
+`dataProviderAnalyticsContext.test.ts`. Follow-up aperto (IMPORTANT-5, separato): la
+descrizione `quick_payment` nei registry AI è incompleta (non falsa).
 
 > **Nota tooling (2026-06-17):** i file `dashboard/` toccati nel commit dello
 > sweep prettier sono cambiati SOLO nel formato (nessun cambiamento di

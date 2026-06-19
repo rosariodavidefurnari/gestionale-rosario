@@ -1,5 +1,6 @@
 import type {
   Client,
+  ClientCommercialPosition,
   Expense,
   Payment,
   Project,
@@ -7,6 +8,7 @@ import type {
   Service,
 } from "../../types";
 import { buildDashboardModel } from "../../dashboard/dashboardModel";
+import { sumOutstandingReceivables } from "@/lib/analytics/outstandingReceivables";
 import {
   buildDashboardHistoryModel,
   type AnalyticsClientLifetimeCompetenceRevenueRow,
@@ -107,6 +109,7 @@ export const getAnnualOperationsContextFromResources = async (
     projectsResponse,
     clientsResponse,
     expensesResponse,
+    receivablesResponse,
   ] = await Promise.all([
     provider.getList<Payment>("payments", {
       pagination: LARGE_PAGE,
@@ -138,6 +141,11 @@ export const getAnnualOperationsContextFromResources = async (
       sort: { field: "expense_date", order: "DESC" },
       filter: {},
     }),
+    provider.getList<ClientCommercialPosition>("client_commercial_position", {
+      pagination: LARGE_PAGE,
+      sort: { field: "client_name", order: "ASC" },
+      filter: {},
+    }),
   ]);
 
   const model = buildDashboardModel({
@@ -150,5 +158,11 @@ export const getAnnualOperationsContextFromResources = async (
     year,
   });
 
-  return buildAnnualOperationsContext(model);
+  // QW2 B2: same canonical source as the dashboard "Da incassare" card, so the
+  // AI annual context and the UI never diverge.
+  const outstandingReceivablesTotal = sumOutstandingReceivables(
+    receivablesResponse.data,
+  );
+
+  return buildAnnualOperationsContext(model, { outstandingReceivablesTotal });
 };

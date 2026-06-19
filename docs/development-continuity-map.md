@@ -6,7 +6,41 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-19 (FIX-3+4 riconciliazione incasso atteso: QuickPayment salda l'atteso collegato + invoice_emit assorbe l'atteso manuale; money-TDD, 4 review PASS, WF-17 desktop+mobile)
+Last updated: 2026-06-19 (QW2 card "Da incassare" reale: Σ balance_due cumulativo da client_commercial_position invece di pendingPaymentsTotal; frontend-only, 3 review PASS, WF-17 + grounding prod 7.131,37)
+
+---
+
+## Card "Da incassare" reale (QW2) — branch `fix/da-incassare-card`
+
+La card KPI mostrava `pendingPaymentsTotal` (`dashboardModel.ts:299-305`: solo righe
+`payments` non-`ricevuto`/non-`rimborso` dell'anno → su prod 375, nascondeva il
+credito reale). Ora mostra il residuo REALE cumulativo:
+`Σ max(0, client_commercial_position.balance_due)` (lavoro+spese consegnati −
+incassato `ricevuto`, su TUTTI gli anni, include il no-project). Fonte canonica
+cassa-aware già esistente (`20260401094930`), SYSTEM-FIRST: nessun ricalcolo.
+
+- Pura `src/lib/analytics/outstandingReceivables.ts` (`sumOutstandingReceivables`
+  clamp per-cliente, `countOpenReceivables`, `formatOpenClientsSubtitle`).
+- `useDashboardData` fetcha `client_commercial_position` year-INDEPENDENT (fuori dal
+  model year-scoped, I4) e ritorna `outstandingReceivables:{total,count}`.
+- `DashboardKpiCards` prop REQUIRED `outstandingReceivables`; card pulita (un numero
+  + "N clienti con saldo aperto", barra rimossa). Propagata da `DashboardAnnual` E
+  `MobileDashboard` (UI-7, parità garantita da tsc — prop required, 2 soli consumer).
+- AI (B2, no seconda verità): `buildAnnualOperationsContext({outstandingReceivablesTotal})`
+  → metric `outstanding_receivables_total` (basis `receivable`) + caveat;
+  `pending_payments_total` mantiene l'id (EF `_shared/annualOperationsAiGuidance.ts`
+  legge per id) con label disambiguata. `dataProviderAnalyticsContext` fetcha la
+  STESSA vista → card e AI stessa fonte. Frontend-only: niente EF deploy, niente migration.
+- Controllori: pure `outstandingReceivables.test.ts`; builder
+  `buildAnnualOperationsContext.test.ts`; **B2 falsificabile**
+  `dataProviderAnalyticsContext.test.ts` (mock provider → metric = Σ balance_due,
+  non `pendingPaymentsTotal`); e2e `dashboard-annual.smoke.spec.ts` (fixture
+  deterministico 2985 + "1 cliente con saldo aperto", RED→GREEN da 2500).
+- `pendingPaymentsTotal/Count` RESTANO nel model (cashflow forecast
+  `dashboardModel.ts:604` + AI). Nota: il widget "Cosa devi fare/Scaduti" continua a
+  usare le righe payment (concetto distinto dal credito cumulativo della card).
+- Grounding prod read-only: Σ = 7.131,37 su 3 clienti (Gustare 6.471 + Aidone 375 +
+  Laurus 285); la spec citava 6.697 (dato vivo evoluto, non un bug).
 
 ---
 
