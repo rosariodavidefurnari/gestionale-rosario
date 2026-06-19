@@ -272,20 +272,30 @@ Non fatto:
 
 ## Prossima Azione
 
-**Ciclo 2 fiscale — IN CORSO sul branch `feat/fiscal-formula-real`.** Scoperta
-chiave (dalle dichiarazioni AdE reali di Rosario, SPID): la **formula forfettaria
-standard è CORRETTA** e replica il commercialista al centesimo; il problema NON era
-la formula ma i DATI. Oracoli reali: 2023 imposta 429 + INPS 2.249; 2024 imposta
-233 + INPS 1.879. Il `total_inps` 3.667 in `fiscal_declarations` è il TOTALE
-riconciliato (acconti+saldo), NON un bug — NON si tocca. I 3 numeri INPS distinti:
-competenza (1.879) / versato-cassa (2.538, LM035, deduce l'imposta) / total ciclo.
+**Ciclo 2 fiscale — formula reale SHIPPED e LIVE** (merge ff su `main` `f2924e96`,
+CI `Check` success sul fork, Vercel prod alias HTTP 200, EF `fiscal_deadline_check`
+deployata `qvdmzhyzpyaveniirsmo`, `npm run health:financial` = PASS dopo deploy).
+Scoperta chiave (dalle dichiarazioni AdE reali di Rosario, SPID): la **formula
+forfettaria standard è CORRETTA** e replica il commercialista al centesimo; il
+problema NON era la formula ma i DATI. Oracoli reali: 2023 imposta 429 + INPS 2.249;
+2024 imposta 233 + INPS 1.879. Il `total_inps` 3.667 in `fiscal_declarations` è il
+TOTALE riconciliato (acconti+saldo), NON un bug — NON si tocca. I 3 numeri INPS
+distinti: competenza (1.879) / versato-cassa (2.538, LM035, deduce l'imposta) / ciclo.
 
-Checkpoint COMMITTATO (questo branch): formula reale (`fiscalFormula.ts`,
-`inpsContributionsPaid.ts`, `aliquotaGs.ts` — 3 helper puri, oracoli verdi) +
-**innesto in `buildFiscalYearEstimate` client+EF** (aliquota per-anno: 2023/2024
-hardcoded verificati, 2025+ config; deduzione cassa-fallback), parity verde,
-**668 unit verdi, 0 regressioni**, typecheck/lint/build/deno-check OK. Retro-
-compatibile (dashboard invariata tranne 2023 che migliora a 26,23%).
+LIVE (4 commit, tutti verde + browser-verificato glance desktop, 0 console errors):
+formula reale (`fiscalFormula.ts`, `inpsContributionsPaid.ts`, `aliquotaGs.ts` — 3
+helper puri, oracoli verdi) + innesto in `buildFiscalYearEstimate` client+EF
+(aliquota per-anno: 2023/2024 hardcoded verificati, 2025+ config; deduzione
+cassa-fallback) + wiring F24→dashboard (single-source) + UI (card tasse mobile,
+fix frizione `DashboardNetAvailabilityCard` Riserva-tasse 0→stima). Review impl
+multi-superficie + RAG (2 PASS + 1 FLAG chiuso col parity sui rami nuovi). 672 unit.
+
+RIMANENTE per un prossimo ciclo (NON bloccante, documentato in backlog):
+**D3** card anno-chiuso → numeri REALI definitivi + label stima/definitivo (complesso:
+i 3 numeri INPS, `total_inps` ciclo ≠ competenza — NON rushato per non mostrare tasse
+sbagliate); attribuzione **data-fattura** (serve BR2, oggi 0/31 payment linkati);
+compensazioni F24 (`amount` negativo) senza test dedicato. **RAG da rigenerare**
+sullo snapshot `f2924e96` (code :8001 + prosa :8002).
 
 RIMANENTE (Fase 5-7, todo tracciati): wiring F24→dashboard (derivare
 `contributiVersatiCassa` da `useFiscalReality`, single-source) · card UI (anno
