@@ -20,7 +20,12 @@ export type AnnualOperationsContext = {
     value: number | null;
     formattedValue: string;
     unit: "currency" | "count" | "percent";
-    basis: "work_value" | "cash_expected" | "pipeline_potential" | "cost";
+    basis:
+      | "work_value"
+      | "cash_expected"
+      | "pipeline_potential"
+      | "cost"
+      | "receivable";
     subtitle: string;
     warningCode?: string;
   }>;
@@ -154,7 +159,9 @@ const formatPercent = (value: number | null) =>
 
 export const buildAnnualOperationsContext = (
   model: DashboardModel,
+  options: { outstandingReceivablesTotal?: number } = {},
 ): AnnualOperationsContext => {
+  const { outstandingReceivablesTotal } = options;
   const caveats: string[] = [];
 
   pushCaveat(
@@ -165,6 +172,12 @@ export const buildAnnualOperationsContext = (
     caveats,
     "I pagamenti da ricevere sono incassi attesi e non vanno confusi con il valore del lavoro gia svolto.",
   );
+  if (outstandingReceivablesTotal != null) {
+    pushCaveat(
+      caveats,
+      "Distinzione importante: 'pending_payments_total' sono solo le righe pagamento attese inserite nell'anno; 'outstanding_receivables_total' e' il credito reale totale (lavoro consegnato meno incassato, cumulativo su tutti gli anni). Per 'quanto mi devono ancora' usa outstanding_receivables_total.",
+    );
+  }
   pushCaveat(
     caveats,
     "I preventivi aperti sono pipeline potenziale, non ricavo gia acquisito.",
@@ -251,12 +264,12 @@ export const buildAnnualOperationsContext = (
       },
       {
         id: "pending_payments_total",
-        label: "Pagamenti da ricevere",
+        label: "Pagamenti attesi inseriti — anno",
         value: model.kpis.pendingPaymentsTotal,
         formattedValue: formatCurrency(model.kpis.pendingPaymentsTotal),
         unit: "currency",
         basis: "cash_expected",
-        subtitle: `${model.kpis.pendingPaymentsCount} pagamenti attesi`,
+        subtitle: `${model.kpis.pendingPaymentsCount} righe pagamento attese registrate nell'anno (non il credito reale totale)`,
       },
       {
         id: "pending_payments_count",
@@ -303,6 +316,24 @@ export const buildAnnualOperationsContext = (
         basis: "cash_expected",
         subtitle: "Pagamenti ricevuti meno rimborsi emessi",
       },
+      // QW2 B2: the real cumulative receivable (work delivered − cash received
+      // across ALL years), same source as the dashboard "Da incassare" card
+      // (client_commercial_position.balance_due). Distinct from the year-scoped
+      // pending_payments_total above. Only emitted when the caller provides it.
+      ...(outstandingReceivablesTotal != null
+        ? [
+            {
+              id: "outstanding_receivables_total",
+              label: "Da incassare (credito reale totale)",
+              value: outstandingReceivablesTotal,
+              formattedValue: formatCurrency(outstandingReceivablesTotal),
+              unit: "currency" as const,
+              basis: "receivable" as const,
+              subtitle:
+                "Lavoro e spese consegnati meno incassato, cumulativo su tutti gli anni (non solo l'anno selezionato)",
+            },
+          ]
+        : []),
     ],
     expenses: {
       total: model.kpis.annualExpensesTotal,

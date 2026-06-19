@@ -72,9 +72,12 @@ Branch corrente:
   sweep (`eeb342fb`), audit-fix FIX-1+2 (`700bc0be`). Lavorare in chat nuova:
   partire da QUI (questo blocco e' autosufficiente).
 
-Obiettivo operativo attivo: **NESSUNO** — FIX-3+4 SHIPPED e LIVE. Prossimo:
-QW2 (card "Da incassare", spec+piano gia' pronti), poi coda audit (IMPORTANT-5
-AI, MINOR). Vedi "Prossima Azione".
+Obiettivo operativo attivo: **NESSUNO** — FIX-3+4 e QW2 SHIPPED e LIVE.
+QW2 (card "Da incassare" reale): branch `fix/da-incassare-card`, frontend-only,
+3 review PASS + 2 FLAG TDD chiuse (F1 controllore B2 falsificabile, F2 sottotitolo
+puro+test), WF-17 desktop+mobile, grounding prod read-only Σ=7.131,37. Prossimo:
+QW3 (mobile scadenzario+cassa) o IMPORTANT-5 (descrizione `quick_payment` registry
+AI, incompleta non falsa — micro-fix). Vedi "Prossima Azione".
 
 - Prettier: tech-debt CHIUSO. Root-cause risolta (`.lintstagedrc` formatta i TS,
   CI step `npm run prettier` BLOCCANTE) + sweep repo-wide a 0 drift; CI

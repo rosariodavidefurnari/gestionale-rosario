@@ -290,4 +290,61 @@ describe("buildAnnualOperationsContext", () => {
       },
     ]);
   });
+
+  it("exposes a cumulative outstanding receivables metric and disambiguates the yearly pending label (QW2 B2)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-02-28T09:00:00.000Z"));
+
+    const model = buildDashboardModel({
+      payments: [],
+      quotes: [],
+      services: [baseService({ fee_shooting: 1000 })],
+      projects: [baseProject()],
+      clients: [baseClient()],
+      expenses: [],
+      year: 2026,
+    });
+
+    const context = buildAnnualOperationsContext(model, {
+      outstandingReceivablesTotal: 6697.48,
+    });
+
+    // new cumulative metric (same source as the "Da incassare" card)
+    const cumulative = context.metrics.find(
+      (m) => m.id === "outstanding_receivables_total",
+    );
+    expect(cumulative).toMatchObject({
+      value: 6697.48,
+      basis: "receivable",
+      unit: "currency",
+    });
+
+    // the year-scoped pending metric keeps its id (EF guidance keys on it) but
+    // its label is disambiguated so the AI never confuses the two.
+    const pending = context.metrics.find(
+      (m) => m.id === "pending_payments_total",
+    );
+    expect(pending).toBeDefined();
+    expect(pending?.label).toMatch(/anno/i);
+  });
+
+  it("omits the cumulative receivables metric when not provided (backward compatible)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-02-28T09:00:00.000Z"));
+
+    const model = buildDashboardModel({
+      payments: [],
+      quotes: [],
+      services: [baseService({ fee_shooting: 1000 })],
+      projects: [baseProject()],
+      clients: [baseClient()],
+      expenses: [],
+      year: 2026,
+    });
+
+    const context = buildAnnualOperationsContext(model);
+    expect(
+      context.metrics.find((m) => m.id === "outstanding_receivables_total"),
+    ).toBeUndefined();
+  });
 });

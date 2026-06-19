@@ -3,6 +3,7 @@ import { useGetList } from "ra-core";
 
 import type {
   Client,
+  ClientCommercialPosition,
   Expense,
   Payment,
   Project,
@@ -11,8 +12,14 @@ import type {
 } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { buildDashboardModel, type DashboardModel } from "./dashboardModel";
+import {
+  countOpenReceivables,
+  sumOutstandingReceivables,
+} from "@/lib/analytics/outstandingReceivables";
 
 const LARGE_PAGE = { page: 1, perPage: 1000 };
+
+export type OutstandingReceivables = { total: number; count: number };
 
 export const useDashboardData = (year?: number) => {
   const { fiscalConfig } = useConfigurationContext();
@@ -47,6 +54,19 @@ export const useDashboardData = (year?: number) => {
     sort: { field: "expense_date", order: "DESC" },
   });
 
+  // "Da incassare" = real cumulative residue (work delivered − cash received),
+  // year-INDEPENDENT. Canonical cassa-aware source `client_commercial_position`
+  // (balance_due already filters status='ricevuto', and unites the no-project
+  // branch). Kept OUT of the year-scoped dashboard model (I4): it must not be
+  // re-derived from payments rows (the QW2 bug).
+  const receivablesQuery = useGetList<ClientCommercialPosition>(
+    "client_commercial_position",
+    {
+      pagination: LARGE_PAGE,
+      sort: { field: "client_name", order: "ASC" },
+    },
+  );
+
   const isPending = [
     paymentsQuery,
     quotesQuery,
@@ -54,6 +74,7 @@ export const useDashboardData = (year?: number) => {
     projectsQuery,
     clientsQuery,
     expensesQuery,
+    receivablesQuery,
   ].some((query) => query.isPending);
 
   const error =
@@ -62,7 +83,16 @@ export const useDashboardData = (year?: number) => {
     servicesQuery.error ||
     projectsQuery.error ||
     clientsQuery.error ||
-    expensesQuery.error;
+    expensesQuery.error ||
+    receivablesQuery.error;
+
+  const outstandingReceivables = useMemo<OutstandingReceivables>(() => {
+    const rows = receivablesQuery.data ?? [];
+    return {
+      total: sumOutstandingReceivables(rows),
+      count: countOpenReceivables(rows),
+    };
+  }, [receivablesQuery.data]);
 
   const data = useMemo<DashboardModel | null>(() => {
     if (
@@ -99,6 +129,7 @@ export const useDashboardData = (year?: number) => {
 
   return {
     data,
+    outstandingReceivables,
     isPending,
     error,
     refetch: () => {
@@ -108,6 +139,7 @@ export const useDashboardData = (year?: number) => {
       void projectsQuery.refetch();
       void clientsQuery.refetch();
       void expensesQuery.refetch();
+      void receivablesQuery.refetch();
     },
   };
 };

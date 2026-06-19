@@ -31,10 +31,15 @@ test.describe("Annual Dashboard", () => {
     const dashboardText = await page.textContent("main");
     expect(dashboardText).toMatch(/6[.,]?500/);
 
-    // Pending payments KPI card
+    // "Da incassare" KPI card (QW2): now the REAL cumulative receivable
+    // Σ max(0, balance_due) from client_commercial_position (work+expenses
+    // delivered − cash received), NOT the year's pending payment rows. The
+    // deterministic fixture seeds ONE client with balance_due = 2984.50, which
+    // the KPI headline renders rounded to whole euros (formatCurrency) → "2985 €"
+    // (queried from client_commercial_position after resetAndSeedTestData).
     await expect(page.getByText("Da incassare", { exact: true })).toBeVisible();
-    // 2000€ in_attesa + 500€ scaduto = 2500€
-    expect(dashboardText).toMatch(/2[.,]?500/);
+    expect(dashboardText).toMatch(/2[.,]?985/);
+    await expect(page.getByText(/1 cliente con saldo aperto/)).toBeVisible();
 
     // Open quotes: should show count (0 in test data)
     await expect(page.getByText("Preventivi aperti").first()).toBeVisible();

@@ -46,6 +46,7 @@
 | **UI**       | UI-7  | Desktop props → verificare mobile         |
 | **UI**       | UI-8  | Nuova superficie AI → card unificata      |
 | **UI**       | UI-9  | Estimator/helper form → mai auto-scrivere campi business |
+| **UI**       | UI-10 | Card "quanto mi devono" → vista canonica balance_due, non payment rows |
 | **Backend**  | BE-5  | EF env vars → stop+start NON restart      |
 | **Backend**  | BE-6  | Reload remoto → TRUNCATE prima load       |
 | **Workflow** | WF-7  | Dopo push → controlla CI autonomo         |
@@ -162,6 +163,27 @@ mettere la location vedeva `location` riempito con il punto auto
 (Acireale) e poi non lo correggeva. La bozza fattura finiva con il punto
 auto al posto del luogo delle riprese, ingannando il cliente. Fix:
 rimosso completamente il ramo di auto-scrittura di `location`.
+
+### UI-10: card "quanto mi devono ancora" -> vista canonica `balance_due`, non le righe payment
+
+**Quando**: una card/KPI finanziaria deve mostrare "da incassare / quanto mi
+devono / credito residuo" e sto per derivarla dalle righe `payments` (es.
+`status != 'ricevuto'`) o da un ricalcolo locale
+**Fare**: leggere la vista canonica cassa-aware `client_commercial_position.balance_due`
+(o `project_financials.balance_due`), che e' `lavoro+spese consegnati − incassato
+ricevuto`, e sommare `Σ max(0, balance_due)` con clamp per-cliente. La card del
+credito e' CUMULATIVA (tutti gli anni), non filtrata per anno. Tenere
+`pendingPaymentsTotal` per cashflow forecast/scaduti (concetto distinto). Se il
+valore alimenta anche l'AI, passare lo STESSO totale al contesto (no seconda
+verita') con un controllore falsificabile che lega card e AI alla stessa fonte.
+**Perche'**: il 2026-06-19 (QW2) la card "Da incassare" derivava da
+`pendingPaymentsTotal` (solo le poche righe payment "attese" inserite a mano):
+mostrava 375 mentre il credito reale era ~7.131. L'utente registra il lavoro
+(`services`) e poi incassa, raramente crea una riga payment attesa per ogni
+lavoro -> il lavoro consegnato-non-incassato era INVISIBILE. La vista
+`client_commercial_position` cattura anche il residuo no-project. Vale anche per
+qualunque card "owed/receivable": la fonte e' il modello di dominio, non le righe
+transazionali parziali (cugino di DOM-4: stato semantico != conteggio righe).
 
 ---
 
