@@ -6,7 +6,27 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-19 (#19 colonna "Da saldare" in lista clienti: residuo per-cliente da `client_commercial_position.balance_due`, desktop colonna + mobile card UI-7, export esteso, helper puro + e2e, 2+2 review PASS, WF-17 0 console errors)
+Last updated: 2026-06-20 (guardrail obblighi certificati: card scadenze + EF reminder + provider `getFiscalDeclarations`; pulizia 6 righe-spazzatura fiscali prod; sweep multi-superficie via RAG)
+
+---
+
+## Guardrail "obblighi certificati" — card scadenze fiscali (2026-06-20)
+
+Sweep delle superfici che leggono `fiscal_obligations` (RAG :8001 + verifica sorgente),
+per impedire che una PROIEZIONE hand-inserita si spacci per dato reale "Da dichiarazione":
+
+- `useFiscalReality` → `buildFiscalRealityAwareSchedule` (card scadenze; desktop
+  `DashboardAnnual` + mobile `MobileDashboard`, un solo punto, UI-7) — **FIXATO**.
+- EF `fiscal_deadline_check` `applyRealObligations` (promemoria + WhatsApp) — **FIXATO**
+  (mirror Deno `_shared/selectCertifiedObligations.ts`).
+- `useDashboardData:102` `obligations.length===0` switch deduzione-cassa — **FOLLOW-UP**
+  (non fatto: dovrebbe gatare su dichiarazione depositata dell'anno; cambia stima 2025).
+- AI `unifiedCrmReadContext` — NON legge obligations (sicuro).
+
+Regola unica (`selectCertifiedObligations`, pura, testata): obbligo reale sse F24 pagato
+OPPURE dichiarazione depositata (`total_substitute_tax + total_inps > 0`). `source` non
+discrimina. **Aggiungendo un nuovo lettore di `fiscal_obligations`, applicare lo stesso
+filtro o documentare perché legge raw.**
 
 ---
 

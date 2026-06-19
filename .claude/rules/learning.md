@@ -71,6 +71,7 @@
 | **DB**       | DB-8  | Builder che unisce services+expenses → skip source_service_id |
 | **DB**       | DB-9  | EF marca per id → UNDO smarca per id/FK, mai per string |
 | **DB**       | DB-10 | Incasso atteso da emit → riconcilia per FK, mai duplicare |
+| **DB**       | DB-11 | Lettore di fiscal_obligations → filtra CERTIFICATI (proiezione ≠ reale) |
 | **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
 | **Workflow** | WF-15 | Lavoro rischioso → RAG attivo + review multi-superficie |
 | **Workflow** | WF-16 | CI check → `gh -R fork` (default punta a upstream)  |
@@ -325,6 +326,26 @@ contava lo stesso dovuto due volte. Stesso spirito di DB-5/DB-8/DB-9: una fonte
 unica (`financial_document_id`) va riusata simmetricamente in tutti i consumer,
 non reinventata. Limite v1 noto: `invoice_void` cancella l'atteso assorbito (no
 ripristino) — documentato in spec.
+
+### DB-11: un lettore di `fiscal_obligations` -> filtra CERTIFICATI (proiezione non è dato reale)
+
+**Quando**: aggiungo o tocco una superficie che legge `fiscal_obligations` e li
+presenta come reali / "Da dichiarazione" / promemoria / switch "anno dichiarato"
+(card scadenze `buildFiscalRealityAwareSchedule`/`useFiscalReality`, EF
+`fiscal_deadline_check.applyRealObligations`, `useDashboardData`, export, AI)
+**Fare**: filtrare con `selectCertifiedObligations` (client `dashboard/` + mirror
+Deno `_shared/`): obbligo reale SSE ha F24 pagato OPPURE `declaration_id` punta a
+dichiarazione DEPOSITATA (`total_substitute_tax + total_inps > 0`). `source` NON
+discrimina (i reali sono `manual` anche loro). La sola PRESENZA di una riga != "anno
+dichiarato dal commercialista". Fare lo sweep dei lettori col RAG :8001 prima di
+dichiarare fatto.
+**Perché**: il 2026-06-19 sei proiezioni hand-inserite (metodo "aliquota effettiva"
+rigettato, `declaration_id` NULL o legato a dichiarazione 2025 a totali ZERO, 0 F24)
+si spacciavano per "Da dichiarazione" e gonfiavano la card scadenze a un falso
+`11.100,60 €`, sostituendo la stima cassa. Tre superfici (card, EF reminder,
+`useDashboardData`) trattavano la presenza della riga come dato reale; il RAG ha
+trovato la EF e `useDashboardData` che grep da solo perdeva. Cugino di DOM-4 (stato
+semantico != `array.length`).
 
 ---
 

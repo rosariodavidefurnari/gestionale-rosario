@@ -73,11 +73,23 @@ Branch corrente:
   IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`, FIX-3+4 `7c7ec1c1`. Lavorare in chat
   nuova: partire da QUI (autosufficiente).
 
-Obiettivo operativo attivo: **NESSUNO**. Stato pulito, CI verde, prod sano
-(`npm run health:financial` = PASS: Da incassare € 7.131,37/3 clienti; cassa
-2023→2026 6.273/13.740/24.954/7.689; reminders vivi 4/4; 0 emit-linked; INV1-4 OK).
+Obiettivo operativo attivo: **NESSUNO**. Stato pulito, CI verde, prod sano.
 
-Shippato e LIVE in questa lunga sessione (tutto su `main`, CI verde, Vercel):
+Ultimo lavoro (2026-06-20) — guardrail "obblighi certificati" + pulizia righe-spazzatura
+fiscali. La card "Scadenze fiscali" mostrava un falso `11.100,60 €` "Da dichiarazione" per
+il 2026: 6 `fiscal_obligations` proiezioni hand-inserite il 2026-04-14 (metodo "aliquota
+effettiva" rigettato, `declaration_id` NULL/zero-totals, 0 F24). Fatto: DELETE prod delle 6
+righe (safe, backup `*_backup_20260414`) + helper puro `selectCertifiedObligations` (client
++ mirror Deno) applicato in `useFiscalReality` (card desktop+mobile) e nella EF
+`fiscal_deadline_check`. Sweep superfici via RAG :8001. 695 unit verdi, typecheck/build OK.
+**Gate aperti**: (1) deploy EF `npx supabase functions deploy fiscal_deadline_check
+--project-ref qvdmzhyzpyaveniirsmo` (BE-1: il push NON deploya le EF); (2) follow-up
+`useDashboardData:102` switch deduzione-cassa (vedi backlog). Dichiarazioni reali 2023/2024
+AdE → formula validata all'euro + bug cassa/competenza provato (memoria
+`project_fiscal_real_data_baseline.md`). Numero a norma di legge 2026 ≈ 9.005 € (INPS
+7.630,11 esatto), NON 11.100.
+
+Shippato e LIVE in sessioni precedenti (tutto su `main`, CI verde, Vercel):
 
 - **#19** colonna "Da saldare" lista clienti (`d6abf3f4`): residuo per-cliente da
   `client_commercial_position.balance_due`, colonna desktop + riga mobile (UI-7),

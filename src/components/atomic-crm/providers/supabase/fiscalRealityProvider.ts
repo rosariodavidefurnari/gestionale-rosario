@@ -157,6 +157,23 @@ export const buildFiscalRealityProviderMethods = () => ({
     return (data ?? []) as FiscalObligation[];
   },
 
+  /**
+   * All declarations (few rows). Consumers use this to tell a CERTIFIED
+   * obligation (backed by a filed declaration with non-zero totals) from a
+   * stale hand-entered PROJECTION, via `selectCertifiedObligations`. Returned
+   * raw — the certification rule lives in the pure helper, not here.
+   */
+  async getFiscalDeclarations(): Promise<FiscalDeclaration[]> {
+    const data = throwOnError(
+      await supabase
+        .from("fiscal_declarations")
+        .select("*")
+        .order("tax_year", { ascending: true }),
+      "getFiscalDeclarations",
+    );
+    return (data ?? []) as FiscalDeclaration[];
+  },
+
   async createFiscalObligation(
     draft: ObligationDraft,
   ): Promise<FiscalObligation> {

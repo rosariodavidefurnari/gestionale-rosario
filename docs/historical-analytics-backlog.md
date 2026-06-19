@@ -6,7 +6,31 @@
 incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 `canonical`.
 
-Last updated: 2026-06-19 (Ciclo 2 fiscale: D3 anno-chiuso definitivo SHIPPED + E2E formula INPS)
+Last updated: 2026-06-20 (guardrail obblighi certificati SHIPPED su card+EF; follow-up `useDashboardData` switch + deploy EF aperti)
+
+## Update 2026-06-20 — Guardrail "obblighi certificati" (card scadenze + EF reminder)
+
+DONE — pulizia dati + guardrail contro proiezioni-fantasma marcate "Da dichiarazione".
+
+- DELETE 6 `fiscal_obligations` 2026 spazzatura su prod (metodo "aliquota effettiva"
+  rigettato, `declaration_id` NULL/zero-totals, 0 F24). La card scadenze non mostra più
+  il falso `11.100,60 €`.
+- Helper puro `selectCertifiedObligations` (client + mirror Deno `_shared/`) +
+  `getFiscalDeclarations()` nel provider. Applicato in `useFiscalReality` (card
+  desktop+mobile) e nella EF `fiscal_deadline_check.applyRealObligations`. Controllore
+  falsificabile `selectCertifiedObligations.test.ts` (6 test). 695 unit verdi.
+
+APERTO (next, NON fatto):
+- **`useDashboardData:102`** usa ancora `obligations.length===0` come switch della
+  deduzione-cassa dell'imposta (DOM-4: stato semantico ≠ lunghezza array). Va gatato sulla
+  dichiarazione DEPOSITATA dell'anno (totali>0), non sulla presenza di obblighi (il bollo
+  pagato la fa scattare). Cambia la stima imposta 2025 → richiede test dedicato + verifica
+  che non regredisca gli anni chiusi. Separato per non rischiare la stima sotto pressione.
+- **Deploy EF**: `npx supabase functions deploy fiscal_deadline_check --project-ref
+  qvdmzhyzpyaveniirsmo` (il codice è committato; `git push` NON deploya le EF — BE-1).
+- Allineamento stima→cassa reale dello scadenzario (acconti reali vs stimati): la stima
+  produce ~7.941 (acconti stimati), il dato a norma di legge è ~9.005 (acconti reali
+  1.503,09 INPS + 233 imposta). Vedi `project_fiscal_real_data_baseline.md`.
 
 ## Update 2026-06-19 — D3 SHIPPED: card anno-chiuso = definitivo reale
 

@@ -22,6 +22,11 @@ import {
 } from "../_shared/internalNotifications.ts";
 import { supabaseAdmin } from "../_shared/supabaseAdmin.ts";
 import { createErrorResponse } from "../_shared/utils.ts";
+import {
+  buildFiledDeclarationIds,
+  buildPaidObligationIds,
+  selectCertifiedObligations,
+} from "../_shared/selectCertifiedObligations.ts";
 
 const FISCAL_TASK_TYPES = new Set(["f24", "inps", "bollo", "dichiarazione"]);
 
@@ -254,30 +259,48 @@ async function applyRealObligations(
   paymentYear: number,
 ): Promise<{ patched: FiscalDeadline[]; hasRealData: boolean }> {
   // 1. Load obligations for payment year
-  const { data: obligations } = await supabaseAdmin
+  const { data: rawObligations } = await supabaseAdmin
     .from("fiscal_obligations")
     .select("*")
     .eq("payment_year", paymentYear);
 
-  if (!obligations || obligations.length === 0) {
+  if (!rawObligations || rawObligations.length === 0) {
     return { patched: deadlines, hasRealData: false };
   }
 
   // 2. Load payment lines for those obligations
-  const obligationIds = obligations.map((o: any) => o.id);
+  const obligationIds = rawObligations.map((o: any) => o.id);
   const { data: paymentLines } = await supabaseAdmin
     .from("fiscal_f24_payment_lines_enriched")
     .select("*")
     .in("obligation_id", obligationIds);
 
-  // 3. Build paid amounts map by obligation_id
+  // 3. Keep ONLY certified obligations: a stale hand-entered PROJECTION
+  // (declaration_id null, or backed by an unfiled/zero-totals declaration, with
+  // no F24 payment) must never patch the estimate nor trigger a reminder. Same
+  // rule as the client deadline card (selectCertifiedObligations).
+  const { data: declarations } = await supabaseAdmin
+    .from("fiscal_declarations")
+    .select("id, total_substitute_tax, total_inps");
+
+  const obligations = selectCertifiedObligations(
+    rawObligations as Array<{ id: string; declaration_id: string | null }>,
+    buildFiledDeclarationIds(declarations ?? []),
+    buildPaidObligationIds(paymentLines ?? []),
+  ) as typeof rawObligations;
+
+  if (obligations.length === 0) {
+    return { patched: deadlines, hasRealData: false };
+  }
+
+  // 4. Build paid amounts map by obligation_id
   const paidByObligation = new Map<string, number>();
   for (const line of paymentLines ?? []) {
     const current = paidByObligation.get(line.obligation_id) ?? 0;
     paidByObligation.set(line.obligation_id, current + Number(line.amount));
   }
 
-  // 4. Build merge map: key → remaining amount
+  // 5. Build merge map: key → remaining amount
   const realAmounts = new Map<string, number>();
   for (const obl of obligations) {
     const key = `${obl.component}::${obl.competence_year}::${obl.due_date}`;

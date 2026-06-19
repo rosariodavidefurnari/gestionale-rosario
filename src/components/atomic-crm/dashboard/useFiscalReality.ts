@@ -5,10 +5,16 @@ import type { CrmDataProvider } from "../providers/types";
 import type { FiscalDeadline } from "./fiscalModelTypes";
 import type {
   FiscalDeadlineView,
+  FiscalDeclaration,
   FiscalObligation,
   FiscalF24PaymentLineEnriched,
 } from "./fiscalRealityTypes";
 import { buildFiscalRealityAwareSchedule } from "./buildFiscalRealityAwareSchedule";
+import {
+  buildFiledDeclarationIds,
+  buildPaidObligationIds,
+  selectCertifiedObligations,
+} from "./selectCertifiedObligations";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,7 +52,35 @@ export const useFiscalReality = ({
       queryFn: () => dataProvider.getEnrichedPaymentLinesForYear(paymentYear),
     });
 
-  const isLoading = obligationsPending || paymentLinesPending;
+  // All declarations (few rows). Needed to tell a CERTIFIED obligation (backed by
+  // a filed declaration with non-zero totals) from a stale hand-entered PROJECTION.
+  // queryKey is year-independent -> react-query dedups across desktop/mobile.
+  const { data: declarations, isPending: declarationsPending } = useQuery({
+    queryKey: ["fiscal-declarations"],
+    queryFn: () => dataProvider.getFiscalDeclarations(),
+  });
+
+  const isLoading =
+    obligationsPending || paymentLinesPending || declarationsPending;
+
+  // Keep ONLY certified obligations. Uncertified projections (declaration_id null,
+  // or backed by an unfiled/zero-totals declaration, with no F24 payment) must
+  // never reach the reality merge: otherwise they masquerade as "Da dichiarazione"
+  // and override the cassa estimate (the 2026 false 11.100,60 bug).
+  const certifiedObligations = useMemo<FiscalObligation[]>(() => {
+    if (obligations == null) return [];
+    const filedDeclarationIds = buildFiledDeclarationIds(
+      (declarations as FiscalDeclaration[] | undefined) ?? [],
+    );
+    const paidObligationIds = buildPaidObligationIds(
+      enrichedPaymentLines ?? [],
+    );
+    return selectCertifiedObligations(
+      obligations,
+      filedDeclarationIds,
+      paidObligationIds,
+    );
+  }, [obligations, declarations, enrichedPaymentLines]);
 
   const deadlineViews = useMemo<FiscalDeadlineView[] | null>(() => {
     if (isLoading || obligations == null || enrichedPaymentLines == null) {
@@ -55,19 +89,19 @@ export const useFiscalReality = ({
 
     return buildFiscalRealityAwareSchedule({
       estimatedDeadlines,
-      obligations,
+      obligations: certifiedObligations,
       enrichedPaymentLines,
       todayIso,
     });
   }, [
     estimatedDeadlines,
+    certifiedObligations,
     obligations,
     enrichedPaymentLines,
     todayIso,
     isLoading,
   ]);
 
-  const resolvedObligations = obligations ?? [];
   const resolvedPaymentLines = enrichedPaymentLines ?? [];
 
   const totalOpenObligations = useMemo(() => {
@@ -77,11 +111,11 @@ export const useFiscalReality = ({
     }, 0);
   }, [deadlineViews]);
 
-  const hasRealFiscalData = resolvedObligations.length > 0;
+  const hasRealFiscalData = certifiedObligations.length > 0;
 
   return {
     deadlineViews,
-    obligations: resolvedObligations,
+    obligations: certifiedObligations,
     enrichedPaymentLines: resolvedPaymentLines,
     totalOpenObligations,
     hasRealFiscalData,

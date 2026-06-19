@@ -6,7 +6,36 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-19 (Ciclo 2 fiscale: D3 anno-chiuso definitivo + E2E formula INPS, browser-verificato desktop+mobile)
+Last updated: 2026-06-20 (guardrail obblighi certificati: card scadenze + EF reminder; pulizia 6 righe-spazzatura fiscali prod; sweep RAG multi-superficie)
+
+## Update 2026-06-20 — Guardrail "obblighi certificati": stop alle proiezioni-fantasma "Da dichiarazione"
+
+Bug prod (l'utente l'ha visto): la card "Scadenze fiscali" mostrava `11.100,60 €`
+"Da dichiarazione" per il 2026, mentre la dichiarazione 2025 è ancora DA PRESENTARE.
+Causa: 6 `fiscal_obligations` `payment_year=2026` inserite a mano il 2026-04-14 col
+metodo "aliquota effettiva" già rigettato (DOM-8) — `declaration_id` NULL o legato
+alla dichiarazione 2025 a totali ZERO, 0 F24 — trattate come reali e sostituite alla
+stima cassa (la riga "CRM stimava" mostrava il numero giusto sotto).
+
+Fatto:
+- **DELETE deterministico** delle 6 righe su prod (0 F24 collegati → safe, `RETURNING`,
+  backup `*_backup_20260414`). Card ora mostra la stima cassa ("Stimato"), non 11.100.
+- **Helper puro `selectCertifiedObligations`** (client + mirror Deno `_shared/`): obbligo
+  CERTIFICATO sse F24 pagato OPPURE dichiarazione DEPOSITATA (`total_substitute_tax +
+  total_inps > 0`). `source` non discrimina (i reali sono `manual` anche loro).
+- Applicato in **`useFiscalReality`** (card desktop + mobile, un punto, UI-7) e nella EF
+  **`fiscal_deadline_check.applyRealObligations`** (promemoria/WhatsApp). Provider:
+  `getFiscalDeclarations()`. Controllore falsificabile `selectCertifiedObligations.test.ts`
+  (6 test: riproduce il garbage 2026 → resta solo il bollo). 695 unit verdi, typecheck/build OK.
+- Sweep superfici via **RAG :8001** (loop) + verifica sorgente: card, EF, `useDashboardData`,
+  AI context. AI NON legge obligations (sicuro).
+
+Numero a norma di legge (cassa, art. 1 c. 64 L. 190/2014): 2026 ≈ 9.005 € (INPS 7.630,11
+esatto), NON 11.100. Dichiarazioni reali 2023/2024 dal Cassetto AdE confermano la formula
+all'euro e provano che il commercialista usa data-fattura (competenza) non cassa: vedi
+memoria `project_fiscal_real_data_baseline.md`.
+
+Prossimo step (non fatto): vedi backlog (follow-up `useDashboardData` switch + deploy EF).
 
 ## Update 2026-06-19 — D3: card anno-chiuso = DEFINITIVO reale (no doppia verita')
 
