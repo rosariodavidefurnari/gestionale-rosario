@@ -72,12 +72,20 @@ export const applyDefinitiveDeclaration = (
   const inps = definitiveInpsCompetenza(declaration);
   const imposta = definitiveImposta(declaration);
   const total = inps + imposta;
+  const net = kpis.fatturatoTotaleYtd - total;
 
   return {
     ...kpis,
     stimaInpsAnnuale: inps,
     stimaImpostaAnnuale: imposta,
-    redditoNettoStimato: roundFiscalOutput(kpis.fatturatoTotaleYtd - total),
+    redditoNettoStimato: roundFiscalOutput(net),
+    // percentualeNetto va ricalcolato sul definitivo: la card "Netto stimato"
+    // mostra numero E percentuale insieme; lasciare la % della stima accanto al
+    // netto definitivo li renderebbe discordanti su un anno chiuso.
+    percentualeNetto:
+      kpis.fatturatoTotaleYtd > 0
+        ? roundFiscalOutput((net / kpis.fatturatoTotaleYtd) * 100)
+        : 0,
     accantonamentoMensile: roundFiscalOutput(total / 12),
     isDefinitive: true,
   };

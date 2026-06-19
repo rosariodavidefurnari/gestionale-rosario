@@ -116,6 +116,51 @@ describe("applyDefinitiveDeclaration", () => {
     expect(result.stimaInpsAnnuale).not.toBe(3667.4);
   });
 
+  it("anno chiuso: netto E percentuale ricalcolati COERENTI sul definitivo", () => {
+    // fatturato 13740, total tasse = 1879 + 233 = 2112 -> netto 11628 (84,63%).
+    // La stima di partenza ha percentualeNetto 76 (discordante): deve essere
+    // sovrascritto, non lasciato accanto al netto definitivo.
+    const result = applyDefinitiveDeclaration(
+      makeStimaKpis({ fatturatoTotaleYtd: 13740, percentualeNetto: 76 }),
+      decl2024,
+    );
+    expect(result.redditoNettoStimato).toBe(11628);
+    expect(result.percentualeNetto).toBe(
+      Math.round((11628 / 13740) * 10000) / 100,
+    );
+    expect(result.percentualeNetto).not.toBe(76);
+  });
+
+  it("clamp: prior_advances_inps > total_inps -> INPS competenza 0 (no negativo)", () => {
+    const weird = makeDeclaration({
+      tax_year: 2024,
+      total_substitute_tax: 233,
+      total_inps: 1879,
+      prior_advances_inps: 5000, // acconti > ciclo (caso anomalo)
+    });
+    expect(definitiveInpsCompetenza(weird)).toBe(0);
+    const result = applyDefinitiveDeclaration(makeStimaKpis(), weird);
+    expect(result.isDefinitive).toBe(true);
+    expect(result.stimaInpsAnnuale).toBe(0);
+  });
+
+  it("anno chiuso con SOLA imposta o SOLO INPS resta chiuso", () => {
+    const soloInps = makeDeclaration({
+      tax_year: 2023,
+      total_substitute_tax: 0,
+      total_inps: 2249,
+      prior_advances_inps: 0,
+    });
+    expect(isDeclarationClosed(soloInps)).toBe(true);
+    const result = applyDefinitiveDeclaration(
+      makeStimaKpis({ taxYear: 2023 }),
+      soloInps,
+    );
+    expect(result.isDefinitive).toBe(true);
+    expect(result.stimaInpsAnnuale).toBe(2249);
+    expect(result.stimaImpostaAnnuale).toBe(0);
+  });
+
   it("anno chiuso 2023: definitivo 2249 + 429", () => {
     const result = applyDefinitiveDeclaration(
       makeStimaKpis({ taxYear: 2023 }),

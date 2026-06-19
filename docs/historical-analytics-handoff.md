@@ -30,8 +30,18 @@ aggiunge `isDefinitive:false` solo per parita' di shape (INV-3, `fiscalParity.te
 
 Controllori: `applyDefinitiveDeclaration.test.ts` (oracoli reali), `DashboardFiscalKpis.test.tsx`
 (pill desktop), `tests/e2e/fiscal-definitivo.smoke.spec.ts` (desktop+mobile reale, seed+cleanup
-WF-19), `tests/e2e/fiscal-estimate.smoke.spec.ts` (formula INPS stima). Full unit 685/685,
+WF-19), `tests/e2e/fiscal-estimate.smoke.spec.ts` (formula INPS stima). Full unit 689/689,
 parity verde, build+deno+typecheck+lint ok, browser desktop+mobile verificato.
+
+Review multi-superficie post-impl (4 revisori, ognuno con RAG :8001/:8002 + verifica sorgente):
+DB/dominio fiscale PASS, provider/EF PASS. Chiusi 2 rilievi: (1) FLAG frontend —
+`applyDefinitiveDeclaration` ricalcola ora anche `percentualeNetto` sul definitivo (prima
+restava la % della stima accanto al netto definitivo → discordante su anni chiusi); (2) BLOCK
+TDD — aggiunto controllore DETERMINISTICO del ramo `isDefinitive` su mobile in
+`MobileDashboard.parity.test.tsx` (la pill mobile e' codice in `MobileFiscalKpis`, prima coperto
+solo da e2e). Aggiunti edge test: clamp `prior>total`→0, anno solo-INPS, coerenza netto↔%.
+Backlog (fuori scope D3): footnote "riserva fiscale stimata" e AI summary annuale restano
+"stima" su anni chiusi (EF intatta per parita', scelta dichiarata).
 
 ## Update 2026-06-19 — Ciclo 2 fiscale: wiring F24 -> dashboard (browser-verificato)
 

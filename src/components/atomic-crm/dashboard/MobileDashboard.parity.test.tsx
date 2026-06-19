@@ -205,6 +205,7 @@ describe("MobileDashboard fiscal tax card (UI-7 parity with desktop)", () => {
         accantonamentoMensile: 176,
         percentualeUtilizzoTetto: 20,
         distanzaDalTetto: 60000,
+        isDefinitive: false,
       },
       schedule: { isFirstYear: false, deadlines: [] },
     };
@@ -215,5 +216,36 @@ describe("MobileDashboard fiscal tax card (UI-7 parity with desktop)", () => {
     expect(screen.getByText("Tasse stimate")).toBeInTheDocument();
     expect(screen.getByText(/INPS/)).toBeInTheDocument();
     expect(screen.getByText(/Imposta/)).toBeInTheDocument();
+    // stima -> pill "Stima", non "Definitivo"
+    expect(screen.getByText("Stima")).toBeInTheDocument();
+    expect(screen.queryByText("Definitivo")).not.toBeInTheDocument();
+  });
+
+  // D3 (BLOCK chiuso): controllore DETERMINISTICO del ramo definitivo su mobile.
+  // La pill mobile e' codice in MobileFiscalKpis: senza questo test un refactor
+  // che rompe solo il ramo isDefinitive mobile resterebbe verde (UI-7/WF-18).
+  it("anno chiuso: mostra 'Definitivo' + numeri reali su mobile (no stima)", () => {
+    const model = makeModel({ isCurrentYear: false, selectedYear: 2024 });
+    (model as unknown as { fiscal: unknown }).fiscal = {
+      fiscalKpis: {
+        stimaInpsAnnuale: 1879,
+        stimaImpostaAnnuale: 233,
+        accantonamentoMensile: 176,
+        percentualeUtilizzoTetto: 16,
+        distanzaDalTetto: 71260,
+        isDefinitive: true,
+      },
+      schedule: { isFirstYear: false, deadlines: [] },
+    };
+    setData(model);
+
+    renderWithQueryClient(<MobileDashboard />);
+
+    expect(screen.getByText("Definitivo")).toBeInTheDocument();
+    expect(screen.queryByText("Stima")).not.toBeInTheDocument();
+    expect(screen.getByText("Tasse")).toBeInTheDocument();
+    // numeri reali del commercialista (separator-agnostico, WF-20)
+    expect(screen.getByText(/1\.?879,00/)).toBeInTheDocument();
+    expect(screen.getByText(/233,00/)).toBeInTheDocument();
   });
 });
