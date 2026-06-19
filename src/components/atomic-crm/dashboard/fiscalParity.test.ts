@@ -284,6 +284,29 @@ const estimateScenarios = [
       { id: "project-1", client_id: "client-1", category: "produzione_tv" },
     ] satisfies SyntheticProject[],
   },
+  {
+    // Esercita la PARITA' sui rami nuovi: aliquota GS hardcoded 2023 (26,23%,
+    // != config) + deduzione su CASSA esplicita. Se le tabelle ALIQUOTA_GS_BY_YEAR
+    // o la formula client/EF driftano, questo scenario rosseggia.
+    name: "aliquotaGs_hardcoded_2023_plus_versatiCassa",
+    taxYear: 2023,
+    config: makeFiscalConfig(),
+    contributiVersatiCassa: 250,
+    payments: [
+      {
+        id: 1,
+        client_id: "client-1",
+        project_id: "project-1",
+        payment_date: "2023-02-01T00:00:00.000Z",
+        payment_type: "saldo",
+        amount: 10000,
+        status: "ricevuto",
+      },
+    ] satisfies SyntheticPayment[],
+    projects: [
+      { id: "project-1", client_id: "client-1", category: "produzione_tv" },
+    ] satisfies SyntheticProject[],
+  },
 ];
 
 const scheduleScenarios = [
@@ -340,12 +363,16 @@ const scheduleScenarios = [
 describe("fiscal parity - estimate scenarios", () => {
   for (const scenario of estimateScenarios) {
     it(scenario.name, () => {
+      const contributiVersatiCassa = (
+        scenario as { contributiVersatiCassa?: number }
+      ).contributiVersatiCassa;
       const clientEstimate = buildClientFiscalYearEstimate({
         payments: toClientPayments(scenario.payments),
         projects: toClientProjects(scenario.projects),
         fiscalConfig: toClientConfig(scenario.config),
         taxYear: scenario.taxYear,
         monthsOfData: 12,
+        contributiVersatiCassa,
       });
       const serverEstimate = buildServerFiscalYearEstimate({
         payments: toServerPayments(scenario.payments),
@@ -353,6 +380,7 @@ describe("fiscal parity - estimate scenarios", () => {
         fiscalConfig: toServerConfig(scenario.config),
         taxYear: scenario.taxYear,
         monthsOfData: 12,
+        contributiVersatiCassa,
       });
 
       expect(normalizeEstimate(serverEstimate)).toEqual(

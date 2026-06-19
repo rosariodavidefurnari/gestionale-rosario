@@ -6,7 +6,7 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-19 (Ciclo 2 fiscale: formula reale + UI + wiring F24->dashboard, browser-verificato, branch `feat/fiscal-formula-real`)
+Last updated: 2026-06-19 (Ciclo 2 fiscale: formula reale + UI + wiring F24 + review impl multi-superficie, browser-verificato, branch `feat/fiscal-formula-real`)
 
 ## Update 2026-06-19 — Ciclo 2 fiscale: wiring F24 -> dashboard (browser-verificato)
 

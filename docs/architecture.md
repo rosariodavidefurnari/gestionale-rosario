@@ -32,6 +32,8 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 > desktop (UI-7). `useDashboardData` deriva `contributiVersatiCassa` dai F24
 > (single source, stesse queryKey di `useFiscalReality`) e lo passa a
 > `buildFiscalModel` per la deduzione su cassa quando l'anno ha obblighi reali.
+> Parita' client/EF (incl. aliquota per-anno + deduzione cassa) coperta da
+> `fiscalParity.test.ts`.
 
 Stato del documento:
 

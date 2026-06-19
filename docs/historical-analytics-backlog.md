@@ -10,6 +10,14 @@ Last updated: 2026-06-19 (Ciclo 2 fiscale: formula reale + batch UI browser-veri
 
 ## Update 2026-06-19 — Ciclo 2 fiscale: formula reale + UI (IN CORSO, branch `feat/fiscal-formula-real`)
 
+DONE — review IMPLEMENTAZIONE multi-superficie + RAG (fiscale/TDD, DB/provider/EF,
+frontend/mobile): 2 PASS + 1 FLAG, nessun BLOCK. FLAG principale chiuso: il parity
+test client/EF non esercitava i rami nuovi -> aggiunto scenario `taxYear 2023`
+(26,23% hardcoded) + `contributiVersatiCassa` (blocca il drift delle 2 tabelle
+`ALIQUOTA_GS_BY_YEAR`). Follow-up minori (non bloccanti): EF reminder usa fallback
+competenza by-design (no cassa, dichiarato); compensazioni F24 con `amount` negativo
+non hanno test dedicato; **deploy EF `fiscal_deadline_check` da fare al merge** (BE-1).
+
 DONE 3° batch (wiring F24 -> dashboard, browser-verificato): `useDashboardData`
 deriva `contributiVersatiCassa(anno)` dai F24 (`getEnrichedPaymentLinesForYear` +
 `getFiscalObligations`, stesse queryKey di `useFiscalReality` -> react-query dedup,
