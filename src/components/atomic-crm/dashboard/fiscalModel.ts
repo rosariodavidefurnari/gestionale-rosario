@@ -36,6 +36,8 @@ import type {
   FiscalWarning,
 } from "./fiscalModelTypes";
 import { roundFiscalOutput } from "./roundFiscalOutput";
+import { computeForfettarioTax } from "./fiscalFormula";
+import { getAliquotaGs } from "./aliquotaGs";
 
 // Re-export types for backward compatibility
 export type {
@@ -185,12 +187,18 @@ export const buildFiscalYearEstimate = ({
   fiscalConfig,
   taxYear,
   monthsOfData = 12,
+  contributiVersatiCassa,
 }: {
   payments: Payment[];
   projects: Project[];
   fiscalConfig: FiscalConfig;
   taxYear: number;
   monthsOfData?: number;
+  /**
+   * INPS versato per cassa nell'anno (LM035), per la deduzione dell'imposta.
+   * Se assente, fallback alla competenza (comportamento storico, retro-compatibile).
+   */
+  contributiVersatiCassa?: number;
 }): FiscalYearEstimateBuildResult => {
   const projectById = new Map(
     projects.map((project) => [String(project.id), project]),
@@ -275,18 +283,21 @@ export const buildFiscalYearEstimate = ({
   );
 
   forfettarioIncome = Math.max(0, forfettarioIncome);
-  const annualInpsEstimate = Math.max(
-    0,
-    forfettarioIncome * (fiscalConfig.aliquotaINPS / 100),
-  );
-  const taxableIncomeAfterInps = Math.max(
-    0,
-    forfettarioIncome - annualInpsEstimate,
-  );
-  const annualSubstituteTaxEstimate = Math.max(
-    0,
-    taxableIncomeAfterInps * (aliquotaSostitutiva / 100),
-  );
+  // Aliquota INPS Gestione Separata storicizzata per anno (ufficiale, per-anno),
+  // con fallback alla config per anni non ancora coperti.
+  const aliquotaGs = getAliquotaGs(taxYear, fiscalConfig.aliquotaINPS);
+  const inpsCompetenza = forfettarioIncome * (aliquotaGs / 100);
+  const tax = computeForfettarioTax({
+    redditoLordo: forfettarioIncome,
+    aliquotaGs,
+    // Deduzione su CASSA (LM035) quando il versato reale e' noto; altrimenti
+    // fallback alla competenza (comportamento storico, retro-compatibile).
+    contributiVersatiCassa: contributiVersatiCassa ?? inpsCompetenza,
+    aliquotaSost: aliquotaSostitutiva,
+  });
+  const annualInpsEstimate = tax.inpsCompetenza;
+  const taxableIncomeAfterInps = tax.redditoImponibile;
+  const annualSubstituteTaxEstimate = tax.impostaSostitutiva;
   const annualTotalEstimate = annualInpsEstimate + annualSubstituteTaxEstimate;
   const monthlySetAside = annualTotalEstimate / 12;
   const netEstimatedCash = totalCashRevenue - annualTotalEstimate;

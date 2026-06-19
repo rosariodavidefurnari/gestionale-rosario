@@ -979,6 +979,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/inpsContributionsPaid.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/fiscalRealityTypes.ts",
           "type": "registry:component"
         },
@@ -988,6 +992,10 @@
         },
         {
           "path": "src/components/atomic-crm/dashboard/fiscalModel.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/fiscalFormula.ts",
           "type": "registry:component"
         },
         {
@@ -1028,6 +1036,10 @@
         },
         {
           "path": "src/components/atomic-crm/dashboard/buildFiscalDeadlineKey.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/aliquotaGs.ts",
           "type": "registry:component"
         },
         {

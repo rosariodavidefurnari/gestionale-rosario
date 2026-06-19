@@ -6,7 +6,19 @@
 incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 `canonical`.
 
-Last updated: 2026-06-19 (QW2 card "Da incassare" reale SHIPPED; AI metric cumulativo aggiunto)
+Last updated: 2026-06-19 (Ciclo 2 fiscale checkpoint: formula reale validata + innesto builder, branch `feat/fiscal-formula-real`)
+
+## Update 2026-06-19 — Ciclo 2 fiscale: formula reale (IN CORSO, branch `feat/fiscal-formula-real`)
+
+DONE (checkpoint committato): 3 helper puri (`fiscalFormula`, `inpsContributionsPaid`,
+`aliquotaGs`) validati sugli oracoli reali AdE (2023 429/2.249; 2024 233/1.879) +
+innesto in `buildFiscalYearEstimate` client+EF, parity verde, 668 unit, 0 regressioni.
+TODO (Fase 5-7): wiring F24→dashboard (single-source da `useFiscalReality`), card KPI
+anno chiuso → reali (2.112 non 3.900) + label stima/definitivo + mobile parity (skill
+impeccable), attribuzione data-fattura (inerte finché BR2: 0/31 payment con
+`financial_document_id`), EF `fiscal_deadline_check` fetch declarations+F24 + deploy,
+review impl multi-superficie + RAG, browser WF-17 + e2e, rigenerare RAG al merge.
+Spec/piano `docs/superpowers/specs|plans/2026-06-19-fiscal-estimate-calibration*`.
 
 ## Update 2026-06-19 — QW2 card "Da incassare" reale (DONE)
 

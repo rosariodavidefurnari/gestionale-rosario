@@ -229,6 +229,18 @@ const getAliquotaSostitutiva = (
   return yearsActive < 5 ? 5 : 15;
 };
 
+// Aliquote ufficiali INPS Gestione Separata per gli anni VERIFICATI sulle
+// dichiarazioni reali (2023, 2024). Anni non dichiarati (2025+) -> config fallback.
+// Duplicato del client src/.../aliquotaGs.ts (runtime Deno != Vite); la parita'
+// e' garantita dal parity test fiscalParity.test.ts.
+const ALIQUOTA_GS_BY_YEAR: Record<number, number> = {
+  2023: 26.23,
+  2024: 26.07,
+};
+
+const getAliquotaGs = (year: number, fallbackRate: number): number =>
+  ALIQUOTA_GS_BY_YEAR[year] ?? fallbackRate;
+
 const getSignedPaymentAmount = (payment: PaymentRow) => {
   const amount = Number(payment.amount || 0);
   return payment.payment_type === "rimborso" ? -amount : amount;
@@ -293,12 +305,14 @@ export const buildFiscalYearEstimate = ({
   fiscalConfig,
   taxYear,
   monthsOfData = 12,
+  contributiVersatiCassa,
 }: {
   payments: PaymentRow[];
   projects: ProjectRow[];
   fiscalConfig: FiscalConfig;
   taxYear: number;
   monthsOfData?: number;
+  contributiVersatiCassa?: number;
 }): FiscalYearEstimateBuildResult => {
   const projectById = new Map(
     projects.map((project) => [String(project.id), project]),
@@ -371,13 +385,17 @@ export const buildFiscalYearEstimate = ({
   }
 
   forfettarioIncome = Math.max(0, forfettarioIncome);
+  // Aliquota INPS Gestione Separata per anno (vedi tabella sopra); fallback config.
+  const aliquotaGs = getAliquotaGs(taxYear, fiscalConfig.aliquotaINPS);
   const annualInpsEstimate = Math.max(
     0,
-    forfettarioIncome * (fiscalConfig.aliquotaINPS / 100),
+    forfettarioIncome * (aliquotaGs / 100),
   );
+  // Deduzione su CASSA (LM035) quando il versato reale e' noto; altrimenti
+  // fallback alla competenza (comportamento storico, retro-compatibile).
   const taxableIncomeAfterInps = Math.max(
     0,
-    forfettarioIncome - annualInpsEstimate,
+    forfettarioIncome - (contributiVersatiCassa ?? annualInpsEstimate),
   );
   const annualSubstituteTaxEstimate = Math.max(
     0,

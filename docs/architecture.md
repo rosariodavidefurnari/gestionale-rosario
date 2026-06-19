@@ -14,6 +14,19 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 > comportamentale (tsc 0, 608 unit verdi). Dettagli in
 > `development-continuity-map.md`.
 
+> **Calcolo fiscale forfettario reale (2026-06-19, branch `feat/fiscal-formula-real`):**
+> la formula forfettaria STANDARD è corretta e replica il commercialista al centesimo
+> (validato sulle dichiarazioni AdE reali: 2023 imposta 429/INPS 2.249; 2024 233/1.879).
+> Helper puri canonici: `dashboard/fiscalFormula.ts` (`computeForfettarioTax`),
+> `dashboard/inpsContributionsPaid.ts` (contributi versati LM035 dai F24),
+> `dashboard/aliquotaGs.ts` (aliquota GS per-anno: 2023/2024 hardcoded verificati,
+> 2025+ da `fiscalConfig`). Innestati in `buildFiscalYearEstimate` (client + EF
+> `_shared/fiscalDeadlineCalculation.ts`, parity-tested). **3 numeri INPS distinti**:
+> competenza (output stima) · versato-cassa (LM035, deduce l'imposta) · `total_inps`
+> in `fiscal_declarations` (totale ciclo riconciliato — dato reale, NON ricalcolare).
+> Vedi `docs/superpowers/specs/2026-06-19-fiscal-estimate-calibration-design.md` §14
+> e trigger DOM-8 in `.claude/rules/learning.md`.
+
 Stato del documento:
 
 - `canonical` — ultimo aggiornamento: 2026-06-17

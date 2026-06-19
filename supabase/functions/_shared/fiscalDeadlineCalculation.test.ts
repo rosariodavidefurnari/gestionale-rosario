@@ -299,32 +299,34 @@ describe("buildFiscalReminderComputation", () => {
     );
 
     expect(computation.schedule.isFirstYear).toBe(false);
+    // Aliquota INPS Gestione Separata 2023 = 26,23% (reale, verificata sulla
+    // dichiarazione). forfettario 1560 -> INPS 409,19 -> imposta 57,54.
     expect(juneDeadline?.items).toEqual([
       expect.objectContaining({
         component: "imposta_saldo",
-        amount: 57.67,
+        amount: 57.54,
         competenceYear: 2023,
       }),
       expect.objectContaining({
         component: "inps_saldo",
-        amount: 406.69,
+        amount: 409.19,
         competenceYear: 2023,
       }),
       expect.objectContaining({
         component: "inps_acconto_1",
-        amount: 162.68,
+        amount: 163.68,
         competenceYear: 2024,
       }),
     ]);
     expect(novemberDeadline?.items).toEqual([
       expect.objectContaining({
         component: "imposta_acconto_unico",
-        amount: 57.67,
+        amount: 57.54,
         competenceYear: 2024,
       }),
       expect.objectContaining({
         component: "inps_acconto_2",
-        amount: 162.68,
+        amount: 163.68,
         competenceYear: 2024,
       }),
     ]);

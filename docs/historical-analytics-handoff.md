@@ -6,7 +6,22 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-19 (QW2 card "Da incassare": nuovo metric AI `outstanding_receivables_total` cumulativo, `pending_payments_total` relabeled; frontend-only, no EF deploy)
+Last updated: 2026-06-19 (Ciclo 2 fiscale checkpoint: formula forfettaria reale validata su dichiarazioni AdE + innesto builder client+EF, branch `feat/fiscal-formula-real`)
+
+## Update 2026-06-19 — Ciclo 2 fiscale: formula reale validata (checkpoint, branch `feat/fiscal-formula-real`)
+
+Scoperta dalle dichiarazioni Redditi PF reali (AdE, SPID): la **formula forfettaria
+standard è corretta** e replica il commercialista al centesimo. Oracoli: 2023 imposta
+429/INPS 2.249; 2024 imposta 233/INPS 1.879. Helper puri nuovi: `fiscalFormula.ts`
+(`computeForfettarioTax`), `inpsContributionsPaid.ts` (contributi versati LM035 dai
+F24: allowlist `inps_saldo/acconto_1/acconto_2`, filtro `submission_date`),
+`aliquotaGs.ts` (2023=26,23% / 2024=26,07% verificati hardcoded; 2025+ config).
+Innestati in `buildFiscalYearEstimate` client + EF (`_shared/fiscalDeadlineCalculation.ts`),
+parity verde, 668 unit, 0 regressioni. Deduzione imposta su **cassa** (versato)
+opzionale con fallback competenza (retro-compat). I 3 numeri INPS distinti: competenza
+/ versato-cassa / `total_inps` ciclo (riconciliato, **non si tocca**). RIMANENTE:
+wiring F24→dashboard, card UI (impeccable), data-fattura (post-BR2), EF reminder,
+review impl + browser/e2e. Spec/piano `2026-06-19-fiscal-estimate-calibration*` §14.
 
 ## Update 2026-06-19 — QW2: AI annual metric `outstanding_receivables_total`
 

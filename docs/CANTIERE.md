@@ -272,12 +272,32 @@ Non fatto:
 
 ## Prossima Azione
 
-**#19 — colonna "Da saldare" in lista clienti: SHIPPED e LIVE (`d6abf3f4` su
-`main`, CI success sul fork, prod alias HTTP 200). Niente in sospeso.** Front
-sicuro completato (Ciclo 2 fiscale resta DIFFERITO). Prossimo consigliato: BR2
-(incassi↔fatture) oppure Ciclo 2 fiscale (vedi sotto). Per ogni nuovo lavoro:
-spec → review → piano → review → impl TDD → review impl → browser WF-17, gate
-spec→codice deciso dall'utente.
+**Ciclo 2 fiscale — IN CORSO sul branch `feat/fiscal-formula-real`.** Scoperta
+chiave (dalle dichiarazioni AdE reali di Rosario, SPID): la **formula forfettaria
+standard è CORRETTA** e replica il commercialista al centesimo; il problema NON era
+la formula ma i DATI. Oracoli reali: 2023 imposta 429 + INPS 2.249; 2024 imposta
+233 + INPS 1.879. Il `total_inps` 3.667 in `fiscal_declarations` è il TOTALE
+riconciliato (acconti+saldo), NON un bug — NON si tocca. I 3 numeri INPS distinti:
+competenza (1.879) / versato-cassa (2.538, LM035, deduce l'imposta) / total ciclo.
+
+Checkpoint COMMITTATO (questo branch): formula reale (`fiscalFormula.ts`,
+`inpsContributionsPaid.ts`, `aliquotaGs.ts` — 3 helper puri, oracoli verdi) +
+**innesto in `buildFiscalYearEstimate` client+EF** (aliquota per-anno: 2023/2024
+hardcoded verificati, 2025+ config; deduzione cassa-fallback), parity verde,
+**668 unit verdi, 0 regressioni**, typecheck/lint/build/deno-check OK. Retro-
+compatibile (dashboard invariata tranne 2023 che migliora a 26,23%).
+
+RIMANENTE (Fase 5-7, todo tracciati): wiring F24→dashboard (derivare
+`contributiVersatiCassa` da `useFiscalReality`, single-source) · card UI (anno
+chiuso → reali 2.112 non 3.900, label stima/definitivo, mobile parity, **usare
+skill impeccable**) · attribuzione data-fattura (inerte finché BR2 non collega i
+documenti: 0/31 payment hanno `financial_document_id`) · EF `fiscal_deadline_check`
+(fetch declarations+F24) + deploy · review impl multi-superficie + RAG · browser
+WF-17 + e2e. **Al merge: rigenerare entrambe le RAG** (richiesta utente) sullo
+snapshot committato. Spec/piano: `docs/superpowers/specs|plans/2026-06-19-fiscal-estimate-calibration*`.
+
+Per ogni nuovo lavoro: spec → review → piano → review → impl TDD → review impl →
+browser WF-17, gate spec→codice deciso dall'utente.
 
 - Cosa: colonna desktop "Da saldare" (ultima, destra, `tabular-nums`) + riga in
   `ClientMobileCard` (UI-7), da `client_commercial_position.balance_due`

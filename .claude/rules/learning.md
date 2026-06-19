@@ -52,6 +52,7 @@
 | **Workflow** | WF-7  | Dopo push → controlla CI autonomo         |
 | **Dominio**  | DOM-3 | FatturaPA XML → schema XSD + Aruba        |
 | **Dominio**  | DOM-7 | FatturaPA Descrizione → solo Latin-1 (`€`/`–` vietati) |
+| **Dominio**  | DOM-8 | Forfettario → 3 numeri INPS distinti, formula standard giusta, total_inps intoccabile |
 | **Dominio**  | DOM-4 | Stato semantico ≠ `array.length`          |
 | **Config**   | CFG-2 | BusinessProfile → merge defaults safe     |
 | **Config**   | CFG-3 | Flag/prop root → verificare consumo reale |
@@ -464,6 +465,16 @@ vietato.
 **Quando**: aggiungo feature fiscali, modifico deadline, dashboard o promemoria
 **Fare**: verificare ENTRAMBI i layer: 1) stima (fiscalModel, fiscalDeadlines) 2) realtà (fiscal_declarations, fiscal_obligations, F24). Un consumer deve usare `buildFiscalRealityAwareSchedule()` per il merge, MAI riscrivere la logica inline. Se tocco il layer stima, verificare che il read model produce output coerente. Se tocco il layer realtà, verificare che il fallback estimated funzioni ancora.
 **Perché**: il sistema ha 2 fonti fiscali — stime CRM e dati reali dal commercialista. Se una feature legge solo una delle due, mostra dati parziali o contraddittori. Phase 1 ha anche un'inconsistenza nota: dashboard mostra obblighi reali, promemoria automatici usano ancora le stime (Phase 2 follow-up).
+
+### DOM-8: forfettario — 3 numeri INPS DISTINTI, formula standard giusta, data-fattura vs cassa
+
+**Quando**: tocco il calcolo fiscale forfettario (INPS Gestione Separata, imposta sostitutiva), `buildFiscalYearEstimate`, `fiscalFormula.ts`, o leggo/scrivo `fiscal_declarations.total_inps`
+**Fare**:
+- la formula forfettaria STANDARD è corretta e replica il commercialista al centesimo (verificato su dichiarazioni AdE reali: 2023 imposta 429/INPS 2.249; 2024 imposta 233/INPS 1.879). Non "calibrare su aliquota effettiva": serve solo la formula giusta coi dati giusti.
+- NON confondere i 3 numeri INPS: **competenza** (`reddito_lordo × aliquota_GS`, RR "contributo dovuto", = output stima); **versato-cassa** (LM035, INPS pagato nell'anno via F24, = ciò che DEDUCE l'imposta — `inps_saldo/acconto_1/acconto_2`, allowlist, escludi `interessi_inps`, filtra per `submission_date`); **`total_inps` in `fiscal_declarations`** (totale ciclo riconciliato acconti+saldo — dato reale del commercialista, NON ricalcolare/UPDATE).
+- aliquota GS storicizzata: hardcoda SOLO gli anni VERIFICATI dalle dichiarazioni reali (2023=26,23%, 2024=26,07%); anni non chiusi (2025+) → `fiscalConfig.aliquotaINPS` (non inventare).
+- attribuzione ricavi: il commercialista usa **data fattura** (competenza), il gestionale `payments.payment_date` (cassa). Sulle fatture a cavallo d'anno divergono (es. Gustare FPR 10/23 emessa 29/12/2023, incassata 30/01/2024). Per predire il commercialista serve `financial_documents.issue_date` — inerte finché BR2 non collega i documenti.
+**Perché**: il 2026-06-19, senza le dichiarazioni reali, il `total_inps` 3.667 sembrava un bug (vs 1.879). Stavo per fare un UPDATE distruttivo che avrebbe rotto la riconciliazione F24. Le dichiarazioni AdE reali (SPID) hanno chiarito: formula giusta, 3 numeri distinti, dato reale intoccabile. Vedi `docs/superpowers/specs/2026-06-19-fiscal-estimate-calibration-design.md` §14 e memoria `project_fiscal_real_data_baseline.md`.
 
 ---
 
