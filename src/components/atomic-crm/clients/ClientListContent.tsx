@@ -1,4 +1,4 @@
-import { useListContext, useCreatePath } from "ra-core";
+import { useListContext, useCreatePath, useGetList } from "ra-core";
 import { Link } from "react-router";
 import {
   Table,
@@ -25,8 +25,9 @@ import { useColumnVisibility } from "@/hooks/useColumnVisibility";
 import { useResizableColumns } from "@/hooks/useResizableColumns";
 import { CLIENT_COLUMNS } from "../misc/columnDefinitions";
 
-import type { Client } from "../types";
+import type { Client, ClientCommercialPosition } from "../types";
 import { ListAvatar } from "../misc/ListAvatar";
+import { formatClientBalanceCell } from "./clientBalanceCell";
 import {
   getClientDistinctBillingName,
   getClientBillingIdentityLines,
@@ -40,12 +41,33 @@ import {
   ListBulkToolbar,
 } from "../misc/ListBulkSelection";
 
+/**
+ * Outstanding balance per client, keyed by String(client_id).
+ * Reads the canonical cassa-aware view client_commercial_position with the SAME
+ * params useDashboardData uses (QW2) so React Query shares one cached fetch.
+ * Every client has exactly one row (the view is clients LEFT JOIN ...), so a
+ * missing entry only happens past the perPage cap → caller falls back to "—".
+ */
+const useClientBalances = (): Map<string, number> => {
+  const { data } = useGetList<ClientCommercialPosition>(
+    "client_commercial_position",
+    {
+      pagination: { page: 1, perPage: 1000 },
+      sort: { field: "client_name", order: "ASC" },
+    },
+  );
+  return new Map(
+    (data ?? []).map((row) => [String(row.client_id), Number(row.balance_due)]),
+  );
+};
+
 export const ClientListContent = () => {
   const { data, isPending, error } = useListContext<Client>();
   const createPath = useCreatePath();
   const isMobile = useIsMobile();
   const { cv } = useColumnVisibility("clients", CLIENT_COLUMNS);
   const resize = useResizableColumns("clients");
+  const balances = useClientBalances();
 
   if (error) return <ErrorMessage />;
   if (isPending || !data) return null;
@@ -58,6 +80,7 @@ export const ClientListContent = () => {
             <MobileSelectableCard key={client.id} id={client.id}>
               <ClientMobileCard
                 client={client}
+                balance={balances.get(String(client.id)) ?? null}
                 link={createPath({
                   resource: "clients",
                   type: "show",
@@ -121,6 +144,14 @@ export const ClientListContent = () => {
             >
               Fonte
             </ResizableHead>
+            <ResizableHead
+              colKey="balance_due"
+              width={getWidth("balance_due")}
+              onResizeStart={onResizeStart}
+              className={cv("balance_due", "text-right")}
+            >
+              Da saldare
+            </ResizableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -130,6 +161,7 @@ export const ClientListContent = () => {
               client={client}
               cv={cv}
               createPath={createPath}
+              balance={balances.get(String(client.id)) ?? null}
             />
           ))}
         </TableBody>
@@ -143,10 +175,12 @@ const ClientRow = ({
   client,
   cv,
   createPath,
+  balance,
 }: {
   client: Client;
   cv: (key: string, extra?: string) => string | undefined;
   createPath: ReturnType<typeof useCreatePath>;
+  balance: number | null;
 }) => (
   <TableRow className="cursor-pointer hover:bg-muted/50">
     <TableCell className="w-10">
@@ -210,34 +244,84 @@ const ClientRow = ({
     >
       {client.source ? clientSourceLabels[client.source] : ""}
     </TableCell>
+    <ClientBalanceCellContent
+      balance={balance}
+      className={cv("balance_due", "text-right tabular-nums text-sm")}
+    />
   </TableRow>
 );
+
+const ClientBalanceCellContent = ({
+  balance,
+  className,
+}: {
+  balance: number | null;
+  className: string | undefined;
+}) => {
+  const { label, colorClass, formattedValue } =
+    formatClientBalanceCell(balance);
+  return (
+    <TableCell className={className}>
+      {formattedValue ? (
+        <span className={colorClass}>
+          {formattedValue}
+          <span className="ml-1 text-[11px] text-muted-foreground">
+            {label === "Credito cliente" ? "credito" : ""}
+          </span>
+        </span>
+      ) : (
+        <span className={colorClass}>{label}</span>
+      )}
+    </TableCell>
+  );
+};
 
 /* ---- Mobile card ---- */
 const ClientMobileCard = ({
   client,
   link,
+  balance,
 }: {
   client: Client;
   link: string;
-}) => (
-  <Link to={link} className="flex flex-col gap-1 px-1 py-3 active:bg-muted/50">
-    <span className="text-base font-bold">{client.name}</span>
-    <div className="flex items-center gap-2">
-      <ClientTypeBadge type={client.client_type} />
-      {client.billing_city && (
+  balance: number | null;
+}) => {
+  const { label, colorClass, formattedValue } =
+    formatClientBalanceCell(balance);
+  return (
+    <Link
+      to={link}
+      className="flex flex-col gap-1 px-1 py-3 active:bg-muted/50"
+    >
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-base font-bold">{client.name}</span>
+        {formattedValue ? (
+          <span
+            className={`shrink-0 text-sm font-semibold tabular-nums ${colorClass}`}
+          >
+            {formattedValue}
+          </span>
+        ) : null}
+      </div>
+      <div className="flex items-center gap-2">
+        <ClientTypeBadge type={client.client_type} />
+        {client.billing_city && (
+          <span className="text-xs text-muted-foreground">
+            {client.billing_city}
+          </span>
+        )}
+      </div>
+      {formattedValue && (
+        <span className="text-[11px] text-muted-foreground">{label}</span>
+      )}
+      {(client.email || client.phone) && (
         <span className="text-xs text-muted-foreground">
-          {client.billing_city}
+          {client.email || client.phone}
         </span>
       )}
-    </div>
-    {(client.email || client.phone) && (
-      <span className="text-xs text-muted-foreground">
-        {client.email || client.phone}
-      </span>
-    )}
-  </Link>
-);
+    </Link>
+  );
+};
 
 const clientTypeConfig: Record<
   string,
