@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { useGetList } from "ra-core";
+import { useDataProvider, useGetList } from "ra-core";
+import { useQuery } from "@tanstack/react-query";
 
 import type {
   Client,
@@ -10,8 +11,10 @@ import type {
   Quote,
   Service,
 } from "../types";
+import type { CrmDataProvider } from "../providers/types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { buildDashboardModel, type DashboardModel } from "./dashboardModel";
+import { sumInpsContributionsPaidInYear } from "./inpsContributionsPaid";
 import {
   countOpenReceivables,
   sumOutstandingReceivables,
@@ -67,6 +70,33 @@ export const useDashboardData = (year?: number) => {
     },
   );
 
+  // INPS versato per cassa nell'anno (LM035) dai F24, per la deduzione
+  // dell'imposta della stima dell'anno selezionato. SINGLE SOURCE: stesse
+  // queryKey di useFiscalReality -> react-query dedup, nessun fetch doppio reale.
+  const dataProvider = useDataProvider<CrmDataProvider>();
+  const fiscalObligationsQuery = useQuery({
+    queryKey: ["fiscal-obligations", year],
+    queryFn: () => dataProvider.getFiscalObligations(year as number),
+    enabled: year != null,
+  });
+  const fiscalPaymentLinesQuery = useQuery({
+    queryKey: ["fiscal-enriched-payment-lines", year],
+    queryFn: () => dataProvider.getEnrichedPaymentLinesForYear(year as number),
+    enabled: year != null,
+  });
+  const contributiVersatiCassa = useMemo(() => {
+    const obligations = fiscalObligationsQuery.data;
+    const lines = fiscalPaymentLinesQuery.data;
+    // Deduzione su cassa SOLO quando esistono obblighi reali per l'anno (anno
+    // dichiarato dal commercialista): li' il versato F24 e' completo e replica
+    // l'imposta della dichiarazione. Per l'anno corrente senza dichiarazione
+    // -> undefined -> fallback competenza (stima stabile, no regressione).
+    if (year == null || !obligations || obligations.length === 0 || !lines) {
+      return undefined;
+    }
+    return sumInpsContributionsPaidInYear(lines, obligations, year);
+  }, [year, fiscalObligationsQuery.data, fiscalPaymentLinesQuery.data]);
+
   const isPending = [
     paymentsQuery,
     quotesQuery,
@@ -115,9 +145,11 @@ export const useDashboardData = (year?: number) => {
       expenses: expensesQuery.data,
       fiscalConfig,
       year,
+      contributiVersatiCassa,
     });
   }, [
     clientsQuery.data,
+    contributiVersatiCassa,
     expensesQuery.data,
     fiscalConfig,
     paymentsQuery.data,

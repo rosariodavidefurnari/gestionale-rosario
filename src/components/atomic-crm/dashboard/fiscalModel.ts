@@ -384,6 +384,7 @@ export const buildFiscalModel = ({
   clients: _clients,
   fiscalConfig,
   year,
+  contributiVersatiCassa,
 }: {
   services: Service[];
   expenses: Expense[];
@@ -393,6 +394,12 @@ export const buildFiscalModel = ({
   clients: Client[];
   fiscalConfig: FiscalConfig;
   year?: number;
+  /**
+   * INPS versato per cassa nell'anno selezionato (LM035), dai F24, per la
+   * deduzione dell'imposta della stima dell'anno corrente. Assente -> fallback
+   * competenza (retro-compatibile).
+   */
+  contributiVersatiCassa?: number;
 }): FiscalModel => {
   const todayIso = todayISODate();
   const nowYear = Number(todayIso.slice(0, 4));
@@ -497,6 +504,7 @@ export const buildFiscalModel = ({
     fiscalConfig,
     taxYear: currentYear,
     monthsOfData,
+    contributiVersatiCassa,
   });
   const previousYearEstimate = buildFiscalYearEstimate({
     payments,

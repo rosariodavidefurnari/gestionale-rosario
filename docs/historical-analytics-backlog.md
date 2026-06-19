@@ -10,6 +10,16 @@ Last updated: 2026-06-19 (Ciclo 2 fiscale: formula reale + batch UI browser-veri
 
 ## Update 2026-06-19 — Ciclo 2 fiscale: formula reale + UI (IN CORSO, branch `feat/fiscal-formula-real`)
 
+DONE 3° batch (wiring F24 -> dashboard, browser-verificato): `useDashboardData`
+deriva `contributiVersatiCassa(anno)` dai F24 (`getEnrichedPaymentLinesForYear` +
+`getFiscalObligations`, stesse queryKey di `useFiscalReality` -> react-query dedup,
+single source) e lo passa a `buildDashboardModel` -> `buildFiscalModel` ->
+`buildFiscalYearEstimate` (stima anno corrente). Deduzione su cassa SOLO se esistono
+obblighi reali per l'anno (anno dichiarato); altrimenti fallback competenza (stima
+stabile, no regressione locale). Browser desktop: 0 console errors, dashboard
+invariata su dati locali (no obblighi -> competenza). 671 unit verdi. (HMR puo'
+dare un falso hooks-order error al salvataggio: sparisce a reload pulito.)
+
 DONE 2° batch (browser-verificato WF-17 desktop, glance, 0 console errors):
 impeccable audit delle card fiscali -> (1) card "Tasse stimate" aggiunta su mobile
 (`MobileFiscalKpis`, prima mostrava solo accantonamento/tetto, UI-7); (2) copy

@@ -29,7 +29,9 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 > `DashboardNetAvailabilityCard` ("Riserva tasse") usa la stima fiscale quando non
 > ci sono obbligazioni reali (call site `hasRealFiscalData` su DashboardAnnual +
 > MobileDashboard); `MobileFiscalKpis` ha la card "Tasse stimate" in parita' col
-> desktop (UI-7).
+> desktop (UI-7). `useDashboardData` deriva `contributiVersatiCassa` dai F24
+> (single source, stesse queryKey di `useFiscalReality`) e lo passa a
+> `buildFiscalModel` per la deduzione su cassa quando l'anno ha obblighi reali.
 
 Stato del documento:
 

@@ -6,7 +6,15 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-19 (Ciclo 2 fiscale: formula reale + 2° batch UI browser-verificato — card tasse mobile, fix Riserva-tasse NetAvailability — branch `feat/fiscal-formula-real`)
+Last updated: 2026-06-19 (Ciclo 2 fiscale: formula reale + UI + wiring F24->dashboard, browser-verificato, branch `feat/fiscal-formula-real`)
+
+## Update 2026-06-19 — Ciclo 2 fiscale: wiring F24 -> dashboard (browser-verificato)
+
+`useDashboardData` deriva `contributiVersatiCassa(anno)` dai F24 (single source,
+stesse queryKey di `useFiscalReality` -> dedup) e lo passa lungo `buildDashboardModel`
+-> `buildFiscalModel` -> `buildFiscalYearEstimate` per la stima dell'anno corrente.
+Deduzione cassa solo se esistono obblighi reali (anno dichiarato), altrimenti
+fallback competenza. Browser desktop 0 errori, dashboard invariata su locale.
 
 ## Update 2026-06-19 — Ciclo 2 fiscale: 2° batch UI (browser-verificato WF-17)
 

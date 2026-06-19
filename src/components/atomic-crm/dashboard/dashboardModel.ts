@@ -140,6 +140,7 @@ export const buildDashboardModel = ({
   expenses,
   fiscalConfig,
   year,
+  contributiVersatiCassa,
 }: {
   payments: Payment[];
   quotes: Quote[];
@@ -149,6 +150,7 @@ export const buildDashboardModel = ({
   expenses: Expense[];
   fiscalConfig?: FiscalConfig;
   year?: number;
+  contributiVersatiCassa?: number;
 }): DashboardModel => {
   const todayIso = todayISODate();
   const nowYear = Number(todayIso.slice(0, 4));
@@ -614,6 +616,7 @@ export const buildDashboardModel = ({
         clients,
         fiscalConfig,
         year: selectedYear,
+        contributiVersatiCassa,
       })
     : null;
 
