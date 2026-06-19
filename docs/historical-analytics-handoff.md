@@ -20,8 +20,16 @@ suo id** (la EF `supabase/functions/_shared/annualOperationsAiGuidance.ts` lo le
 per id, `.value`), cambia solo la label. La fonte del metric è la STESSA della card
 (`dataProviderAnalyticsContext` fetcha `client_commercial_position`). Quindi
 **frontend-only, NESSUN deploy EF**. Controllore B2 falsificabile:
-`dataProviderAnalyticsContext.test.ts`. Follow-up aperto (IMPORTANT-5, separato): la
-descrizione `quick_payment` nei registry AI è incompleta (non falsa).
+`dataProviderAnalyticsContext.test.ts`.
+
+## Update 2026-06-19 — IMPORTANT-5: descrizione AI `quick_payment` allineata (DONE)
+
+Dopo FIX-3 l'incasso rapido SALDA l'incasso atteso collegato (riconciliazione)
+invece di creare sempre. Le description di `quick_payment_dialog` e
+`project_quick_payment` in `crmCapabilityRegistry.ts` dicevano solo "crea un
+pagamento" (incompleto, non falso): aggiornate a settle/picker/create. Solo
+metadata di capability (testo di contesto per l'AI), nessun cambiamento runtime,
+nessun deploy EF. `crmSemanticRegistry` non aveva descrizione `quick_payment`.
 
 > **Nota tooling (2026-06-17):** i file `dashboard/` toccati nel commit dello
 > sweep prettier sono cambiati SOLO nel formato (nessun cambiamento di

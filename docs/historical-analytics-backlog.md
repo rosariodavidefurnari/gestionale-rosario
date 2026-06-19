@@ -15,8 +15,13 @@ Card KPI dashboard: da `pendingPaymentsTotal` (375 su prod) a Σ max(0,
 fonte canonica cassa-aware (no seconda verità). AI annuale allineata
 (`outstanding_receivables_total`). Dettagli in `architecture.md` +
 `development-continuity-map.md` + handoff. Coda residua: QW3 (mobile
-scadenzario+cassa), BR2 (riconciliazione pagamenti/allocazioni), IMPORTANT-5
-(descrizione `quick_payment` registry AI, incompleta non falsa), bollo €2.
+scadenzario+cassa), BR2 (riconciliazione pagamenti/allocazioni), bollo €2.
+
+## Update 2026-06-19 — IMPORTANT-5: descrizione AI `quick_payment` (DONE)
+
+Descrizione capability `quick_payment_dialog` + `project_quick_payment` in
+`crmCapabilityRegistry.ts` allineata al comportamento reale post-FIX-3
+(settle/picker/create, non solo "crea"). Metadata-only, nessun deploy EF.
 
 ## Update 2026-06-17 — Tooling: prettier drift risolto alla radice
 
