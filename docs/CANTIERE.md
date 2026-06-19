@@ -72,10 +72,9 @@ Branch corrente:
   sweep (`eeb342fb`), audit-fix FIX-1+2 (`700bc0be`). Lavorare in chat nuova:
   partire da QUI (questo blocco e' autosufficiente).
 
-Obiettivo operativo attivo: **NESSUNO** — FIX-3+4 IMPLEMENTATO su branch
-`fix/expected-payment-reconciliation` (verde locale + 4 review PASS + WF-17),
-in attesa di merge/deploy (vedi "Prossima Azione"). Dopo: QW2 (card "Da
-incassare", spec+piano gia' pronti), poi coda audit (IMPORTANT-5 AI, MINOR).
+Obiettivo operativo attivo: **NESSUNO** — FIX-3+4 SHIPPED e LIVE. Prossimo:
+QW2 (card "Da incassare", spec+piano gia' pronti), poi coda audit (IMPORTANT-5
+AI, MINOR). Vedi "Prossima Azione".
 
 - Prettier: tech-debt CHIUSO. Root-cause risolta (`.lintstagedrc` formatta i TS,
   CI step `npm run prettier` BLOCCANTE) + sweep repo-wide a 0 drift; CI
@@ -233,35 +232,32 @@ Non fatto:
 
 ## Prossima Azione
 
-**FIX-3+4 IMPLEMENTATO e verde su branch `fix/expected-payment-reconciliation`.
-Prossimo step = SHIP (gated OK utente): deploy EF + merge.**
+**FIX-3+4 SHIPPED e LIVE. Prossimo ciclo = QW2 (card "Da incassare").**
 
 Spec v2: `docs/superpowers/specs/2026-06-17-expected-payment-reconciliation-design.md`
 Piano v2: `docs/superpowers/plans/2026-06-17-expected-payment-reconciliation.md`
 (blocchi "REVISIONE v2 AUTORITATIVA" vincono sul corpo.)
 
-Cosa fare per shippare (in ordine):
+SHIP completato:
 
-1. `npx supabase functions deploy invoice_emit --project-ref qvdmzhyzpyaveniirsmo`
-   (FIX-4 tocca l'EF; FIX-3 e' frontend → Vercel al merge). BE-1/BE-8.
-2. Smoke PROD: emit su un progetto con atteso manuale → 1 solo atteso collegato
-   (assorbito); incasso rapido di una fattura emessa → 1 pagamento ricevuto, 0
-   atteso orfano, "Da incassare" non raddoppia.
-3. Merge `main` (Vercel auto-deploy frontend) + CI check
-   (`gh -R rosariodavidefurnari/gestionale-rosario`, WF-16).
+- EF `invoice_emit` deployata su prod (`qvdmzhyzpyaveniirsmo`, FIX-4); FIX-3 e'
+  frontend (Vercel auto-deploy al merge).
+- **Smoke PROD FIX-4 GREEN** (entita' usa-e-getta + cleanup completo, 0 leftover):
+  emit con atteso manuale pre-esistente → `expectedPaymentAbsorbed:true`,
+  `paymentId == atteso manuale`, nessuna riga nuova (1→1), 1 solo collegato
+  `in_attesa`; void cleanup `paymentsDeleted:1`.
+- Merge `main` (`7c7ec1c1`), push `origin`, CI `Check | push | success` sul fork,
+  Vercel prod alias `HTTP 200`.
 
-Stato verifiche locali (questa tornata):
+Verifiche locali (pre-merge): 632 unit, 7/7 e2e
+(`invoice-void.smoke.spec.ts`: settle invariant a delta + absorb contro EF reali),
+tsc 0, lint 0 errori, prettier clean, `deno check invoice_emit`, `continuity:check`.
 
-- 632 unit verdi, 7/7 e2e (`invoice-void.smoke.spec.ts`: aggiunti settle invariant
-  + absorb contro EF reali), tsc 0, lint 0 errori, prettier clean,
-  `deno check invoice_emit` ok, `continuity:check` verde.
-- 4 review multi-superficie + RAG: tutte **PASS** (DB/Edge: PASS + 1 FLAG
-  documentato = void-after-absorb cancella un atteso manuale assorbito, limite v1
-  accettato in spec non-obiettivi; TDD FLAG-1 chiusa = cassa-year ora lockata a
-  clock congelato nel RTL, WF-9).
-- WF-17 browser desktop + mobile: `QuickPaymentDialog` raggiungibile e leggibile su
-  entrambe le viewport, 0 errori console DAL SURFACE (1 errore pre-esistente
-  `StartPage/CRM` setState-in-render allo startup, non introdotto qui).
+Review: 4 pre-merge + 2 post-ship = **6 PASS** (DB/Edge, fiscale-cassa,
+frontend/mobile, TDD; post-ship: money/Edge correctness + coverage/continuity).
+Falsificabilita' provata (post-ship): iniettata regressione cassa-year nel RTL →
+RED. FLAG chiuse: cassa-year lockata a clock congelato (WF-9); limite v1
+void-after-absorb documentato in spec non-obiettivi (nessuna cassa persa).
 
 Sintesi tecnica: due decider PURI (`projects/quickPaymentReconciliation.ts`,
 `_shared/invoiceEmit.ts`) sul pattern `decideEmittedPaymentReconciliation` (match
@@ -271,7 +267,11 @@ l'atteso collegato (`useUpdate`, `payment_date` reale mai null/futuro, gate
 l'atteso manuale (SELECT FOR UPDATE + UPDATE count-guard, PROJECT-LEVEL ONLY B2,
 `expectedPaymentAbsorbed` nel result). Niente migration (FK da `20260616200000`).
 
-Gate di processo: niente prod senza OK utente.
+Follow-up accodati (out-of-scope v1): flussi gemelli orfani `/payments/create`,
+`client_create_payment`, `quote_create_payment` (stesso doppio conteggio se
+incassano una fattura emessa da li'); IMPORTANT-5 AI registry (descrizione
+`quick_payment` incompleta ma NON falsa). Limite v1: `invoice_void` cancella
+l'atteso manuale assorbito (no ripristino, no cassa persa).
 
 ### Fatto in questa tornata (audit ciclo fatturazione, 2026-06-17)
 
