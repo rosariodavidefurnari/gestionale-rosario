@@ -72,10 +72,10 @@ Branch corrente:
   sweep (`eeb342fb`), audit-fix FIX-1+2 (`700bc0be`). Lavorare in chat nuova:
   partire da QUI (questo blocco e' autosufficiente).
 
-Obiettivo operativo attivo: **FIX-3+4 — riconciliazione incasso atteso** (money).
-Spec v2 + piano v2 PRONTI (plan review BLOCK chiusa). Prossimo = **IMPL** (vedi
-"Prossima Azione"). Dopo: QW2 (card "Da incassare", spec+piano gia' pronti), poi
-coda audit (IMPORTANT-5 AI, MINOR).
+Obiettivo operativo attivo: **NESSUNO** — FIX-3+4 IMPLEMENTATO su branch
+`fix/expected-payment-reconciliation` (verde locale + 4 review PASS + WF-17),
+in attesa di merge/deploy (vedi "Prossima Azione"). Dopo: QW2 (card "Da
+incassare", spec+piano gia' pronti), poi coda audit (IMPORTANT-5 AI, MINOR).
 
 - Prettier: tech-debt CHIUSO. Root-cause risolta (`.lintstagedrc` formatta i TS,
   CI step `npm run prettier` BLOCCANTE) + sweep repo-wide a 0 drift; CI
@@ -233,43 +233,45 @@ Non fatto:
 
 ## Prossima Azione
 
-**Ciclo attivo: FIX-3+4 — riconciliazione incasso atteso. Prossimo step = IMPL
-(subagent-driven TDD, RED-first).**
+**FIX-3+4 IMPLEMENTATO e verde su branch `fix/expected-payment-reconciliation`.
+Prossimo step = SHIP (gated OK utente): deploy EF + merge.**
 
 Spec v2: `docs/superpowers/specs/2026-06-17-expected-payment-reconciliation-design.md`
 Piano v2: `docs/superpowers/plans/2026-06-17-expected-payment-reconciliation.md`
-(LEGGERE i blocchi "REVISIONE v2 AUTORITATIVA" in entrambi — vincono sul corpo.)
+(blocchi "REVISIONE v2 AUTORITATIVA" vincono sul corpo.)
 
-Problema (da audit post-ship, cassa fiscale CLEAN): l'incasso ATTESO creato da
-`invoice_emit` (payment `in_attesa` con `financial_document_id`) non viene
-riconciliato → doppio conteggio in `pendingPaymentsTotal` ("Da incassare").
-Decisioni di business LOCKED dall'utente:
+Cosa fare per shippare (in ordine):
 
-- **FIX-3** Incasso rapido (`QuickPaymentDialog`) SALDA l'atteso collegato
-  (`status->ricevuto`, `payment_date` reale, MAI null) invece di creare; >1 atteso
-  collegato → AMBIGUOUS = picker "quale fattura"; incasso parziale → aggiorna
-  `amount`, residuo via `balance_due`. **GATE `payment_type`**: salda solo
-  saldo/acconto/parziale, mai rimborso (B1).
-- **FIX-4** `invoice_emit` ASSORBE un `in_attesa` manuale pre-esistente con match
-  preciso (amount±cent + tipo assorbibile + **solo `source.kind==='project'`**,
-  scope `project_id`; client-level = create, out-of-scope v1 — B2).
-- Bersaglio = `pendingPaymentsTotal` (NON `balance_due`, che conta solo ricevuto).
-  SYSTEM-FIRST: riuso match per `financial_document_id`
-  (`decideEmittedPaymentReconciliation`). VP5 foundation-basis NON applicabile
-  (view single-source dal 20260401).
+1. `npx supabase functions deploy invoice_emit --project-ref qvdmzhyzpyaveniirsmo`
+   (FIX-4 tocca l'EF; FIX-3 e' frontend → Vercel al merge). BE-1/BE-8.
+2. Smoke PROD: emit su un progetto con atteso manuale → 1 solo atteso collegato
+   (assorbito); incasso rapido di una fattura emessa → 1 pagamento ricevuto, 0
+   atteso orfano, "Da incassare" non raddoppia.
+3. Merge `main` (Vercel auto-deploy frontend) + CI check
+   (`gh -R rosariodavidefurnari/gestionale-rosario`, WF-16).
 
-Ordine impl (piano v2): decider puri `decideQuickPaymentTarget` +
-`decideEmitExpectedPayment` (RED-first, test reali) -> QuickPaymentDialog wiring
-(useGetList candidati `{"financial_document_id@not.is": null}` + useUpdate settle)
--> `invoice_emit` EF absorb (SELECT FOR UPDATE + UPDATE returning+count-guard) ->
-RTL component test (assert update non create) + e2e (estendere
-`invoice-void.smoke.spec.ts`) -> review impl multi-superficie + RAG -> browser
-WF-17 desktop+mobile (OBBLIGATORIO) -> **PROD GATED (OK utente)**: deploy EF
-`invoice_emit --project-ref qvdmzhyzpyaveniirsmo` (BE-1/BE-8), FIX-3 e' frontend
-(Vercel al merge), smoke prod emit->incasso = 1 pagamento.
+Stato verifiche locali (questa tornata):
 
-Gate di processo: RAG attivo + review multi-superficie + browser desktop/mobile +
-niente prod senza verde locale e OK utente.
+- 632 unit verdi, 7/7 e2e (`invoice-void.smoke.spec.ts`: aggiunti settle invariant
+  + absorb contro EF reali), tsc 0, lint 0 errori, prettier clean,
+  `deno check invoice_emit` ok, `continuity:check` verde.
+- 4 review multi-superficie + RAG: tutte **PASS** (DB/Edge: PASS + 1 FLAG
+  documentato = void-after-absorb cancella un atteso manuale assorbito, limite v1
+  accettato in spec non-obiettivi; TDD FLAG-1 chiusa = cassa-year ora lockata a
+  clock congelato nel RTL, WF-9).
+- WF-17 browser desktop + mobile: `QuickPaymentDialog` raggiungibile e leggibile su
+  entrambe le viewport, 0 errori console DAL SURFACE (1 errore pre-esistente
+  `StartPage/CRM` setState-in-render allo startup, non introdotto qui).
+
+Sintesi tecnica: due decider PURI (`projects/quickPaymentReconciliation.ts`,
+`_shared/invoiceEmit.ts`) sul pattern `decideEmittedPaymentReconciliation` (match
+per `financial_document_id`, SYSTEM-FIRST). FIX-3 = `QuickPaymentDialog` salda
+l'atteso collegato (`useUpdate`, `payment_date` reale mai null/futuro, gate
+`payment_type` B1, picker su >1 = ambiguous). FIX-4 = `invoice_emit` assorbe
+l'atteso manuale (SELECT FOR UPDATE + UPDATE count-guard, PROJECT-LEVEL ONLY B2,
+`expectedPaymentAbsorbed` nel result). Niente migration (FK da `20260616200000`).
+
+Gate di processo: niente prod senza OK utente.
 
 ### Fatto in questa tornata (audit ciclo fatturazione, 2026-06-17)
 

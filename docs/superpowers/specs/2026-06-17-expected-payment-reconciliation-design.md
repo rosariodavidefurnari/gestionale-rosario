@@ -114,6 +114,14 @@ Esiste GIA' la semantica di settle-in-place per gli incassi emessi:
 
 ## Non-obiettivi
 
+- **Limite v1 ACCETTATO (void-after-absorb)**: `invoice_void` cancella i payments
+  `in_attesa`/`scaduto` legati al documento per `financial_document_id`. Quindi un
+  atteso MANUALE pre-esistente che l'emit ha ASSORBITO (FIX-4), se la fattura viene
+  poi annullata, viene CANCELLATO e NON ripristinato allo stato manuale slegato
+  (oggi non distinguibile da un atteso emit-created). Nessuna cassa persa (un
+  `ricevuto` blocca il void con 409); si perde solo la riga di forecast. Ripristino
+  selettivo rimandato a v2 (richiederebbe un flag `absorbed_from_manual` o l'unlink
+  invece del delete nel void). Verificato in review impl (revisore DB/Edge).
 - NON toccare la base imponibile fiscale (cassa = solo `ricevuto`).
 - NON inventare una terza logica di reconciliation: riusare il match per
   `financial_document_id`.

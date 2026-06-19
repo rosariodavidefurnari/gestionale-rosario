@@ -216,6 +216,16 @@ Semantica:
 - il pulsante "Genera bozza fattura" compare solo se
   `hasInvoiceDraftCollectableAmount()` ritorna true
 - non scrive su DB (solo anteprima/download PDF)
+- `QuickPaymentDialog` (incasso rapido da `ProjectShow`) ora RICONCILIA
+  l'incasso atteso: se il progetto ha un `payment` `in_attesa` con
+  `financial_document_id` (creato da `invoice_emit`), registrare l'incasso
+  SALDA quella riga (`status='ricevuto'`, `payment_date` reale, mai null/futuro)
+  invece di crearne una nuova — niente doppio conteggio in "Da incassare".
+  Decider puro `projects/quickPaymentReconciliation.ts#decideQuickPaymentTarget`
+  (`settle|create|ambiguous`, gate `payment_type` saldo/acconto/parziale);
+  su >1 atteso collegato il dialog chiede "quale fattura" (picker). Consumer
+  unico `ProjectShow` → parità desktop/mobile automatica (UI-7). Dettagli e
+  controllori in `development-continuity-map.md` (FIX-3+4).
 
 Impatto architetturale:
 

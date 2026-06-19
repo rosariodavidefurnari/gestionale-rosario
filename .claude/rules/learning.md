@@ -68,6 +68,7 @@
 | **DB**       | DB-7  | F24 reali → interessi e compensazioni     |
 | **DB**       | DB-8  | Builder che unisce services+expenses → skip source_service_id |
 | **DB**       | DB-9  | EF marca per id → UNDO smarca per id/FK, mai per string |
+| **DB**       | DB-10 | Incasso atteso da emit → riconcilia per FK, mai duplicare |
 | **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
 | **Workflow** | WF-15 | Lavoro rischioso → RAG attivo + review multi-superficie |
 | **Workflow** | WF-16 | CI check → `gh -R fork` (default punta a upstream)  |
@@ -266,6 +267,38 @@ lavori/spese storici estranei, e il twin-guard per `document_number` (senza
 Fix: FK `financial_document_id` simmetrica all'emit, twin-guard rimosso. Stesso
 spirito di DB-5/DB-8: spostare un invariant senza rendere simmetrico il rovescio
 e' la causa radice.
+
+### DB-10: un incasso ATTESO creato da emit (in_attesa + financial_document_id) -> riconcilia per FK, non duplicare
+
+**Quando**: tocco un flusso che registra un incasso reale (`QuickPaymentDialog`,
+`/payments/create`, quote/client payment) o che emette/registra una fattura
+(`invoice_emit`) su un progetto/cliente che puo' gia' avere un `payment`
+`in_attesa` legato a un documento (`financial_document_id`)
+**Fare**: PRIMA di `create`, cercare l'atteso collegato e RICONCILIARE invece di
+inserire:
+- incasso reale -> SETTLE in place la riga collegata (`status='ricevuto'`,
+  `payment_date` reale via `todayISODate()` MAI null/futuro, cassa DOM-1/WF-8),
+  non un secondo payment; >1 collegato = `ambiguous`, CHIEDI quale (mai indovinare);
+- emit con atteso MANUALE pre-esistente (FK NULL, stesso amount±cent + tipo
+  assorbibile + stesso project) -> ASSORBI (`UPDATE ... SET financial_document_id
+  WHERE financial_document_id IS NULL` + count-guard fail-closed, `FOR UPDATE`);
+  client-level senza scope project = `create` (out-of-scope v1);
+- gate `payment_type`: salda/assorbi SOLO `saldo/acconto/parziale`, MAI `rimborso*`
+  (corromperebbe importo fattura + cassa). La Set assorbibile va tenuta SIMMETRICA
+  tra runtime client (`quickPaymentReconciliation.ts`) e Deno
+  (`_shared/invoiceEmit.ts`);
+- decider PURO testabile (`settle|create|ambiguous`, `absorb|create|ambiguous`)
+  sul pattern `decideEmittedPaymentReconciliation`; il bersaglio e'
+  `pendingPaymentsTotal` ("Da incassare", `status != 'ricevuto'`), NON `balance_due`
+  (conta solo `ricevuto`); controllore e2e con DELTA (robusto al seed) + RTL che
+  asserisce `update` non `create` e lock cassa-year a clock congelato (WF-9).
+**Perche'**: il 2026-06-17 `QuickPaymentDialog` faceva sempre `create` senza
+`financial_document_id` e `invoice_emit` creava sempre un nuovo `in_attesa` →
+l'atteso emesso restava orfano e il manuale veniva duplicato → "Da incassare"
+contava lo stesso dovuto due volte. Stesso spirito di DB-5/DB-8/DB-9: una fonte
+unica (`financial_document_id`) va riusata simmetricamente in tutti i consumer,
+non reinventata. Limite v1 noto: `invoice_void` cancella l'atteso assorbito (no
+ripristino) — documentato in spec.
 
 ---
 

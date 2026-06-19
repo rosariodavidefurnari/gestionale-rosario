@@ -20,6 +20,9 @@ export type EmitInvoiceResult =
       status: "emitted";
       financialDocumentId: string;
       paymentId: string;
+      // FIX-4: true when emit absorbed a pre-existing manual expected payment
+      // instead of inserting a new one (paymentId = the absorbed row).
+      expectedPaymentAbsorbed?: boolean;
       servicesMarked: number;
       expensesMarked: number;
     }
