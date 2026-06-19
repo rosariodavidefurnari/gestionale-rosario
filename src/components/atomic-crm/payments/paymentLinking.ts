@@ -138,9 +138,9 @@ const buildPaymentCreatePath = (
   return search ? `/payments/create?${search}` : "/payments/create";
 };
 
-const buildProjectShowPath = (
+export const buildProjectShowPath = (
   projectId: Identifier | null | undefined,
-  defaults: Record<string, string | number | null | undefined>,
+  defaults: Record<string, string | number | null | undefined> = {},
 ) => {
   if (projectId == null || projectId === "") {
     return null;

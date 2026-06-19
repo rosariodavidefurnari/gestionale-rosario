@@ -46,3 +46,15 @@ export const decideQuickPaymentTarget = (
   if (linked.length === 1) return { action: "settle", paymentId: linked[0].id };
   return { action: "ambiguous", candidates: linked };
 };
+
+/**
+ * True when recording a collection here would ORPHAN an emit-linked expected
+ * payment — i.e. the decider would `settle` or `ambiguous` rather than `create`.
+ * Used by surfaces OTHER than QuickPaymentDialog (e.g. /payments/create) to WARN
+ * the user instead of silently creating a duplicate. Delegates entirely to
+ * `decideQuickPaymentTarget` (no second source of truth for the gates).
+ */
+export const wouldOrphanExpectedPayment = (
+  candidates: ExpectedPaymentCandidate[],
+  draft: { status: string; payment_type: string },
+): boolean => decideQuickPaymentTarget(candidates, draft).action !== "create";

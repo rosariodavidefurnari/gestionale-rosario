@@ -72,7 +72,14 @@ Branch corrente:
   sweep (`eeb342fb`), audit-fix FIX-1+2 (`700bc0be`). Lavorare in chat nuova:
   partire da QUI (questo blocco e' autosufficiente).
 
-Obiettivo operativo attivo: **NESSUNO** — FIX-3+4 e QW2 SHIPPED e LIVE.
+Obiettivo operativo attivo: **NESSUNO** — FIX-3+4, QW2 e FIX-3-gemello
+(/payments/create avviso anti-doppione, scope A) SHIPPED e LIVE.
+FIX-3-gemello: branch `fix/payment-create-orphan-hint`, frontend-only, card
+`ExpectedPaymentOrphanHint` (display-only, create-only, riusa
+`wouldOrphanExpectedPayment`); 3 review spec + 5 piano/trasversali + 3 impl
+(mutation-tested) PASS, code RAG :8001 + prose RAG :8002 anti-drift coerente,
+WF-17 desktop+mobile con dati demo + cleanup (WF-19, 0 leftover). Scope C (settle
+reale nel form) rimandato a quando l'emissione da app è in uso.
 QW2 (card "Da incassare" reale): branch `fix/da-incassare-card`, frontend-only,
 3 review PASS + 2 FLAG TDD chiuse (F1 controllore B2 falsificabile, F2 sottotitolo
 puro+test), WF-17 desktop+mobile, grounding prod read-only Σ=7.131,37. Prossimo:
@@ -320,6 +327,19 @@ Coda lavori residua (ordine consigliato): QW2 card "Da incassare" (375 vs
 6.412), QW3 mobile scadenzario+cassa, BR2 riconciliazione pagamenti/allocazioni,
 bollo (Ciclo 5). Per ognuno: spec -> review -> piano -> review multi-superficie +
 RAG -> esecuzione LOCALE prima del remoto.
+
+BR3 (BIG-ROCK FUTURO, DIFFERITO, rischiosissimo) — **DB AI-driven headless**:
+rendere il DB interrogabile da LLM esterni (connettore Supabase MCP di Claude
+Desktop, agenti futuri) in modo SICURO e SEMANTICAMENTE CORRETTO, indipendente
+dalla UI del CRM. Trigger: il connettore desktop su tabelle grezze ha risposto
+"chi mi deve soldi" = 375 (1 riga `payments`) mentre il credito reale e' 7.131,37
+(vista `client_commercial_position.balance_due`, verificato su prod). Candidati
+NON decisi: (A) ruolo Postgres read-only limitato alle viste canoniche
+(`client_commercial_position`, `project_financials`, `financial_documents_summary`,
+`analytics_*`) con grezzi negati via GRANT/RLS; (B) layer semantico MCP/Edge che
+ritorna risposte di dominio curate; (C) catalogo semantico sulle viste. Rischi:
+DB prod, RLS/grant, dati fiscali esfiltrabili, eventuali path di scrittura.
+Solo appuntato (2026-06-19) — spec+piano dedicati prima di toccare alcunche'.
 
 Follow-up aperti di "Emetti fattura" (documentati in development-continuity-map +
 backlog): Task 7b badge incasso in LIST desktop + card mobile (tocca infra
