@@ -190,7 +190,8 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
     {
       id: "quick_payment_dialog",
       label: "Registra pagamento rapido",
-      description: "Registra un pagamento dal progetto usando i financials del progetto.",
+      description:
+        "Registra un incasso dal progetto usando i financials. Se esiste un incasso atteso collegato alla fattura emessa (payment in_attesa con financial_document_id), lo SALDA in place (riconciliazione, niente doppione); su piu' fatture aperte chiede quale; altrimenti crea un nuovo pagamento.",
       sourceFile: "src/components/atomic-crm/projects/QuickPaymentDialog.tsx",
       entryPoints: ["/#/projects/:id/show"],
       actsOn: ["projects", "payments"],
@@ -540,7 +541,7 @@ export const buildCrmCapabilityRegistry = (): CrmCapabilityRegistry => ({
       id: "project_quick_payment",
       label: "Registra pagamento rapido dal progetto",
       description:
-        "Crea un pagamento leggendo il saldo operativo dal progetto e puo aprirsi da handoff guidato con tipo pagamento gia selezionato o con una bozza stretta che porta anche importo e stato derivati dai financials del progetto.",
+        "Registra un incasso leggendo il saldo operativo dal progetto; puo aprirsi da handoff guidato con tipo pagamento gia selezionato o con una bozza stretta (importo e stato derivati dai financials). Se la fattura emessa ha gia' un incasso atteso collegato lo SALDA (riconciliazione, no doppione), su piu' fatture aperte chiede quale, altrimenti crea un nuovo pagamento.",
       sourceFile: "src/components/atomic-crm/projects/QuickPaymentDialog.tsx",
       actsOn: ["projects", "payments"],
       requiredFields: ["project_id", "client_id", "amount", "payment_type"],
