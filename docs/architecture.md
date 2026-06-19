@@ -25,7 +25,11 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 > competenza (output stima) · versato-cassa (LM035, deduce l'imposta) · `total_inps`
 > in `fiscal_declarations` (totale ciclo riconciliato — dato reale, NON ricalcolare).
 > Vedi `docs/superpowers/specs/2026-06-19-fiscal-estimate-calibration-design.md` §14
-> e trigger DOM-8 in `.claude/rules/learning.md`.
+> e trigger DOM-8 in `.claude/rules/learning.md`. UI (browser-verificata WF-17):
+> `DashboardNetAvailabilityCard` ("Riserva tasse") usa la stima fiscale quando non
+> ci sono obbligazioni reali (call site `hasRealFiscalData` su DashboardAnnual +
+> MobileDashboard); `MobileFiscalKpis` ha la card "Tasse stimate" in parita' col
+> desktop (UI-7).
 
 Stato del documento:
 

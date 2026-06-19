@@ -45,7 +45,9 @@ vi.mock("ra-core", async (importOriginal) => {
   const actual = await importOriginal<typeof import("ra-core")>();
   return {
     ...actual,
-    useDataProvider: () => ({ getFiscalDeclaration: vi.fn() }),
+    useDataProvider: () => ({
+      getFiscalDeclaration: vi.fn().mockResolvedValue(null),
+    }),
     useTimeout: () => false,
   };
 });
@@ -183,5 +185,35 @@ describe("MobileDashboard QW3 parity (cash flow + deadline tracker)", () => {
     expect(
       screen.queryByTestId("mobile-deadline-tracker"),
     ).not.toBeInTheDocument();
+  });
+});
+
+// UI-7 controller: mobile must show the year's TAX breakdown (INPS + Imposta),
+// not only the monthly set-aside. Falsifiable: remove the "Tasse stimate" card
+// from MobileFiscalKpis -> these assertions fail.
+describe("MobileDashboard fiscal tax card (UI-7 parity with desktop)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows 'Tasse stimate' with INPS and Imposta on mobile", () => {
+    const model = makeModel({ isCurrentYear: true, selectedYear: 2026 });
+    (model as unknown as { fiscal: unknown }).fiscal = {
+      fiscalKpis: {
+        stimaInpsAnnuale: 1879,
+        stimaImpostaAnnuale: 233,
+        accantonamentoMensile: 176,
+        percentualeUtilizzoTetto: 20,
+        distanzaDalTetto: 60000,
+      },
+      schedule: { isFirstYear: false, deadlines: [] },
+    };
+    setData(model);
+
+    renderWithQueryClient(<MobileDashboard />);
+
+    expect(screen.getByText("Tasse stimate")).toBeInTheDocument();
+    expect(screen.getByText(/INPS/)).toBeInTheDocument();
+    expect(screen.getByText(/Imposta/)).toBeInTheDocument();
   });
 });

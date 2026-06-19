@@ -71,11 +71,12 @@ export const DashboardAnnual = () => {
   const { markAsPaid, clearPayment, getPayment } =
     useFiscalPaymentTracking(selectedYear);
 
-  const { deadlineViews, totalOpenObligations } = useFiscalReality({
-    estimatedDeadlines: data?.fiscal?.schedule.deadlines ?? [],
-    paymentYear: selectedYear,
-    todayIso: todayISODate(),
-  });
+  const { deadlineViews, totalOpenObligations, hasRealFiscalData } =
+    useFiscalReality({
+      estimatedDeadlines: data?.fiscal?.schedule.deadlines ?? [],
+      paymentYear: selectedYear,
+      todayIso: todayISODate(),
+    });
 
   // Dialog states
   const [f24Target, setF24Target] = useState<FiscalDeadlineView | null>(null);
@@ -120,7 +121,7 @@ export const DashboardAnnual = () => {
         year={data.selectedYear}
         fiscalKpis={data.fiscal?.fiscalKpis ?? null}
         totalOpenObligations={
-          deadlineViews != null ? totalOpenObligations : undefined
+          hasRealFiscalData ? totalOpenObligations : undefined
         }
         outstandingReceivables={outstandingReceivables}
       />

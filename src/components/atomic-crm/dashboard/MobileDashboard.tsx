@@ -8,6 +8,7 @@ import {
   PenLine,
   PiggyBank,
   Plus,
+  Receipt,
   Shield,
 } from "lucide-react";
 import { RefreshCw } from "lucide-react";
@@ -108,11 +109,12 @@ const MobileAnnualDashboard = () => {
   const showLoading = useTimeout(800);
   const dataProvider = useDataProvider<CrmDataProvider>();
 
-  const { deadlineViews, totalOpenObligations } = useFiscalReality({
-    estimatedDeadlines: data?.fiscal?.schedule.deadlines ?? [],
-    paymentYear: selectedYear,
-    todayIso: todayISODate(),
-  });
+  const { deadlineViews, totalOpenObligations, hasRealFiscalData } =
+    useFiscalReality({
+      estimatedDeadlines: data?.fiscal?.schedule.deadlines ?? [],
+      paymentYear: selectedYear,
+      todayIso: todayISODate(),
+    });
 
   // Fiscal dialog states
   const [showDichiarazione, setShowDichiarazione] = useState(false);
@@ -178,7 +180,7 @@ const MobileAnnualDashboard = () => {
         year={data.selectedYear}
         fiscalKpis={data.fiscal?.fiscalKpis ?? null}
         totalOpenObligations={
-          deadlineViews != null ? totalOpenObligations : undefined
+          hasRealFiscalData ? totalOpenObligations : undefined
         }
         outstandingReceivables={outstandingReceivables}
         compact
@@ -284,11 +286,31 @@ const MobileFiscalKpis = ({
 
   return (
     <div className="grid grid-cols-1 gap-3">
+      {/* Taxes total — parity with desktop DashboardFiscalKpis (UI-7): on mobile
+          the user must see the year's tax burden, not only the monthly set-aside. */}
+      <Card className="gap-2 py-3">
+        <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
+          <CardTitle className="text-sm font-medium">Tasse stimate</CardTitle>
+          <Receipt className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="px-4 space-y-1">
+          <div className="text-xl font-semibold text-red-700 dark:text-red-300 tabular-nums">
+            {formatCurrency(
+              fiscalKpis.stimaInpsAnnuale + fiscalKpis.stimaImpostaAnnuale,
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground tabular-nums">
+            INPS {formatCurrencyPrecise(fiscalKpis.stimaInpsAnnuale)} · Imposta{" "}
+            {formatCurrencyPrecise(fiscalKpis.stimaImpostaAnnuale)}
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Monthly set-aside */}
       <Card className="gap-2 py-3">
         <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
           <CardTitle className="text-sm font-medium">
-            Accantonamento mensile consigliato
+            Accantona al mese
           </CardTitle>
           <PiggyBank className="h-4 w-4 text-muted-foreground" />
         </CardHeader>

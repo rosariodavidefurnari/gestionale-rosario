@@ -6,7 +6,16 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-19 (Ciclo 2 fiscale checkpoint: formula forfettaria reale validata su dichiarazioni AdE + innesto builder client+EF, branch `feat/fiscal-formula-real`)
+Last updated: 2026-06-19 (Ciclo 2 fiscale: formula reale + 2° batch UI browser-verificato — card tasse mobile, fix Riserva-tasse NetAvailability — branch `feat/fiscal-formula-real`)
+
+## Update 2026-06-19 — Ciclo 2 fiscale: 2° batch UI (browser-verificato WF-17)
+
+impeccable audit -> card "Tasse stimate" su mobile (UI-7), copy uniformato, e fix
+frizione `DashboardNetAvailabilityCard`: "Riserva tasse" non si azzera piu' quando
+mancano obblighi reali (usa la stima fiscale; call site `hasRealFiscalData` su
+DashboardAnnual + MobileDashboard). Verificato live nel browser (glance, desktop,
+0 console errors): Riserva 0->742,97, "Ti restano" coerente con "Netto stimato".
+Controllori `DashboardNetAvailabilityCard.test` + `MobileDashboard.parity` (tax card).
 
 ## Update 2026-06-19 — Ciclo 2 fiscale: formula reale validata (checkpoint, branch `feat/fiscal-formula-real`)
 

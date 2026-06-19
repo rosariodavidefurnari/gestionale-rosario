@@ -6,11 +6,22 @@
 incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 `canonical`.
 
-Last updated: 2026-06-19 (Ciclo 2 fiscale checkpoint: formula reale validata + innesto builder, branch `feat/fiscal-formula-real`)
+Last updated: 2026-06-19 (Ciclo 2 fiscale: formula reale + batch UI browser-verificato, branch `feat/fiscal-formula-real`)
 
-## Update 2026-06-19 — Ciclo 2 fiscale: formula reale (IN CORSO, branch `feat/fiscal-formula-real`)
+## Update 2026-06-19 — Ciclo 2 fiscale: formula reale + UI (IN CORSO, branch `feat/fiscal-formula-real`)
 
-DONE (checkpoint committato): 3 helper puri (`fiscalFormula`, `inpsContributionsPaid`,
+DONE 2° batch (browser-verificato WF-17 desktop, glance, 0 console errors):
+impeccable audit delle card fiscali -> (1) card "Tasse stimate" aggiunta su mobile
+(`MobileFiscalKpis`, prima mostrava solo accantonamento/tetto, UI-7); (2) copy
+uniformato "Accantona al mese"; (3) **fix frizione `DashboardNetAvailabilityCard`**:
+"Riserva tasse" mostrava 0 (call site passava `0` invece di `undefined` quando
+nessun obbligo reale) contraddicendo "Netto stimato" -> ora usa la stima fiscale
+se non ci sono obblighi reali (`hasRealFiscalData ? totalOpenObligations : undefined`
+su DashboardAnnual + MobileDashboard, UI-7). Verificato live: Riserva 0->742,97,
+"Ti restano" 3200->2457 (coerente con Netto stimato). Controllori:
+`DashboardNetAvailabilityCard.test`, `MobileDashboard.parity` tax card. 671 unit verdi.
+
+DONE 1° batch (checkpoint committato): 3 helper puri (`fiscalFormula`, `inpsContributionsPaid`,
 `aliquotaGs`) validati sugli oracoli reali AdE (2023 429/2.249; 2024 233/1.879) +
 innesto in `buildFiscalYearEstimate` client+EF, parity verde, 668 unit, 0 regressioni.
 TODO (Fase 5-7): wiring F24→dashboard (single-source da `useFiscalReality`), card KPI
