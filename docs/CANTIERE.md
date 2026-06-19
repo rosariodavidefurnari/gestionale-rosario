@@ -290,12 +290,23 @@ cassa-fallback) + wiring F24→dashboard (single-source) + UI (card tasse mobile
 fix frizione `DashboardNetAvailabilityCard` Riserva-tasse 0→stima). Review impl
 multi-superficie + RAG (2 PASS + 1 FLAG chiuso col parity sui rami nuovi). 672 unit.
 
+**D3 SHIPPED 2026-06-19** (commit successivo a `e303ba08`): card anno-chiuso →
+numeri REALI definitivi + pill `Definitivo`/`Stima`, desktop+mobile. Helper puro
+`applyDefinitiveDeclaration` — INPS competenza = `total_inps − prior_advances_inps`
+(verificato prod: 2023→2249, 2024→1879; `total_inps` ciclo NON toccato, DOM-8),
+imposta = `total_substitute_tax` (2023→429, 2024→233); chiuso = totali>0 (2025-zero
+→ stima). Override SOLO in `buildFiscalModel` (client+UI), formula condivisa client/EF
+intatta (`fiscalParity.test.ts` verde). Controllori: helper test (oracoli),
+`DashboardFiscalKpis.test.tsx` (pill), E2E `fiscal-definitivo.smoke.spec.ts`
+(desktop+mobile reale + cleanup WF-19) + `fiscal-estimate.smoke.spec.ts` (formula INPS,
+650,71/92,26). Browser-verificato desktop (glance, pill verde DEFINITIVO 1879/233) +
+mobile (e2e viewport). 685 unit + 12 e2e verdi. **RAG rigenerati** (code :8001 clone
+fresco GitHub, prosa :8002 token-safe — entrambi validati).
+
 RIMANENTE per un prossimo ciclo (NON bloccante, documentato in backlog):
-**D3** card anno-chiuso → numeri REALI definitivi + label stima/definitivo (complesso:
-i 3 numeri INPS, `total_inps` ciclo ≠ competenza — NON rushato per non mostrare tasse
-sbagliate); attribuzione **data-fattura** (serve BR2, oggi 0/31 payment linkati);
-compensazioni F24 (`amount` negativo) senza test dedicato. **RAG da rigenerare**
-sullo snapshot `f2924e96` (code :8001 + prosa :8002).
+attribuzione **data-fattura** (serve BR2, oggi 0/31 payment linkati); D4 card
+"prossima scadenza tutto compreso"; D5 confronto stima↔reale in
+`DichiarazioneEntryDialog`; compensazioni F24 (`amount` negativo) senza test dedicato.
 
 RIMANENTE (Fase 5-7, todo tracciati): wiring F24→dashboard (derivare
 `contributiVersatiCassa` da `useFiscalReality`, single-source) · card UI (anno

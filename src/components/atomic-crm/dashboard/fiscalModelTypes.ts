@@ -43,6 +43,13 @@ export type FiscalKpis = {
   aliquotaSostitutiva: number;
   /** Number of months of data available (for reliability indicator). */
   monthsOfData: number;
+  /**
+   * D3 / INV-6: true quando i numeri fiscali sono il DEFINITIVO reale della
+   * dichiarazione del commercialista (anno chiuso), false quando sono la STIMA
+   * della formula (anno corrente / nessuna dichiarazione chiusa). Mai una stima
+   * spacciata per definitivo.
+   */
+  isDefinitive: boolean;
 };
 
 export type AtecoBreakdownPoint = {

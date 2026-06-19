@@ -176,6 +176,15 @@ dichiarazione 2025 (anno "puro") diventa la nuova piu' recente chiusa. Vedi R1.
 
 ### D3 — Anni con dichiarazione reale (passato): nessuna doppia verita'
 
+> STATO: IMPLEMENTATO 2026-06-19 (commit successivo a `e303ba08`). RETTIFICA su
+> §14.4: l'INPS dell'anno da mostrare e' la **competenza** = `total_inps −
+> prior_advances_inps` (= `inps_saldo`, NON il `total_inps` ciclo, che resta
+> intoccabile per DOM-8); l'imposta = `total_substitute_tax`. Oracoli prod:
+> 2023→2249/429, 2024→1879/233; 2025-zero→stima. Helper `applyDefinitiveDeclaration`,
+> override SOLO in `buildFiscalModel` (client+UI), formula condivisa client/EF
+> intatta. Pill `Definitivo`/`Stima` desktop+mobile. Controllori: helper test
+> (oracoli), `DashboardFiscalKpis.test.tsx`, E2E `fiscal-definitivo.smoke.spec.ts`.
+
 Per un anno `Y` che HA gia' la sua dichiarazione reale chiusa, le card KPI NON
 devono mostrare la stima: devono mostrare i **totali reali** della dichiarazione
 (`total_inps`, `total_substitute_tax`), coerenti con lo scadenzario gia'

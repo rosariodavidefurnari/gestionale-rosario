@@ -73,6 +73,9 @@ export type FiscalKpis = {
   percentualeUtilizzoTetto: number;
   aliquotaSostitutiva: number;
   monthsOfData: number;
+  // D3 (client-side display concern): l'EF produce sempre una STIMA. Il flag e'
+  // qui solo per parita' di shape con il client (INV-3); l'EF non rende card.
+  isDefinitive: boolean;
 };
 
 export type FiscalEstimateScheduleInput = {
@@ -468,6 +471,9 @@ export const buildFiscalYearEstimate = ({
       percentualeUtilizzoTetto: roundFiscalOutput(percentualeUtilizzoTetto),
       aliquotaSostitutiva: roundFiscalOutput(aliquotaSostitutiva),
       monthsOfData,
+      // STIMA per default (parita' di shape col client, INV-3). L'EF non rende
+      // le card KPI, quindi non promuove mai a definitivo.
+      isDefinitive: false,
     },
     warnings,
     scheduleInput: {

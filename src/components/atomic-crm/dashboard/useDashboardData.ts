@@ -84,6 +84,14 @@ export const useDashboardData = (year?: number) => {
     queryFn: () => dataProvider.getEnrichedPaymentLinesForYear(year as number),
     enabled: year != null,
   });
+  // D3: dichiarazione reale del commercialista per l'anno SELEZIONATO. Se chiusa
+  // (totali non-zero), le card KPI mostrano il definitivo invece della stima.
+  // queryKey coerente con gli altri consumer -> react-query dedup.
+  const fiscalDeclarationQuery = useQuery({
+    queryKey: ["fiscal-declaration", year],
+    queryFn: () => dataProvider.getFiscalDeclaration(year as number),
+    enabled: year != null,
+  });
   const contributiVersatiCassa = useMemo(() => {
     const obligations = fiscalObligationsQuery.data;
     const lines = fiscalPaymentLinesQuery.data;
@@ -146,12 +154,14 @@ export const useDashboardData = (year?: number) => {
       fiscalConfig,
       year,
       contributiVersatiCassa,
+      declaration: fiscalDeclarationQuery.data ?? null,
     });
   }, [
     clientsQuery.data,
     contributiVersatiCassa,
     expensesQuery.data,
     fiscalConfig,
+    fiscalDeclarationQuery.data,
     paymentsQuery.data,
     projectsQuery.data,
     quotesQuery.data,

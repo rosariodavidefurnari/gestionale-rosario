@@ -23,6 +23,7 @@ import type {
 import { sanitizeQuoteItems } from "../quotes/quoteItems";
 import { quoteStatusLabels } from "../quotes/quotesTypes";
 import { buildFiscalModel, getExpenseAmount } from "./fiscalModel";
+import type { FiscalDeclaration } from "./fiscalRealityTypes";
 import { getCategoryLabel } from "./dashboardFormatters";
 
 // Re-export types and formatters so existing consumer imports keep working.
@@ -141,6 +142,7 @@ export const buildDashboardModel = ({
   fiscalConfig,
   year,
   contributiVersatiCassa,
+  declaration,
 }: {
   payments: Payment[];
   quotes: Quote[];
@@ -151,6 +153,8 @@ export const buildDashboardModel = ({
   fiscalConfig?: FiscalConfig;
   year?: number;
   contributiVersatiCassa?: number;
+  /** D3: dichiarazione reale del commercialista per l'anno selezionato. */
+  declaration?: FiscalDeclaration | null;
 }): DashboardModel => {
   const todayIso = todayISODate();
   const nowYear = Number(todayIso.slice(0, 4));
@@ -617,6 +621,7 @@ export const buildDashboardModel = ({
         fiscalConfig,
         year: selectedYear,
         contributiVersatiCassa,
+        declaration,
       })
     : null;
 

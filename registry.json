@@ -1039,6 +1039,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/applyDefinitiveDeclaration.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/aliquotaGs.ts",
           "type": "registry:component"
         },

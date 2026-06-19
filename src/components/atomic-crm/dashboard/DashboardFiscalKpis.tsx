@@ -75,10 +75,19 @@ export const DashboardFiscalKpis = ({
 
       {/* ── Tasse: INPS | Imposta ── */}
       <Card className="gap-3 py-4">
-        <CardHeader className="px-4 pb-0">
+        <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
           <CardTitle className="text-base font-semibold">
-            Tasse stimate
+            {fiscalKpis.isDefinitive ? "Tasse" : "Tasse stimate"}
           </CardTitle>
+          <span
+            className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+              fiscalKpis.isDefinitive
+                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {fiscalKpis.isDefinitive ? "Definitivo" : "Stima"}
+          </span>
         </CardHeader>
         <CardContent className="px-4 space-y-2">
           <div className="text-2xl font-bold text-red-700 dark:text-red-300 tabular-nums">
@@ -114,9 +123,11 @@ export const DashboardFiscalKpis = ({
             {formatCurrencyPrecise(fiscalKpis.accantonamentoMensile)}
           </div>
           <p className="text-xs text-muted-foreground">
-            {isCurrentYear
-              ? "Da mettere da parte per tasse"
-              : "Media mensile teorica"}
+            {fiscalKpis.isDefinitive
+              ? "Su dichiarazione reale"
+              : isCurrentYear
+                ? "Da mettere da parte per tasse"
+                : "Media mensile teorica"}
           </p>
         </CardContent>
       </Card>

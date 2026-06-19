@@ -6,7 +6,32 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-19 (Ciclo 2 fiscale: formula reale + UI + wiring F24 + review impl multi-superficie, browser-verificato, branch `feat/fiscal-formula-real`)
+Last updated: 2026-06-19 (Ciclo 2 fiscale: D3 anno-chiuso definitivo + E2E formula INPS, browser-verificato desktop+mobile)
+
+## Update 2026-06-19 — D3: card anno-chiuso = DEFINITIVO reale (no doppia verita')
+
+Per un anno con dichiarazione reale CHIUSA (`total_substitute_tax + total_inps > 0`),
+le card KPI fiscali mostrano il DEFINITIVO del commercialista invece della stima,
+con pill onesta `Definitivo`/`Stima` (INV-6), desktop E mobile (UI-7).
+
+Derivazione (helper puro `applyDefinitiveDeclaration.ts`, verificata su dichiarazioni
+AdE reali, prod read-only):
+- INPS competenza dell'anno = `total_inps − prior_advances_inps` (= `inps_saldo`,
+  stessa derivazione di `buildObligationsFromDeclaration`). Oracoli: 2023→2249, 2024→1879.
+  `total_inps` (ciclo riconciliato, 3.667,40) NON viene mai toccato (DOM-8).
+- Imposta = `total_substitute_tax`. Oracoli: 2023→429, 2024→233.
+- 2025 ha totali ZERO intenzionali → NON chiusa → resta stima.
+
+Wiring (solo client + UI; formula condivisa client/EF intatta): `useDashboardData`
+fetcha `getFiscalDeclaration(anno)` (queryKey `["fiscal-declaration", year]`, dedup),
+`buildDashboardModel`→`buildFiscalModel` applica `applyDefinitiveDeclaration` su
+`estimate.fiscalKpis`. Nuovo flag `FiscalKpis.isDefinitive`. L'EF `_shared/fiscalDeadlineCalculation.ts`
+aggiunge `isDefinitive:false` solo per parita' di shape (INV-3, `fiscalParity.test.ts` verde).
+
+Controllori: `applyDefinitiveDeclaration.test.ts` (oracoli reali), `DashboardFiscalKpis.test.tsx`
+(pill desktop), `tests/e2e/fiscal-definitivo.smoke.spec.ts` (desktop+mobile reale, seed+cleanup
+WF-19), `tests/e2e/fiscal-estimate.smoke.spec.ts` (formula INPS stima). Full unit 685/685,
+parity verde, build+deno+typecheck+lint ok, browser desktop+mobile verificato.
 
 ## Update 2026-06-19 — Ciclo 2 fiscale: wiring F24 -> dashboard (browser-verificato)
 

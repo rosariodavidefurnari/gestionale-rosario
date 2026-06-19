@@ -38,6 +38,8 @@ import type {
 import { roundFiscalOutput } from "./roundFiscalOutput";
 import { computeForfettarioTax } from "./fiscalFormula";
 import { getAliquotaGs } from "./aliquotaGs";
+import { applyDefinitiveDeclaration } from "./applyDefinitiveDeclaration";
+import type { FiscalDeclaration } from "./fiscalRealityTypes";
 
 // Re-export types for backward compatibility
 export type {
@@ -362,6 +364,9 @@ export const buildFiscalYearEstimate = ({
       percentualeUtilizzoTetto: roundFiscalOutput(percentualeUtilizzoTetto),
       aliquotaSostitutiva: roundFiscalOutput(aliquotaSostitutiva),
       monthsOfData,
+      // STIMA per default; D3 lo promuove a definitivo nel buildFiscalModel
+      // quando esiste una dichiarazione reale chiusa per l'anno.
+      isDefinitive: false,
     },
     atecoBreakdown,
     warnings,
@@ -385,6 +390,7 @@ export const buildFiscalModel = ({
   fiscalConfig,
   year,
   contributiVersatiCassa,
+  declaration,
 }: {
   services: Service[];
   expenses: Expense[];
@@ -400,6 +406,12 @@ export const buildFiscalModel = ({
    * competenza (retro-compatibile).
    */
   contributiVersatiCassa?: number;
+  /**
+   * D3: dichiarazione reale del commercialista per l'anno selezionato. Se chiusa
+   * (totali non-zero), le card KPI mostrano il DEFINITIVO reale invece della
+   * stima. `total_inps` non viene mai toccato (DOM-8).
+   */
+  declaration?: FiscalDeclaration | null;
 }): FiscalModel => {
   const todayIso = todayISODate();
   const nowYear = Number(todayIso.slice(0, 4));
@@ -601,7 +613,9 @@ export const buildFiscalModel = ({
   );
 
   return {
-    fiscalKpis: estimate.fiscalKpis,
+    // D3: per un anno chiuso con dichiarazione reale, sostituisce la stima col
+    // definitivo del commercialista (INPS competenza + imposta), con label onesta.
+    fiscalKpis: applyDefinitiveDeclaration(estimate.fiscalKpis, declaration),
     atecoBreakdown: estimate.atecoBreakdown,
     schedule,
     deadlines,

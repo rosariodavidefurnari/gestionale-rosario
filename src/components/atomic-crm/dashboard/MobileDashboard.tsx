@@ -8,7 +8,6 @@ import {
   PenLine,
   PiggyBank,
   Plus,
-  Receipt,
   Shield,
 } from "lucide-react";
 import { RefreshCw } from "lucide-react";
@@ -290,8 +289,18 @@ const MobileFiscalKpis = ({
           the user must see the year's tax burden, not only the monthly set-aside. */}
       <Card className="gap-2 py-3">
         <CardHeader className="px-4 pb-0 flex flex-row items-center justify-between space-y-0 gap-2">
-          <CardTitle className="text-sm font-medium">Tasse stimate</CardTitle>
-          <Receipt className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">
+            {fiscalKpis.isDefinitive ? "Tasse" : "Tasse stimate"}
+          </CardTitle>
+          <span
+            className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+              fiscalKpis.isDefinitive
+                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {fiscalKpis.isDefinitive ? "Definitivo" : "Stima"}
+          </span>
         </CardHeader>
         <CardContent className="px-4 space-y-1">
           <div className="text-xl font-semibold text-red-700 dark:text-red-300 tabular-nums">

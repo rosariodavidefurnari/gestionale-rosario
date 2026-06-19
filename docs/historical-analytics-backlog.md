@@ -6,7 +6,23 @@
 incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 `canonical`.
 
-Last updated: 2026-06-19 (Ciclo 2 fiscale: formula reale + batch UI browser-verificato, branch `feat/fiscal-formula-real`)
+Last updated: 2026-06-19 (Ciclo 2 fiscale: D3 anno-chiuso definitivo SHIPPED + E2E formula INPS)
+
+## Update 2026-06-19 — D3 SHIPPED: card anno-chiuso = definitivo reale
+
+DONE — D3 (anno con dichiarazione reale chiusa mostra il DEFINITIVO del
+commercialista, non la stima, con pill `Definitivo`/`Stima`, desktop+mobile UI-7).
+Helper puro `applyDefinitiveDeclaration` (INPS competenza = `total_inps −
+prior_advances_inps`; imposta = `total_substitute_tax`; chiuso = totali > 0),
+verificato sugli oracoli AdE reali (2023→2249/429, 2024→1879/233; 2025-zero→stima).
+`total_inps` mai toccato (DOM-8). Solo client+UI: formula condivisa client/EF e
+`fiscalParity.test.ts` intatti. Controllori: helper test (oracoli), component pill
+test, E2E `fiscal-definitivo.smoke.spec.ts` (desktop+mobile reale + cleanup WF-19),
+E2E `fiscal-estimate.smoke.spec.ts` (formula INPS). Browser-verificato desktop+mobile.
+
+Resta aperto (next cycle, NON fatto): D4 card "prossima scadenza tutto compreso",
+D5 confronto stima↔reale in `DichiarazioneEntryDialog`, attribuzione data-fattura
+(dipende da BR2: 0/31 payment hanno `financial_document_id`).
 
 ## Update 2026-06-19 — Ciclo 2 fiscale: formula reale + UI (IN CORSO, branch `feat/fiscal-formula-real`)
 
