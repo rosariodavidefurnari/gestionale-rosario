@@ -6,7 +6,54 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-17 (invoice_void audit post-ship: FIX-1 cache invalidation + FIX-2 badge parity UI-7; prettier root-cause; invoice_void SHIPPED)
+Last updated: 2026-06-19 (FIX-3+4 riconciliazione incasso atteso: QuickPayment salda l'atteso collegato + invoice_emit assorbe l'atteso manuale; money-TDD, 4 review PASS, WF-17 desktop+mobile)
+
+---
+
+## Riconciliazione incasso atteso (FIX-3+4) — branch `fix/expected-payment-reconciliation`
+
+Chiude il doppio conteggio in `pendingPaymentsTotal` ("Da incassare",
+`dashboardModel.ts:299-305` = somma payments `status != 'ricevuto'` e
+`payment_type != 'rimborso'`) introdotto dall'incasso ATTESO che `invoice_emit`
+crea (`payments` `in_attesa` + `financial_document_id`). NON tocca la cassa
+fiscale (solo `ricevuto` entra). Riusa il match per `financial_document_id`
+(SYSTEM-FIRST, stesso principio di `decideEmittedPaymentReconciliation`).
+
+- **FIX-3 — Incasso rapido salda l'atteso collegato.**
+  `QuickPaymentDialog` carica i candidati (`useGetList` payments
+  `project_id@eq` + `status@eq in_attesa` + `financial_document_id@not.is`=null,
+  `enabled: open`) e con il decider puro
+  `projects/quickPaymentReconciliation.ts#decideQuickPaymentTarget` decide
+  `settle | create | ambiguous`:
+  - `settle` → `useUpdate` della riga (`status='ricevuto'`, `amount`,
+    `payment_date = paymentDate || todayISODate()` — MAI null/futuro, VP2/I1/DOM-1),
+    niente nuovo `create`;
+  - `ambiguous` (>1 atteso collegato) → picker "quale fattura" nel dialog;
+  - `create` → ramo storico invariato.
+  Gate `payment_type` (B1): salda SOLO `saldo/acconto/parziale`, mai `rimborso*`.
+  Consumer unico `ProjectShow` → parità mobile automatica (UI-7).
+- **FIX-4 — emit assorbe l'atteso manuale pre-esistente.**
+  `invoice_emit` (decider `_shared/invoiceEmit.ts#decideEmitExpectedPayment`),
+  PROJECT-LEVEL ONLY (B2), prima di inserire: `SELECT ... FOR UPDATE` dei
+  candidati `in_attesa` + FK NULL su `client_id`+`project_id`, e se match singolo
+  (amount±cent + tipo assorbibile) → `UPDATE ... SET financial_document_id, invoice_ref
+  WHERE financial_document_id IS NULL` + count-guard fail-closed (M1, 409 se 0);
+  >1 → `ambiguous` (crea); client-level → sempre `create`. Result EF/provider
+  espone `expectedPaymentAbsorbed?: boolean` (`paymentId` = riga assorbita, I2).
+- **Limite v1 noto (documentato, accettato):** `invoice_void` cancella i payments
+  `in_attesa` legati al doc per FK; quindi un atteso MANUALE assorbito da emit, se
+  poi la fattura viene annullata, viene CANCELLATO (non ripristinato). Nessuna
+  cassa persa (`ricevuto` blocca il void). Vedi spec non-obiettivi.
+- **Out-of-scope v1 (flussi gemelli orfani, I5):** `/payments/create`,
+  `client_create_payment`, `quote_create_payment` non riconciliano (stesso doppio
+  conteggio, follow-up). IMPORTANT-5 (AI capability registry) resta accodato.
+
+Controllori (money-TDD): decider puri `quickPaymentReconciliation.test.ts` +
+`_shared/invoiceEmit.test.ts`; RTL `QuickPaymentDialog.test.tsx` (assert
+`update` non `create`, picker ambiguo, cassa-year locked a clock congelato, WF-9);
+e2e contro EF reali `tests/e2e/invoice-void.smoke.spec.ts` (settle invariant
+delta + absorb = nessuna riga nuova). Verde: 632 unit, 7/7 e2e, tsc/lint/prettier,
+`deno check invoice_emit`. PROD: deploy EF `invoice_emit` (BE-1/BE-8) gated OK utente.
 
 ---
 

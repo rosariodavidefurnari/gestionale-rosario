@@ -133,6 +133,60 @@ export const buildFinancialDocumentInsert = (req: InvoiceEmitRequest) => ({
   currency_code: "EUR",
 });
 
+export type EmitPendingCandidate = {
+  id: string;
+  amount: number;
+  payment_type: string | null;
+  project_id: string | null;
+  financial_document_id: string | null;
+};
+
+export type EmitExpectedDecision =
+  | { action: "absorb"; paymentId: string }
+  | { action: "create" }
+  | { action: "ambiguous" };
+
+/**
+ * Absorbable payment types. MUST stay symmetric with FIX-3's
+ * `ABSORBABLE_PAYMENT_TYPES` in
+ * `src/components/atomic-crm/projects/quickPaymentReconciliation.ts` (different
+ * runtime, no shared import → kept in sync by convention, see B1). A `rimborso*`
+ * pending must NEVER be absorbed by an emitted `saldo` document.
+ */
+const ABSORBABLE_TYPES = new Set(["saldo", "acconto", "parziale"]);
+
+/**
+ * Absorb a pre-existing MANUAL in_attesa (financial_document_id NULL) instead of
+ * creating a second expected payment. Disciplined like the import decider: same
+ * amount (±cent) + absorbable type (never rimborso) + project scope.
+ *
+ * B2: FIX-4 v1 is PROJECT-LEVEL ONLY. A client-level emit (`source.kind ===
+ * "client"`) has no project scope, so absorbing would risk settling the wrong
+ * project's invoice → always `create` (client-level absorb is deferred to v2).
+ * Project-level with >1 match → `ambiguous` (do not absorb the wrong one → the
+ * caller creates a fresh expected payment).
+ */
+export const decideEmitExpectedPayment = (
+  candidates: EmitPendingCandidate[],
+  req: {
+    netCollectable: number;
+    source: { kind: InvoiceEmitSourceKind; id: string };
+  },
+): EmitExpectedDecision => {
+  if (req.source.kind !== "project") return { action: "create" };
+  const matches = candidates.filter(
+    (c) =>
+      c.financial_document_id == null &&
+      ABSORBABLE_TYPES.has(c.payment_type ?? "") &&
+      Math.abs(c.amount - req.netCollectable) <= CENT &&
+      c.project_id === req.source.id,
+  );
+  if (matches.length === 0) return { action: "create" };
+  if (matches.length === 1)
+    return { action: "absorb", paymentId: matches[0].id };
+  return { action: "ambiguous" };
+};
+
 export const buildExpectedPaymentInsert = (
   req: InvoiceEmitRequest,
   financialDocumentId: string,

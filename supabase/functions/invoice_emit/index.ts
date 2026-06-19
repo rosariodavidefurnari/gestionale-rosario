@@ -8,6 +8,7 @@ import { getUserSale } from "../_shared/getUserSale.ts";
 import {
   buildExpectedPaymentInsert,
   buildFinancialDocumentInsert,
+  decideEmitExpectedPayment,
   validateInvoiceEmitRequest,
 } from "../_shared/invoiceEmit.ts";
 import { createErrorResponse } from "../_shared/utils.ts";
@@ -68,11 +69,70 @@ const emitInvoice = async ({
         .returning(["id"])
         .executeTakeFirstOrThrow();
 
-      const insertedPayment = await trx
-        .insertInto("payments")
-        .values(buildExpectedPaymentInsert(request, insertedDocument.id))
-        .returning(["id"])
-        .executeTakeFirstOrThrow();
+      // FIX-4: absorb a pre-existing MANUAL expected payment (in_attesa,
+      // financial_document_id NULL) on this project instead of creating a second
+      // expected payment (double "Da incassare"). Project-level only (B2):
+      // client-level emits never absorb (no project scope → wrong-invoice risk).
+      // FOR UPDATE serializes the absorb against a concurrent settle/re-import.
+      let absorbedPaymentId: string | null = null;
+      if (request.source.kind === "project") {
+        const candidates = await trx
+          .selectFrom("payments")
+          .select([
+            "id",
+            "amount",
+            "payment_type",
+            "project_id",
+            "financial_document_id",
+          ])
+          .where("client_id", "=", request.clientId)
+          .where("project_id", "=", request.source.id)
+          .where("status", "=", "in_attesa")
+          .where("financial_document_id", "is", null)
+          .forUpdate()
+          .execute();
+
+        const decision = decideEmitExpectedPayment(
+          candidates.map((c) => ({
+            id: c.id,
+            amount: Number(c.amount),
+            payment_type: c.payment_type,
+            project_id: c.project_id,
+            financial_document_id: c.financial_document_id ?? null,
+          })),
+          { netCollectable: request.netCollectable, source: request.source },
+        );
+
+        if (decision.action === "absorb") {
+          // Idempotent guard: only link if still unlinked (a concurrent emit
+          // could have claimed it after the SELECT). Count mismatch -> rollback.
+          const absorbed = await trx
+            .updateTable("payments")
+            .set({
+              financial_document_id: insertedDocument.id,
+              invoice_ref: request.documentNumber,
+            })
+            .where("id", "=", decision.paymentId)
+            .where("financial_document_id", "is", null)
+            .returning(["id"])
+            .execute();
+          if (absorbed.length !== 1) {
+            throw new InvoiceEmitError(
+              409,
+              "Incasso atteso non piu' assorbibile: rigenera la bozza e riprova.",
+            );
+          }
+          absorbedPaymentId = absorbed[0].id;
+        }
+      }
+
+      const insertedPayment = absorbedPaymentId
+        ? null
+        : await trx
+            .insertInto("payments")
+            .values(buildExpectedPaymentInsert(request, insertedDocument.id))
+            .returning(["id"])
+            .executeTakeFirstOrThrow();
 
       // Mark the source records as invoiced. The guard (invoice_ref empty) makes
       // this idempotent and prevents stealing a record already invoiced
@@ -123,7 +183,8 @@ const emitInvoice = async ({
       return {
         status: "emitted" as const,
         financialDocumentId: insertedDocument.id,
-        paymentId: insertedPayment.id,
+        paymentId: absorbedPaymentId ?? insertedPayment!.id,
+        expectedPaymentAbsorbed: absorbedPaymentId != null,
         servicesMarked,
         expensesMarked,
       };

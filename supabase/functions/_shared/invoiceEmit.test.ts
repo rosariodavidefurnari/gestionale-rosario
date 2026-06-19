@@ -3,7 +3,9 @@ import { describe, it, expect } from "vitest";
 import {
   buildExpectedPaymentInsert,
   buildFinancialDocumentInsert,
+  decideEmitExpectedPayment,
   validateInvoiceEmitRequest,
+  type EmitPendingCandidate,
 } from "./invoiceEmit.ts";
 
 const validPayload = () => ({
@@ -107,5 +109,96 @@ describe("buildFinancialDocumentInsert / buildExpectedPaymentInsert", () => {
     });
     const payment = buildExpectedPaymentInsert(data!, "fd-2");
     expect(payment.project_id).toBeNull();
+  });
+});
+
+describe("decideEmitExpectedPayment (FIX-4 absorb)", () => {
+  const c = (
+    id: string,
+    o: Partial<EmitPendingCandidate> = {},
+  ): EmitPendingCandidate => ({
+    id,
+    amount: 1000,
+    payment_type: "saldo",
+    project_id: "prj-1",
+    financial_document_id: null,
+    ...o,
+  });
+
+  const projectReq = {
+    netCollectable: 1000,
+    source: { kind: "project" as const, id: "prj-1" },
+  };
+
+  it("absorbs a single matching manual pending (same amount, absorbable type, same project)", () => {
+    expect(decideEmitExpectedPayment([c("p1")], projectReq)).toEqual({
+      action: "absorb",
+      paymentId: "p1",
+    });
+  });
+
+  it("absorbs within the cent tolerance", () => {
+    expect(
+      decideEmitExpectedPayment([c("p1", { amount: 1000.004 })], projectReq),
+    ).toEqual({ action: "absorb", paymentId: "p1" });
+  });
+
+  it("creates when there is no candidate", () => {
+    expect(decideEmitExpectedPayment([], projectReq)).toEqual({
+      action: "create",
+    });
+  });
+
+  it("creates when the amount is outside the cent tolerance", () => {
+    expect(
+      decideEmitExpectedPayment([c("p1", { amount: 950 })], projectReq),
+    ).toEqual({ action: "create" });
+  });
+
+  it("creates when the candidate type is rimborso (never absorbable)", () => {
+    expect(
+      decideEmitExpectedPayment(
+        [c("p1", { payment_type: "rimborso_spese" })],
+        projectReq,
+      ),
+    ).toEqual({ action: "create" });
+    expect(
+      decideEmitExpectedPayment(
+        [c("p1", { payment_type: "rimborso" })],
+        projectReq,
+      ),
+    ).toEqual({ action: "create" });
+  });
+
+  it("creates when the candidate is already linked to a document", () => {
+    expect(
+      decideEmitExpectedPayment(
+        [c("p1", { financial_document_id: "fd-9" })],
+        projectReq,
+      ),
+    ).toEqual({ action: "create" });
+  });
+
+  it("creates when the candidate belongs to a different project", () => {
+    expect(
+      decideEmitExpectedPayment([c("p1", { project_id: "prj-2" })], projectReq),
+    ).toEqual({ action: "create" });
+  });
+
+  // B2: client-level emit is out of scope v1 → never absorb (would cross-project
+  // settle the wrong invoice; the seed has 4 saldo in_attesa on one client).
+  it("creates for a client-level source even with matching candidates (B2 out-of-scope v1)", () => {
+    expect(
+      decideEmitExpectedPayment([c("p1", { project_id: "prj-1" })], {
+        netCollectable: 1000,
+        source: { kind: "client", id: "client-1" },
+      }),
+    ).toEqual({ action: "create" });
+  });
+
+  it("is ambiguous (no guess) when >1 candidate matches on the same project", () => {
+    expect(decideEmitExpectedPayment([c("p1"), c("p2")], projectReq)).toEqual({
+      action: "ambiguous",
+    });
   });
 });

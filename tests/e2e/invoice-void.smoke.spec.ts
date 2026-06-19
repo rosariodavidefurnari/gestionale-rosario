@@ -309,6 +309,117 @@ test.describe("invoice_void (Annulla emissione) — money/fiscal controller", ()
     expect(kmExpenses[0].financial_document_id).toBeNull();
   });
 
+  test("settle reconciliation: collecting an emit-linked expected payment never duplicates it (FIX-3)", async ({
+    request,
+  }) => {
+    const { api, clientId, projectId, serviceIds } = await setup(request);
+    const serviceId = serviceIds[0];
+    await linkServiceToClient(api, serviceId, clientId);
+
+    const emitted = await api.emit(
+      emitPayload(clientId, projectId, "RECON-E2E-1", [serviceId]),
+    );
+    expect(emitted.status, JSON.stringify(emitted.body)).toBe(200);
+    const docId = emitted.body.data.financialDocumentId as string;
+
+    // emit created exactly ONE expected payment, in_attesa + linked to the doc
+    const expectedBefore = await api.rest(
+      "GET",
+      `payments?project_id=eq.${projectId}&select=id,status,amount,financial_document_id`,
+    );
+    const linkedBefore = expectedBefore.filter(
+      (p: any) => p.financial_document_id === docId,
+    );
+    expect(linkedBefore.length).toBe(1);
+    expect(linkedBefore[0].status).toBe("in_attesa");
+    // "Da incassare"-equivalent (sum of non-received) BEFORE settling, scoped to
+    // the project (the seed carries unrelated payments; we measure the DELTA).
+    const pendingBefore = expectedBefore
+      .filter((p: any) => p.status !== "ricevuto")
+      .reduce((s: number, p: any) => s + Number(p.amount ?? 0), 0);
+
+    // FIX-3 path: the quick payment SETTLES that row in place (status->ricevuto,
+    // real cash date) instead of inserting a second payment.
+    await api.rest("PATCH", `payments?id=eq.${linkedBefore[0].id}`, {
+      status: "ricevuto",
+      payment_date: "2026-06-18",
+    });
+
+    // INVARIANT: still exactly ONE row linked to the doc (settle = UPDATE, not a
+    // new INSERT), now received, none left pending.
+    const allAfter = await api.rest(
+      "GET",
+      `payments?project_id=eq.${projectId}&select=id,status,amount,financial_document_id`,
+    );
+    const linkedAfter = allAfter.filter(
+      (p: any) => p.financial_document_id === docId,
+    );
+    expect(linkedAfter.length).toBe(1);
+    expect(linkedAfter[0].status).toBe("ricevuto");
+
+    // "Da incassare" drops by EXACTLY the emitted amount: no double counting.
+    const pendingAfter = allAfter
+      .filter((p: any) => p.status !== "ricevuto")
+      .reduce((s: number, p: any) => s + Number(p.amount ?? 0), 0);
+    expect(pendingBefore - pendingAfter).toBe(1000);
+  });
+
+  test("absorb reconciliation: emit absorbs a pre-existing manual expected payment (FIX-4)", async ({
+    request,
+  }) => {
+    const { api, clientId, projectId, serviceIds } = await setup(request);
+    const serviceId = serviceIds[0];
+    await linkServiceToClient(api, serviceId, clientId);
+
+    // A manual expected payment already tracks the due amount for this project
+    // (real workflow): same amount + absorbable type + FK NULL.
+    const [manual] = await api.rest("POST", "payments", {
+      client_id: clientId,
+      project_id: projectId,
+      payment_date: "2026-06-17",
+      payment_type: "saldo",
+      amount: 1000,
+      status: "in_attesa",
+    });
+    expect(manual.id).toBeTruthy();
+    expect(manual.financial_document_id).toBeNull();
+
+    // Count ALL project payments before emit (the seed carries unrelated rows;
+    // we assert the absorb does NOT add a row → count delta must be 0).
+    const before = await api.rest(
+      "GET",
+      `payments?project_id=eq.${projectId}&select=id`,
+    );
+
+    const emitted = await api.emit(
+      emitPayload(clientId, projectId, "RECON-E2E-2", [serviceId]),
+    );
+    expect(emitted.status, JSON.stringify(emitted.body)).toBe(200);
+    const docId = emitted.body.data.financialDocumentId as string;
+
+    // emit ABSORBED the manual row instead of inserting a second one
+    expect(emitted.body.data.expectedPaymentAbsorbed).toBe(true);
+    expect(emitted.body.data.paymentId).toBe(manual.id);
+
+    // no new payment row was created (absorb = UPDATE of the manual row)
+    const after = await api.rest(
+      "GET",
+      `payments?project_id=eq.${projectId}&select=id`,
+    );
+    expect(after.length).toBe(before.length);
+
+    // exactly ONE expected payment linked to the doc, and it IS the manual row,
+    // still in_attesa and now stamped with the invoice number
+    const linked = await api.rest(
+      "GET",
+      `payments?financial_document_id=eq.${docId}&select=id,status,amount,invoice_ref`,
+    );
+    expect(linked.length).toBe(1);
+    expect(linked[0].id).toBe(manual.id);
+    expect(linked[0].status).toBe("in_attesa");
+    expect(linked[0].invoice_ref).toBe("RECON-E2E-2");
+  });
+
   test("refuse if allocations exist: 409 + nothing deleted (no silent CASCADE)", async ({
     request,
   }) => {
