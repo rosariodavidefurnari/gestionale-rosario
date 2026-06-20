@@ -23,6 +23,9 @@ export const INVOICE_COLUMNS: ColumnDef[] = [
   { key: "direction", label: "Direzione", exportKey: "direzione" },
   { key: "taxable", label: "Imponibile", exportKey: "imponibile" },
   { key: "stamp", label: "Bollo", exportKey: "bollo" },
+  // Collection state is derived live from linked payments (not a record field):
+  // intentionally NO exportKey, so the CSV export is unaffected.
+  { key: "collection", label: "Incasso" },
   { key: "total", label: "Totale", exportKey: "totale" },
 ];
 

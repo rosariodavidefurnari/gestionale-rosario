@@ -27,6 +27,7 @@ import type { FinancialDocumentSummary, Payment } from "../types";
 import { ErrorMessage } from "../misc/ErrorMessage";
 import { MobileBackButton } from "../misc/MobileBackButton";
 import {
+  COLLECTION_TONE_CLASS,
   deriveDocumentCollectionState,
   documentTypeLabel,
   directionLabel,
@@ -35,12 +36,6 @@ import {
 import { canVoidInvoiceFromPayments } from "./invoiceVoidRules";
 import { useVoidInvoice } from "./useVoidInvoice";
 import { invalidateVoidedInvoiceSurfaces } from "./voidInvoiceSurfaces";
-
-const COLLECTION_TONE_CLASS: Record<string, string> = {
-  pending: "text-amber-700 bg-amber-50 border-amber-200",
-  settled: "text-emerald-700 bg-emerald-50 border-emerald-200",
-  overdue: "text-red-700 bg-red-50 border-red-200",
-};
 
 /**
  * Collection-state badge derived from the payments LINKED to this document via

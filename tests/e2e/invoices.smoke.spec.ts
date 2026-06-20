@@ -49,6 +49,15 @@ test.describe("Module: Fatture (financial_documents_summary) — Smoke", () => {
     const orphanRow = tbody.locator("tr", { hasText: "FT 2/25" });
     await expect(orphanRow.getByText("Non associata")).toBeVisible();
 
+    // Task 7b) La colonna "Incasso" (stato derivato dai payments FK, non dalla
+    // colonna morta settlement_status) e' presente nella lista. I doc di test non
+    // hanno payment collegati -> stato neutro; qui basta provare che la colonna
+    // venga renderizzata nella app reale (il badge "Incassata"/parita' mobile e'
+    // coperto dal component test FinancialDocumentListContent.test.tsx).
+    await expect(
+      page.getByRole("columnheader", { name: "Incasso" }),
+    ).toBeVisible();
+
     // 2) Riepilogo (default, nessun filtro direzione -> netto emesse di TUTTI gli anni)
     const summary = page.getByTestId("invoice-summary");
     await expect(summary).toBeVisible();

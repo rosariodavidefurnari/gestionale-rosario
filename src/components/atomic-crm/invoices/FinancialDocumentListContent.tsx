@@ -1,4 +1,5 @@
-import { useListContext, useCreatePath } from "ra-core";
+import { useMemo } from "react";
+import { useListContext, useCreatePath, useGetList } from "ra-core";
 import { Link } from "react-router";
 import {
   Table,
@@ -13,15 +14,19 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { formatBusinessDate } from "@/lib/dateTimezone";
 import { cn } from "@/lib/utils";
 
-import type { FinancialDocumentSummary } from "../types";
+import type { FinancialDocumentSummary, Payment } from "../types";
 import { ErrorMessage } from "../misc/ErrorMessage";
 import { useColumnVisibility } from "@/hooks/useColumnVisibility";
 import { useResizableColumns } from "@/hooks/useResizableColumns";
 import { INVOICE_COLUMNS } from "../misc/columnDefinitions";
 import {
+  COLLECTION_TONE_CLASS,
+  deriveDocumentCollectionState,
   documentTypeLabel,
   directionLabel,
   formatEur,
+  groupPaymentsByDocument,
+  type DocumentCollectionState,
 } from "./financialDocumentHelpers";
 
 const RESOURCE = "financial_documents_summary";
@@ -52,6 +57,28 @@ const TypeBadge = ({
   type: FinancialDocumentSummary["document_type"];
 }) => <Badge variant="secondary">{documentTypeLabel(type)}</Badge>;
 
+/**
+ * Collection-state cell/badge for the Fatture list, derived from the payments
+ * LINKED to the document (not the dead `settlement_status`). Neutral docs (no
+ * linked payment: historical imports, credit notes, errors) render a muted "—"
+ * instead of a Badge — a list cell cannot be empty the way an inline Show badge
+ * can.
+ */
+const CollectionStateBadge = ({
+  state,
+}: {
+  state: DocumentCollectionState;
+}) => {
+  if (state.tone === "neutral") {
+    return <span className="text-muted-foreground">—</span>;
+  }
+  return (
+    <Badge variant="outline" className={cn(COLLECTION_TONE_CLASS[state.tone])}>
+      {state.label}
+    </Badge>
+  );
+};
+
 const TaxableValue = ({ doc }: { doc: FinancialDocumentSummary }) =>
   doc.taxable_amount != null ? (
     <>{formatEur(doc.taxable_amount, doc.currency_code)}</>
@@ -73,6 +100,28 @@ export const FinancialDocumentListContent = () => {
   const { cv } = useColumnVisibility(RESOURCE, INVOICE_COLUMNS);
   const { getWidth, onResizeStart, headerRef } = useResizableColumns(RESOURCE);
 
+  // Single page-agnostic payments fetch (NOT per-row N+1), mirroring the
+  // ClientListContent "Da saldare" pattern (whole-resource fetch + Map). The
+  // dataset is tiny (~32 payments); group by financial_document_id and derive
+  // each row's collection state from the linked payments. Uses the standard
+  // useGetList('payments', ...) query key so it is covered by the existing
+  // resource-level cache invalidation on void/settle. No server-side IS-NULL
+  // filter: this codebase has no working `@not.is` operator precedent, and the
+  // tiny dataset makes the over-fetch negligible (groupPaymentsByDocument drops
+  // the unlinked rows client-side).
+  const { data: payments } = useGetList<Payment>("payments", {
+    pagination: { page: 1, perPage: 1000 },
+    sort: { field: "payment_date", order: "DESC" },
+  });
+  const paymentsByDoc = useMemo(
+    () => groupPaymentsByDocument(payments ?? []),
+    [payments],
+  );
+  const collectionStateFor = (
+    doc: FinancialDocumentSummary,
+  ): DocumentCollectionState =>
+    deriveDocumentCollectionState(paymentsByDoc.get(String(doc.id)));
+
   if (error) return <ErrorMessage />;
   if (isPending || !data) return null;
 
@@ -83,6 +132,7 @@ export const FinancialDocumentListContent = () => {
           <FinancialDocumentMobileCard
             key={doc.id}
             doc={doc}
+            collectionState={collectionStateFor(doc)}
             link={createPath({ resource: RESOURCE, type: "show", id: doc.id })}
           />
         ))}
@@ -151,6 +201,14 @@ export const FinancialDocumentListContent = () => {
             Bollo
           </ResizableHead>
           <ResizableHead
+            colKey="collection"
+            width={getWidth("collection")}
+            onResizeStart={onResizeStart}
+            className={cv("collection")}
+          >
+            Incasso
+          </ResizableHead>
+          <ResizableHead
             colKey="total"
             width={getWidth("total")}
             onResizeStart={onResizeStart}
@@ -165,6 +223,7 @@ export const FinancialDocumentListContent = () => {
           <FinancialDocumentRow
             key={doc.id}
             doc={doc}
+            collectionState={collectionStateFor(doc)}
             link={createPath({ resource: RESOURCE, type: "show", id: doc.id })}
           />
         ))}
@@ -176,9 +235,11 @@ export const FinancialDocumentListContent = () => {
 /* ---- Mobile card ---- */
 const FinancialDocumentMobileCard = ({
   doc,
+  collectionState,
   link,
 }: {
   doc: FinancialDocumentSummary;
+  collectionState: DocumentCollectionState;
   link: string;
 }) => (
   <Link to={link} className="flex flex-col gap-1 px-1 py-3 active:bg-muted/50">
@@ -195,7 +256,12 @@ const FinancialDocumentMobileCard = ({
       {formatBusinessDate(doc.issue_date)}
     </span>
     <span className="text-base font-bold">{counterpartName(doc)}</span>
-    <div className="flex items-center justify-end">
+    <div className="flex items-center justify-between gap-2">
+      {collectionState.tone === "neutral" ? (
+        <span className="text-xs text-muted-foreground">Incasso —</span>
+      ) : (
+        <CollectionStateBadge state={collectionState} />
+      )}
       <span className="text-sm font-semibold tabular-nums">
         {formatEur(doc.total_amount, doc.currency_code)}
       </span>
@@ -206,9 +272,11 @@ const FinancialDocumentMobileCard = ({
 /* ---- Desktop row ---- */
 const FinancialDocumentRow = ({
   doc,
+  collectionState,
   link,
 }: {
   doc: FinancialDocumentSummary;
+  collectionState: DocumentCollectionState;
   link: string;
 }) => {
   const { cv } = useColumnVisibility(RESOURCE, INVOICE_COLUMNS);
@@ -247,6 +315,9 @@ const FinancialDocumentRow = ({
         )}
       >
         <StampValue doc={doc} />
+      </TableCell>
+      <TableCell className={cv("collection", "text-sm")}>
+        <CollectionStateBadge state={collectionState} />
       </TableCell>
       <TableCell
         className={cv("total", "text-right text-sm font-bold tabular-nums")}

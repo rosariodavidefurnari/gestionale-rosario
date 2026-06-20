@@ -73,12 +73,57 @@ Branch corrente:
   IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`, FIX-3+4 `7c7ec1c1`. Lavorare in chat
   nuova: partire da QUI (autosufficiente).
 
-Obiettivo operativo attivo: **Layer confronto Cassa vs Competenza data-fattura —
-SHIPPED e LIVE** (commit `d1210726`, CI `Check` success sul fork, Vercel prod alias
-HTTP 200). Card read-only di riconciliazione col commercialista (NO flip della base
-legale, scelta utente "Layer confronto"). 0 gate aperti. Vedi sessione
-2026-06-20-quinquies sotto. Prossimo lavoro: scegliere dalla coda (Fase 2, Scope C
-gated, minori).
+Obiettivo operativo attivo: **Task 7b — badge incasso lista Fatture: IMPLEMENTATO + review
+impl PASS, PRONTO PER COMMIT** (working tree, non committato — atteso via utente). Frontend-only,
+747 unit + e2e + browser WF-17 verdi. In coda: spec backfill 6 fatture no-doc (Bucket A pronto,
+B pending XML 2026). Vedi sessione 2026-06-20-sexies sotto. Ultimo SHIPPED: Layer confronto Cassa
+vs Competenza (`d1210726`, CI verde, Vercel 200).
+
+### Sessione 2026-06-20-sexies (IN CORSO, pre-commit, 0 codice applicato) — fix-minori → pivot
+
+Partita da "fix fiscali minori" (AQUACHETA +25%, bollo €2). Esito misura prod deterministica:
+
+- **RAG :8001 RIGENERATO** sullo snapshot working `fde4d2a7` (clone canonico
+  `rosariodavidefurnari_gestionale-rosario`, code-only, 0 errori embed, grounded sul codice
+  nuovo). Vedi sezione RAG sotto per repo_url aggiornato. TODO owed chiuso.
+- **AQUACHETA +25% e bollo €2 = NON-bug** (verificato prod): il +25% (465 vs 372, 312,50 vs 250)
+  è cash reale Aruba ImportoPagamento (fonte-verità local-truth-rebuild), contenuto del tutto
+  (balance_due AQUACHETA = 0). Il bollo €2 è separato dal total, fuori base forfettaria, non
+  incassato dal cliente per scelta storica. Correggere = sbagliato (DOM-1/DOM-2). Report-only
+  già deciso in BR2. Nessun fix.
+- **Mistero Aidone risolto**: FPA 1/25 (fattura errata) → FPA 2/25 (nota di credito che la
+  storna) → FPA 3/25 (rifatta, pagata €200). Le 2 "no-payment" sono CORRETTE → nessun backfill.
+- **Falso allarme settlement (verify-before-fix)**: `financial_documents_summary.settlement_status`
+  mostra tutte 28 fatture `overdue` perché legge `financial_document_cash_allocations` (vuota).
+  MA quella colonna è **morta-per-design**: nessuna superficie la consuma (Show/lista/AI/e2e
+  derivano lo stato dai `payments` FK). NON è un bug. Quasi scritta una spec per un non-problema.
+- **2 spec draft prodotte** (0 review ancora, gate spec→codice utente):
+  - `2026-06-20-missing-invoices-backfill-design.md` — backfill 6 fatture no-doc:
+    Bucket A 3 storiche LAURUS (XML in repo, pronte: FPR 1/23, 6/23, 1/24, stesso-anno no
+    shift cassa) + Bucket B 3 del 2026 (GUSTARE 1/26, 2/26 parziale, LAURUS 3/26, PENDING XML
+    Aruba che l'utente fornisce in `Fatture/2026/`) + Bucket C Aidone non-issue. Σ no-doc 12.063,31.
+  - `2026-06-20-fatture-list-collection-badge-design.md` — **Task 7b** badge incasso nella
+    LISTA Fatture desktop+mobile (oggi solo lo Show ce l'ha), frontend-only via `getList` payments
+    page-sized + helper `deriveDocumentCollectionState` riusato. NON tocca la colonna morta.
+
+**Task 7b ESEGUITO (impl + verifica + 2 review, pre-commit):** badge stato incasso nella LISTA
+Fatture (desktop tabella + card mobile), derivato dai `payments` FK col `deriveDocumentCollectionState`
+già testato (NON dalla colonna morta `settlement_status`). Frontend-only: helper
+`groupPaymentsByDocument` + `COLLECTION_TONE_CLASS` esportati, `useGetList('payments', perPage 1000)`
+full-view + Map (pattern ClientList, NON `@in` malformato), `collectionState` in Row E MobileCard
+(UI-7), colonna `collection` senza exportKey, neutro "—".
+- Review spec v2 (4 revisori, gate v1 BLOCK→chiuso: `@in`→full-view Map, §2 corretto su
+  `SupplierFinancialSection`, export, cella neutra, prop threading) + review impl (3 revisori, gate
+  **PASS**, 0 BLOCK), ognuna RAG :8001 + sorgente.
+- Verifica: typecheck/lint/prettier/build 0, **747 unit** (+11), e2e `invoices.smoke` (colonna +
+  anti-leak verde), **browser WF-17** desktop+mobile (Incassata reale FT 1/25, 0 console errors).
+- Residuo accettato 0-esposizione: prefs-merge `useColumnVisibility` non implementato (prod non ha
+  prefs colonne Fatture salvate → colonna default-visibile; caveat #19 se l'utente salva prefs).
+- Bug latente documentato (spec §12): `SupplierFinancialSection` consuma campi morti ma 0 doc inbound.
+- Dettaglio: `docs/development-continuity-map.md` Update 2026-06-21.
+
+**Prossima azione:** commit Task 7b (codice + docs + spec, UNICO commit WF-6) — atteso via utente.
+Poi coda: backfill 6 fatture no-doc (Bucket A pronto / B pending XML 2026), Fase 2, Scope C (gated).
 
 ### Sessione 2026-06-20-quinquies (IMPL VERIFICATA, pre-commit) — Layer confronto Cassa vs Competenza data-fattura
 
@@ -723,26 +768,28 @@ Artefatti storici (cicli chiusi):
 
 ## RAG / DeepWiki
 
-Stato DeepWiki:
+Stato DeepWiki (rigenerato 2026-06-20 sessione fix-minori):
 
 - API locale attiva su `http://localhost:8001`
 - indice operativo corrente:
-  `/root/.adalflow/databases/gestionale-rosario-current-20260614.pkl`
-- repo_url da usare nelle query RAG:
-  `/root/.adalflow/repos/gestionale-rosario-current-20260614`
+  `/root/.adalflow/databases/rosariodavidefurnari_gestionale-rosario.pkl`
+  (96MB, 2026-06-20 18:53)
+- repo_url da usare nelle query RAG (path CONTAINER, type `local`):
+  `/root/.adalflow/repos/rosariodavidefurnari_gestionale-rosario`
 - snapshot indicizzato:
-  `39b3e463c8c4206b6bd334ef47018a7223e5ced6`
+  `fde4d2a7802fc888f09b1101faed90b1c81b4daa` (allineato a working HEAD;
+  include BR2 backfill, cash-vs-competence card/helper, gate selected-year)
 - corpus code-only creato da `included_dirs = src, supabase, scripts, tests`
   con `model: "gemini-2.5-pro"`.
-- validazione indice:
-  - 665 file sorgente letti;
-  - 2863 chunk/documenti caricati per retrieval;
-  - embeddings: 2863 non-empty, 0 empty, dimensione 3072;
-  - un 429 Google durante l'ultimo batch e' stato recuperato dal backoff;
-  - nessun `Giving up`, `embedding size mismatch` o `Filtered out` nei log di
-    validazione.
-- nota: sono entrati anche 2 file sotto `doc/` per match di path component
-  (`doc/src`), ma non `docs/`, planning notes o Cantiere.
+- validazione indice (post re-embed):
+  - top-dir corpus: `src 621, supabase 84, tests 31, scripts 4` (+ `doc 2`
+    per match path-component `doc/src`, innocuo; nessun `docs/`/`.planning`/`.claude`);
+  - log embed: 0 `429`/`embedding size mismatch`, 0 `Giving up`, 0 `Filtered out`;
+  - query di validazione grounded sul codice NUOVO
+    (`cashVsCompetenceReconciliation.ts`, esiste solo da `d1210726`).
+- nota: il vecchio indice `gestionale-rosario-current-20260614.pkl` (snapshot
+  `39b3e463`) resta su disco ma e' SUPERATO; usare il clone canonico
+  `rosariodavidefurnari_gestionale-rosario` (origin = GitHub fork).
 - conclusione: RAG operativo sullo snapshot corrente; resta supporto, non fonte
   di verita'. Ogni file o claim suggerito dal RAG va verificato sul sorgente
   reale prima di implementare, concludere review o dichiarare "fatto".

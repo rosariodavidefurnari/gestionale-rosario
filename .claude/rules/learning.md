@@ -47,6 +47,7 @@
 | **UI**       | UI-8  | Nuova superficie AI → card unificata      |
 | **UI**       | UI-9  | Estimator/helper form → mai auto-scrivere campi business |
 | **UI**       | UI-10 | Card "quanto mi devono" → vista canonica balance_due, non payment rows |
+| **UI**       | UI-11 | Colonna per-riga da risorsa sorella → full-view Map, MAI `@in` array |
 | **Backend**  | BE-5  | EF env vars → stop+start NON restart      |
 | **Backend**  | BE-6  | Reload remoto → TRUNCATE prima load       |
 | **Workflow** | WF-7  | Dopo push → controlla CI autonomo         |
@@ -192,6 +193,30 @@ lavoro -> il lavoro consegnato-non-incassato era INVISIBILE. La vista
 `client_commercial_position` cattura anche il residuo no-project. Vale anche per
 qualunque card "owed/receivable": la fonte e' il modello di dominio, non le righe
 transazionali parziali (cugino di DOM-4: stato semantico != conteggio righe).
+
+### UI-11: colonna/badge per-riga derivato da una risorsa SORELLA -> full-view useGetList + Map, MAI `@in` array
+
+**Quando**: aggiungo a una lista una colonna/badge il cui valore deriva, per ogni
+riga, da un'altra risorsa (es. stato incasso da `payments` per ogni
+`financial_documents_summary`; balance da `client_commercial_position` per ogni
+client)
+**Fare**: UN solo `useGetList('<sorella>', { pagination:{ perPage: 1000 } })` nel
+componente parent + raggruppa in una `Map` per la FK, poi passa il valore derivato
+come prop in TUTTE le rese (Row desktop E card mobile, UI-7). MAI
+`useGetList(..., { filter: { 'fk@in': [ids] } })` con un array grezzo:
+ra-data-postgrest `parseFilters` lo serializza in `in.id1,id2` SENZA parentesi ->
+query PostgREST invalida (l'unico `@in` funzionante nel repo passa una STRINGA
+pre-formattata `"(a,b)"`, vedi `FinancialDocumentListFilter`). Niente `@not.is` per
+scartare i null: non c'e' precedente funzionante (la convenzione IS-NULL e' il
+resolver suffisso `n`); fetcha tutto e scarta i null nel builder puro. Riusa
+l'helper di derivazione gia' testato (no seconda verita'), `useMemo` sul Map; il
+queryKey `['<sorella>','getList',...]` e' coperto dalla invalidation resource-level
+esistente (WF-18).
+**Perche'**: il 2026-06-21 (Task 7b badge incasso lista Fatture) la spec v1
+proponeva `financial_document_id@in: [array]`; la review multi-superficie ha
+intercettato che e' malformato in ra-data-postgrest. Il pattern canonico gia' nel
+repo e' `ClientListContent` "Da saldare" (full-view + Map). Stesso spirito di UI-7
+(parita') + SYSTEM-FIRST (riuso helper, no seconda verita').
 
 ---
 

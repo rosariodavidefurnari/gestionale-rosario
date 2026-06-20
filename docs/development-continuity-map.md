@@ -3928,3 +3928,51 @@ linkedCount>=25, `BR2b` uniqueness 0).
 bollo €2 + anomalia AQUACHETA +25% report-only; void-hardening `source_path` = follow-up.
 
 **Doc collegati:** spec/piano `docs/superpowers/specs|plans/2026-06-20-br2-payments-financial-documents-reconciliation*`.
+
+## Update 2026-06-21 — Task 7b: badge stato incasso nella LISTA Fatture (desktop + mobile)
+
+**Cosa:** la lista Fatture (`FinancialDocumentListContent`, tabella desktop + card mobile)
+mostra ora una colonna/badge **"Incasso"** (Incassata / Parziale / Da incassare / Scaduta / —)
+derivato dai `payments` collegati via `financial_document_id`, NON dalla colonna morta
+`settlement_status`. Prima il badge esisteva solo nello Show (BR2/INV-6); ora anche in lista
+(chiude il follow-up "Task 7b" citato sopra).
+
+**Come (frontend-only, 0 migration/EF/view, AI anti-leak intatto):**
+- helper puri esportati in `financialDocumentHelpers.ts`: `COLLECTION_TONE_CLASS` (mappa
+  tone→classe, ora condivisa con lo Show che ha rimosso la copia locale) e
+  `groupPaymentsByDocument` (Map `financial_document_id → Payment[]`, skip non-linkati).
+- `FinancialDocumentListContent`: UN solo `useGetList('payments', perPage 1000)` (pattern
+  full-view + Map come `ClientListContent` "Da saldare", **NON `@in`** — array grezzo malformato
+  in ra-data-postgrest, nessun precedente `@not.is` nel repo), `collectionState` threadato in
+  ENTRAMBE le rese `FinancialDocumentRow` + `FinancialDocumentMobileCard` (UI-7); neutro = "—"
+  muted (non un badge vuoto). `useMemo` sul Map; key invalidation `['payments']` esistente
+  (void/settle) aggiorna il badge (WF-18).
+- `INVOICE_COLUMNS`: chiave `collection` SENZA `exportKey` → export CSV invariato.
+
+**Prefs colonne (residuo accettato, 0 esposizione prod):** NON è stato implementato il merge in
+`useColumnVisibility` (`visibleKeys = savedColumns ?? allKeys`, override non merge). Prod NON ha
+una riga `list_columns:financial_documents_summary` salvata → `getColumnPreferences` ritorna null
+→ fallback `allKeys` (include `collection`) → la colonna appare di default oggi. Caveat (come #19
+"Da saldare"): se l'utente salva prefs colonne Fatture, deve riattivare "Incasso" una volta dal
+toggle colonne. Il merge zero-azione resta follow-up opzionale.
+
+**Controllori:** `financialDocumentHelpers.test.ts` (`groupPaymentsByDocument` skip-null /
+multi-payment / precedenze stato), `FinancialDocumentListContent.test.tsx` (parità desktop+mobile
+falsificabile, neutro "—", loading), `columnDefinitions.test.ts` (`collection` senza exportKey →
+`filterExportRow` non lo esporta), `invoices.smoke.spec.ts` (colonna "Incasso" reale + anti-leak
+Show resta verde). Verifica: typecheck/lint/build, **747 unit**, e2e, browser WF-17 desktop+mobile
+(Incassata reale su FT 1/25, 0 console errors).
+
+**Review:** spec v2 (4 revisori, gate v1 BLOCK→chiuso) + impl (3 revisori, gate **PASS**), ognuna
+RAG :8001 + sorgente reale.
+
+**Finding emerso (FUORI scope, latente):** `SupplierFinancialSection` consuma i campi morti
+`settlement_status/settled_amount/open_amount` (mostrerebbe Pagato €0 / Da pagare pieno), ma ha
+**0 esposizione prod** (0 doc `inbound`/supplier, `cash_movements` vuota, `payments` senza
+supplier). Da guardare solo se in futuro entrano fatture fornitore. Documentato, non schedulato
+(spec §12).
+
+**Doc collegati:** spec `docs/superpowers/specs/2026-06-20-fatture-list-collection-badge-design.md`
+(v2). Spec gemella in coda: backfill 6 fatture no-doc
+`docs/superpowers/specs/2026-06-20-missing-invoices-backfill-design.md` (Bucket A pronto, B pending
+XML 2026).

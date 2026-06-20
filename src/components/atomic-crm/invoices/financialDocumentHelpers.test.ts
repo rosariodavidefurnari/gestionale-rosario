@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   deriveDocumentCollectionState,
+  groupPaymentsByDocument,
   isCreditNote,
   signedTotal,
   documentTypeLabel,
@@ -49,6 +50,79 @@ describe("deriveDocumentCollectionState", () => {
         { status: "in_attesa" },
       ]),
     ).toEqual({ label: "Parziale", tone: "pending" });
+  });
+
+  it("scaduto wins over the final 'Da incassare' fallback (in_attesa + scaduto)", () => {
+    // Precedence: not-all-received, none received -> scaduto checked before
+    // the Da incassare fallback -> Scaduta.
+    expect(
+      deriveDocumentCollectionState([
+        { status: "in_attesa" },
+        { status: "scaduto" },
+      ]).label,
+    ).toBe("Scaduta");
+  });
+
+  it("'Parziale' wins when one received + one overdue (received checked before overdue)", () => {
+    // some(ricevuto) is evaluated before some(scaduto): a doc with one received
+    // and one overdue payment is 'Parziale', not 'Scaduta'.
+    expect(
+      deriveDocumentCollectionState([
+        { status: "ricevuto" },
+        { status: "scaduto" },
+      ]).label,
+    ).toBe("Parziale");
+  });
+});
+
+describe("groupPaymentsByDocument", () => {
+  type P = {
+    id: string;
+    status: string;
+    financial_document_id?: string | null;
+  };
+
+  it("groups payments by financial_document_id", () => {
+    const payments: P[] = [
+      { id: "p1", status: "ricevuto", financial_document_id: "doc-a" },
+      { id: "p2", status: "in_attesa", financial_document_id: "doc-a" },
+      { id: "p3", status: "ricevuto", financial_document_id: "doc-b" },
+    ];
+    const map = groupPaymentsByDocument(payments);
+    expect(map.get("doc-a")).toHaveLength(2);
+    expect(map.get("doc-b")).toHaveLength(1);
+    expect(map.size).toBe(2);
+  });
+
+  it("skips unlinked payments (null/undefined financial_document_id)", () => {
+    const payments: P[] = [
+      { id: "p1", status: "ricevuto", financial_document_id: null },
+      { id: "p2", status: "ricevuto" },
+      { id: "p3", status: "ricevuto", financial_document_id: "doc-a" },
+    ];
+    const map = groupPaymentsByDocument(payments);
+    expect(map.size).toBe(1);
+    expect(map.get("doc-a")).toHaveLength(1);
+  });
+
+  it("a doc with no linked payment is absent -> deriveDocumentCollectionState gives neutral", () => {
+    const map = groupPaymentsByDocument<P>([]);
+    expect(map.get("doc-x")).toBeUndefined();
+    expect(deriveDocumentCollectionState(map.get("doc-x")).tone).toBe(
+      "neutral",
+    );
+  });
+
+  it("coerces non-string ids via String() for stable keying", () => {
+    const payments = [
+      {
+        id: "p1",
+        status: "ricevuto",
+        financial_document_id: 42 as unknown as string,
+      },
+    ];
+    const map = groupPaymentsByDocument(payments);
+    expect(map.get("42")).toHaveLength(1);
   });
 });
 

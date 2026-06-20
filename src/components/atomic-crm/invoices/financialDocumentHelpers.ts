@@ -160,6 +160,40 @@ export function deriveDocumentCollectionState(
   return { label: "Da incassare", tone: "pending" };
 }
 
+/**
+ * Tailwind classes for a collection-state badge, keyed by tone. Shared between
+ * the document Show (inline badge) and the Fatture list column. The `neutral`
+ * tone has NO badge style on purpose: surfaces render it as a muted "—" instead
+ * of a Badge (a list cell cannot be empty the way an inline Show badge can).
+ */
+export const COLLECTION_TONE_CLASS: Record<
+  Exclude<DocumentCollectionState["tone"], "neutral">,
+  string
+> = {
+  pending: "text-amber-700 bg-amber-50 border-amber-200",
+  settled: "text-emerald-700 bg-emerald-50 border-emerald-200",
+  overdue: "text-red-700 bg-red-50 border-red-200",
+};
+
+/**
+ * Groups payments by their linked `financial_document_id` (skipping unlinked
+ * rows). Lets the Fatture list derive a per-row collection state from ONE
+ * page-agnostic payments fetch instead of an N+1 per-document query.
+ */
+export function groupPaymentsByDocument<
+  T extends { financial_document_id?: string | null },
+>(payments: T[]): Map<string, T[]> {
+  const map = new Map<string, T[]>();
+  for (const p of payments) {
+    if (!p.financial_document_id) continue;
+    const key = String(p.financial_document_id);
+    const existing = map.get(key);
+    if (existing) existing.push(p);
+    else map.set(key, [p]);
+  }
+  return map;
+}
+
 // ---------------------------------------------------------------------------
 // Aggregation
 // ---------------------------------------------------------------------------
