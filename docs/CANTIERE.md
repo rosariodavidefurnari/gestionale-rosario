@@ -73,11 +73,11 @@ Branch corrente:
   IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`, FIX-3+4 `7c7ec1c1`. Lavorare in chat
   nuova: partire da QUI (autosufficiente).
 
-Obiettivo operativo attivo: **Task 7b — badge incasso lista Fatture: IMPLEMENTATO + review
-impl PASS, PRONTO PER COMMIT** (working tree, non committato — atteso via utente). Frontend-only,
-747 unit + e2e + browser WF-17 verdi. In coda: spec backfill 6 fatture no-doc (Bucket A pronto,
-B pending XML 2026). Vedi sessione 2026-06-20-sexies sotto. Ultimo SHIPPED: Layer confronto Cassa
-vs Competenza (`d1210726`, CI verde, Vercel 200).
+Obiettivo operativo attivo: **Task 7b — badge incasso lista Fatture: SHIPPED & LIVE**
+(`f7fade2f`, CI `Check` success sul fork, Vercel prod alias HTTP 200). Frontend-only, 747 unit +
+e2e + browser WF-17 verdi, review spec v2 (BLOCK→chiuso) + impl (PASS). 0 gate aperti. In coda:
+spec backfill 6 fatture no-doc (Bucket A pronto, B pending XML 2026), Fase 2, Scope C (gated).
+Vedi sessione 2026-06-20-sexies sotto.
 
 ### Sessione 2026-06-20-sexies (IN CORSO, pre-commit, 0 codice applicato) — fix-minori → pivot
 
@@ -122,8 +122,10 @@ full-view + Map (pattern ClientList, NON `@in` malformato), `collectionState` in
 - Bug latente documentato (spec §12): `SupplierFinancialSection` consuma campi morti ma 0 doc inbound.
 - Dettaglio: `docs/development-continuity-map.md` Update 2026-06-21.
 
-**Prossima azione:** commit Task 7b (codice + docs + spec, UNICO commit WF-6) — atteso via utente.
-Poi coda: backfill 6 fatture no-doc (Bucket A pronto / B pending XML 2026), Fase 2, Scope C (gated).
+**SHIPPED:** commit `f7fade2f` (codice + docs + spec, UNICO WF-6), push `origin`, CI `Check`
+success sul fork, Vercel prod alias HTTP 200. **Prossima azione:** scegliere dalla coda — backfill
+6 fatture no-doc (Bucket A pronto / B pending XML 2026 da consegnare in `Fatture/2026/`), Fase 2,
+Scope C (gated).
 
 ### Sessione 2026-06-20-quinquies (IMPL VERIFICATA, pre-commit) — Layer confronto Cassa vs Competenza data-fattura
 
