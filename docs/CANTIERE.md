@@ -74,9 +74,11 @@ Branch corrente:
   nuova: partire da QUI (autosufficiente).
 
 Obiettivo operativo attivo: **Layer confronto Cassa vs Competenza data-fattura —
-IMPLEMENTATO e VERIFICATO in locale, in attesa del gate commit/push (su `main` =
-deploy prod Vercel)**. Card read-only di riconciliazione col commercialista (NO flip
-della base legale, scelta utente "Layer confronto"). Vedi sessione 2026-06-20-quinquies sotto.
+SHIPPED e LIVE** (commit `d1210726`, CI `Check` success sul fork, Vercel prod alias
+HTTP 200). Card read-only di riconciliazione col commercialista (NO flip della base
+legale, scelta utente "Layer confronto"). 0 gate aperti. Vedi sessione
+2026-06-20-quinquies sotto. Prossimo lavoro: scegliere dalla coda (Fase 2, Scope C
+gated, minori).
 
 ### Sessione 2026-06-20-quinquies (IMPL VERIFICATA, pre-commit) — Layer confronto Cassa vs Competenza data-fattura
 
@@ -108,9 +110,9 @@ commercialista (competenza per `issue_date` via FK BR2). Coerente col FLIP in
   "DEMO-CVC incassata 2026 emessa 2025", footer "Cassa = per legge"), **0 console errors**.
   Mobile-browser non eseguito (MCP chromium-1223 assente, glance no-resize) → coperto dal
   parity test (componente reale MobileDashboard).
-- **Prossima azione**: decisione utente su commit/push (su `main` → Vercel prod). Al merge:
-  rigenerare RAG :8001 sullo snapshot. Follow-up v2: entry manuale ricavo dichiarato Fabio
-  (colonna Δ reale); esposizione AI/headless (BR3).
+- **SHIPPED**: commit `d1210726`, push `origin`, CI `Check` success, Vercel prod alias HTTP 200.
+  TODO post-merge: rigenerare RAG :8001 sullo snapshot (richiesta utente standing). Follow-up
+  v2: entry manuale ricavo dichiarato Fabio (colonna Δ reale); esposizione AI/headless (BR3).
 
 Coda residua (dopo questo): Fase 2 (verità remoto/locale/XML), Scope C (gated), minori
 (bollo €2, anomalia AQUACHETA +25%, void-hardening source_path, 6 no-doc + 2 no-payment).
