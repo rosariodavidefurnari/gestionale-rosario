@@ -73,10 +73,47 @@ Branch corrente:
   IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`, FIX-3+4 `7c7ec1c1`. Lavorare in chat
   nuova: partire da QUI (autosufficiente).
 
-Obiettivo operativo attivo: **BR2 — riconciliazione storica incassi↔fatture SHIPPED e LIVE
-(prod)**. 25/32 `payments` ricevuti collegati alle fatture via `payments.financial_document_id`
-(prima 0). Scaduto `FPA 1/23` ESCLUSO (evita void-cancellazione cassa). **0 gate aperti.**
-Prossimo lavoro: scegliere dalla coda (Fase 2, Scope C gated, attribuzione data-fattura).
+Obiettivo operativo attivo: **Layer confronto Cassa vs Competenza data-fattura —
+IMPLEMENTATO e VERIFICATO in locale, in attesa del gate commit/push (su `main` =
+deploy prod Vercel)**. Card read-only di riconciliazione col commercialista (NO flip
+della base legale, scelta utente "Layer confronto"). Vedi sessione 2026-06-20-quinquies sotto.
+
+### Sessione 2026-06-20-quinquies (IMPL VERIFICATA, pre-commit) — Layer confronto Cassa vs Competenza data-fattura
+
+Spec/piano: `docs/superpowers/specs|plans/2026-06-20-cash-vs-invoice-competence-reconciliation*`
+(spec: 4 review fiscale/DB/frontend/TDD; piano: 2 review — tutte PASS/FLAG, 0 BLOCK, RAG
+:8001+:8002 + sorgente). Decisione utente (AskUserQuestion): **"Layer confronto (no flip)"** —
+la base fiscale legale resta CASSA; si aggiunge SOLO una vista read-only che riconcilia col
+commercialista (competenza per `issue_date` via FK BR2). Coerente col FLIP in
+`memory/project_fiscal_real_data_baseline.md`.
+
+- **Helper puro** `dashboard/cashVsCompetenceReconciliation.ts`: riusa `getSignedPaymentAmount`
+  + `isPaymentExcludedByTaxabilityDefaults` (ora `export` da `fiscalModel.ts`, additivo),
+  ri-bucketa i payment ricevuti per `issue_date` del doc collegato (fallback cassa). Output
+  GREZZO → conservazione `Σ cassa==Σ competenza`. Solo 2 cross-year su prod.
+- **Card condivisa** `DashboardCashVsCompetenceCard.tsx` (prop `compact`), resa in
+  `DashboardAnnual` + `MobileDashboard` (UI-7), dentro il blocco `data.fiscal`. Wiring FUORI
+  da `data.fiscal`/`FiscalModel`: campo separato `cashVsCompetence` nel return di
+  `useDashboardData` (fetch provider-first vista `financial_documents_summary` outbound).
+- **Base legale INTATTA**: 0 migration, 0 EF, solo export. `fiscalParity` + `fiscalModel`
+  test verdi; smoke `ef-reminder-parity` invariato 9.005,91.
+- **Controllori**: unit helper falsificabili (cross-year fixture, conservazione property-test
+  seeded, symbol-guard rimborso/rimborso_spese, esclusione, unlinked-fallback) — 8/8; parity
+  mobile (componente reale, "per legge" + numeri + ponte) — 5/5; smoke prod
+  `npm run smoke:cash-vs-competence` PASS (2024 competenza **9.240,18 ≈ Fabio 9.240**, ponte=2,
+  Σ 52.657,02).
+- **Verifica**: typecheck 0, build OK, **736/736** unit, ef-reminder 9.005,91, continuity OK.
+  **Browser WF-17 desktop** (glance, locale + demo cross-year WF-19 + cleanup 0 leftover):
+  card perfetta (tabella 2025/2026 Cassa|Data-fattura, copertura 63% "stima parziale", ponte
+  "DEMO-CVC incassata 2026 emessa 2025", footer "Cassa = per legge"), **0 console errors**.
+  Mobile-browser non eseguito (MCP chromium-1223 assente, glance no-resize) → coperto dal
+  parity test (componente reale MobileDashboard).
+- **Prossima azione**: decisione utente su commit/push (su `main` → Vercel prod). Al merge:
+  rigenerare RAG :8001 sullo snapshot. Follow-up v2: entry manuale ricavo dichiarato Fabio
+  (colonna Δ reale); esposizione AI/headless (BR3).
+
+Coda residua (dopo questo): Fase 2 (verità remoto/locale/XML), Scope C (gated), minori
+(bollo €2, anomalia AQUACHETA +25%, void-hardening source_path, 6 no-doc + 2 no-payment).
 
 ### Sessione 2026-06-20-quater (BR2 SHIPPED su prod) — backfill 25 link incassi↔fatture
 

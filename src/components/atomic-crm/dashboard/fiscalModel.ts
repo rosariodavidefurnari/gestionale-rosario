@@ -120,7 +120,9 @@ const isInYear = (value: string | undefined, year: number) => {
   return getBusinessYear(value) === year;
 };
 
-const getSignedPaymentAmount = (payment: Payment) => {
+// Exported for reuse by the read-only cash-vs-competence reconciliation layer
+// (single source of "signed taxable payment"; do NOT re-implement inline).
+export const getSignedPaymentAmount = (payment: Payment) => {
   const amount = toNumber(payment.amount);
   return payment.payment_type === "rimborso" ? -amount : amount;
 };
@@ -139,7 +141,9 @@ const buildCategoryToProfileMap = (
   return categoryToProfile;
 };
 
-const isPaymentExcludedByTaxabilityDefaults = ({
+// Exported for reuse by the cash-vs-competence reconciliation layer (same
+// taxability definition as the cash fiscal estimate; no second truth).
+export const isPaymentExcludedByTaxabilityDefaults = ({
   payment,
   projectById,
   taxDefaults,

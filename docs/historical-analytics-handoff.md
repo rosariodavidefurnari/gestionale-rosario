@@ -6,7 +6,49 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-20 (gate 2: deduzione-cassa imposta anno SELEZIONATO gatata su dichiarazione DEPOSITATA, DOM-4 — schermata "Scadenze fiscali" 0 gate aperti; + gate 1 EF reminder; + 3 fix card 9.005,91)
+Last updated: 2026-06-20 (f) (Layer confronto Cassa vs Competenza data-fattura: card read-only di riconciliazione col commercialista, NO flip della base legale, riusa FK BR2)
+
+## Update 2026-06-20 (f) — Layer confronto Cassa vs Competenza data-fattura (riconciliazione commercialista)
+
+**Cosa**: card dashboard read-only `DashboardCashVsCompetenceCard` (desktop +
+mobile, UI-7) che affianca la base CASSA (legge, `payment_date`, immutata) alla
+base COMPETENZA data-fattura (`financial_documents.issue_date` via FK BR2
+`payments.financial_document_id`), per spiegare/riconciliare la divergenza coi
+numeri dichiarati dal commercialista. **Decisione utente 2026-06-20: "Layer
+confronto (no flip)"** — la base fiscale legale resta CASSA (forfettario art.1
+c.64); NON si attribuisce per data-fattura. Coerente col FLIP in
+`memory/project_fiscal_real_data_baseline.md`.
+
+**Modello (helper puro `cashVsCompetenceReconciliation.ts`)**: riusa
+`getSignedPaymentAmount` + `isPaymentExcludedByTaxabilityDefaults` esportati da
+`fiscalModel.ts` (stessa def di "signed taxable payment", una sola verità,
+sequenza signing→esclusione come `fiscalModel.ts:232-244`); ri-bucketa ogni
+payment `ricevuto` per `issue_date` del doc collegato (fallback cassa se
+unlinked). Output GREZZO (no round) → invariante conservazione
+`Σ cassa == Σ competenza`. Solo 2 fatture cross-year su prod (FPR 10/23 4.500
+2024→2023; FPR 9/25 1.746 2026→2025).
+
+**Prova (prod, read-only)**: competenza 2024 = **9.240,18 ≈ Fabio dichiarato
+9.240** (al centesimo) · 2023 = 10.773,26 (vs Fabio 10.993, gap −219,74 da
+copertura incompleta) · Σ = 52.657,02. Card mostra copertura per anno (progress
+bar, "stima parziale" se <100%) + wording difensivo ("Cassa = per legge").
+
+**Layer legale INTATTO**: zero migration, zero EF; solo `export` additivo su 2
+helper. `fiscalParity.test.ts` + `fiscalModel.test.ts` verdi; smoke
+`ef-reminder-parity` invariato 9.005,91. Wiring fuori da `data.fiscal`: campo
+separato `cashVsCompetence` nel return di `useDashboardData` (NON tocca
+`buildDashboardModel`/`FiscalModel`).
+
+**Controllori**: unit helper falsificabili (`cashVsCompetenceReconciliation.test.ts`
+— cross-year fixture, conservazione property-test seeded, symbol-guard
+rimborso/rimborso_spese, esclusione, unlinked-fallback); parity mobile
+(`MobileDashboard.parity.test.tsx`, card render + "per legge" + numeri + ponte);
+smoke prod `npm run smoke:cash-vs-competence` (oracoli + ponte=2). Fetch
+provider-first via vista `financial_documents_summary` (outbound).
+
+**Follow-up v2 (fuori scope)**: entry manuale del ricavo dichiarato da Fabio →
+colonna Δ reale (oggi non in `fiscal_declarations`); esposizione AI/headless (BR3).
+Spec/piano: `docs/superpowers/specs|plans/2026-06-20-cash-vs-invoice-competence-reconciliation*`.
 
 ## Update 2026-06-20 (e) — Selected-year cassa gate su dichiarazione depositata (gate 2, DOM-4)
 

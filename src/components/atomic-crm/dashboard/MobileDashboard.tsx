@@ -39,6 +39,7 @@ import type { FiscalDeadlineView } from "./fiscalRealityTypes";
 import { DashboardKpiCards } from "./DashboardKpiCards";
 import { MobileDashboardLoading } from "./DashboardLoading";
 import { useDashboardData } from "./useDashboardData";
+import { DashboardCashVsCompetenceCard } from "./DashboardCashVsCompetenceCard";
 import { useFiscalReality } from "./useFiscalReality";
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => {
@@ -102,8 +103,14 @@ const MobileAnnualDashboard = () => {
   const currentYear = Number(todayISODate().slice(0, 4));
   useRealtimeInvalidation(REALTIME_TABLES);
   const [selectedYear, setSelectedYear] = useState(currentYear);
-  const { data, outstandingReceivables, isPending, error, refetch } =
-    useDashboardData(selectedYear);
+  const {
+    data,
+    outstandingReceivables,
+    cashVsCompetence,
+    isPending,
+    error,
+    refetch,
+  } = useDashboardData(selectedYear);
   const isCurrentYear = data?.isCurrentYear ?? selectedYear === currentYear;
   const showLoading = useTimeout(800);
   const dataProvider = useDataProvider<CrmDataProvider>();
@@ -229,6 +236,11 @@ const MobileAnnualDashboard = () => {
           <MobileFiscalKpis
             fiscal={data.fiscal}
             deadlineViews={deadlineViews ?? undefined}
+          />
+          <DashboardCashVsCompetenceCard
+            data={cashVsCompetence}
+            selectedYear={selectedYear}
+            compact
           />
         </>
       )}

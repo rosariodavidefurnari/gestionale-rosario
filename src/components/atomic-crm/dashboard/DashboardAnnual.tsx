@@ -39,6 +39,7 @@ import { F24RegistrationDialog } from "./F24RegistrationDialog";
 import { ObligationEntryDialog } from "./ObligationEntryDialog";
 import type { FiscalDeadlineView } from "./fiscalRealityTypes";
 import { useDashboardData } from "./useDashboardData";
+import { DashboardCashVsCompetenceCard } from "./DashboardCashVsCompetenceCard";
 import { useFiscalPaymentTracking } from "./useFiscalPaymentTracking";
 import { useFiscalReality } from "./useFiscalReality";
 import { useGenerateFiscalTasks } from "./useGenerateFiscalTasks";
@@ -57,8 +58,14 @@ export const DashboardAnnual = () => {
   const currentYear = Number(todayISODate().slice(0, 4));
   useRealtimeInvalidation(REALTIME_TABLES);
   const [selectedYear, setSelectedYear] = useState(currentYear);
-  const { data, outstandingReceivables, isPending, error, refetch } =
-    useDashboardData(selectedYear);
+  const {
+    data,
+    outstandingReceivables,
+    cashVsCompetence,
+    isPending,
+    error,
+    refetch,
+  } = useDashboardData(selectedYear);
   const isCurrentYear = data?.isCurrentYear ?? selectedYear === currentYear;
   const dataProvider = useDataProvider<CrmDataProvider>();
 
@@ -208,6 +215,11 @@ export const DashboardAnnual = () => {
             fiscalKpis={data.fiscal.fiscalKpis}
             warnings={data.fiscal.warnings}
             isCurrentYear={isCurrentYear}
+          />
+
+          <DashboardCashVsCompetenceCard
+            data={cashVsCompetence}
+            selectedYear={selectedYear}
           />
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

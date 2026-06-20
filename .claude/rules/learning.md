@@ -53,6 +53,7 @@
 | **Dominio**  | DOM-3 | FatturaPA XML → schema XSD + Aruba        |
 | **Dominio**  | DOM-7 | FatturaPA Descrizione → solo Latin-1 (`€`/`–` vietati) |
 | **Dominio**  | DOM-8 | Forfettario → 3 numeri INPS distinti, formula standard giusta, total_inps intoccabile |
+| **Dominio**  | DOM-9 | Vista confronto/metodo alternativo → NON toccare base legale, riusa helper, campo separato dal model |
 | **Dominio**  | DOM-4 | Stato semantico ≠ `array.length`          |
 | **Config**   | CFG-2 | BusinessProfile → merge defaults safe     |
 | **Config**   | CFG-3 | Flag/prop root → verificare consumo reale |
@@ -553,6 +554,37 @@ vietato.
 - attribuzione ricavi: il commercialista usa **data fattura** (competenza), il gestionale `payments.payment_date` (cassa). Sulle fatture a cavallo d'anno divergono (es. Gustare FPR 10/23 emessa 29/12/2023, incassata 30/01/2024). Per predire il commercialista serve `financial_documents.issue_date` — inerte finché BR2 non collega i documenti.
 - **card anno CHIUSO (D3)**: mostra il DEFINITIVO, non la stima. L'INPS "dell'anno" da mostrare = **competenza** = `total_inps − prior_advances_inps` (= `inps_saldo`, stessa derivazione di `buildObligationsFromDeclaration`; verificato prod 2023→2249, 2024→1879), NON `total_inps` (ciclo). Imposta = `total_substitute_tax` (2023→429, 2024→233). Chiuso = `total_substitute_tax + total_inps > 0` (2025 zero → resta stima). Helper puro `applyDefinitiveDeclaration`; override SOLO in `buildFiscalModel` (client+UI), MAI nella formula condivisa client/EF (così `fiscalParity.test.ts` resta verde). Flag onesto `FiscalKpis.isDefinitive` + pill `Definitivo`/`Stima` (INV-6), parita' desktop/mobile (UI-7).
 **Perché**: il 2026-06-19, senza le dichiarazioni reali, il `total_inps` 3.667 sembrava un bug (vs 1.879). Stavo per fare un UPDATE distruttivo che avrebbe rotto la riconciliazione F24. Le dichiarazioni AdE reali (SPID) hanno chiarito: formula giusta, 3 numeri distinti, dato reale intoccabile. Vedi `docs/superpowers/specs/2026-06-19-fiscal-estimate-calibration-design.md` §14 e memoria `project_fiscal_real_data_baseline.md`.
+
+### DOM-9: vista di CONFRONTO con un metodo alternativo → non toccare la base legale, riusa gli helper, esponi FUORI dal model
+
+**Quando**: aggiungo una superficie read-only che affianca al numero canonico/legale un
+calcolo con un METODO ALTERNATIVO (es. competenza data-fattura vs cassa; previsione vs reale;
+lordo vs netto) per confronto/riconciliazione/diagnosi
+**Fare**:
+- la base legale/operativa NON si tocca: zero modifiche al builder canonico
+  (`buildFiscalYearEstimate`/`FiscalModel`), zero migration/EF se evitabile;
+- riusa la STESSA definizione canonica (esporta gli helper esistenti —
+  `getSignedPaymentAmount` + `isPaymentExcludedByTaxabilityDefaults` — e applicali nella
+  STESSA sequenza del builder: `fiscalModel.ts:232-244`), MAI ricodificare inline il signing
+  (seconda verità → drift su `rimborso`/`rimborso_spese`);
+- esponi il risultato come CAMPO SEPARATO del return del hook (`cashVsCompetence`), in una
+  `useMemo` FUORI da `buildDashboardModel`/`data.fiscal` — iniettarlo dentro il model legale
+  lo modifica e rompe `fiscalParity`/`fiscalModel` test;
+- output GREZZO non arrotondato per gli invarianti (conservazione `Σ A == Σ B`), arrotonda solo
+  al display (WF-20); copertura/affidabilità come progress bar, mai badge-footnote;
+- wording difensivo OBBLIGATORIO: marca il numero legale ("per legge") e l'alternativo come
+  spiegazione ("non cambia cosa devi dichiarare") — un confronto fiscale può indurre l'utente
+  a usare il metodo sbagliato;
+- controllori: non-regressione (test del builder canonico + smoke parità invariati), unit
+  falsificabili (fixture col caso che fa divergere i due metodi), property-test di
+  conservazione su grezzi, symbol-guard, smoke prod read-only sugli oracoli reali.
+**Perché**: il 2026-06-20 (Layer confronto Cassa vs Competenza data-fattura) la scelta utente
+era "confronto, NO flip della base legale". Iniettare la competenza dentro `FiscalModel` o
+ricodificare il signing avrebbe creato una seconda verità e cambiato il numero legale. Tenuto
+fuori (`useDashboardData.cashVsCompetence`) + riuso helper esportati: `fiscalParity` +
+`fiscalModel` verdi, smoke `ef-reminder-parity` invariato 9.005,91, 2024 competenza 9.240,18 =
+commercialista al centesimo. Cugino di SYSTEM-FIRST (no seconda verità) e DB-9 (riuso simmetrico
+di una fonte unica). Spec/piano `docs/superpowers/specs|plans/2026-06-20-cash-vs-invoice-competence-reconciliation*`.
 
 ---
 

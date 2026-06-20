@@ -13,6 +13,7 @@
     "security:check:cascade-protection": "npx supabase db query --linked -f scripts/check-cascade-protection.sql",
     "health:financial": "node scripts/check-prod-financial-health.mjs",
     "smoke:ef-reminder-parity": "npx tsx scripts/prod-smoke-ef-reminder-parity.ts",
+    "smoke:cash-vs-competence": "npx tsx scripts/prod-smoke-cash-vs-competence.ts",
     "local:admin:bootstrap": "node ./scripts/bootstrap-local-admin.mjs",
     "preview": "vite preview",
     "lint:apply": "eslint **/*.{mjs,ts,tsx} --fix",

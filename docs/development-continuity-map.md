@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-20 (saldo scadenzario ESATTO `9.005,91 €`: acconti REALI da dichiarazione anno-2 + imposta su CASSA LM035 `basisContributiVersatiCassa`; desktop+mobile, parità intatta; + guardrail obblighi certificati + pulizia spazzatura)
+Last updated: 2026-06-20 (f) (Layer confronto Cassa vs Competenza data-fattura: card read-only riconciliazione commercialista, helper `cashVsCompetenceReconciliation`, riusa FK BR2 + helper di tassabilità di `fiscalModel`; base legale INTATTA)
 
 ---
 
@@ -475,6 +475,37 @@ emit→re-import + review impl multi-superficie + prod gated. Spec/piano:
 - [Nota manutenzione 2026-03-02](#nota-manutenzione-2026-03-02-fix-ci)
 - [Testing Session Log 2026-03-04](#testing-session-log-2026-03-04--e2e-complete-validation)
 - [AI Semantic UI Upgrade 2026-03-04](#ai-semantic-ui-upgrade-2026-03-04--pareto-principle-applied)
+
+---
+
+## Update 2026-06-20 (f) — Layer confronto Cassa vs Competenza data-fattura
+
+**Cosa**: card dashboard read-only `DashboardCashVsCompetenceCard` (desktop +
+mobile, UI-7) che riconcilia la base CASSA (legge) con la base COMPETENZA
+data-fattura (la metodologia del commercialista). Non cambia il numero fiscale
+legale: helper puro `cashVsCompetenceReconciliation.ts` che riusa
+`getSignedPaymentAmount` + `isPaymentExcludedByTaxabilityDefaults` (ora esportati
+da `fiscalModel.ts`) e ri-bucketa i payment per `issue_date` del doc collegato
+(FK BR2). Decisione utente: "Layer confronto (no flip)".
+
+**Superfici toccate (sweep dashboard)**:
+- `dashboard/cashVsCompetenceReconciliation.ts` (helper puro + tipi view) + `.test.ts`
+- `dashboard/DashboardCashVsCompetenceCard.tsx` (card condivisa, prop `compact`)
+- `dashboard/fiscalModel.ts` (solo `export` additivo dei 2 helper — base legale intatta)
+- `dashboard/useDashboardData.ts` (fetch `financial_documents_summary` outbound +
+  campo separato `cashVsCompetence` nel return, FUORI da `data.fiscal`)
+- `dashboard/DashboardAnnual.tsx` + `dashboard/MobileDashboard.tsx` (render gated `data.fiscal`)
+- `dashboard/MobileDashboard.parity.test.tsx` (controllore parità)
+- `scripts/prod-smoke-cash-vs-competence.ts` + `package.json` (`smoke:cash-vs-competence`)
+
+**Non toccato**: nessuna migration, nessuna EF, nessuna vista nuova, Settings, AI
+registry (follow-up BR3). Base legale provata intatta: `fiscalParity.test.ts` +
+`fiscalModel.test.ts` verdi, smoke `ef-reminder-parity` 9.005,91.
+
+**Invarianti/controllori**: conservazione `Σ cassa == Σ competenza` (property-test
+seeded); riuso simbolo (no ricodifica signing); oracoli prod 2024=9.240,18 (=Fabio),
+ponte=2 (smoke). Spec/piano:
+`docs/superpowers/specs|plans/2026-06-20-cash-vs-invoice-competence-reconciliation*`.
 
 ---
 

@@ -1039,6 +1039,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/cashVsCompetenceReconciliation.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/buildObligationsFromDeclaration.ts",
           "type": "registry:component"
         },
@@ -1168,6 +1172,10 @@
         },
         {
           "path": "src/components/atomic-crm/dashboard/DashboardCategoryChart.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardCashVsCompetenceCard.tsx",
           "type": "registry:component"
         },
         {

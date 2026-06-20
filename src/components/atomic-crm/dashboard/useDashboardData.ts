@@ -6,6 +6,7 @@ import type {
   Client,
   ClientCommercialPosition,
   Expense,
+  FinancialDocumentSummary,
   Payment,
   Project,
   Quote,
@@ -16,6 +17,10 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import { buildDashboardModel, type DashboardModel } from "./dashboardModel";
 import { sumInpsContributionsPaidInYear } from "./inpsContributionsPaid";
 import { resolveSelectedYearContributiVersatiCassa } from "./selectedYearContributiVersatiCassa";
+import {
+  buildCashVsCompetenceReconciliation,
+  type CashVsCompetenceView,
+} from "./cashVsCompetenceReconciliation";
 import {
   countOpenReceivables,
   sumOutstandingReceivables,
@@ -57,6 +62,18 @@ export const useDashboardData = (year?: number) => {
     pagination: LARGE_PAGE,
     sort: { field: "expense_date", order: "DESC" },
   });
+
+  // Outbound financial documents: only for the read-only cash-vs-competence
+  // reconciliation card (issue_date per linked payment). Provider-first via the
+  // registered view; never the raw table. Does NOT feed the fiscal estimate.
+  const financialDocsQuery = useGetList<FinancialDocumentSummary>(
+    "financial_documents_summary",
+    {
+      pagination: LARGE_PAGE,
+      sort: { field: "issue_date", order: "ASC" },
+      filter: { "direction@eq": "outbound" },
+    },
+  );
 
   // "Da incassare" = real cumulative residue (work delivered − cash received),
   // year-INDEPENDENT. Canonical cassa-aware source `client_commercial_position`
@@ -175,6 +192,45 @@ export const useDashboardData = (year?: number) => {
     };
   }, [receivablesQuery.data]);
 
+  // Cash-vs-competence reconciliation (read-only). Computed OUTSIDE the fiscal
+  // model so it never touches the legal estimate. Reuses the cash taxable basis
+  // (same signing + exclusions) re-bucketed by invoice issue-date.
+  const cashVsCompetence = useMemo<CashVsCompetenceView | null>(() => {
+    if (
+      !paymentsQuery.data ||
+      !projectsQuery.data ||
+      !financialDocsQuery.data
+    ) {
+      return null;
+    }
+    const issueDateByDocId = new Map<string, string>();
+    const documentNumberById = new Map<string, string>();
+    for (const doc of financialDocsQuery.data) {
+      if (doc.issue_date) issueDateByDocId.set(String(doc.id), doc.issue_date);
+      documentNumberById.set(String(doc.id), doc.document_number);
+    }
+    const { byYear, bridge } = buildCashVsCompetenceReconciliation({
+      payments: paymentsQuery.data,
+      projects: projectsQuery.data,
+      issueDateByDocId,
+      fiscalConfig,
+    });
+    return {
+      byYear,
+      bridge: bridge.map((row) => ({
+        ...row,
+        documentNumber:
+          documentNumberById.get(String(row.documentId)) ??
+          String(row.documentId),
+      })),
+    };
+  }, [
+    paymentsQuery.data,
+    projectsQuery.data,
+    financialDocsQuery.data,
+    fiscalConfig,
+  ]);
+
   const data = useMemo<DashboardModel | null>(() => {
     if (
       !paymentsQuery.data ||
@@ -219,6 +275,7 @@ export const useDashboardData = (year?: number) => {
   return {
     data,
     outstandingReceivables,
+    cashVsCompetence,
     isPending,
     error,
     refetch: () => {
@@ -229,6 +286,7 @@ export const useDashboardData = (year?: number) => {
       void clientsQuery.refetch();
       void expensesQuery.refetch();
       void receivablesQuery.refetch();
+      void financialDocsQuery.refetch();
     },
   };
 };

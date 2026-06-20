@@ -249,3 +249,90 @@ describe("MobileDashboard fiscal tax card (UI-7 parity with desktop)", () => {
     expect(screen.getByText(/233,00/)).toBeInTheDocument();
   });
 });
+
+// UI-7 controller: la card Cassa-vs-Competenza riceve `cashVsCompetence` dal hook
+// e la rende su mobile con gli STESSI numeri del desktop (stesso campo del return).
+// Falsifiabile: togliere il render della card da MobileDashboard -> rosso.
+describe("MobileDashboard cash-vs-competence reconciliation card (UI-7)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const setDataWithReconciliation = (
+    model: DashboardModel,
+    cashVsCompetence: unknown,
+  ) =>
+    mockUseDashboardData.mockReturnValue({
+      data: model,
+      outstandingReceivables: { total: 0, count: 0 },
+      cashVsCompetence,
+      isPending: false,
+      error: null,
+      refetch: () => {},
+    });
+
+  it("renders Cassa vs Data-fattura with cent-accurate numbers + 'per legge' + bridge (anche su anno passato)", () => {
+    // anno passato (2024) -> prova C6: la card multi-anno appare anche non-current
+    const model = makeModel({ isCurrentYear: false, selectedYear: 2024 });
+    (model as unknown as { fiscal: unknown }).fiscal = {
+      fiscalKpis: {
+        stimaInpsAnnuale: 1879,
+        stimaImpostaAnnuale: 233,
+        accantonamentoMensile: 176,
+        percentualeUtilizzoTetto: 16,
+        distanzaDalTetto: 71260,
+        isDefinitive: true,
+      },
+      schedule: { isFirstYear: false, deadlines: [] },
+    };
+    setDataWithReconciliation(model, {
+      byYear: [
+        {
+          year: 2023,
+          cashTaxable: 6273.26,
+          competenceTaxable: 10773.26,
+          linkedCount: 7,
+          totalCount: 9,
+          linkedAmount: 1903.18,
+          totalAmount: 6273.26,
+          coverageRatio: 1903.18 / 6273.26,
+        },
+        {
+          year: 2024,
+          cashTaxable: 13740.18,
+          competenceTaxable: 9240.18,
+          linkedCount: 7,
+          totalCount: 8,
+          linkedAmount: 11990.18,
+          totalAmount: 13740.18,
+          coverageRatio: 11990.18 / 13740.18,
+        },
+      ],
+      bridge: [
+        {
+          paymentId: "pA",
+          amount: 4500,
+          documentId: "docA",
+          documentNumber: "FPR 10/23",
+          cashYear: 2024,
+          competenceYear: 2023,
+        },
+      ],
+    });
+
+    renderWithQueryClient(<MobileDashboard />);
+
+    // titolo + wording difensivo "per legge" (anti-equivoco fiscale)
+    expect(
+      screen.getByText("Confronto col commercialista"),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/per legge/i).length).toBeGreaterThan(0);
+    // numeri al centesimo (separator-agnostico, WF-20): cassa 2024 + competenza 2024 = Fabio
+    expect(screen.getByText(/13\.?740,18/)).toBeInTheDocument();
+    expect(screen.getByText(/9\.?240,18/)).toBeInTheDocument();
+    // ponte cross-year: toggle con count (dettaglio collassato in compact)
+    expect(
+      screen.getByText(/Fatture a cavallo d'anno \(1\)/),
+    ).toBeInTheDocument();
+  });
+});
