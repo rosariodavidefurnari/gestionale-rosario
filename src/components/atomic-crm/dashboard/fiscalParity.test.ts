@@ -6,6 +6,8 @@ import {
   buildFiscalPaymentSchedule as buildClientFiscalPaymentSchedule,
 } from "./fiscalDeadlines";
 import { buildFiscalYearEstimate as buildClientFiscalYearEstimate } from "./fiscalModel";
+import { resolvePriorAdvanceScheduleInput as resolveClientPriorAdvanceScheduleInput } from "./resolvePriorAdvanceScheduleInput";
+import type { FiscalDeclaration } from "./fiscalRealityTypes";
 import type {
   FiscalConfig as ClientFiscalConfig,
   Payment,
@@ -16,6 +18,7 @@ import {
   buildFiscalReminderComputation as buildServerFiscalReminderComputation,
   buildFiscalYearEstimate as buildServerFiscalYearEstimate,
   type FiscalConfig as ServerFiscalConfig,
+  type FiscalDeclarationInput as ServerFiscalDeclarationInput,
   type PaymentRow,
   type ProjectRow,
 } from "../../../../supabase/functions/_shared/fiscalDeadlineCalculation.ts";
@@ -358,6 +361,52 @@ const scheduleScenarios = [
       { id: "project-1", client_id: "client-1", category: "produzione_tv" },
     ] satisfies SyntheticProject[],
   },
+  {
+    // DOM-5 / DB-12: the reminder must use the REAL prior advances (closed
+    // currentYear-2 declaration) for the saldo and deduct the imposta on CASH
+    // (LM035), exactly like the client deadline card. Exercises the two new
+    // params end-to-end → server reminder == client schedule.
+    name: "schedule_realPriorAdvances_plus_cashImposta",
+    paymentYear: 2026,
+    todayIso: "2026-01-15",
+    config: makeFiscalConfig(),
+    basisContributiVersatiCassa: 1000,
+    priorBasisDeclaration: {
+      id: "decl-2024",
+      tax_year: 2024,
+      total_substitute_tax: 233,
+      total_inps: 3667.4,
+      prior_advances_substitute_tax: 429,
+      prior_advances_inps: 1788.4,
+      notes: null,
+      created_at: "2026-04-02T00:00:00Z",
+      updated_at: "2026-04-02T00:00:00Z",
+      user_id: "user-1",
+    } satisfies FiscalDeclaration,
+    payments: [
+      {
+        id: 1,
+        client_id: "client-1",
+        project_id: "project-1",
+        payment_date: "2024-02-01T00:00:00.000Z",
+        payment_type: "saldo",
+        amount: 20000,
+        status: "ricevuto",
+      },
+      {
+        id: 2,
+        client_id: "client-1",
+        project_id: "project-1",
+        payment_date: "2025-02-01T00:00:00.000Z",
+        payment_type: "saldo",
+        amount: 30000,
+        status: "ricevuto",
+      },
+    ] satisfies SyntheticPayment[],
+    projects: [
+      { id: "project-1", client_id: "client-1", category: "produzione_tv" },
+    ] satisfies SyntheticProject[],
+  },
 ];
 
 describe("fiscal parity - estimate scenarios", () => {
@@ -393,6 +442,15 @@ describe("fiscal parity - estimate scenarios", () => {
 describe("fiscal parity - schedule scenarios", () => {
   for (const scenario of scheduleScenarios) {
     it(scenario.name, () => {
+      // Optional DOM-5 inputs (undefined on existing scenarios → no-op → the
+      // legacy formula behavior is preserved and parity stays exact).
+      const basisContributiVersatiCassa = (
+        scenario as { basisContributiVersatiCassa?: number }
+      ).basisContributiVersatiCassa;
+      const priorBasisDeclaration =
+        (scenario as { priorBasisDeclaration?: FiscalDeclaration })
+          .priorBasisDeclaration ?? null;
+
       const clientPayments = toClientPayments(scenario.payments);
       const clientProjects = toClientProjects(scenario.projects);
       const clientPreviousYearEstimate = buildClientFiscalYearEstimate({
@@ -400,6 +458,7 @@ describe("fiscal parity - schedule scenarios", () => {
         projects: clientProjects,
         fiscalConfig: toClientConfig(scenario.config),
         taxYear: scenario.paymentYear - 1,
+        contributiVersatiCassa: basisContributiVersatiCassa,
       });
       const clientTwoYearsBackEstimate = buildClientFiscalYearEstimate({
         payments: clientPayments,
@@ -411,7 +470,10 @@ describe("fiscal parity - schedule scenarios", () => {
         paymentYear: scenario.paymentYear,
         basisEstimate: clientPreviousYearEstimate.scheduleInput,
         priorAdvancePlan: buildClientAdvancePlanFromEstimate({
-          estimate: clientTwoYearsBackEstimate.scheduleInput,
+          estimate: resolveClientPriorAdvanceScheduleInput(
+            clientTwoYearsBackEstimate.scheduleInput,
+            priorBasisDeclaration,
+          ),
         }),
         annoInizioAttivita: scenario.config.annoInizioAttivita,
         todayIso: scenario.todayIso,
@@ -423,6 +485,9 @@ describe("fiscal parity - schedule scenarios", () => {
         projects: toServerProjects(scenario.projects),
         paymentYear: scenario.paymentYear,
         todayIso: scenario.todayIso,
+        basisContributiVersatiCassa,
+        priorBasisDeclaration:
+          priorBasisDeclaration as ServerFiscalDeclarationInput | null,
       });
 
       expect(normalizeSchedule(serverComputation.schedule)).toEqual(

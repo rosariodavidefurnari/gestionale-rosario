@@ -6,7 +6,25 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-20 (saldo scadenzario sui ACCONTI REALI dalla dichiarazione anno-2 chiusa: card 7.941→~8.840, desktop+mobile, parità intatta; + guardrail obblighi certificati + pulizia spazzatura)
+Last updated: 2026-06-20 (gate 1: EF reminder `fiscal_deadline_check` allineata alla card sul saldo — porta lato Deno acconti reali + imposta cassa, DEPLOYATA; + 3 fix card 9.005,91)
+
+## Update 2026-06-20 (d) — EF reminder allineata alla card (gate 1, DOM-5)
+
+Il LAYER STIMA della EF `fiscal_deadline_check` (promemoria WhatsApp/email + task) calcolava il
+saldo ANCORA sulla stima-formula → avrebbe detto ~7.941 invece di 9.005,91. Portati lato Deno i 2
+fix client (Update c + b): `buildFiscalReminderComputation` accetta `basisContributiVersatiCassa`
+(imposta saldo su CASSA LM035) + `priorBasisDeclaration` (acconti saldo dai numeri REALI della
+dichiarazione chiusa anno-2). Helper puri mirrorati (`resolvePriorAdvanceScheduleInput`,
+`isDeclarationClosed`, `definitiveInpsCompetenza`, `definitiveImposta` in
+`_shared/fiscalDeadlineCalculation.ts`; `sumInpsContributionsPaidInYear` in nuovo
+`_shared/inpsContributionsPaid.ts`). EF `loadEstimateRealityInputs` fetcha dichiarazione
+`tax_year=anno-2` + obblighi/F24 `payment_year=anno-1` — stessa fetch del hook `useDashboardData`
+(parità). Builder condivisi INTATTI → `fiscalParity.test.ts` verde (nuovo scenario falsificabile,
+2 mutazioni uccise). 4 review multi-superficie (DB/Edge, fiscale, parità, TDD) con RAG + sorgente →
+PASS. Controllore prod read-only versionato `npm run smoke:ef-reminder-parity` = **9.005,91 €**.
+EF DEPLOYATA su `qvdmzhyzpyaveniirsmo`. `total_inps` solo letto (DOM-8); inerte per anni con
+obblighi certificati (overlay vince, DB-11). Spec/piano:
+`docs/superpowers/specs|plans/2026-06-20-ef-reminder-fiscal-parity*`.
 
 ## Update 2026-06-20 (c) — Imposta del saldo su CASSA: card ESATTA 9.005,91 €
 

@@ -11,11 +11,17 @@ import {
   buildTaskPayloads,
   type FiscalConfig,
   type FiscalDeadline,
+  type FiscalDeclarationInput,
   type FiscalWarning,
   type FiscalTaskPayload,
   type PaymentRow,
   type ProjectRow,
 } from "../_shared/fiscalDeadlineCalculation.ts";
+import {
+  sumInpsContributionsPaidInYear,
+  type FiscalObligationComponentRow,
+  type FiscalF24PaymentLineCashRow,
+} from "../_shared/inpsContributionsPaid.ts";
 import {
   sendInternalEmail,
   sendWhatsApp,
@@ -92,6 +98,64 @@ async function loadYearData(paymentYear: number) {
         ? getBusinessYear(String(earliestPaymentResult.data[0].payment_date))
         : null,
   };
+}
+
+/**
+ * Inputs that align the ESTIMATE layer of the reminder with the client deadline
+ * card (DOM-5 two-layer). Mirrors what `useDashboardData` feeds `buildFiscalModel`:
+ *  - `priorBasisDeclaration`: the real `fiscal_declarations` for the prior basis
+ *    year (currentYear-2). If CLOSED, the saldo subtracts the REAL acconti paid
+ *    (its definitive competence) instead of the drift-prone formula estimate.
+ *  - `basisContributiVersatiCassa`: INPS actually paid in cash in the basis year
+ *    (currentYear-1) from the F24 lines → the saldo imposta deducts on CASH (LM035),
+ *    not competence.
+ * Queries replicate the provider (getFiscalDeclaration / getFiscalObligations /
+ * getEnrichedPaymentLinesForYear) verbatim so the EF and the card agree.
+ */
+async function loadEstimateRealityInputs(currentYear: number): Promise<{
+  priorBasisDeclaration: FiscalDeclarationInput | null;
+  basisContributiVersatiCassa: number | undefined;
+}> {
+  const priorBasisYear = currentYear - 2;
+  const basisYear = currentYear - 1;
+
+  const [priorDeclarationResult, basisObligationsResult] = await Promise.all([
+    supabaseAdmin
+      .from("fiscal_declarations")
+      .select("total_substitute_tax, total_inps, prior_advances_inps")
+      .eq("tax_year", priorBasisYear)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("fiscal_obligations")
+      .select("id, component")
+      .eq("payment_year", basisYear),
+  ]);
+
+  const priorBasisDeclaration =
+    (priorDeclarationResult.data as FiscalDeclarationInput | null) ?? null;
+
+  // Basis-year INPS paid-in-cash: needs the F24 lines of the basis-year
+  // obligations. No obligations → undefined → the model falls back to competence
+  // (same guard as the client hook).
+  const basisObligations = (basisObligationsResult.data ??
+    []) as FiscalObligationComponentRow[];
+  let basisContributiVersatiCassa: number | undefined = undefined;
+  if (basisObligations.length > 0) {
+    const { data: basisLines } = await supabaseAdmin
+      .from("fiscal_f24_payment_lines_enriched")
+      .select("obligation_id, amount, submission_date")
+      .in(
+        "obligation_id",
+        basisObligations.map((o) => o.id),
+      );
+    basisContributiVersatiCassa = sumInpsContributionsPaidInYear(
+      (basisLines ?? []) as FiscalF24PaymentLineCashRow[],
+      basisObligations,
+      basisYear,
+    );
+  }
+
+  return { priorBasisDeclaration, basisContributiVersatiCassa };
 }
 
 async function createMissingTasks(
@@ -349,6 +413,11 @@ async function runFiscalDeadlineCheck(): Promise<CheckResult> {
 
   const { payments, projects, inferredActivityStartYear } =
     await loadYearData(currentYear);
+  // DOM-5 two-layer: feed the estimate layer the same real inputs the client
+  // deadline card uses (real prior advances + cash imposta), so the reminder
+  // matches the card when there are no certified obligations to overlay.
+  const { priorBasisDeclaration, basisContributiVersatiCassa } =
+    await loadEstimateRealityInputs(currentYear);
   const computation = buildFiscalReminderComputation({
     config: fiscalConfig,
     payments,
@@ -356,6 +425,8 @@ async function runFiscalDeadlineCheck(): Promise<CheckResult> {
     paymentYear: currentYear,
     todayIso: todayStr,
     inferredActivityStartYear,
+    basisContributiVersatiCassa,
+    priorBasisDeclaration,
   });
   const deadlines = computation.schedule.deadlines;
   logFiscalWarnings(computation.warnings);

@@ -74,8 +74,30 @@ Branch corrente:
   nuova: partire da QUI (autosufficiente).
 
 Obiettivo operativo attivo: **schermata "Scadenze fiscali" CHIUSA** (card 2026 esatta
-`9.005,91 €`). Restano **2 gate NON bloccanti** (EF reminder, useDashboardData switch) —
-vedi "Prossima azione".
+`9.005,91 €`) **+ gate 1 (EF reminder) CHIUSO e DEPLOYATO**. Resta **1 gate NON bloccante**
+(`useDashboardData` length-switch, DOM-4) — vedi "Prossima azione".
+
+### Sessione 2026-06-20-bis (CHIUSA) — gate 1: EF reminder allineata alla card (DOM-5)
+
+La EF `fiscal_deadline_check` calcolava il saldo ANCORA sulla stima-formula → il promemoria
+WhatsApp/email avrebbe detto ~7.941 invece di 9.005,91. Ora il LAYER STIMA della EF è
+allineato alla card. Spec/piano: `docs/superpowers/specs|plans/2026-06-20-ef-reminder-fiscal-parity*`.
+
+- Portati lato Deno i 2 fix client (`9dc7f6c3` acconti reali + `41c655fc` imposta cassa):
+  `buildFiscalReminderComputation` accetta `basisContributiVersatiCassa` + `priorBasisDeclaration`;
+  helper puri mirrorati (`resolvePriorAdvanceScheduleInput`, `isDeclarationClosed`, `definitive*`
+  in `_shared/fiscalDeadlineCalculation.ts`; `sumInpsContributionsPaidInYear` in nuovo
+  `_shared/inpsContributionsPaid.ts`). EF `loadEstimateRealityInputs` fetcha dichiarazione
+  `tax_year=anno-2` + obblighi/F24 `payment_year=anno-1` (stessa fetch del hook `useDashboardData`).
+- Builder condivisi INTATTI → `fiscalParity.test.ts` verde (nuovo scenario falsificabile
+  `schedule_realPriorAdvances_plus_cashImposta`, 2 mutazioni uccise). `total_inps` solo letto (DOM-8).
+- TDD: RED→GREEN, 711 unit verdi, typecheck/deno check/lint/prettier/continuity OK.
+- **4 review multi-superficie** (DB/Edge, fiscale forfettario, parità/frontend, TDD) ognuna con
+  RAG :8001 + verifica sorgente → tutte **PASS** (1 FLAG non bloccante AC-7 chiusa col controllore).
+- Controllore prod read-only versionato: `npm run smoke:ef-reminder-parity` →
+  **9.005,91 €** sui dati prod reali (30/06 6.574,10 + 30/11 2.431,81; cassa 2025 = 3.382,09).
+- SHIP: EF DEPLOYATA su `qvdmzhyzpyaveniirsmo` (script 934kB); liveness 401 unauth / 204 preflight.
+  Learning DOM-5 aggiornato. Inerte per anni con obblighi certificati (overlay vince, DB-11).
 
 ### Sessione 2026-06-20 (CHIUSA) — schermata "Scadenze fiscali" corretta in 3 fix
 
@@ -99,21 +121,17 @@ solo schedule) → `fiscalParity.test.ts` verde. Mobile parità automatica (un s
 Baseline fiscale reale (dichiarazioni 2023/2024 AdE, formula validata all'euro, bug cassa/competenza
 provato): memoria `project_fiscal_real_data_baseline.md`.
 
-### Prossima azione (gate aperti, NON bloccanti — la card è già giusta)
+### Prossima azione (1 gate aperto, NON bloccante — la card è già giusta)
 
-1. **EF reminder — DOM-5 due-layer**: `supabase/functions/_shared/fiscalDeadlineCalculation.ts`
-   (usata da `fiscal_deadline_check`) calcola il saldo ANCORA sulla stima-formula → il promemoria
-   WhatsApp direbbe ~7.941 invece di 9.005,91. Portare lato Deno: (a) acconti reali
-   (`resolvePriorAdvanceScheduleInput` + fetch dichiarazione anno-2 server-side), (b) imposta cassa
-   (`basisContributiVersatiCassa` + somma INPS F24 anno-1). Poi `npx supabase functions deploy
-   fiscal_deadline_check --project-ref qvdmzhyzpyaveniirsmo` (BE-1: push NON deploya le EF).
-2. **`useDashboardData:102` length-switch — DOM-4**: la deduzione-cassa dell'imposta dell'anno
+1. **`useDashboardData` length-switch — DOM-4**: la deduzione-cassa dell'imposta dell'anno
    SELEZIONATO usa `obligations.length===0` come switch (il bollo pagato la fa scattare) → gatare
    su dichiarazione DEPOSITATA dell'anno. Cambia la stima imposta 2025 → test dedicato.
 
+Gate 1 (EF reminder) CHIUSO e DEPLOYATO in questa sessione (vedi sopra).
+
 **Ripartenza (chat nuova)**: leggi `AGENTS.md` → questo CANTIERE → `docs/historical-analytics-handoff.md`
-(Update 2026-06-20 a/b/c) → memoria `project_fiscal_real_data_baseline.md`. Learning: DB-11, DB-12.
-Prompt-esempio cortissimo: **"continua dal CANTIERE: chiudi il gate 1 (EF reminder DOM-5)"**.
+(Update 2026-06-20 a/b/c) → memoria `project_fiscal_real_data_baseline.md`. Learning: DB-11, DB-12, DOM-5.
+Prompt-esempio cortissimo: **"continua dal CANTIERE: chiudi il gate 2 (useDashboardData length-switch DOM-4)"**.
 
 Shippato e LIVE in sessioni precedenti (tutto su `main`, CI verde, Vercel):
 

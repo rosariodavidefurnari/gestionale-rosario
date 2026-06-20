@@ -84,6 +84,17 @@ export type FiscalEstimateScheduleInput = {
   annualSubstituteTaxEstimate: number;
 };
 
+/**
+ * Subset minimale di `fiscal_declarations` necessario al reminder per derivare
+ * gli acconti reali del saldo (DOM-5 / DB-12). Mirror del client
+ * `FiscalDeclaration` (solo i campi letti). `total_inps` MAI scritto (DOM-8).
+ */
+export type FiscalDeclarationInput = {
+  total_substitute_tax: number;
+  total_inps: number;
+  prior_advances_inps: number;
+};
+
 export type FiscalScheduleMethod = "historical";
 export type FiscalScheduleConfidence = "estimated";
 
@@ -180,6 +191,66 @@ const isoDate = (year: number, month: number, day: number) =>
 
 export const roundFiscalOutput = (value: number) =>
   Math.round((value + Number.EPSILON) * 100) / 100;
+
+// ── Real prior-year declaration → advance basis (DOM-5 / DB-12) ──────────────
+// Deno mirror of the client applyDefinitiveDeclaration.ts + resolvePriorAdvance
+// ScheduleInput.ts. Parity guarded by fiscalParity.test.ts.
+
+/**
+ * Una dichiarazione e' "chiusa/affidabile" quando i totali annuali sono non-zero
+ * (`total_substitute_tax + total_inps > 0`). Una dichiarazione DA PRESENTARE
+ * (totali zero) resta NON affidabile → fallback alla stima.
+ */
+export const isDeclarationClosed = (
+  declaration: FiscalDeclarationInput | null | undefined,
+): declaration is FiscalDeclarationInput => {
+  if (!declaration) return false;
+  const totals =
+    Number(declaration.total_substitute_tax) + Number(declaration.total_inps);
+  return Number.isFinite(totals) && totals > 0;
+};
+
+/**
+ * INPS di competenza dell'anno (RR "contributo dovuto") = ciclo − acconti
+ * (`total_inps − prior_advances_inps`). `total_inps` non viene mai modificato.
+ */
+export const definitiveInpsCompetenza = (
+  declaration: FiscalDeclarationInput,
+): number =>
+  roundFiscalOutput(
+    Math.max(
+      0,
+      Number(declaration.total_inps) - Number(declaration.prior_advances_inps),
+    ),
+  );
+
+/** Imposta sostitutiva dell'anno (LM039) = `total_substitute_tax`. */
+export const definitiveImposta = (
+  declaration: FiscalDeclarationInput,
+): number =>
+  roundFiscalOutput(Math.max(0, Number(declaration.total_substitute_tax)));
+
+/**
+ * Gli acconti sottratti dal SALDO di un anno sono i % della tassa del PRECEDENTE
+ * anno di competenza. Quando la dichiarazione del basis-year precedente
+ * (currentYear-2) e' CHIUSA, derivare la base degli acconti dai suoi numeri
+ * DEFINITIVI invece che dalla stima-formula (drift-prone). Fallback alla stima
+ * quando non c'e' una dichiarazione chiusa (anni correnti/aperti → invariato).
+ *
+ * Pure: nessun fetch, nessun clock. I builder condivisi restano intatti (parità
+ * safe) — cambia solo l'INPUT passato a `buildAdvancePlanFromEstimate`.
+ */
+export const resolvePriorAdvanceScheduleInput = (
+  estimateInput: FiscalEstimateScheduleInput,
+  priorBasisDeclaration: FiscalDeclarationInput | null | undefined,
+): FiscalEstimateScheduleInput =>
+  isDeclarationClosed(priorBasisDeclaration)
+    ? {
+        taxYear: estimateInput.taxYear,
+        annualInpsEstimate: definitiveInpsCompetenza(priorBasisDeclaration),
+        annualSubstituteTaxEstimate: definitiveImposta(priorBasisDeclaration),
+      }
+    : estimateInput;
 
 const formatCompetenceYear = (value: number | null) =>
   value == null ? "none" : String(value);
@@ -860,6 +931,8 @@ export const buildFiscalReminderComputation = ({
   paymentYear,
   todayIso,
   inferredActivityStartYear,
+  basisContributiVersatiCassa,
+  priorBasisDeclaration,
 }: {
   config: FiscalConfig;
   payments: PaymentRow[];
@@ -867,12 +940,27 @@ export const buildFiscalReminderComputation = ({
   paymentYear: number;
   todayIso: string;
   inferredActivityStartYear?: number | null;
+  /**
+   * INPS versato per cassa nel basis-year (paymentYear-1) dai F24, per dedurre
+   * l'imposta del SALDO su CASSA (LM035) come la dichiarazione reale, invece che
+   * su competenza. Assente → fallback competenza (comportamento storico).
+   */
+  basisContributiVersatiCassa?: number;
+  /**
+   * Dichiarazione reale del basis-year precedente (paymentYear-2). Se CHIUSA, gli
+   * acconti sottratti dal saldo vengono derivati da essa (reali) invece che dalla
+   * stima-formula. Assente/aperta → fallback stima (comportamento storico).
+   */
+  priorBasisDeclaration?: FiscalDeclarationInput | null;
 }): FiscalReminderComputation => {
   const estimate = buildFiscalYearEstimate({
     payments,
     projects,
     fiscalConfig: config,
     taxYear: paymentYear - 1,
+    // INPS versato per cassa nel basis-year (LM035) → imposta del saldo su CASSA
+    // come la dichiarazione reale, non competenza. Assente → fallback competenza.
+    contributiVersatiCassa: basisContributiVersatiCassa,
   });
   const priorAdvanceEstimate = buildFiscalYearEstimate({
     payments,
@@ -884,7 +972,13 @@ export const buildFiscalReminderComputation = ({
     paymentYear,
     basisEstimate: estimate.scheduleInput,
     priorAdvancePlan: buildAdvancePlanFromEstimate({
-      estimate: priorAdvanceEstimate.scheduleInput,
+      // Acconti del saldo = quelli effettivamente versati per il basis-year,
+      // derivati dalla dichiarazione REALE chiusa (paymentYear-2) quando esiste,
+      // altrimenti la stima-formula. Allinea il reminder alla card (DB-12).
+      estimate: resolvePriorAdvanceScheduleInput(
+        priorAdvanceEstimate.scheduleInput,
+        priorBasisDeclaration,
+      ),
     }),
     annoInizioAttivita: config.annoInizioAttivita,
     inferredActivityStartYear:
