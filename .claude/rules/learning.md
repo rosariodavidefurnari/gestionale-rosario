@@ -500,6 +500,8 @@ vietato.
 **Fare**: verificare se il dominio ha elementi "sempre presenti" o low-priority filler; se sì, introdurre un flag esplicito nel modello (`isFirstYear`, `isDegraded`, ecc.) e usare quello nella UI
 **Perché**: nel refactor fiscale 2026-04-02 le low-priority deadlines (bollo/dichiarazione) esistono sempre, quindi `deadlines.length === 0` non può più significare "primo anno". La UI avrebbe mostrato semantica falsa pur con calcolo corretto.
 
+**Update 2026-06-20 (gate 2)**: stesso pattern in `useDashboardData`. La deduzione su CASSA dell'imposta della STIMA dell'anno SELEZIONATO era gatata su `fiscal_obligations.length === 0` ("anno dichiarato dal commercialista"). Ma un BOLLO pagato (obbligo low-priority sempre possibile) fa `length>0` → faceva scattare una deduzione su un versato F24 PARZIALE per un anno APERTO (es. 2025, dichiarazione non depositata) invece della competenza. Fix: gatare su `isDeclarationClosed(declaration)` (lo STESSO segnale di D3/`applyDefinitiveDeclaration`), in una funzione pura `resolveSelectedYearContributiVersatiCassa`. Cugino di DB-11 (`selectCertifiedObligations`): la PRESENZA di una riga obbligo ≠ stato semantico "anno chiuso". ATTENZIONE all'ASIMMETRIA: la memo gemella `basisContributiVersatiCassa` (saldo, gate 1) deve RESTARE su `length` — il saldo deduce l'INPS versato nel basis-year anche se non depositato; gatarla su `isDeclarationClosed` romperebbe il 9.005,91. Due memo identiche all'occhio, predicato corretto diverso.
+
 ### DOM-5: Fiscale due layer → check entrambi
 
 **Quando**: aggiungo feature fiscali, modifico deadline, dashboard o promemoria

@@ -73,9 +73,29 @@ Branch corrente:
   IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`, FIX-3+4 `7c7ec1c1`. Lavorare in chat
   nuova: partire da QUI (autosufficiente).
 
-Obiettivo operativo attivo: **schermata "Scadenze fiscali" CHIUSA** (card 2026 esatta
-`9.005,91 €`) **+ gate 1 (EF reminder) CHIUSO e DEPLOYATO**. Resta **1 gate NON bloccante**
-(`useDashboardData` length-switch, DOM-4) — vedi "Prossima azione".
+Obiettivo operativo attivo: **schermata "Scadenze fiscali" COMPLETAMENTE CHIUSA** — card 2026
+esatta `9.005,91 €`, gate 1 (EF reminder) DEPLOYATO, gate 2 (selected-year cassa) CHIUSO.
+**0 gate aperti.** Prossimo lavoro: scegliere dalla coda (BR2 incassi↔fatture, Fase 2, Scope C).
+
+### Sessione 2026-06-20-ter (CHIUSA) — gate 2: deduzione-cassa anno selezionato su dichiarazione DEPOSITATA (DOM-4)
+
+La deduzione su CASSA dell'imposta della STIMA dell'anno SELEZIONATO (`useDashboardData`) era gatata
+su `obligations.length===0` → un BOLLO pagato la faceva scattare (DOM-4: stato semantico ≠ length),
+deducendo un versato F24 PARZIALE per un anno aperto invece della competenza. Verificato su prod: il
+2025 (dichiarazione NON depositata, totali 0) ha obblighi bollo+imposta+inps → la vecchia gate sommava
+`3.382,09 €` cassa per la stima imposta 2025, invece di usare la competenza. Spec/piano:
+`docs/superpowers/specs|plans/2026-06-20-selected-year-cassa-gate*`.
+
+- Fix: funzione pura `resolveSelectedYearContributiVersatiCassa` gata su `isDeclarationClosed(declaration)`
+  (lo STESSO segnale di D3). Anno aperto → `undefined` → competenza stabile; anno chiuso → cassa
+  (D3 sovrascrive comunque la card; `redditoImponibile` diventa cassa-accurato).
+- **ASIMMETRIA VOLUTA**: la memo `basisContributiVersatiCassa` (saldo, gate 1) resta su `length` —
+  il saldo deduce l'INPS versato nel basis-year anche se non depositato; gate-1 9.005,91 INTATTO
+  (smoke ri-verificato). Frontend-only: nessun EF, nessuna migration.
+- TDD: RED→GREEN, helper test 5/5 falsificabile (mutazione: gate rimosso → 2 test rossi). 716 unit,
+  typecheck/lint/continuity OK. 10 e2e dashboard (desktop+mobile, fiscal estimate, parità) verdi sul
+  local stack reale (chromium-1208 del progetto, WF-21). **2 review multi-superficie** (fiscale+gate-1,
+  frontend/mobile/TDD) con RAG :8001 + sorgente → entrambe **PASS**.
 
 ### Sessione 2026-06-20-bis (CHIUSA) — gate 1: EF reminder allineata alla card (DOM-5)
 
@@ -121,17 +141,20 @@ solo schedule) → `fiscalParity.test.ts` verde. Mobile parità automatica (un s
 Baseline fiscale reale (dichiarazioni 2023/2024 AdE, formula validata all'euro, bug cassa/competenza
 provato): memoria `project_fiscal_real_data_baseline.md`.
 
-### Prossima azione (1 gate aperto, NON bloccante — la card è già giusta)
+### Prossima azione — schermata "Scadenze fiscali" CHIUSA, 0 gate aperti
 
-1. **`useDashboardData` length-switch — DOM-4**: la deduzione-cassa dell'imposta dell'anno
-   SELEZIONATO usa `obligations.length===0` come switch (il bollo pagato la fa scattare) → gatare
-   su dichiarazione DEPOSITATA dell'anno. Cambia la stima imposta 2025 → test dedicato.
+Schermata "Scadenze fiscali" completamente chiusa (3 fix card + gate 1 EF reminder + gate 2
+selected-year cassa). Niente di aperto qui. Prossimo lavoro = scegliere dalla coda sotto:
+**BR2** (incassi↔fatture, 0/31 payment linkati, delta bollo €2), **Fase 2** (verità remoto vs
+locale vs XML), **Scope C** (/payments/create settle reale, gated a quando l'emissione da app è
+in uso). Per ognuno: spec → review → piano → review → impl TDD → review impl → browser/verifica,
+gate spec→codice deciso dall'utente.
 
-Gate 1 (EF reminder) CHIUSO e DEPLOYATO in questa sessione (vedi sopra).
+Gate 1 (EF reminder, DEPLOYATO) e gate 2 (selected-year cassa) CHIUSI in questa sessione (vedi sopra).
 
 **Ripartenza (chat nuova)**: leggi `AGENTS.md` → questo CANTIERE → `docs/historical-analytics-handoff.md`
-(Update 2026-06-20 a/b/c) → memoria `project_fiscal_real_data_baseline.md`. Learning: DB-11, DB-12, DOM-5.
-Prompt-esempio cortissimo: **"continua dal CANTIERE: chiudi il gate 2 (useDashboardData length-switch DOM-4)"**.
+(Update 2026-06-20 a/b/c/d/e) → memoria `project_fiscal_real_data_baseline.md`. Learning: DB-11, DB-12,
+DOM-4, DOM-5.
 
 Shippato e LIVE in sessioni precedenti (tutto su `main`, CI verde, Vercel):
 

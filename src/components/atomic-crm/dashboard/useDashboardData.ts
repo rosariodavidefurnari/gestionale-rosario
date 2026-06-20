@@ -15,6 +15,7 @@ import type { CrmDataProvider } from "../providers/types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { buildDashboardModel, type DashboardModel } from "./dashboardModel";
 import { sumInpsContributionsPaidInYear } from "./inpsContributionsPaid";
+import { resolveSelectedYearContributiVersatiCassa } from "./selectedYearContributiVersatiCassa";
 import {
   countOpenReceivables,
   sumOutstandingReceivables,
@@ -114,18 +115,26 @@ export const useDashboardData = (year?: number) => {
     queryFn: () => dataProvider.getFiscalDeclaration((year as number) - 2),
     enabled: year != null,
   });
-  const contributiVersatiCassa = useMemo(() => {
-    const obligations = fiscalObligationsQuery.data;
-    const lines = fiscalPaymentLinesQuery.data;
-    // Deduzione su cassa SOLO quando esistono obblighi reali per l'anno (anno
-    // dichiarato dal commercialista): li' il versato F24 e' completo e replica
-    // l'imposta della dichiarazione. Per l'anno corrente senza dichiarazione
-    // -> undefined -> fallback competenza (stima stabile, no regressione).
-    if (year == null || !obligations || obligations.length === 0 || !lines) {
-      return undefined;
-    }
-    return sumInpsContributionsPaidInYear(lines, obligations, year);
-  }, [year, fiscalObligationsQuery.data, fiscalPaymentLinesQuery.data]);
+  // Deduzione su cassa dell'imposta della STIMA dell'anno selezionato SOLO quando
+  // la dichiarazione di quell'anno e' DEPOSITATA (chiusa), non quando esiste una
+  // qualunque obbligazione (un bollo pagato non = "anno dichiarato", DOM-4). Anno
+  // aperto -> undefined -> fallback competenza (stima stabile). La memo basis-year
+  // sotto NON usa questo gate (asimmetria voluta, vedi gate 1).
+  const contributiVersatiCassa = useMemo(
+    () =>
+      resolveSelectedYearContributiVersatiCassa({
+        year,
+        declaration: fiscalDeclarationQuery.data,
+        obligations: fiscalObligationsQuery.data,
+        lines: fiscalPaymentLinesQuery.data,
+      }),
+    [
+      year,
+      fiscalDeclarationQuery.data,
+      fiscalObligationsQuery.data,
+      fiscalPaymentLinesQuery.data,
+    ],
+  );
 
   // INPS versato per cassa nel basis-year (anno-1) -> deduce l'imposta del SALDO
   // su cassa (LM035). Il basis-year ha obblighi reali (acconti/saldo F24) -> il

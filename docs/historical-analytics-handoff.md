@@ -6,7 +6,25 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-20 (gate 1: EF reminder `fiscal_deadline_check` allineata alla card sul saldo — porta lato Deno acconti reali + imposta cassa, DEPLOYATA; + 3 fix card 9.005,91)
+Last updated: 2026-06-20 (gate 2: deduzione-cassa imposta anno SELEZIONATO gatata su dichiarazione DEPOSITATA, DOM-4 — schermata "Scadenze fiscali" 0 gate aperti; + gate 1 EF reminder; + 3 fix card 9.005,91)
+
+## Update 2026-06-20 (e) — Selected-year cassa gate su dichiarazione depositata (gate 2, DOM-4)
+
+La deduzione su CASSA dell'imposta della STIMA dell'anno SELEZIONATO (`useDashboardData`,
+`contributiVersatiCassa`) era gatata su `obligations.length===0`: un `fiscal_obligation` di tipo
+BOLLO pagato la faceva scattare (DOM-4: stato semantico ≠ length), deducendo un versato F24 PARZIALE
+per un anno aperto invece della competenza. Prod 2025: dichiarazione NON depositata (totali 0) ma
+obblighi bollo+imposta+inps presenti → la vecchia gate sommava `3.382,09 €` cassa per la stima
+imposta 2025 invece di usare la competenza. Fix: funzione pura
+`resolveSelectedYearContributiVersatiCassa` gata su `isDeclarationClosed(declaration)` (lo STESSO
+segnale che `applyDefinitiveDeclaration`/D3 usa). Anno aperto → `undefined` → competenza stabile;
+anno chiuso → cassa (D3 sovrascrive comunque la card KPI; `redditoImponibile` diventa cassa-accurato).
+ASIMMETRIA VOLUTA: la memo `basisContributiVersatiCassa` (SALDO, gate 1) resta su `length` — il saldo
+deduce l'INPS versato nel basis-year anche se non depositato; gate-1 9.005,91 INTATTO (smoke
+ri-verificato). Frontend-only (un hook → desktop+mobile, UI-7). TDD helper test falsificabile
+(mutazione: gate rimosso → 2 test rossi), 716 unit, 10 e2e dashboard verdi, 2 review multi-superficie
+(fiscale+gate-1, frontend/mobile/TDD) con RAG + sorgente → PASS. Spec/piano:
+`docs/superpowers/specs|plans/2026-06-20-selected-year-cassa-gate*`.
 
 ## Update 2026-06-20 (d) — EF reminder allineata alla card (gate 1, DOM-5)
 

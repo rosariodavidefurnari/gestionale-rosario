@@ -975,6 +975,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/selectedYearContributiVersatiCassa.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/selectCertifiedObligations.ts",
           "type": "registry:component"
         },
