@@ -73,36 +73,47 @@ Branch corrente:
   IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`, FIX-3+4 `7c7ec1c1`. Lavorare in chat
   nuova: partire da QUI (autosufficiente).
 
-Obiettivo operativo attivo: **NESSUNO**. Stato pulito, CI verde, prod sano.
+Obiettivo operativo attivo: **schermata "Scadenze fiscali" CHIUSA** (card 2026 esatta
+`9.005,91 €`). Restano **2 gate NON bloccanti** (EF reminder, useDashboardData switch) —
+vedi "Prossima azione".
 
-Ultimo lavoro (2026-06-20c) — card scadenze ESATTA `9.005,91 €`. Oltre agli acconti
-reali, l'imposta del saldo ora si deduce su CASSA (LM035: `basisContributiVersatiCassa` =
-INPS versato cassa anno-1 dai F24) invece che su competenza: imposta 2025 dovuta 719,50→804,12,
-imposta saldo 486,50→571,12. `previousYearEstimate` alimenta solo lo schedule → KPI/parità
-intatti. 701 unit verdi, RAG :8001 + sorgente PASS. Chiude il residuo imposta cassa-vs-competenza.
-Gate aperto: solo EF reminder (DOM-5 due-layer).
+### Sessione 2026-06-20 (CHIUSA) — schermata "Scadenze fiscali" corretta in 3 fix
 
-Lavoro precedente (2026-06-20b) — saldo scadenzario sui ACCONTI REALI. La card "Scadenze
-fiscali" mostrava `7.941,49 €` sottostimando (sottraeva acconti STIMATI). Helper puro
-`resolvePriorAdvanceScheduleInput`: se la dichiarazione anno-2 è chiusa, deriva gli acconti
-dalla sua competenza (riusa D3), altrimenti fallback. Builder condivisi intatti (parità
-verde), desktop+mobile via `useDashboardData`. Prod 2026: saldo INPS 2.839→3.571, totale
-`~8.840` (non 7.941). 700 unit + e2e fiscal verdi, RAG :8001 multi-lente PASS. Gate aperto:
-EF reminder ancora sulla stima (DOM-5 due-layer).
+Tutti su `main`, CI verde, Vercel. La card mostrava numeri sbagliati; ora mostra l'ESATTO.
 
-Lavoro precedente (2026-06-20) — guardrail "obblighi certificati" + pulizia righe-spazzatura
-fiscali. La card "Scadenze fiscali" mostrava un falso `11.100,60 €` "Da dichiarazione" per
-il 2026: 6 `fiscal_obligations` proiezioni hand-inserite il 2026-04-14 (metodo "aliquota
-effettiva" rigettato, `declaration_id` NULL/zero-totals, 0 F24). Fatto: DELETE prod delle 6
-righe (safe, backup `*_backup_20260414`) + helper puro `selectCertifiedObligations` (client
-+ mirror Deno) applicato in `useFiscalReality` (card desktop+mobile) e nella EF
-`fiscal_deadline_check`. Sweep superfici via RAG :8001. 695 unit verdi, typecheck/build OK.
-**Gate aperti**: (1) deploy EF `npx supabase functions deploy fiscal_deadline_check
---project-ref qvdmzhyzpyaveniirsmo` (BE-1: il push NON deploya le EF); (2) follow-up
-`useDashboardData:102` switch deduzione-cassa (vedi backlog). Dichiarazioni reali 2023/2024
-AdE → formula validata all'euro + bug cassa/competenza provato (memoria
-`project_fiscal_real_data_baseline.md`). Numero a norma di legge 2026 ≈ 9.005 € (INPS
-7.630,11 esatto), NON 11.100.
+- `3d1f23c5` — **guardrail "obblighi certificati" + pulizia**: card mostrava falso `11.100,60 €`
+  "Da dichiarazione" (6 `fiscal_obligations` 2026 proiezioni hand-inserite 2026-04-14, metodo
+  "aliquota effettiva" rigettato, `declaration_id` NULL/zero-totals, 0 F24). DELETE prod 6 righe
+  (backup `*_backup_20260414`) + helper puro `selectCertifiedObligations` (client + mirror Deno)
+  in `useFiscalReality` (card desktop+mobile) e nella EF `fiscal_deadline_check` (DEPLOYATA). DB-11.
+- `9dc7f6c3` — **saldo su ACCONTI REALI**: il saldo sottraeva acconti STIMATI. Helper
+  `resolvePriorAdvanceScheduleInput`: dichiarazione anno-2 CHIUSA → acconti dalla sua competenza
+  (riusa D3), altrimenti fallback. Saldo INPS 2.839→3.571. DB-12.
+- `41c655fc` — **imposta saldo su CASSA (LM035)**: `basisContributiVersatiCassa` (INPS versato
+  cassa anno-1 dai F24) → imposta deduce su cassa, non competenza. Imposta saldo 486,50→571,12.
+
+Builder fiscali condivisi + KPI INTATTI (`previousYearEstimate`/`buildFiscalPaymentSchedule`
+solo schedule) → `fiscalParity.test.ts` verde. Mobile parità automatica (un solo hook
+`useDashboardData`, UI-7). **Card finale: `9.005,91 €`** (30 giu 6.574,10 + 30 nov 2.431,81).
+701 unit + typecheck + build + e2e fiscal desktop+mobile verdi; RAG :8001 multi-lente + sorgente PASS.
+Baseline fiscale reale (dichiarazioni 2023/2024 AdE, formula validata all'euro, bug cassa/competenza
+provato): memoria `project_fiscal_real_data_baseline.md`.
+
+### Prossima azione (gate aperti, NON bloccanti — la card è già giusta)
+
+1. **EF reminder — DOM-5 due-layer**: `supabase/functions/_shared/fiscalDeadlineCalculation.ts`
+   (usata da `fiscal_deadline_check`) calcola il saldo ANCORA sulla stima-formula → il promemoria
+   WhatsApp direbbe ~7.941 invece di 9.005,91. Portare lato Deno: (a) acconti reali
+   (`resolvePriorAdvanceScheduleInput` + fetch dichiarazione anno-2 server-side), (b) imposta cassa
+   (`basisContributiVersatiCassa` + somma INPS F24 anno-1). Poi `npx supabase functions deploy
+   fiscal_deadline_check --project-ref qvdmzhyzpyaveniirsmo` (BE-1: push NON deploya le EF).
+2. **`useDashboardData:102` length-switch — DOM-4**: la deduzione-cassa dell'imposta dell'anno
+   SELEZIONATO usa `obligations.length===0` come switch (il bollo pagato la fa scattare) → gatare
+   su dichiarazione DEPOSITATA dell'anno. Cambia la stima imposta 2025 → test dedicato.
+
+**Ripartenza (chat nuova)**: leggi `AGENTS.md` → questo CANTIERE → `docs/historical-analytics-handoff.md`
+(Update 2026-06-20 a/b/c) → memoria `project_fiscal_real_data_baseline.md`. Learning: DB-11, DB-12.
+Prompt-esempio cortissimo: **"continua dal CANTIERE: chiudi il gate 1 (EF reminder DOM-5)"**.
 
 Shippato e LIVE in sessioni precedenti (tutto su `main`, CI verde, Vercel):
 
