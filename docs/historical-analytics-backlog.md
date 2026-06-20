@@ -15,10 +15,14 @@ stima-formula: `7.941 → ~8.840` su prod. Helper puro `resolvePriorAdvanceSched
 condivisi intatti (parità verde), desktop+mobile via `useDashboardData`. Chiude il follow-up
 "allineamento stima→acconti reali" della tornata precedente.
 
+DONE (2026-06-20c): imposta del saldo su CASSA (LM035) — `basisContributiVersatiCassa` passato a
+`previousYearEstimate`. Card ora ESATTA `9.005,91 €` (imposta saldo 486,50→571,12). Chiude il
+residuo imposta cassa-vs-competenza.
+
 APERTO (next): EF `_shared/fiscalDeadlineCalculation` (reminder server-side) ancora sulla stima
-formula → portare lo stesso `priorBasisDeclaration` (fetch year-2 lato Deno) per allineare i
-promemoria alla card (DOM-5 due-layer). + `useDashboardData:102` length-switch deduzione-cassa
-(invariato, separato). + imposta cassa-vs-competenza (~85 € residui, secondario).
+formula → portare lo stesso `priorBasisDeclaration` + `basisContributiVersatiCassa` (fetch lato
+Deno) per allineare i promemoria alla card (DOM-5 due-layer). + `useDashboardData:102` length-switch
+deduzione-cassa dell'anno SELEZIONATO (separato, invariato).
 
 ## Update 2026-06-20 — Guardrail "obblighi certificati" (card scadenze + EF reminder)
 

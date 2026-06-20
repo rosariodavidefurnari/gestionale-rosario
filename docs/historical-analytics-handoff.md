@@ -8,6 +8,18 @@ prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
 Last updated: 2026-06-20 (saldo scadenzario sui ACCONTI REALI dalla dichiarazione anno-2 chiusa: card 7.941→~8.840, desktop+mobile, parità intatta; + guardrail obblighi certificati + pulizia spazzatura)
 
+## Update 2026-06-20 (c) — Imposta del saldo su CASSA: card ESATTA 9.005,91 €
+
+Completato il saldo: oltre agli acconti reali, l'imposta del saldo ora si deduce su CASSA
+(contributi INPS versati nel basis-year, `sumInpsContributionsPaidInYear` sui F24) invece che
+su competenza. `buildFiscalModel` passa `basisContributiVersatiCassa` a `previousYearEstimate`
+(accetta già `contributiVersatiCassa`, tocca solo l'imposta); `useDashboardData` fetcha obblighi
++ righe F24 dell'anno-1. Builder condivisi + KPI intatti (previousYearEstimate solo schedule) →
+parità verde. Prod 2026: imposta 2025 `719,50 → 804,12` (reddito 19.464 − LM035 3.382,09 × 5%),
+imposta saldo `486,50 → 571,12`, **totale card `9.005,91 €` esatto** (era ~8.840). Controllore
+`fiscalModel.test.ts` (`cash imposta_saldo = 730`). 701 unit verdi, RAG :8001 + sorgente PASS.
+Chiude il residuo imposta cassa-vs-competenza. APERTO: solo EF reminder (DOM-5 due-layer).
+
 ## Update 2026-06-20 (b) — Saldo scadenzario sui ACCONTI REALI (card 7.941 → ~8.840)
 
 La card "Scadenze fiscali" mostrava `7.941,49 €` sottostimando: il saldo sottraeva acconti

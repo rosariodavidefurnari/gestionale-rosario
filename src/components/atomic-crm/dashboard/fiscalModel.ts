@@ -391,6 +391,7 @@ export const buildFiscalModel = ({
   fiscalConfig,
   year,
   contributiVersatiCassa,
+  basisContributiVersatiCassa,
   declaration,
   priorBasisDeclaration,
 }: {
@@ -408,6 +409,12 @@ export const buildFiscalModel = ({
    * competenza (retro-compatibile).
    */
   contributiVersatiCassa?: number;
+  /**
+   * INPS versato per cassa nel basis-year (currentYear-1) dai F24, per dedurre
+   * l'imposta del SALDO su CASSA (LM035) come la dichiarazione reale, invece che
+   * su competenza. Assente -> fallback competenza (comportamento storico).
+   */
+  basisContributiVersatiCassa?: number;
   /**
    * D3: dichiarazione reale del commercialista per l'anno selezionato. Se chiusa
    * (totali non-zero), le card KPI mostrano il DEFINITIVO reale invece della
@@ -531,6 +538,9 @@ export const buildFiscalModel = ({
     projects,
     fiscalConfig,
     taxYear: currentYear - 1,
+    // INPS versato per cassa nel basis-year (LM035) -> imposta del saldo su CASSA
+    // come la dichiarazione reale, non competenza. Assente -> fallback competenza.
+    contributiVersatiCassa: basisContributiVersatiCassa,
   });
   const twoYearsBackEstimate = buildFiscalYearEstimate({
     payments,

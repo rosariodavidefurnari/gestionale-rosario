@@ -75,7 +75,14 @@ Branch corrente:
 
 Obiettivo operativo attivo: **NESSUNO**. Stato pulito, CI verde, prod sano.
 
-Ultimo lavoro (2026-06-20b) — saldo scadenzario sui ACCONTI REALI. La card "Scadenze
+Ultimo lavoro (2026-06-20c) — card scadenze ESATTA `9.005,91 €`. Oltre agli acconti
+reali, l'imposta del saldo ora si deduce su CASSA (LM035: `basisContributiVersatiCassa` =
+INPS versato cassa anno-1 dai F24) invece che su competenza: imposta 2025 dovuta 719,50→804,12,
+imposta saldo 486,50→571,12. `previousYearEstimate` alimenta solo lo schedule → KPI/parità
+intatti. 701 unit verdi, RAG :8001 + sorgente PASS. Chiude il residuo imposta cassa-vs-competenza.
+Gate aperto: solo EF reminder (DOM-5 due-layer).
+
+Lavoro precedente (2026-06-20b) — saldo scadenzario sui ACCONTI REALI. La card "Scadenze
 fiscali" mostrava `7.941,49 €` sottostimando (sottraeva acconti STIMATI). Helper puro
 `resolvePriorAdvanceScheduleInput`: se la dichiarazione anno-2 è chiusa, deriva gli acconti
 dalla sua competenza (riusa D3), altrimenti fallback. Builder condivisi intatti (parità

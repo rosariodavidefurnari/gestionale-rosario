@@ -142,6 +142,7 @@ export const buildDashboardModel = ({
   fiscalConfig,
   year,
   contributiVersatiCassa,
+  basisContributiVersatiCassa,
   declaration,
   priorBasisDeclaration,
 }: {
@@ -154,6 +155,8 @@ export const buildDashboardModel = ({
   fiscalConfig?: FiscalConfig;
   year?: number;
   contributiVersatiCassa?: number;
+  /** INPS versato per cassa nel basis-year (anno-1) per la deduzione cassa dell'imposta del saldo. */
+  basisContributiVersatiCassa?: number;
   /** D3: dichiarazione reale del commercialista per l'anno selezionato. */
   declaration?: FiscalDeclaration | null;
   /** Dichiarazione reale del basis-year precedente (anno-2) per gli acconti reali del saldo. */
@@ -624,6 +627,7 @@ export const buildDashboardModel = ({
         fiscalConfig,
         year: selectedYear,
         contributiVersatiCassa,
+        basisContributiVersatiCassa,
         declaration,
         priorBasisDeclaration,
       })

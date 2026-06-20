@@ -84,6 +84,19 @@ export const useDashboardData = (year?: number) => {
     queryFn: () => dataProvider.getEnrichedPaymentLinesForYear(year as number),
     enabled: year != null,
   });
+  // Stessi dati per il BASIS-year (anno-1): l'imposta del SALDO si deduce su CASSA
+  // dai contributi INPS versati nel basis-year (LM035), non su competenza.
+  const fiscalObligationsPrevQuery = useQuery({
+    queryKey: ["fiscal-obligations", year != null ? year - 1 : null],
+    queryFn: () => dataProvider.getFiscalObligations((year as number) - 1),
+    enabled: year != null,
+  });
+  const fiscalPaymentLinesPrevQuery = useQuery({
+    queryKey: ["fiscal-enriched-payment-lines", year != null ? year - 1 : null],
+    queryFn: () =>
+      dataProvider.getEnrichedPaymentLinesForYear((year as number) - 1),
+    enabled: year != null,
+  });
   // D3: dichiarazione reale del commercialista per l'anno SELEZIONATO. Se chiusa
   // (totali non-zero), le card KPI mostrano il definitivo invece della stima.
   // queryKey coerente con gli altri consumer -> react-query dedup.
@@ -113,6 +126,18 @@ export const useDashboardData = (year?: number) => {
     }
     return sumInpsContributionsPaidInYear(lines, obligations, year);
   }, [year, fiscalObligationsQuery.data, fiscalPaymentLinesQuery.data]);
+
+  // INPS versato per cassa nel basis-year (anno-1) -> deduce l'imposta del SALDO
+  // su cassa (LM035). Il basis-year ha obblighi reali (acconti/saldo F24) -> il
+  // versato e' completo. Assente -> undefined -> fallback competenza nel modello.
+  const basisContributiVersatiCassa = useMemo(() => {
+    const obligations = fiscalObligationsPrevQuery.data;
+    const lines = fiscalPaymentLinesPrevQuery.data;
+    if (year == null || !obligations || obligations.length === 0 || !lines) {
+      return undefined;
+    }
+    return sumInpsContributionsPaidInYear(lines, obligations, year - 1);
+  }, [year, fiscalObligationsPrevQuery.data, fiscalPaymentLinesPrevQuery.data]);
 
   const isPending = [
     paymentsQuery,
@@ -163,12 +188,14 @@ export const useDashboardData = (year?: number) => {
       fiscalConfig,
       year,
       contributiVersatiCassa,
+      basisContributiVersatiCassa,
       declaration: fiscalDeclarationQuery.data ?? null,
       priorBasisDeclaration: priorBasisDeclarationQuery.data ?? null,
     });
   }, [
     clientsQuery.data,
     contributiVersatiCassa,
+    basisContributiVersatiCassa,
     expensesQuery.data,
     fiscalConfig,
     fiscalDeclarationQuery.data,

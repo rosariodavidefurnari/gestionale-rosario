@@ -6,7 +6,7 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-20 (saldo scadenzario usa acconti REALI da dichiarazione anno-2 chiusa via `resolvePriorAdvanceScheduleInput`: card 7.941→~8.840 su prod, desktop+mobile, parità intatta; + guardrail obblighi certificati + pulizia 6 righe-spazzatura fiscali)
+Last updated: 2026-06-20 (saldo scadenzario ESATTO `9.005,91 €`: acconti REALI da dichiarazione anno-2 + imposta su CASSA LM035 `basisContributiVersatiCassa`; desktop+mobile, parità intatta; + guardrail obblighi certificati + pulizia spazzatura)
 
 ---
 

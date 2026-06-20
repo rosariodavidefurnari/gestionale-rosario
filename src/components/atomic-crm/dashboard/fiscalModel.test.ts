@@ -983,4 +983,28 @@ describe("buildFiscalModel — saldo subtracts REAL paid acconti (closed prior-y
       getInpsSaldo(buildFiscalModel({ ...input, priorBasisDeclaration: null })),
     );
   });
+
+  it("deducts the imposta on CASH basis (LM035) when basisContributiVersatiCassa is provided", () => {
+    const input = baseInput();
+    const getImpostaSaldo = (
+      model: ReturnType<typeof buildFiscalModel>,
+    ): number | null => {
+      for (const deadline of model.schedule.deadlines) {
+        const item = deadline.items.find(
+          (i) => i.component === "imposta_saldo",
+        );
+        if (item) return item.amount;
+      }
+      return null;
+    };
+    // reddito 2025 = 20000 × 78% = 15600. No prior-year declaration -> imposta advance 0.
+    // Competence (default): imposta = (15600 − INPS competence 4066.92) × 5% = 576.65.
+    // Cash (LM035 = 1000): imposta = (15600 − 1000) × 5% = 730.00.
+    const competence = getImpostaSaldo(buildFiscalModel(input));
+    const cash = getImpostaSaldo(
+      buildFiscalModel({ ...input, basisContributiVersatiCassa: 1000 }),
+    );
+    expect(cash).toBe(730);
+    expect(cash).not.toBe(competence);
+  });
 });
