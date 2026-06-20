@@ -3857,3 +3857,43 @@ stesso pattern UX per quotes (Show/Edit) e bulk delete services.
 
 **Doc collegati:** spec `docs/superpowers/specs/2026-06-14-fiscal-cascade-protection-design.md`,
 piano `docs/superpowers/plans/2026-06-14-fiscal-cascade-protection.md`.
+
+## Update 2026-06-20 — BR2: backfill storico `payments.financial_document_id` (LIVE prod)
+
+**Cosa:** collegati i **25** `payments` `ricevuto` alle rispettive fatture outbound
+(match 1:1 `client_id + trim(document_number)=trim(invoice_ref)`, `customer_invoice`),
+valorizzando `payments.financial_document_id` (prima 0/32 collegati). One-shot
+data-only, **non migration** (FK già da `20260616200000`), applicato via MCP
+`execute_sql` su prod. Reversibile (`ON DELETE SET NULL`).
+
+**Escluso (U5-A):** il payment `scaduto` `FPA 1/23`. Collegarlo lo renderebbe
+void-eligibile (`canVoidInvoiceFromPayments` `.every(in_attesa||scaduto)`) → il bottone
+"Annulla emissione" su `FinancialDocumentShow` cancellerebbe cassa reale di una fattura
+2023 storica. Il gate void NON ha flag di provenienza: è la presenza della FK ad
+abilitarlo. Vedi learning **DB-13**.
+
+**Neutralità verificata (3 tornate di review, RAG+sorgente, cassa-integrity adversary
+PASS):** 0 viste leggono `financial_document_id` (`information_schema.views`); la vista
+canonica `20260401094930_single_source_financials.sql` filtra i payment solo per
+`status/project/client`. La stima fiscale (`fiscalModel.ts`,
+`_shared/fiscalDeadlineCalculation.ts`) legge solo amount/payment_date/status → 0-delta
+(`npm run smoke:ef-reminder-parity` = 9.005,91 pre==post). `financial_document_cash_allocations`
+= 0 righe (colonna morta), AI snapshot strip payment-state.
+
+**Effetto UI per-design (INV-6):** `FinancialDocumentShow` (componente condiviso
+desktop+mobile) fetcha i payment per `financial_document_id@eq` → i 25 doc collegati
+rendono ora il badge "Incassata" (`deriveDocumentCollectionState([ricevuto])`). La LISTA
+Fatture NON cambia (legge `financial_documents_summary`, 0 fetch payment).
+
+**Controllori (committati):** `scripts/br2-link-payments-financial-documents.sql` (CTE
+match 1:1 fail-closed + apply DO-block con checksum cassa INV-1 pre==post +
+`RAISE` abort-on-mismatch + C1/C2/C3 OK/MISMATCH); `scripts/br2LinkDecider.ts` +
+`.test.ts` (C5, 3 rami safety non triggerati da seed/prod); C4 `[scaduto]`-solo in
+`invoiceVoidRules.test.ts`; `npm run health:financial` esteso (`BR2a` floor
+linkedCount>=25, `BR2b` uniqueness 0).
+
+**Rischi residui:** re-import futuro dei 25 sovrascrive `payment_date` con `issue_date`
+(shift cassa cross-year, DOM-8) → out-of-scope, lega all'attribuzione data-fattura;
+bollo €2 + anomalia AQUACHETA +25% report-only; void-hardening `source_path` = follow-up.
+
+**Doc collegati:** spec/piano `docs/superpowers/specs|plans/2026-06-20-br2-payments-financial-documents-reconciliation*`.

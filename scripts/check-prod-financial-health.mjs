@@ -93,6 +93,20 @@ const main = async () => {
     `INV3b doc >1 in_attesa: ${multiPending.length}`,
   );
 
+  // BR2 backfill invariants. INV4 is a FLOOR, not an equality: linkedCount grows
+  // with every real app emit (FIX-3/4), so `== 25` would false-FAIL the moment a
+  // real invoice is emitted from the app. The exact `== 25` belongs to the
+  // one-shot post-apply acceptance check (C3), not this recurring guard.
+  const multiReceived = Object.values(byDoc).filter(
+    (st) => st.filter((s) => s === "ricevuto").length > 1,
+  );
+  (linkedCount >= 25 ? ok : fails).push(
+    `BR2a backfill floor linkedCount>=25: ${linkedCount}`,
+  );
+  (multiReceived.length === 0 ? ok : fails).push(
+    `BR2b doc >1 ricevuto collegato: ${multiReceived.length}`,
+  );
+
   const ccp = await all(
     "client_commercial_position",
     "client_name,balance_due",

@@ -73,9 +73,36 @@ Branch corrente:
   IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`, FIX-3+4 `7c7ec1c1`. Lavorare in chat
   nuova: partire da QUI (autosufficiente).
 
-Obiettivo operativo attivo: **schermata "Scadenze fiscali" COMPLETAMENTE CHIUSA** — card 2026
-esatta `9.005,91 €`, gate 1 (EF reminder) DEPLOYATO, gate 2 (selected-year cassa) CHIUSO.
-**0 gate aperti.** Prossimo lavoro: scegliere dalla coda (BR2 incassi↔fatture, Fase 2, Scope C).
+Obiettivo operativo attivo: **BR2 — riconciliazione storica incassi↔fatture SHIPPED e LIVE
+(prod)**. 25/32 `payments` ricevuti collegati alle fatture via `payments.financial_document_id`
+(prima 0). Scaduto `FPA 1/23` ESCLUSO (evita void-cancellazione cassa). **0 gate aperti.**
+Prossimo lavoro: scegliere dalla coda (Fase 2, Scope C gated, attribuzione data-fattura).
+
+### Sessione 2026-06-20-quater (BR2 SHIPPED su prod) — backfill 25 link incassi↔fatture
+
+Spec/piano: `docs/superpowers/specs|plans/2026-06-20-br2-payments-financial-documents-reconciliation*`.
+Processo completo: RAG :8001 rigenerato su snapshot `1704a926` (code-only, validato) → ground-truth
+prod deterministico → spec v3 → **3 tornate di review** (spec 5 revisori, piano 5, trasversale 6 —
+16 passaggi, ognuno RAG+sorgente) → gate utente (U5-A link 25, U3-A script) → impl TDD.
+
+- **BLOCK convergente intercettato dalla review**: collegare lo `scaduto FPA 1/23` lo avrebbe reso
+  void-eligibile (`canVoidInvoiceFromPayments`) → "Annulla emissione" su fattura 2023 storica →
+  cancellazione cassa reale. Fix: escluso (link 25, non 26). Cassa-integrity adversary review = PASS
+  (nessun euro si muove: 0 viste leggono la FK, allocations 0 righe morte). DB-13.
+- **Backfill**: `scripts/br2-link-payments-financial-documents.sql` (CTE match 1:1 fail-closed
+  `client+trim(document_number)=trim(invoice_ref)` outbound customer_invoice + `status='ricevuto'`;
+  apply DO-block con checksum cassa INV-1 pre==post + `RAISE` abort-on-mismatch). Applicato via MCP
+  `execute_sql` su `qvdmzhyzpyaveniirsmo`. Dry-run prima (RAISE forzato → rollback, would_link=25).
+- **Verde prod**: C1 RED 25/0 → APPLY → C3 GREEN (linked 25, residui 0, INV-2 uniq 0, scaduto NULL,
+  allocations 0) → idempotenza 2ª run 0 → fiscale `smoke:ef-reminder-parity` 9.005,91 **0-delta** →
+  `health:financial` PASS (`BR2a` floor linkedCount>=25, `BR2b` uniqueness 0). 41 unit (C5 decider +
+  C4 void scaduto-solo + INV-6 badge), tsc 0, prettier OK.
+- **Reversibile** (`ON DELETE SET NULL`). Nessuna Edge Function toccata, nessuna migration (FK
+  esisteva da `20260616200000`). Frontend immutato → badge "Incassata" appare per-design sulle 25
+  Fatture Show (INV-6, deriveDocumentCollectionState).
+- **Rischi residui documentati** (non bloccanti): re-import futuro dei 25 sovrascrive `payment_date`
+  con issue_date (shift cassa cross-year, lega a data-fattura/U4); bollo €2 + anomalia AQUACHETA
+  +25% report-only; void-hardening `source_path` = follow-up U5-B. 6 no-doc + 2 no-payment = follow-up.
 
 ### Sessione 2026-06-20-ter (CHIUSA) — gate 2: deduzione-cassa anno selezionato su dichiarazione DEPOSITATA (DOM-4)
 

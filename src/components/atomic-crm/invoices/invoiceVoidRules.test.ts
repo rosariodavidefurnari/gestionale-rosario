@@ -24,6 +24,19 @@ describe("canVoidInvoiceFromPayments", () => {
     ).toBe(false);
   });
 
+  // BR2 C4: documents WHY the historical scaduto FPA 1/23 is excluded from the
+  // backfill. A doc with a single linked scaduto payment IS void-eligible (the
+  // void gate has no app-emitted/provenance discriminator), so linking it would
+  // surface a destructive "Annulla emissione" button on a 2023 historical
+  // invoice. The 25 ricevuto are safe (a lone linked ricevuto is NOT voidable).
+  it("true for a lone linked scaduto — the reason BR2 excludes FPA 1/23", () => {
+    expect(canVoidInvoiceFromPayments(outbound, [pay("scaduto")])).toBe(true);
+  });
+
+  it("false for a lone linked ricevuto — the 25 backfilled docs stay safe", () => {
+    expect(canVoidInvoiceFromPayments(outbound, [pay("ricevuto")])).toBe(false);
+  });
+
   it("false with no linked payments (historical/imported)", () => {
     expect(canVoidInvoiceFromPayments(outbound, [])).toBe(false);
   });

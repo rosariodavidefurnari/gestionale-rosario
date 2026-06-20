@@ -73,6 +73,7 @@
 | **DB**       | DB-10 | Incasso atteso da emit → riconcilia per FK, mai duplicare |
 | **DB**       | DB-11 | Lettore di fiscal_obligations → filtra CERTIFICATI (proiezione ≠ reale) |
 | **DB**       | DB-12 | Saldo scadenzario → acconti REALI da dichiarazione anno-2, non stima |
+| **DB**       | DB-13 | Backfill FK che abilita void/settle → simmetria del rovescio + match 1:1 fail-closed |
 | **Workflow** | WF-14 | Flow rapidi → dedup guard project+day     |
 | **Workflow** | WF-15 | Lavoro rischioso → RAG attivo + review multi-superficie |
 | **Workflow** | WF-16 | CI check → `gh -R fork` (default punta a upstream)  |
@@ -364,6 +365,38 @@ condivisi → `fiscalParity.test.ts` resta verde. `total_inps` solo letto (DOM-8
 invece di 3.571, totale ~1.000 € troppo basso. Il vero (~8.840) si ottiene riusando la
 dichiarazione 2024 reale di cui la card D3 già si fida. L'EF reminder resta sulla stima → due-layer
 DOM-5 da allineare a parte.
+
+### DB-13: un backfill di FK che ABILITA un'azione distruttiva (void) o un settle (re-import) → rendi simmetrico il rovescio + match 1:1 fail-closed
+
+**Quando**: faccio un backfill/UPDATE che valorizza una FK su righe storiche (es.
+`payments.financial_document_id`) e quella FK è l'ancora di un'azione a valle (void
+che cancella, re-import che fa settle, allocazione)
+**Fare**:
+1. prima del backfill, mappare CHI consuma quella FK e quale comportamento si
+   ATTIVA collegando una riga oggi non collegata. Il gate dell'azione distruttiva
+   spesso NON ha un flag di provenienza: è la PRESENZA della FK (`linkedPayments.length>0`)
+   che lo abilita. Un `status` "innocuo" (es. `scaduto`) può rendere la riga
+   void-eligibile → escluderlo dal set (`status='ricevuto'` only) o aggiungere un
+   discriminatore reale (`source_path IS NULL` per app-emessi) PRIMA di collegare;
+2. match SOLO esatto 1:1 fail-closed (chiave naturale + `NOT EXISTS` su ENTRAMBI i
+   lati), mai blind-UPDATE per stringa free-text (`invoice_ref` editabile, DB-9);
+3. controllore eseguibile per le colonne soldi: checksum cassa pre==post dentro la
+   stessa transazione + `DO/RAISE` abort-on-mismatch (rollback), perché un UPDATE
+   "solo FK" che per errore tocca `status/amount/payment_date` è corruzione silenziosa;
+4. i rami di sicurezza (scaduto-skip, 2-match-skip, inbound-skip) spesso NON sono
+   triggerati da alcun dato in seed/prod → l'UNICO test deterministico è una funzione
+   pura (`decidePaymentDocumentLink`), non il rehearsal su dati reali;
+5. residuo da documentare: dopo il link, il re-import settla in-place e SOVRASCRIVE
+   `payment_date` con l'`issue_date` del doc → shift cassa cross-year su fatture a
+   cavallo d'anno (DOM-8). Non introdotto dal backfill ma da esso RESO RAGGIUNGIBILE.
+**Perché**: il 2026-06-20 (BR2) collegare lo `scaduto FPA 1/23` lo avrebbe reso
+void-eligibile (`canVoidInvoiceFromPayments` `.every(in_attesa||scaduto)`) →
+"Annulla emissione" su una fattura 2023 storica → cancellazione di cassa reale. La
+review multi-superficie l'ha intercettato; fix: backfill dei soli 25 `ricevuto`,
+scaduto escluso (FK NULL). Cugino di DB-9 (mark/un-mark simmetrici per FK, non per
+stringa) e DB-11/DOM-4 (presenza riga ≠ stato semantico). Artefatti:
+`scripts/br2-link-payments-financial-documents.sql` (checksum INV-1 + abort),
+`scripts/br2LinkDecider.ts` (+test C5), `docs/superpowers/specs|plans/2026-06-20-br2-*`.
 
 ---
 
