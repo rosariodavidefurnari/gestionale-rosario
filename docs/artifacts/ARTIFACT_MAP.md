@@ -33,16 +33,16 @@ the variable registry. Secret artifacts must not be readable, indexable, or logg
 ## cache-test-and-browser-output
 
 - kind: `cache`
-- path_patterns: `test-results/**, playwright-report/**, .playwright-mcp/**, .browser-sessions/**, coverage/**`
+- path_patterns: `test-results/**, playwright-report/**, .playwright-mcp/**, .browser-sessions/**, coverage/**, __pycache__/**, **/__pycache__/**, *.py[cod]`
 - delete_policy: `safe_rebuild`
-- producers: `npm run test:e2e`
+- producers: `npm run test:e2e, npm run governance:precommit`
 - consumers: `local-e2e-smoke`
 - source_variables: `LOCAL_SUPABASE_ADMIN_EMAIL, LOCAL_SUPABASE_ADMIN_PASSWORD`
-- validation: `npm run test:e2e`
+- validation: `npm run test:e2e, npm run governance:artifacts:check`
 - allowed_to_read: `true`
 - allowed_to_index: `false`
 - allowed_to_log: `true`
-- risk: Rebuildable test/browser output; useful only for immediate debugging.
+- risk: Rebuildable test/browser/Python bytecode output; useful only for immediate debugging.
 
 ## dangerous-local-supabase-state
 

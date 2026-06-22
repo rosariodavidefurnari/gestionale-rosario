@@ -46,11 +46,15 @@
         "playwright-report/**",
         ".playwright-mcp/**",
         ".browser-sessions/**",
-        "coverage/**"
+        "coverage/**",
+        "__pycache__/**",
+        "**/__pycache__/**",
+        "*.py[cod]"
       ],
       "kind": "cache",
       "producers": [
-        "npm run test:e2e"
+        "npm run test:e2e",
+        "npm run governance:precommit"
       ],
       "consumers": [
         "local-e2e-smoke"
@@ -60,9 +64,10 @@
         "LOCAL_SUPABASE_ADMIN_PASSWORD"
       ],
       "delete_policy": "safe_rebuild",
-      "risk": "Rebuildable test/browser output; useful only for immediate debugging.",
+      "risk": "Rebuildable test/browser/Python bytecode output; useful only for immediate debugging.",
       "validation": [
-        "npm run test:e2e"
+        "npm run test:e2e",
+        "npm run governance:artifacts:check"
       ],
       "allowed_to_read": true,
       "allowed_to_index": false,
