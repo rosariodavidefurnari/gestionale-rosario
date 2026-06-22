@@ -74,7 +74,7 @@ To avoid ambiguity between similarly named fields:
 
 ## Canonical Formula
 
-```
+```text
 total_fees     = SUM(fee_shooting + fee_editing + fee_other - discount)
 total_expenses = SUM(expense_amount)
                  where: credito_ricevuto     -> -amount

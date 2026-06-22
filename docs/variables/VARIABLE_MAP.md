@@ -1125,6 +1125,18 @@ used only as a template source.
 - risk: pre-commit guard order
 - evidence: `.husky/pre-commit`
 
+### path-markdownlint-json
+
+- name: `.markdownlint.json`
+- scope: `repo_configuration`
+- required: `false`
+- sensitive: `false`
+- status: `verified`
+- owner_command: `repo governance`
+- source_file: `.markdownlint.json`
+- risk: Markdown lint triage policy
+- evidence: `.markdownlint.json`
+
 ### path-prettierignore
 
 - name: `.prettierignore`

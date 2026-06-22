@@ -57,7 +57,7 @@ Steps:
 - history_scan_required: `false`
 - rotation_required: `false`
 - commands: `npm run docs:markdownlint:triage:write, npm run docs:markdownlint:triage:check, npm run docs:drift`
-- inputs: `package.json`
+- inputs: `package.json, .markdownlint.json`
 - outputs: `docs/doc-quality/MARKDOWNLINT_TRIAGE.md`
 - validation: `npm run docs:markdownlint:triage:check, npm run docs:drift`
 - escalation: Fix problem-severity findings before promoting markdownlint to a hard gate.

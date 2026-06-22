@@ -34,7 +34,7 @@ missing three fields that the standard `ServiceCreate` form has:
 
 ### Form fields (new + changed)
 
-```
+```text
 Servizio
 ├── Tutto il giorno   [Switch, default ON]
 ├── Data inizio *     [<input type="date"> if all_day else <input type="datetime-local">]
@@ -146,7 +146,7 @@ for business date-only coercion.
 ## Rollout
 
 Single atomic commit:
-```
+```text
 feat(quick-episode): add description, datetime range and all-day toggle
 ```
 Followed by an explicit remote EF deploy step only if any Edge Function is

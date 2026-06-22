@@ -61,12 +61,12 @@ commit di codice e poi un commit separato "docs: align...". Questo e' il
 pattern sbagliato che causa disallineamenti.
 
 Sequenza corretta:
-```
+```text
 codice → test → docs + memoria → git add TUTTO → git commit UNICO
 ```
 
 Sequenza VIETATA:
-```
+```text
 codice → git add codice → git commit → "ah si, i docs" → git commit docs
 ```
 
@@ -74,7 +74,7 @@ codice → git add codice → git commit → "ah si, i docs" → git commit docs
 
 Dopo OGNI `git push`, controllare AUTONOMAMENTE il CI:
 
-```
+```bash
 git push
 ↓
 gh run list --limit 1 --json databaseId -q '.[0].databaseId'

@@ -18,7 +18,7 @@ toggle e' spento, il flusso markdown esistente resta immutato.
 
 ## Architettura
 
-```
+```text
 ┌─────────────┐     ┌──────────────────┐     ┌────────────────────┐
 │  UI toggle  │────▶│  Provider method  │────▶│  Edge Function     │
 │  (localStorage)   │  (visualMode)     │     │  (prompt switch)   │

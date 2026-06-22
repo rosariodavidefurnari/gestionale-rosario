@@ -893,7 +893,7 @@ Nota backup fiscali 2026-04-14:
 
 ### Quotes — 10 stati pipeline
 
-```
+```text
 primo_contatto → preventivo_inviato → in_trattativa → accettato →
 acconto_ricevuto → in_lavorazione → completato → saldato → rifiutato / perso
 ```
@@ -1143,7 +1143,7 @@ Eccezioni reali da ricordare:
 - `travel` non e' una resource autonoma: e' un helper cross-cutting riusato da
   spese, servizi e quick flows progetto
 
-```
+```text
 src/components/atomic-crm/[modulo]/
 ├── index.tsx              # Export (list, show, edit, create, recordRepresentation)
 ├── [Modulo]List.tsx       # Lista con filtri, export CSV, sort
@@ -1158,7 +1158,7 @@ src/components/atomic-crm/[modulo]/
 
 ### Struttura Promemoria (Tasks)
 
-```
+```text
 src/components/atomic-crm/tasks/
 ├── TasksList.tsx          # Pagina lista desktop
 ├── MobileTasksList.tsx    # Pagina lista mobile
@@ -1186,7 +1186,7 @@ Risorsa: `client_notes` (UUID PK, FK obbligatoria a clients)
 
 ### Struttura Tags
 
-```
+```text
 src/components/atomic-crm/tags/
 ├── ClientTagsList.tsx     # Display tags nel cliente
 ├── TagsListEdit.tsx       # Editor generico tags per risorse taggable
@@ -1206,7 +1206,7 @@ esposta come superficie operativa nei form/show dei `contacts`.
 
 ### Dashboard (Recharts + Fiscale)
 
-```
+```text
 src/components/atomic-crm/dashboard/
 ├── Dashboard.tsx                       # Desktop toggle Annuale / Storico
 ├── MobileDashboard.tsx                 # Mobile con Annuale compatta + accesso a Storico
@@ -1247,7 +1247,7 @@ src/components/atomic-crm/dashboard/
 
 ## Navigazione
 
-```
+```text
 Bacheca | Clienti | Progetti | Registro Lavori | Preventivi | Pagamenti | Spese | Promemoria
 ```
 
@@ -1272,7 +1272,7 @@ Automazioni: rimossa dal menu `Altro`, accessibile da Impostazioni.
 
 ## Risorse registrate in CRM.tsx
 
-```
+```text
 clients, contacts, projects, services, quotes, payments, expenses, suppliers
   ← CRUD/Kanban con pagine
 client_tasks
@@ -1304,7 +1304,7 @@ tags
 
 ## Tipi TypeScript (types.ts)
 
-```
+```typescript
 Client, Contact, Project, Service, Payment, ← CRUD
 Expense, Quote, ProjectContact              ← CRUD/Kanban/relazioni
 ClientTask, ClientNote                     ← Tasks/Notes adattati
@@ -1343,7 +1343,7 @@ FiscalConfig, FiscalTaxProfile             ← Fiscale
 
 ## Pages Map
 
-```
+```text
 /login               → Entry auth principale; nel runtime Supabase corrente resta il percorso normale di accesso
 /sign-up             → Superficie tecnica di bootstrap primo utente; nel runtime corrente rimbalza sul login se l'app risulta gia inizializzata
 /sign-up/confirm     → Schermata tecnica di conferma bootstrap iniziale

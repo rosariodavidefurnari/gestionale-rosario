@@ -510,7 +510,7 @@ Fonte: `riepilogo analisi compensi per servizi per diego caltabiano.pdf`
 Il PDF rivela un terzo programma TV: **Vale il Viaggio**.
 Va aggiunto alle opzioni `tv_show` nel DB:
 
-```
+```sql
 CHECK (tv_show IN ('bella_tra_i_fornelli', 'gustare_sicilia', 'vale_il_viaggio', 'altro'))
 ```
 

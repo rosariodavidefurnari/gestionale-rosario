@@ -638,7 +638,7 @@ make registry-build   # Build Shadcn registry
 
 ### Directory Structure
 
-```
+```text
 src/
 ├── components/
 │   ├── admin/              # Shadcn Admin Kit components (mutable dependency)

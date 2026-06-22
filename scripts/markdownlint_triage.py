@@ -16,6 +16,14 @@ from pathlib import Path
 
 LAST_VERIFIED = "2026-06-22"
 REPORT_PATH = Path("docs/doc-quality/MARKDOWNLINT_TRIAGE.md")
+CONFIG_PATHS = [
+    Path(".markdownlint.json"),
+    Path(".markdownlint.jsonc"),
+    Path(".markdownlint.yaml"),
+    Path(".markdownlint.yml"),
+    Path(".markdownlint-cli2.jsonc"),
+    Path(".markdownlint-cli2.yaml"),
+]
 DEFAULT_GLOBS = [
     "docs/**/*.md",
     "#docs/doc-quality/MARKDOWNLINT_TRIAGE.md",
@@ -185,6 +193,10 @@ def table_row(values: list[str | int]) -> str:
     return "| " + " | ".join(str(value) for value in values) + " |"
 
 
+def existing_configs(repo: Path) -> list[str]:
+    return [path.as_posix() for path in CONFIG_PATHS if (repo / path).exists()]
+
+
 def top_files_section(findings: list[Finding], severity: str, limit: int = 12) -> list[str]:
     counts = file_counts_by_severity(findings, severity)
     lines = [
@@ -226,7 +238,7 @@ def examples_section(findings: list[Finding], severity: str, limit: int = 16) ->
     return lines
 
 
-def md_text(findings: list[Finding], globs: list[str]) -> str:
+def md_text(findings: list[Finding], globs: list[str], configs: list[str]) -> str:
     severities = severity_counts(findings)
     rules = rule_counts(findings)
     total = len(findings)
@@ -243,6 +255,8 @@ def md_text(findings: list[Finding], globs: list[str]) -> str:
         "```bash",
         "markdownlint-cli2 " + " ".join(f"'{glob}'" for glob in globs),
         "```",
+        "",
+        f"Config: `{', '.join(configs) if configs else 'markdownlint defaults'}`",
         "",
         "Purpose: classify markdownlint findings so the repo can distinguish",
         "actionable documentation problems from formatting noise.",
@@ -311,7 +325,7 @@ def md_text(findings: list[Finding], globs: list[str]) -> str:
 def build_report(repo: Path, globs: list[str]) -> str:
     output = run_markdownlint(repo, globs)
     findings = parse_findings(output)
-    return md_text(findings, globs)
+    return md_text(findings, globs, existing_configs(repo))
 
 
 def write_report(repo: Path, content: str) -> None:

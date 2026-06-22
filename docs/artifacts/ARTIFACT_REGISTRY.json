@@ -159,7 +159,8 @@
         "documentation-lint-triage"
       ],
       "source_variables": [
-        "package.json"
+        "package.json",
+        ".markdownlint.json"
       ],
       "delete_policy": "safe_rebuild",
       "risk": "Generated L2 documentation lint triage; useful for prioritization, not a product truth source.",

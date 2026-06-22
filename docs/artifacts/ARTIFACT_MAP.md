@@ -93,7 +93,7 @@ the variable registry. Secret artifacts must not be readable, indexable, or logg
 - delete_policy: `safe_rebuild`
 - producers: `npm run docs:markdownlint:triage:write`
 - consumers: `documentation-lint-triage`
-- source_variables: `package.json`
+- source_variables: `package.json, .markdownlint.json`
 - validation: `npm run docs:markdownlint:triage:check`
 - allowed_to_read: `true`
 - allowed_to_index: `true`

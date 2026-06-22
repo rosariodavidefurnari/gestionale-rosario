@@ -618,7 +618,7 @@ If the exact section name differs, add it to the Quick Episode area — do NOT c
 
 Run: `git status` and verify the staged files are:
 
-```
+```text
 modified:   docs/architecture.md
 modified:   docs/development-continuity-map.md
 modified:   docs/superpowers/plans/2026-04-14-quick-episode-description-and-datetime.md

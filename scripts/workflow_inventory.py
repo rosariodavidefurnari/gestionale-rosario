@@ -120,7 +120,7 @@ WORKFLOW_DEFINITIONS: list[dict[str, Any]] = [
             "npm run docs:markdownlint:triage:check",
             "npm run docs:drift",
         ],
-        "inputs": ["package.json"],
+        "inputs": ["package.json", ".markdownlint.json"],
         "outputs": ["docs/doc-quality/MARKDOWNLINT_TRIAGE.md"],
         "validation": ["npm run docs:markdownlint:triage:check", "npm run docs:drift"],
         "sensitivity": "internal",

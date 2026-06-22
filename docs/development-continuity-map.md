@@ -404,8 +404,8 @@ emit→re-import + review impl multi-superficie + prod gated. Spec/piano:
 - [2026-03-31](#update-2026-03-31--timezone-bonifica) — Timezone bonifica: centralized `dateTimezone` helpers, 12 call sites fixed
 - [2026-03-30](#update-2026-03-30--bugfix-audit) — Bugfix audit: type safety, UI parity, formatting unification
 - [2026-03-08 (n)](#update-2026-03-08-n--fatturapa-xml-generation) — FatturaPA XML generation from invoice draft
-- [2026-03-08 (m)](#update-2026-03-08-m--invoice-draft-commercial-structure--navy-petrolio--services-navigation) — Invoice draft: commercial structure + Navy & Petrolio + services navigation
-- [2026-03-08 (l)](#update-2026-03-08-l--quote-pdf-navy-petrolio-redesign--email-color-alignment) — Quote PDF: Navy & Petrolio redesign + email color alignment
+- [2026-03-08 (m)](#update-2026-03-08-m--invoice-draft-commercial-structure--navy--petrolio--services-navigation) — Invoice draft: commercial structure + Navy & Petrolio + services navigation
+- [2026-03-08 (l)](#update-2026-03-08-l--quote-pdf-navy--petrolio-redesign--email-color-alignment) — Quote PDF: Navy & Petrolio redesign + email color alignment
 - [2026-03-08 (k)](#update-2026-03-08-k--quote-pdf-visual-redesign--business-profile-fields) — Quote PDF: visual redesign + business profile fields
 - [2026-03-08 (j)](#update-2026-03-08-j--quote-email-bambino-redesign--pdf-attachment) — Quote email: Bambino+Neuro redesign + PDF attachment
 - [2026-03-08 (i)](#update-2026-03-08-i--quote-email-editable-recipient) — Quote email: editable recipient field
@@ -3675,7 +3675,7 @@ Stato di caricamento con:
 
 ### File Nuovi/Modificati
 
-```
+```text
 src/lib/ai/
   aiActionSemantics.ts          # NUOVO - Sistema colori semantici
 

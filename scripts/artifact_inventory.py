@@ -161,7 +161,7 @@ ARTIFACT_DEFINITIONS: list[dict[str, Any]] = [
         "kind": "derived",
         "producers": ["npm run docs:markdownlint:triage:write"],
         "consumers": ["documentation-lint-triage"],
-        "source_variables": ["package.json"],
+        "source_variables": ["package.json", ".markdownlint.json"],
         "delete_policy": "safe_rebuild",
         "risk": "Generated L2 documentation lint triage; useful for prioritization, not a product truth source.",
         "validation": ["npm run docs:markdownlint:triage:check"],

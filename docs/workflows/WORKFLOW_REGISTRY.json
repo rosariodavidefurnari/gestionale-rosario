@@ -73,7 +73,8 @@
         "npm run docs:drift"
       ],
       "inputs": [
-        "package.json"
+        "package.json",
+        ".markdownlint.json"
       ],
       "outputs": [
         "docs/doc-quality/MARKDOWNLINT_TRIAGE.md"

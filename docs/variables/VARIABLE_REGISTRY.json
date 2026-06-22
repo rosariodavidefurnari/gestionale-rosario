@@ -642,6 +642,22 @@
       "sensitive": false
     },
     {
+      "id": "path-markdownlint-json",
+      "name": ".markdownlint.json",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": false,
+      "owner_command": "repo governance",
+      "source_file": ".markdownlint.json",
+      "risk": "Markdown lint triage policy",
+      "status": "verified",
+      "source_evidence": [
+        ".markdownlint.json"
+      ],
+      "sensitive": false
+    },
+    {
       "id": "path-prettierignore",
       "name": ".prettierignore",
       "scope": "repo_configuration",

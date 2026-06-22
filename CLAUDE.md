@@ -19,7 +19,7 @@ Questo file e' intenzionalmente complementare, non parallelo.
 
 **Questo blocco è un comando. Devo eseguirlo ALL'INIZIO di ogni sessione.**
 
-```
+```text
 learning.md e' ora in .claude/rules/ (auto-loaded in ogni sessione)
 ↓
 APPLICA: Tutti i trigger attivi automaticamente dal contesto

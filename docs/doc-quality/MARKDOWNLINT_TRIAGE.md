@@ -10,6 +10,8 @@ Scope:
 markdownlint-cli2 'docs/**/*.md' '#docs/doc-quality/MARKDOWNLINT_TRIAGE.md' 'AGENTS.md' 'CLAUDE.md' '.claude/rules/*.md'
 ```
 
+Config: `.markdownlint.json`
+
 Purpose: classify markdownlint findings so the repo can distinguish
 actionable documentation problems from formatting noise.
 
@@ -26,32 +28,28 @@ Severity contract:
 
 | Metric | Value |
 | --- | ---: |
-| total findings | 5374 |
+| total findings | 5299 |
 | files with findings | 73 |
-| problem | 76 |
+| problem | 0 |
 | review | 1143 |
-| noise | 4155 |
+| noise | 4156 |
 | unknown | 0 |
 
 ## Rule Summary
 
 | Rule | Severity | Findings | Meaning |
 | --- | --- | ---: | --- |
-| MD013 | noise | 2441 | line length; common in generated reports, tables, logs, and specs |
+| MD013 | noise | 2442 | line length; common in generated reports, tables, logs, and specs |
 | MD004 | noise | 1592 | unordered list marker style; stylistic under current repo conventions |
 | MD060 | review | 627 | table pipe style; readability issue, usually not semantic drift |
 | MD032 | review | 291 | list spacing; can affect parser/readability, usually not code drift |
 | MD031 | review | 177 | fence spacing; can affect Markdown readability and extraction |
 | MD036 | noise | 114 | emphasis used as heading; stylistic in historical notes |
-| MD040 | problem | 41 | fenced code block lacks language; blocks executable-doc tooling |
-| MD024 | problem | 31 | duplicate headings; can create ambiguous anchors |
 | MD022 | review | 30 | heading spacing; readability and parser hygiene |
 | MD029 | review | 11 | ordered list numbering; readability and diff hygiene |
 | MD034 | review | 6 | bare URL; should be an explicit link for link checking |
 | MD009 | noise | 3 | trailing spaces; cleanup-only unless inside meaningful Markdown |
 | MD026 | noise | 2 | heading trailing punctuation; stylistic |
-| MD051 | problem | 2 | link fragment should resolve; direct navigation risk |
-| MD018 | problem | 2 | heading marker lacks following space; can break heading parsing |
 | MD041 | noise | 1 | first line is not H1; acceptable for imported or agent-context files |
 | MD028 | noise | 1 | blank line inside blockquote; stylistic unless rendering is broken |
 | MD001 | review | 1 | heading levels skip; can make the outline less navigable |
@@ -61,18 +59,7 @@ Severity contract:
 
 | Findings | File | Dominant rules |
 | ---: | --- | --- |
-| 22 | `docs/analisi-pulizia-moduli.md` | MD024=22 |
-| 16 | `docs/design-fase2.md` | MD040=15, MD024=1 |
-| 11 | `docs/architecture.md` | MD040=9, MD024=2 |
-| 8 | `docs/development-continuity-map.md` | MD024=5, MD051=2, MD040=1 |
-| 5 | `docs/superpowers/specs/2026-06-19-fiscal-estimate-calibration-design.md` | MD040=3, MD018=2 |
-| 3 | `.claude/rules/session-workflow.md` | MD040=3 |
-| 2 | `docs/superpowers/specs/2026-04-14-quick-episode-description-and-datetime-design.md` | MD040=2 |
-| 1 | `AGENTS.md` | MD040=1 |
-| 1 | `CLAUDE.md` | MD040=1 |
-| 1 | `docs/ai-visual-blocks-pattern.md` | MD040=1 |
-| 1 | `docs/data-import-analysis.md` | MD040=1 |
-| 1 | `docs/README.md` | MD024=1 |
+| 0 | `none` | none |
 
 ## Top Review Files
 
@@ -118,22 +105,7 @@ Severity contract:
 
 | File | Line | Rule | Message |
 | --- | ---: | --- | --- |
-| `.claude/rules/session-workflow.md` | 64 | MD040 | Fenced code blocks should have a language specified [Context: "```"] |
-| `.claude/rules/session-workflow.md` | 69 | MD040 | Fenced code blocks should have a language specified [Context: "```"] |
-| `.claude/rules/session-workflow.md` | 77 | MD040 | Fenced code blocks should have a language specified [Context: "```"] |
-| `AGENTS.md` | 641 | MD040 | Fenced code blocks should have a language specified [Context: "```"] |
-| `CLAUDE.md` | 22 | MD040 | Fenced code blocks should have a language specified [Context: "```"] |
-| `docs/ai-visual-blocks-pattern.md` | 21 | MD040 | Fenced code blocks should have a language specified [Context: "```"] |
-| `docs/analisi-pulizia-moduli.md` | 81 | MD024 | Multiple headings with the same content [Context: "Cosa fa"] |
-| `docs/analisi-pulizia-moduli.md` | 104 | MD024 | Multiple headings with the same content [Context: "Chi lo usa"] |
-| `docs/analisi-pulizia-moduli.md` | 111 | MD024 | Multiple headings with the same content [Context: "Chi dipende da lui"] |
-| `docs/analisi-pulizia-moduli.md` | 117 | MD024 | Multiple headings with the same content [Context: "Stato attuale nel gestionale"] |
-| `docs/analisi-pulizia-moduli.md` | 125 | MD024 | Multiple headings with the same content [Context: "Opzioni"] |
-| `docs/analisi-pulizia-moduli.md` | 154 | MD024 | Multiple headings with the same content [Context: "Cosa fa"] |
-| `docs/analisi-pulizia-moduli.md` | 181 | MD024 | Multiple headings with the same content [Context: "Chi lo usa"] |
-| `docs/analisi-pulizia-moduli.md` | 189 | MD024 | Multiple headings with the same content [Context: "Stato attuale nel gestionale"] |
-| `docs/analisi-pulizia-moduli.md` | 195 | MD024 | Multiple headings with the same content [Context: "Opzioni"] |
-| `docs/analisi-pulizia-moduli.md` | 205 | MD024 | Multiple headings with the same content [Context: "Rischio rimozione: BASSO"] |
+| `none` | 0 | none | none |
 
 ## Review Examples
 

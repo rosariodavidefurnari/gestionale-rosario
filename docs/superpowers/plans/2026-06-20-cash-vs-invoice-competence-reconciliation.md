@@ -52,7 +52,7 @@ nessuna migration, nessuna EF, nessuna view nuova, Settings, AI registry (follow
 
 ## 3. Contratto dell'helper (firma + invarianti)
 
-```
+```typescript
 buildCashVsCompetenceReconciliation({
   payments, projects, financialDocsById, fiscalConfig, taxYears?
 }): {

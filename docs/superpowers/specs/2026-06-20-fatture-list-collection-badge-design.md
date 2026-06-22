@@ -143,7 +143,7 @@ sintetici); lo smoke prod asserisce solo "almeno un Incassata reale", NON un "Sc
 
 Nuovo hook `usePaymentsByDocument(): Map<string, Payment[]>` modellato su `useClientBalances`:
 
-```
+```typescript
 useGetList('payments', {
   pagination: { page: 1, perPage: 500 },
   filter: { 'financial_document_id@not.is': null },

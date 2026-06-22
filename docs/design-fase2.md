@@ -26,12 +26,12 @@ e sul codice reale di Atomic CRM. Nessuna invenzione.
 ## 1. Navigazione (Header)
 
 **Oggi:**
-```
+```text
 Bacheca | Contatti | Aziende | Trattative
 ```
 
 **Diventerà:**
-```
+```text
 Bacheca | Clienti | Progetti | Registro Lavori | Preventivi | Pagamenti | Spese
 ```
 
@@ -88,7 +88,7 @@ merge contacts, vCard export.
 
 ### Form Creazione / Modifica Cliente
 
-```
+```text
 +---------------------------------------------+
 |  NUOVO CLIENTE                              |
 |                                             |
@@ -117,7 +117,7 @@ Instagram / Facebook / Passaparola / Google / Altro
 
 La scheda mostra un riepilogo completo di tutta l'attivita con quel cliente:
 
-```
+```text
 +--------------------------------------------------------------+
 |  DIEGO CALTABIANO                        [Modifica] [Elimina]|
 |  Produzione TV - Passaparola                                 |
@@ -172,7 +172,7 @@ Dati derivati dalle relazioni: `projects.client_id`, `services` via project,
 
 ### Form Creazione / Modifica Progetto
 
-```
+```text
 +---------------------------------------------------------+
 |  NUOVO PROGETTO                                         |
 |                                                         |
@@ -205,7 +205,7 @@ Bella tra i Fornelli / Gustare Sicilia / Vale il Viaggio / Altro
 
 ### Scheda Progetto (`/projects/:id`)
 
-```
+```text
 +--------------------------------------------------------------+
 |  GUSTARE SICILIA S2                      [Modifica] [Elimina]|
 |  Diego Caltabiano - Produzione TV - In corso                 |
@@ -269,13 +269,13 @@ Vista tabellare (la piu densa di tutto il gestionale):
 - Export CSV (per commercialista)
 
 **Riga di totale in fondo (somma colonne filtrate):**
-```
+```text
 TOTALE: | | | | 2.431,00 | 3.241,00 | 500,00 | 6.172,00 | 890 | 169,10 | |
 ```
 
 ### Form Creazione / Modifica Servizio
 
-```
+```text
 +---------------------------------------------------------+
 |  NUOVO SERVIZIO                                         |
 |                                                         |
@@ -331,7 +331,7 @@ rejection_reason, notes.
 
 Le colonne della pipeline passano da 6 a 10 stati:
 
-```
+```text
 | PRIMO    |PREVENTIVO|   IN     |ACCETTATO |ACCONTO   |   IN     |COMPLETATO| SALDATO  |RIFIUTATO |  PERSO   |
 | CONTATTO | INVIATO  |TRATTATIVA|          |RICEVUTO  |LAVORAZ.  |          |          |          |(no risp.)|
 |          |          |          |          |          |          |          |          |          |          |
@@ -345,7 +345,7 @@ Le colonne della pipeline passano da 6 a 10 stati:
 ```
 
 **Card preventivo (dentro la colonna Kanban):**
-```
+```text
 +----------------------+
 | Matrimonio Rossi     |
 | Mario Rossi          |  <- client name
@@ -365,7 +365,7 @@ sono nascosti con `dealPipelineStatuses`.
 
 ### Form Creazione / Modifica Preventivo
 
-```
+```text
 +---------------------------------------------------------+
 |  NUOVO PREVENTIVO                                       |
 |                                                         |
@@ -422,7 +422,7 @@ Wedding / Battesimo / Compleanno / Evento / Spot / Sito Web
 
 ### Form Creazione Pagamento
 
-```
+```text
 +---------------------------------------------------------+
 |  NUOVO PAGAMENTO                                        |
 |                                                         |
@@ -463,7 +463,7 @@ Wedding / Battesimo / Compleanno / Evento / Spot / Sito Web
 
 ### Form Creazione Spesa
 
-```
+```text
 +---------------------------------------------------------+
 |  NUOVA SPESA                                            |
 |                                                         |
@@ -501,7 +501,7 @@ La dashboard attuale mostra: contatti caldi, grafico deals ultimi 6 mesi
 
 La nuova dashboard diventa una dashboard finanziaria:
 
-```
+```text
 +---------------------------------------------------------------------------+
 |                                                                           |
 |  +--------------+ +--------------+ +--------------+ +--------------+     |
@@ -563,7 +563,7 @@ categorie deal, stati note, tipi attivita.
 
 Diventa:
 
-```
+```text
 +---------------------------------------------+
 |  IMPOSTAZIONI                               |
 |                                             |

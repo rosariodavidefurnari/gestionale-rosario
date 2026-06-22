@@ -4,7 +4,7 @@ Stato: draft (in attesa review multi-superficie)
 Data: 2026-06-19
 Autore: agente (sessione Ciclo 2 fiscale)
 Origine: assessment `docs/superpowers/2026-06-15-gestionale-assessment.md` finding
-#3, #4, #13; richiesta utente esplicita in sessione.
+Finding #3, #4, #13; richiesta utente esplicita in sessione.
 
 ---
 
@@ -119,7 +119,7 @@ deprecca l'intento "usa la formula" della nota.
 Dall'ultima dichiarazione reale chiusa (anno `Yd`) si ricavano DUE aliquote
 effettive, ciascuna sulla base su cui quel tributo realmente insiste:
 
-```
+```text
 forfettarioIncome(Yd)      = taxable_cash(Yd) × coefficiente(Yd)
 taxableAfterInps(Yd)       = forfettarioIncome(Yd) − decl.total_inps
 
@@ -130,7 +130,7 @@ rate_imposta = decl.total_substitute_tax / taxableAfterInps(Yd)
 Per l'anno stimato `Y` (senza dichiarazione chiusa) si applicano alle basi
 proiettate di `Y` (calcolate con il coefficiente di `Y`):
 
-```
+```text
 forfettarioIncome(Y)         = taxable_cash(Y) × coefficiente(Y)
 annualInpsEstimate           = forfettarioIncome(Y) × rate_inps
 taxableAfterInps(Y)          = forfettarioIncome(Y) − annualInpsEstimate
@@ -315,7 +315,7 @@ come seed.
 ## 11. Relazione con la roadmap / assessment
 
 Copre #3 (imposta deduce INPS stimato → ora la stima e' calibrata sul reale),
-#4 (INPS sotto-stimata → aliquota reale), #13 (drift client/EF → parity test
+Finding #4 (INPS sotto-stimata → aliquota reale), #13 (drift client/EF → parity test
 esteso). Ciclo 2 dell'assessment. #18 (obblighi senza stima) resta follow-up.
 
 ## 12. Domande aperte — RISOLTE in review
@@ -432,7 +432,7 @@ Dichiarazione PF 2025 (periodo 2024), id `11320252020`:
 
 ### 14.2 Formula canonica reale (il tool DEVE riprodurla)
 
-```
+```text
 reddito_lordo(Y)       = componenti_positivi(Y) × coefficiente            (78%)
 inps_competenza(Y)     = reddito_lordo(Y) × aliquota_gs(Y)                (26,23% 2023; 26,07% 2024; per-anno)
 imposta_base(Y)        = reddito_lordo(Y) − contributi_versati_cassa(Y)   (LM035: INPS PAGATO nell'anno, cassa)
