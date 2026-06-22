@@ -3,6 +3,7 @@ import type { InvokeEdgeFunction } from "./dataProviderTypes";
 
 export type EmitInvoiceRequest = {
   clientId: string;
+  billingProfileId?: string | null;
   source: { kind: "project" | "client"; id: string };
   documentNumber: string;
   issueDate: string;

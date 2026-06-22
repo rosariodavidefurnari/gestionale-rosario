@@ -28,6 +28,28 @@ describe("validateInvoiceEmitRequest", () => {
     expect(r.data?.documentNumber).toBe("FT-1/2026");
   });
 
+  it("accepts absent or null billingProfileId as main-client recipient", () => {
+    const absent = validateInvoiceEmitRequest(validPayload());
+    expect(absent.error).toBeUndefined();
+    expect(absent.data?.billingProfileId).toBeNull();
+
+    const explicitNull = validateInvoiceEmitRequest({
+      ...validPayload(),
+      billingProfileId: null,
+    });
+    expect(explicitNull.error).toBeUndefined();
+    expect(explicitNull.data?.billingProfileId).toBeNull();
+  });
+
+  it("rejects a blank billingProfileId", () => {
+    const r = validateInvoiceEmitRequest({
+      ...validPayload(),
+      billingProfileId: "   ",
+    });
+    expect(r.data).toBeUndefined();
+    expect(r.error).toMatch(/profilo fatturazione/i);
+  });
+
   it("rejects a draft that carries a prior acconto (gross != net)", () => {
     const r = validateInvoiceEmitRequest({
       ...validPayload(),
@@ -91,6 +113,7 @@ describe("buildFinancialDocumentInsert / buildExpectedPaymentInsert", () => {
     expect(doc.taxable_amount).toBe(1000);
     expect(doc.total_amount).toBe(1002);
     expect(doc.stamp_amount).toBe(2);
+    expect(doc.billing_profile_id).toBeNull();
     expect(doc.due_date).toBe("2026-06-16"); // defaults to issue_date
 
     const payment = buildExpectedPaymentInsert(data!, "fd-1");
@@ -109,6 +132,15 @@ describe("buildFinancialDocumentInsert / buildExpectedPaymentInsert", () => {
     });
     const payment = buildExpectedPaymentInsert(data!, "fd-2");
     expect(payment.project_id).toBeNull();
+  });
+
+  it("writes the selected billing_profile_id to the financial document", () => {
+    const { data } = validateInvoiceEmitRequest({
+      ...validPayload(),
+      billingProfileId: "profile-live",
+    });
+    const doc = buildFinancialDocumentInsert(data!);
+    expect(doc.billing_profile_id).toBe("profile-live");
   });
 });
 

@@ -33,6 +33,12 @@ contatti.
 - XML FatturaPA, PDF bozza e validation fatturazione devono leggere lo stesso
   `InvoiceBillingRecipient`, cosi' il destinatario fiscale visualizzato e quello
   emesso non divergono.
+- `runEmitInvoice` e `invoice_emit` propagano `billingProfileId` solo come FK
+  opzionale del documento fiscale (`financial_documents.billing_profile_id`):
+  payments, absorb del saldo atteso, service/expense marking e importi restano
+  invariati.
+- Ogni modifica a `supabase/functions/invoice_emit/**` richiede deploy Supabase
+  manuale; `git push` aggiorna Vercel ma non le Edge Functions.
 - La propagazione applicativa deve continuare lungo spec/piano/review dedicati
   e, per UI/UX, skill `impeccable` + browser reale desktop/mobile.
 - Money invariant: il backfill puo' collegare documenti e FK, ma non cambia

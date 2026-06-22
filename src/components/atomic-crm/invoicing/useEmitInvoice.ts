@@ -108,6 +108,9 @@ export const runEmitInvoice = async (
     netCollectable: amounts.netCollectable,
     serviceIds: (draft.serviceIds ?? []).map(String),
     expenseIds: (draft.expenseIds ?? []).map(String),
+    ...(draft.billingProfile?.id != null
+      ? { billingProfileId: String(draft.billingProfile.id) }
+      : {}),
   });
 
   return { status: result.status, result };

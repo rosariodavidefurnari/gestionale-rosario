@@ -138,6 +138,7 @@ interface ServicesTable {
 interface FinancialDocumentsTable {
   id: Generated<string>;
   client_id: string;
+  billing_profile_id?: string | null;
   direction: string;
   document_type: string;
   document_number: string;

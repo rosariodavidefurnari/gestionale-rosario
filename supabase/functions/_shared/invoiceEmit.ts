@@ -5,6 +5,7 @@ export type InvoiceEmitSourceKind = "project" | "client";
 
 export type InvoiceEmitRequest = {
   clientId: string;
+  billingProfileId?: string | null;
   source: { kind: InvoiceEmitSourceKind; id: string };
   documentNumber: string;
   issueDate: string; // YYYY-MM-DD (client-side, via toISODate)
@@ -49,6 +50,13 @@ export const validateInvoiceEmitRequest = (
 
   if (!isNonEmptyString(p.clientId)) {
     return { error: "clientId mancante" };
+  }
+  let billingProfileId: string | null = null;
+  if (p.billingProfileId != null) {
+    if (!isNonEmptyString(p.billingProfileId)) {
+      return { error: "Profilo fatturazione non valido" };
+    }
+    billingProfileId = p.billingProfileId.trim();
   }
   if (
     !source ||
@@ -106,6 +114,7 @@ export const validateInvoiceEmitRequest = (
   return {
     data: {
       clientId: p.clientId,
+      billingProfileId,
       source: { kind: source.kind, id: source.id },
       documentNumber: p.documentNumber.trim(),
       issueDate: p.issueDate,
@@ -122,6 +131,7 @@ export const validateInvoiceEmitRequest = (
 
 export const buildFinancialDocumentInsert = (req: InvoiceEmitRequest) => ({
   client_id: req.clientId,
+  billing_profile_id: req.billingProfileId ?? null,
   direction: "outbound",
   document_type: "customer_invoice",
   document_number: req.documentNumber,

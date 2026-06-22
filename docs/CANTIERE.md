@@ -211,8 +211,17 @@ Integrazione applicativa billing profiles — spec/piano gate 2026-06-22:
   PASS 71 test; `npm run typecheck` PASS; `npm run lint` PASS;
   `git diff --check` PASS. Scope: stesso recipient adapter per XML, PDF e
   validation; nessun cambio a payments/importi/cassa e nessun redesign.
-- Stop point: nessuna UI di selezione profili prima dei task provider/emit e
-  della review dedicata; browser desktop/mobile obbligatorio prima del commit UI.
+- Task 3 emit/provider/Edge persistence: IMPLEMENTATO e review PASS. RED:
+  `runEmitInvoice` non inviava `billingProfileId`; `invoiceEmit` non validava
+  blank/null e `buildFinancialDocumentInsert` non scriveva `billing_profile_id`.
+  GREEN:
+  `npm run test -- src/components/atomic-crm/invoicing/useEmitInvoice.test.ts src/components/atomic-crm/providers/supabase/dataProviderInvoiceEmit.test.ts supabase/functions/_shared/invoiceEmit.test.ts`
+  PASS 36 test; `npm run typecheck` PASS; `git diff --check` PASS. Scope:
+  payload opzionale + FK documento; idempotenza, absorb incasso e importi
+  invariati. Nota deploy: `supabase/functions/invoice_emit` toccata, quindi
+  serve deploy Supabase manuale dopo commit/push finale.
+- Stop point: prossima tranche UI selector con review dedicata; browser
+  desktop/mobile obbligatorio prima del commit UI.
 
 Governance/RAG fix 2026-06-22:
 

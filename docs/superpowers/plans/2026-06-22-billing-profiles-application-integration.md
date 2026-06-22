@@ -232,7 +232,7 @@ git commit -m "feat: render invoice drafts with billing recipients"
 - Produces: `billingProfileId?: string | null` in emit payload and
   `financial_documents.billing_profile_id` insert value.
 
-- [ ] **Step 1: RED tests**
+- [x] **Step 1: RED tests**
 
 Add tests:
 
@@ -252,13 +252,13 @@ npm run test -- src/components/atomic-crm/invoicing/useEmitInvoice.test.ts \
 
 Expected: FAIL before implementation.
 
-- [ ] **Step 2: Implement minimal thread**
+- [x] **Step 2: Implement minimal thread**
 
 Add `billingProfileId?: string | null` to provider and Edge types. In
 `buildFinancialDocumentInsert`, include `billing_profile_id:
 req.billingProfileId ?? null`.
 
-- [ ] **Step 3: GREEN**
+- [x] **Step 3: GREEN**
 
 Run:
 
@@ -271,7 +271,7 @@ npm run typecheck
 
 Expected: PASS.
 
-- [ ] **Step 4: Review and commit**
+- [x] **Step 4: Review and commit**
 
 Review dimensions: Edge payload, DB insert, idempotency, cash invariants,
 Supabase deploy requirement.

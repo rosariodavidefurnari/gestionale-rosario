@@ -65,6 +65,27 @@ describe("runEmitInvoice", () => {
     expect(outcome.status).toBe("emitted");
   });
 
+  it("sends billingProfileId when the draft has a selected billing profile", async () => {
+    const emitInvoice = vi
+      .fn()
+      .mockResolvedValue({ status: "emitted", financialDocumentId: "fd1" });
+    const getList = vi.fn().mockResolvedValue({ data: [], total: 0 });
+    const deps = { getList, emitInvoice } as unknown as EmitInvoiceDeps;
+    const draft = {
+      ...draftFixture(),
+      billingProfile: { id: "profile-live" },
+    } as unknown as InvoiceDraftInput;
+
+    await runEmitInvoice(deps, draft, {
+      documentNumber: "FT-1",
+      issueDate: "2026-06-17",
+    });
+
+    expect(emitInvoice).toHaveBeenCalledWith(
+      expect.objectContaining({ billingProfileId: "profile-live" }),
+    );
+  });
+
   it("returns cancelled and does NOT emit when the user declines the duplicate confirm", async () => {
     vi.spyOn(window, "confirm").mockReturnValue(false);
     const emitInvoice = vi.fn();

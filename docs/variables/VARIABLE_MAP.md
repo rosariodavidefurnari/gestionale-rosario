@@ -425,7 +425,7 @@ used only as a template source.
 - owner_command: `make remote-deploy-supabase`
 - source_file: `supabase/functions/.env.example`
 - risk: Supabase auth/database routing
-- evidence: `supabase/functions/.env.example:10, supabase/functions/_shared/db.ts:257`
+- evidence: `supabase/functions/.env.example:10, supabase/functions/_shared/db.ts:258`
 
 ### env-build-sourcemap
 

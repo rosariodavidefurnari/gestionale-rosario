@@ -48,6 +48,29 @@ describe("emitInvoice provider method", () => {
     });
   });
 
+  it("forwards the optional billingProfileId to invoice_emit", async () => {
+    const invokeEdgeFunction = vi.fn().mockResolvedValue({
+      data: {
+        data: {
+          status: "already_emitted",
+          financialDocumentId: "fd-1",
+        },
+      },
+      error: null,
+    });
+
+    const { emitInvoice } = buildInvoiceEmitProviderMethods({
+      invokeEdgeFunction,
+    });
+    const request = { ...baseRequest(), billingProfileId: "profile-live" };
+    await emitInvoice(request);
+
+    expect(invokeEdgeFunction).toHaveBeenCalledWith("invoice_emit", {
+      method: "POST",
+      body: request,
+    });
+  });
+
   it("throws a readable error when the edge function fails", async () => {
     const invokeEdgeFunction = vi.fn().mockResolvedValue({
       data: null,
