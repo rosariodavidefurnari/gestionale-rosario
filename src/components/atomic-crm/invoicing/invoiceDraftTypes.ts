@@ -1,6 +1,6 @@
 import type { Identifier } from "ra-core";
 
-import type { Client } from "../types";
+import type { Client, ClientBillingProfile } from "../types";
 
 /**
  * Kind of an invoice draft line item. Used by downstream renderers to
@@ -36,6 +36,7 @@ export type InvoiceDraftSource = {
 
 export type InvoiceDraftInput = {
   client: Client;
+  billingProfile?: ClientBillingProfile | null;
   lineItems: InvoiceDraftLineItem[];
   invoiceDate?: string;
   notes?: string;

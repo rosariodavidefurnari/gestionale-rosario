@@ -197,6 +197,12 @@ Integrazione applicativa billing profiles — spec/piano gate 2026-06-22:
 - Review piano: PASS dopo fix. RAG piano ha trovato `dataProviderInvoiceEmit.test.ts`
   non incluso e assenza di test provider import; il piano ora include il test
   provider emit e crea `dataProviderInvoiceImport.test.ts`.
+- Task 1 adapter recipient: IMPLEMENTATO e review PASS. RED:
+  `invoiceBillingRecipient.test.ts` falliva per modulo mancante. GREEN:
+  `npm run test -- src/components/atomic-crm/invoicing/invoiceBillingRecipient.test.ts`
+  PASS 2 test; `npm run typecheck` PASS; `git diff --check` PASS. Scope:
+  helper puro `invoiceBillingRecipient.ts` + `InvoiceDraftInput.billingProfile`,
+  zero UI, zero DB, zero cash.
 - Stop point: nessuna implementazione UI/applicativa prima di eseguire il piano
   task-by-task con review per task, commit per task e browser desktop/mobile.
 

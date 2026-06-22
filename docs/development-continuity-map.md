@@ -7,8 +7,8 @@ obbligatoria delle superfici collegate.
 prodotto.
 
 Last updated: 2026-06-22 (LIVE/Gustare billing profiles: backend contract
-`client_billing_profiles` + `financial_documents.billing_profile_id`, UI/emission
-propagation in a separate reviewed tranche)
+`client_billing_profiles` + `financial_documents.billing_profile_id`, application
+recipient adapter started for UI/emission propagation)
 
 ---
 
@@ -26,9 +26,12 @@ contatti.
   profilo fiscale usato.
 - `financial_documents_summary` espone campi `billing_profile_*` per superfici
   read-only.
-- La tranche backend non cambia UI/emissione; la propagazione applicativa deve
-  avere spec/piano/review dedicati e, per UI/UX, skill `impeccable` + browser
-  reale desktop/mobile.
+- `invoiceBillingRecipient.ts` e' l'adapter applicativo puro che separa
+  cliente operativo (`operationalClientId`) e destinatario fiscale opzionale
+  (`profileId`). `InvoiceDraftInput.billingProfile` e' opzionale: le superfici
+  che non selezionano un profilo restano sul cliente principale.
+- La propagazione applicativa deve continuare lungo spec/piano/review dedicati
+  e, per UI/UX, skill `impeccable` + browser reale desktop/mobile.
 - Money invariant: il backfill puo' collegare documenti e FK, ma non cambia
   `payments.amount`, `payments.status`, `payments.payment_date` o
   `payments.payment_type`.
@@ -36,8 +39,10 @@ contatti.
 Spec/piani:
 
 - `docs/superpowers/specs/2026-06-22-client-billing-profiles-design.md`
+- `docs/superpowers/specs/2026-06-22-billing-profiles-application-integration-design.md`
 - `docs/superpowers/plans/2026-06-22-live-gustare-billing-profiles-end-to-end.md`
 - `docs/superpowers/plans/2026-06-22-client-billing-profiles-backend.md`
+- `docs/superpowers/plans/2026-06-22-billing-profiles-application-integration.md`
 
 ## Guardrail "obblighi certificati" — card scadenze fiscali (2026-06-20)
 
