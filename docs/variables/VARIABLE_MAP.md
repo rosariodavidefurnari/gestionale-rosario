@@ -31,6 +31,18 @@ used only as a template source.
 - default: `true`
 - evidence: `.github/workflows/check.yml:18, .github/workflows/deploy.yml:14`
 
+### env-github-repository
+
+- name: `GITHUB_REPOSITORY`
+- scope: `ci`
+- required: `false`
+- sensitive: `false`
+- status: `verified`
+- owner_command: `github workflow deploy`
+- source_file: `.github/workflows/deploy.yml`
+- risk: behavioral input
+- evidence: `.github/workflows/deploy.yml:41`
+
 ### env-github-step-summary
 
 - name: `GITHUB_STEP_SUMMARY`
@@ -866,8 +878,8 @@ used only as a template source.
 - owner_command: `npm run governance:cli:check`
 - source_file: `docs/cli/COMMAND_REGISTRY.json`
 - risk: command behavior modifier
-- evidence: `docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:check, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:check, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier`
-- owner_commands: `npm run governance:cli:check, npm run governance:variables:check, npm run prettier`
+- evidence: `docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:check, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:check, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:workflows:check, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier`
+- owner_commands: `npm run governance:cli:check, npm run governance:variables:check, npm run governance:workflows:check, npm run prettier`
 
 ### flag-config
 
@@ -1048,8 +1060,8 @@ used only as a template source.
 - owner_command: `npm run governance:cli:write`
 - source_file: `docs/cli/COMMAND_REGISTRY.json`
 - risk: command behavior modifier
-- evidence: `docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:write, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:write, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier:apply, docs/cli/COMMAND_REGISTRY.json:Makefile:95`
-- owner_commands: `npm run governance:cli:write, npm run governance:variables:write, npm run prettier:apply, make registry-gen`
+- evidence: `docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:write, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:write, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:workflows:write, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier:apply, docs/cli/COMMAND_REGISTRY.json:Makefile:95`
+- owner_commands: `npm run governance:cli:write, npm run governance:variables:write, npm run governance:workflows:write, npm run prettier:apply`
 
 ## Config Paths
 

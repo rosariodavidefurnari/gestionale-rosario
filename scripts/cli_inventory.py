@@ -26,6 +26,11 @@ OFFICIAL_NPM_SCRIPTS = {
     "rag:policy:check",
     "governance:cli:check",
     "governance:cli:write",
+    "governance:test",
+    "governance:variables:check",
+    "governance:variables:write",
+    "governance:workflows:check",
+    "governance:workflows:write",
     "security:check:fiscal-backups",
     "security:check:fiscal-backups:rest",
     "security:check:cascade-protection",
@@ -131,6 +136,8 @@ def destructive_level(name: str, command: str) -> str:
     value = f"{name} {command}".lower()
     if name in DANGEROUS_NAMES:
         return "remote_or_destructive"
+    if value.startswith("git add "):
+        return "worktree_write"
     if "db reset" in value or "drop " in value or "truncate " in value:
         return "local_destructive"
     if "db push" in value or "functions deploy" in value or "secrets set" in value:
@@ -158,6 +165,8 @@ def status_for(source: str, name: str, command: str) -> str:
         return "official"
     if source.startswith(".github/workflows/"):
         return "candidate"
+    if source.startswith(".husky/"):
+        return "candidate"
     return "candidate"
 
 
@@ -174,6 +183,8 @@ def reads_for(command: str) -> list[str]:
         reads.append("registry.json")
     if "rag" in value:
         reads.extend([".contextignore", "scripts/check-rag-corpus-policy.mjs"])
+    if "lint-staged" in value:
+        reads.extend([".lintstagedrc", "package.json"])
     return sorted(set(reads))
 
 
@@ -186,6 +197,8 @@ def writes_for(command: str, level: str) -> list[str]:
         writes.append("registry.json")
     if "registry:build" in value or "shadcn build" in value:
         writes.append("public/r/**")
+    if value.startswith("git add "):
+        writes.append("git index")
     if "prettier" in value and "--write" in value:
         writes.append("worktree")
     if "eslint" in value and "--fix" in value:
@@ -346,8 +359,34 @@ def workflow_records(repo: Path) -> list[dict[str, Any]]:
     return records
 
 
+def hook_records(repo: Path) -> list[dict[str, Any]]:
+    hook_paths = [repo / ".husky" / "pre-commit"]
+    records: list[dict[str, Any]] = []
+    for hook_path in hook_paths:
+        if not hook_path.exists():
+            continue
+        rel = hook_path.relative_to(repo).as_posix()
+        for line_number, line in enumerate(hook_path.read_text(encoding="utf-8").splitlines(), 1):
+            command = line.strip()
+            if not command or command.startswith("#"):
+                continue
+            if not command.startswith(("npm ", "git add ", "node ")):
+                continue
+            name = f"{hook_path.name}:{line_number}:{command}"
+            records.append(
+                record(
+                    source=rel,
+                    name=name,
+                    command=command,
+                    entrypoint="git hook",
+                    evidence=f"{rel}:{line_number}",
+                ),
+            )
+    return records
+
+
 def build_registry(repo: Path) -> dict[str, Any]:
-    commands = package_records(repo) + makefile_records(repo) + workflow_records(repo)
+    commands = package_records(repo) + makefile_records(repo) + workflow_records(repo) + hook_records(repo)
     commands = sorted(commands, key=lambda item: (item["status"], item["id"]))
     return {
         "schema_version": SCHEMA_VERSION,
@@ -357,6 +396,7 @@ def build_registry(repo: Path) -> dict[str, Any]:
             "package.json",
             "Makefile",
             ".github/workflows/*.yml",
+            ".husky/pre-commit",
         ],
         "commands": commands,
     }

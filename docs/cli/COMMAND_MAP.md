@@ -251,6 +251,61 @@ candidates until promoted through the repo governance docs.
 - destructive_level: `none`
 - reads: `package-lock.json, package.json`
 
+### npm-script-governance-test
+
+- command: `npm run governance:test`
+- category: `test`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.governance:test = python3 ./scripts/governance_inventory_test.py`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
+### npm-script-governance-variables-check
+
+- command: `npm run governance:variables:check`
+- category: `governance`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.governance:variables:check = python3 ./scripts/variable_inventory.py --check`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
+### npm-script-governance-variables-write
+
+- command: `npm run governance:variables:write`
+- category: `governance`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.governance:variables:write = python3 ./scripts/variable_inventory.py --write`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
+### npm-script-governance-workflows-check
+
+- command: `npm run governance:workflows:check`
+- category: `governance`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.governance:workflows:check = python3 ./scripts/workflow_inventory.py --check`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
+### npm-script-governance-workflows-write
+
+- command: `npm run governance:workflows:write`
+- category: `governance`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.governance:workflows:write = python3 ./scripts/workflow_inventory.py --write`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
 ### npm-script-health-financial
 
 - command: `npm run health:financial`
@@ -441,6 +496,73 @@ candidates until promoted through the repo governance docs.
 - reads: `package-lock.json, package.json`
 
 ## Candidate Commands
+
+### git-hook-pre-commit-1-npm-run-registry-gen
+
+- command: `npm run registry:gen`
+- category: `maintenance`
+- entrypoint: `git hook`
+- source: `.husky/pre-commit`
+- evidence: `.husky/pre-commit:1`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json, registry.json`
+- writes: `registry.json`
+
+### git-hook-pre-commit-2-git-add-registry-json
+
+- command: `git add registry.json`
+- category: `maintenance`
+- entrypoint: `git hook`
+- source: `.husky/pre-commit`
+- evidence: `.husky/pre-commit:2`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `registry.json`
+- writes: `git index`
+
+### git-hook-pre-commit-3-npm-exec-lint-staged
+
+- command: `npm exec lint-staged`
+- category: `quality`
+- entrypoint: `git hook`
+- source: `.husky/pre-commit`
+- evidence: `.husky/pre-commit:3`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `.lintstagedrc, package-lock.json, package.json`
+
+### git-hook-pre-commit-4-npm-run-continuity-check
+
+- command: `npm run continuity:check`
+- category: `governance`
+- entrypoint: `git hook`
+- source: `.husky/pre-commit`
+- evidence: `.husky/pre-commit:4`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
+### git-hook-pre-commit-5-npm-run-docs-drift
+
+- command: `npm run docs:drift`
+- category: `governance`
+- entrypoint: `git hook`
+- source: `.husky/pre-commit`
+- evidence: `.husky/pre-commit:5`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `docs/**, package-lock.json, package.json`
+
+### git-hook-pre-commit-7-node-scripts-check-learning-integrity-mjs
+
+- command: `node scripts/check-learning-integrity.mjs`
+- category: `maintenance`
+- entrypoint: `git hook`
+- source: `.husky/pre-commit`
+- evidence: `.husky/pre-commit:7`
+- safe_to_run: `true`
+- destructive_level: `none`
 
 ### github-workflows-check-yml-check-103-npm-ci
 
@@ -745,39 +867,6 @@ candidates until promoted through the repo governance docs.
 - evidence: `Makefile:39 build and serve the production bundle locally`
 - safe_to_run: `true`
 - destructive_level: `none`
-
-### npm-script-governance-test
-
-- command: `npm run governance:test`
-- category: `test`
-- entrypoint: `npm script`
-- source: `package.json`
-- evidence: `package.json:scripts.governance:test = python3 ./scripts/governance_inventory_test.py`
-- safe_to_run: `true`
-- destructive_level: `none`
-- reads: `package-lock.json, package.json`
-
-### npm-script-governance-variables-check
-
-- command: `npm run governance:variables:check`
-- category: `governance`
-- entrypoint: `npm script`
-- source: `package.json`
-- evidence: `package.json:scripts.governance:variables:check = python3 ./scripts/variable_inventory.py --check`
-- safe_to_run: `true`
-- destructive_level: `none`
-- reads: `package-lock.json, package.json`
-
-### npm-script-governance-variables-write
-
-- command: `npm run governance:variables:write`
-- category: `governance`
-- entrypoint: `npm script`
-- source: `package.json`
-- evidence: `package.json:scripts.governance:variables:write = python3 ./scripts/variable_inventory.py --write`
-- safe_to_run: `true`
-- destructive_level: `none`
-- reads: `package-lock.json, package.json`
 
 ### npm-script-lint-apply
 

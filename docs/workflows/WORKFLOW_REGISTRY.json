@@ -1,0 +1,405 @@
+{
+  "schema_version": 1,
+  "generated_by": "scripts/workflow_inventory.py",
+  "last_verified": "2026-06-22",
+  "sources": [
+    "docs/cli/COMMAND_REGISTRY.json",
+    "docs/variables/VARIABLE_REGISTRY.json",
+    "scripts/workflow_inventory.py"
+  ],
+  "workflows": [
+    {
+      "id": "docs-registry-publish",
+      "name": "Docs and shadcn registry publish",
+      "intent": "Build and optionally publish generated docs and shadcn registry artifacts.",
+      "steps": [
+        "Install doc dependencies.",
+        "Build the shadcn registry.",
+        "Build docs.",
+        "Publish only from the manual deploy workflow or explicit operator action."
+      ],
+      "commands": [
+        "make doc-install",
+        "make registry-build",
+        "make doc-build",
+        "make registry-deploy",
+        "make doc-deploy"
+      ],
+      "inputs": [
+        "GITHUB_TOKEN",
+        "GITHUB_REPOSITORY"
+      ],
+      "outputs": [
+        "public/r/**",
+        "doc/dist/**",
+        "remote gh-pages branch"
+      ],
+      "validation": [
+        "make registry-build",
+        "make doc-build"
+      ],
+      "sensitivity": "secret",
+      "allowed_to_read": [
+        "tracked docs",
+        "tracked registry source"
+      ],
+      "allowed_to_index": false,
+      "allowed_to_log": false,
+      "gitignore_required": true,
+      "history_scan_required": true,
+      "rotation_required": true,
+      "owner": "docs operator",
+      "escalation": "Do not publish if generated docs or registry artifacts drift from source.",
+      "rollback": "Rebuild from source or revert gh-pages publish commit if necessary.",
+      "operator_checkpoint": true,
+      "source_evidence": [
+        "Makefile",
+        ".github/workflows/deploy.yml"
+      ]
+    },
+    {
+      "id": "frontend-quality-gate",
+      "name": "Frontend quality gate",
+      "intent": "Run local deterministic quality checks for frontend and governance-safe changes.",
+      "steps": [
+        "Typecheck the project.",
+        "Run ESLint.",
+        "Run Prettier in check mode.",
+        "Run unit tests.",
+        "Run docs and continuity guards."
+      ],
+      "commands": [
+        "npm run typecheck",
+        "npm run lint",
+        "npm run prettier",
+        "npm run test"
+      ],
+      "inputs": [
+        "NODE_ENV",
+        "package.json"
+      ],
+      "outputs": [],
+      "validation": [
+        "npm run continuity:check",
+        "npm run docs:drift"
+      ],
+      "sensitivity": "internal",
+      "allowed_to_read": [
+        "tracked source",
+        "tracked docs"
+      ],
+      "allowed_to_index": true,
+      "allowed_to_log": true,
+      "gitignore_required": false,
+      "history_scan_required": false,
+      "rotation_required": false,
+      "owner": "developer",
+      "escalation": "Fix the first failing deterministic check before broadening scope.",
+      "rollback": "No rollback for read-only checks; revert only the change that introduced the failure.",
+      "operator_checkpoint": false,
+      "source_evidence": [
+        "package.json",
+        ".github/workflows/check.yml"
+      ]
+    },
+    {
+      "id": "governance-registry-refresh",
+      "name": "Governance registry refresh",
+      "intent": "Regenerate and verify the governance command, variable, and workflow maps.",
+      "steps": [
+        "Regenerate the CLI registry after package, Makefile, workflow, or hook command changes.",
+        "Regenerate the variable registry after env, config, or command flag changes.",
+        "Regenerate the workflow registry after adding or changing ordered operator workflows.",
+        "Run the governance generator tests."
+      ],
+      "commands": [
+        "npm run governance:cli:write",
+        "npm run governance:variables:write",
+        "npm run governance:workflows:write",
+        "npm run governance:test"
+      ],
+      "inputs": [
+        "package.json",
+        "Makefile",
+        ".husky/pre-commit"
+      ],
+      "outputs": [
+        "docs/cli/COMMAND_REGISTRY.json",
+        "docs/cli/COMMAND_MAP.md",
+        "docs/variables/VARIABLE_REGISTRY.json",
+        "docs/variables/VARIABLE_MAP.md",
+        "docs/workflows/WORKFLOW_REGISTRY.json",
+        "docs/workflows/WORKFLOW_MAP.md"
+      ],
+      "validation": [
+        "npm run governance:cli:check",
+        "npm run governance:variables:check",
+        "npm run governance:workflows:check",
+        "npm run governance:test"
+      ],
+      "sensitivity": "internal",
+      "allowed_to_read": [
+        "tracked governance scripts",
+        "generated registry files",
+        "package/build metadata"
+      ],
+      "allowed_to_index": true,
+      "allowed_to_log": true,
+      "gitignore_required": false,
+      "history_scan_required": false,
+      "rotation_required": false,
+      "owner": "repo governance",
+      "escalation": "Stop and inspect generated diffs if any check reports stale output.",
+      "rollback": "Re-run the generators from a clean tree or restore the generated registry files before commit.",
+      "operator_checkpoint": false,
+      "source_evidence": [
+        "docs/CANTIERE.md",
+        "package.json"
+      ]
+    },
+    {
+      "id": "local-development-stack",
+      "name": "Local development stack",
+      "intent": "Start the local Supabase stack and Vite app with deterministic local admin bootstrap.",
+      "steps": [
+        "Install dependencies when needed.",
+        "Start local Supabase and bootstrap the local admin.",
+        "Start the Vite dev server.",
+        "Stop Supabase when the session is complete."
+      ],
+      "commands": [
+        "make install",
+        "make start",
+        "make stop"
+      ],
+      "inputs": [
+        "LOCAL_SUPABASE_ADMIN_EMAIL",
+        "LOCAL_SUPABASE_ADMIN_PASSWORD",
+        "VITE_SUPABASE_URL",
+        "VITE_SB_PUBLISHABLE_KEY"
+      ],
+      "outputs": [
+        "node_modules/**",
+        "local Supabase database",
+        "Vite dev server"
+      ],
+      "validation": [
+        "npm run typecheck",
+        "npm run lint"
+      ],
+      "sensitivity": "internal",
+      "allowed_to_read": [
+        "tracked source",
+        "local env defaults"
+      ],
+      "allowed_to_index": true,
+      "allowed_to_log": true,
+      "gitignore_required": true,
+      "history_scan_required": false,
+      "rotation_required": false,
+      "owner": "local operator",
+      "escalation": "If Supabase fails to start, inspect local Supabase status and port conflicts before changing code.",
+      "rollback": "Run make stop and remove only rebuildable local artifacts after operator approval.",
+      "operator_checkpoint": false,
+      "source_evidence": [
+        "Makefile",
+        "scripts/bootstrap-local-admin.mjs"
+      ]
+    },
+    {
+      "id": "local-e2e-smoke",
+      "name": "Local E2E smoke",
+      "intent": "Run Playwright smoke tests against the deterministic local Supabase stack.",
+      "steps": [
+        "Start the local stack.",
+        "Run Playwright smoke tests.",
+        "Stop local Supabase after the run."
+      ],
+      "commands": [
+        "make start",
+        "npm run test:e2e",
+        "make stop"
+      ],
+      "inputs": [
+        "LOCAL_SUPABASE_ADMIN_EMAIL",
+        "LOCAL_SUPABASE_ADMIN_PASSWORD",
+        "VITE_SUPABASE_URL",
+        "VITE_SB_PUBLISHABLE_KEY"
+      ],
+      "outputs": [
+        "test-results/**",
+        "playwright-report/**"
+      ],
+      "validation": [
+        "npm run test:e2e"
+      ],
+      "sensitivity": "internal",
+      "allowed_to_read": [
+        "tracked source",
+        "local deterministic test data"
+      ],
+      "allowed_to_index": true,
+      "allowed_to_log": true,
+      "gitignore_required": true,
+      "history_scan_required": false,
+      "rotation_required": false,
+      "owner": "developer",
+      "escalation": "Treat financial or auth smoke failures as system failures until source evidence proves otherwise.",
+      "rollback": "Run make stop; remove only rebuildable Playwright outputs.",
+      "operator_checkpoint": false,
+      "source_evidence": [
+        "Makefile",
+        "playwright.config.ts",
+        "tests/e2e/support/auth.ts"
+      ]
+    },
+    {
+      "id": "pre-commit-continuity-guard",
+      "name": "Pre-commit continuity guard",
+      "intent": "Run the local commit guard that refreshes registry.json, formats staged files, and blocks continuity or docs drift.",
+      "steps": [
+        "Generate the shadcn registry and stage registry.json.",
+        "Run lint-staged on staged files.",
+        "Run continuity and documentation drift checks.",
+        "Run learning integrity only when learning rules are staged."
+      ],
+      "commands": [
+        "npm run registry:gen",
+        "git add registry.json",
+        "npm exec lint-staged",
+        "npm run continuity:check",
+        "npm run docs:drift",
+        "node scripts/check-learning-integrity.mjs"
+      ],
+      "inputs": [
+        ".husky/pre-commit",
+        "package.json"
+      ],
+      "outputs": [
+        "registry.json",
+        "git index"
+      ],
+      "validation": [
+        "npm run continuity:check",
+        "npm run docs:drift"
+      ],
+      "sensitivity": "internal",
+      "allowed_to_read": [
+        "staged tracked files",
+        "docs/**",
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".claude/rules/*.md"
+      ],
+      "allowed_to_index": true,
+      "allowed_to_log": true,
+      "gitignore_required": false,
+      "history_scan_required": false,
+      "rotation_required": false,
+      "owner": "git hook",
+      "escalation": "Fix the failing companion docs, generated registry, or learning rule before committing.",
+      "rollback": "Unstage hook-generated files if the commit is intentionally aborted.",
+      "operator_checkpoint": false,
+      "source_evidence": [
+        ".husky/pre-commit"
+      ]
+    },
+    {
+      "id": "production-financial-health",
+      "name": "Production financial health",
+      "intent": "Run read-only production financial and fiscal smoke checks with explicit env inputs.",
+      "steps": [
+        "Run the production financial invariant check.",
+        "Run fiscal reminder parity smoke.",
+        "Run cash-vs-competence smoke.",
+        "Inspect exact failures before modifying financial code or data."
+      ],
+      "commands": [
+        "npm run health:financial",
+        "npm run smoke:ef-reminder-parity",
+        "npm run smoke:cash-vs-competence"
+      ],
+      "inputs": [
+        "HEALTH_ENV_FILE",
+        "SUPABASE_PROJECT_REF",
+        "TODAY_ISO",
+        "TS"
+      ],
+      "outputs": [
+        "console report only"
+      ],
+      "validation": [
+        "npm run health:financial",
+        "npm run smoke:ef-reminder-parity",
+        "npm run smoke:cash-vs-competence"
+      ],
+      "sensitivity": "secret",
+      "allowed_to_read": [
+        "tracked smoke scripts",
+        "operator-provided env file"
+      ],
+      "allowed_to_index": false,
+      "allowed_to_log": false,
+      "gitignore_required": true,
+      "history_scan_required": true,
+      "rotation_required": false,
+      "owner": "financial operator",
+      "escalation": "Stop on any mismatch and gather DB/query evidence before changing money or fiscal logic.",
+      "rollback": "Read-only workflow; no rollback expected.",
+      "operator_checkpoint": true,
+      "source_evidence": [
+        "scripts/check-prod-financial-health.mjs",
+        "scripts/prod-smoke-ef-reminder-parity.ts",
+        "scripts/prod-smoke-cash-vs-competence.ts"
+      ]
+    },
+    {
+      "id": "remote-supabase-deploy",
+      "name": "Remote Supabase deploy",
+      "intent": "Push remote Supabase migrations and deploy Edge Functions separately from Vercel frontend auto-deploy.",
+      "steps": [
+        "Confirm a reviewed migration/function diff exists.",
+        "Push remote database migrations.",
+        "Deploy Edge Functions.",
+        "Run relevant remote smoke checks."
+      ],
+      "commands": [
+        "make remote-deploy-supabase"
+      ],
+      "inputs": [
+        "SUPABASE_ACCESS_TOKEN",
+        "SUPABASE_DB_PASSWORD",
+        "SUPABASE_PROJECT_ID",
+        "SUPABASE_URL",
+        "SB_PUBLISHABLE_KEY"
+      ],
+      "outputs": [
+        "remote Supabase database",
+        "remote Supabase Edge Functions"
+      ],
+      "validation": [
+        "npm run health:financial"
+      ],
+      "sensitivity": "secret",
+      "allowed_to_read": [
+        "tracked migrations",
+        "tracked Edge Functions",
+        "Supabase secrets by operator action"
+      ],
+      "allowed_to_index": false,
+      "allowed_to_log": false,
+      "gitignore_required": true,
+      "history_scan_required": true,
+      "rotation_required": true,
+      "owner": "release operator",
+      "escalation": "If db push or function deploy fails, stop and inspect Supabase CLI output before retrying.",
+      "rollback": "Use migration-specific rollback/expand-contract plan; do not reset remote data.",
+      "operator_checkpoint": true,
+      "source_evidence": [
+        "Makefile",
+        ".github/workflows/deploy.yml",
+        "AGENTS.md"
+      ]
+    }
+  ]
+}

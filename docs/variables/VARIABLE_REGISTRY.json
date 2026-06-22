@@ -19,6 +19,7 @@
       "owner_commands": [
         "npm run governance:cli:check",
         "npm run governance:variables:check",
+        "npm run governance:workflows:check",
         "npm run prettier"
       ],
       "source_file": "docs/cli/COMMAND_REGISTRY.json",
@@ -27,6 +28,7 @@
       "source_evidence": [
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:check",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:check",
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:workflows:check",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier"
       ],
       "sensitive": false
@@ -299,6 +301,7 @@
       "owner_commands": [
         "npm run governance:cli:write",
         "npm run governance:variables:write",
+        "npm run governance:workflows:write",
         "npm run prettier:apply",
         "make registry-gen"
       ],
@@ -308,6 +311,7 @@
       "source_evidence": [
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:write",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:write",
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:workflows:write",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier:apply",
         "docs/cli/COMMAND_REGISTRY.json:Makefile:95"
       ],
@@ -753,6 +757,22 @@
       "source_evidence": [
         ".github/workflows/check.yml:18",
         ".github/workflows/deploy.yml:14"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-github-repository",
+      "name": "GITHUB_REPOSITORY",
+      "scope": "ci",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "behavioral input",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:41"
       ],
       "sensitive": false
     },

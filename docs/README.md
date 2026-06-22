@@ -85,6 +85,9 @@ La governance operativa del repo espone anche mappe generate:
 - `docs/variables/VARIABLE_MAP.md` e' generata da
   `npm run governance:variables:write` e verificata da
   `npm run governance:variables:check`
+- `docs/workflows/WORKFLOW_MAP.md` e' generata da
+  `npm run governance:workflows:write` e verificata da
+  `npm run governance:workflows:check`
 - la sequenza di bootstrap resta CLI -> variabili -> workflow -> artifact
 
 ## Agent Orchestration Files
@@ -163,6 +166,11 @@ CI come `official`, `candidate`, `dangerous` o `legacy`.
 
 Mappa generata di env vars, config keys, CLI flags e path di configurazione.
 Esclude `.env*` reali e usa solo sorgenti tracciate sicure.
+
+### `docs/workflows/WORKFLOW_MAP.md`
+
+Mappa generata dei workflow operativi. Ogni comando deve esistere nel CLI
+registry e ogni input deve esistere nel variable registry.
 
 ### `docs/development-continuity-map.md`
 

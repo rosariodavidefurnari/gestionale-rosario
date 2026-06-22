@@ -217,7 +217,7 @@ def discover_env_refs(repo: Path) -> list[VariableRef]:
         ("github_env", re.compile(r"\$\{\{\s*env\.([A-Z][A-Z0-9_]*)\s*}}")),
     ]
     workflow_env_re = re.compile(r"^\s*([A-Z][A-Z0-9_]{2,})\s*:\s*(.+)$")
-    shell_env_re = re.compile(r"(?<![A-Za-z0-9_])\$([A-Z][A-Z0-9_]{2,})\b")
+    shell_env_re = re.compile(r"(?<![A-Za-z0-9_])\$(?:\{([A-Z][A-Z0-9_]{2,})\}|([A-Z][A-Z0-9_]{2,})\b)")
     dotenv_re = re.compile(r"^([A-Z][A-Z0-9_]*)=(.*)$")
 
     for rel_path in tracked_files(repo):
@@ -296,7 +296,7 @@ def discover_env_refs(repo: Path) -> list[VariableRef]:
                         ),
                     )
                 for match in shell_env_re.finditer(line):
-                    name = match.group(1)
+                    name = match.group(1) or match.group(2)
                     refs.append(
                         VariableRef(
                             name=name,

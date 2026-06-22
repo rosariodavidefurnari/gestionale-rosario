@@ -94,9 +94,12 @@ Governance/RAG fix 2026-06-22:
 - governance variabili avviata: `scripts/variable_inventory.py` genera
   `docs/variables/VARIABLE_REGISTRY.json` + `docs/variables/VARIABLE_MAP.md`,
   e `npm run governance:variables:check` verifica il drift;
-- prossimo step governance: workflow registry, poi artifact registry; installare
-  hook aggiuntivi solo dopo che i quattro check esistono e passano nell'ordine
-  canonico.
+- governance workflow avviata: `scripts/workflow_inventory.py` genera
+  `docs/workflows/WORKFLOW_REGISTRY.json` + `docs/workflows/WORKFLOW_MAP.md`,
+  e `npm run governance:workflows:check` valida ogni comando contro il CLI
+  registry e ogni input contro il variable registry;
+- prossimo step governance: artifact registry; installare hook aggiuntivi solo
+  dopo che i quattro check esistono e passano nell'ordine canonico.
 
 ### Sessione 2026-06-20-sexies (IN CORSO, pre-commit, 0 codice applicato) — fix-minori → pivot
 
