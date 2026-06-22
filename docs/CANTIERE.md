@@ -103,10 +103,12 @@ Governance/RAG fix 2026-06-22:
   e `npm run governance:artifacts:check` valida producer/check contro il CLI
   registry, consumer contro il workflow registry, source variables contro il
   variable registry e policy dei secret;
-- prossimo step governance: valutare inserimento hook solo dopo che
-  `governance:cli:check`, `governance:variables:check`,
-  `governance:workflows:check`, `governance:artifacts:check` e
-  `governance:test` passano nell'ordine canonico.
+- hook governance installato: `.husky/pre-commit` esegue
+  `npm run governance:precommit`, che passa i quattro check in ordine canonico
+  e blocca registri generati aggiornati ma non staged;
+- regola d'uso: le mappe governance sono bussola anti-invenzione per comandi,
+  variabili, workflow e artefatti; per claim critici vanno sempre confermate
+  sulla fonte reale.
 
 ### Sessione 2026-06-20-sexies (IN CORSO, pre-commit, 0 codice applicato) — fix-minori → pivot
 

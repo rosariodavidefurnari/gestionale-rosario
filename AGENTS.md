@@ -111,6 +111,24 @@
 - se un controllo non puo' stare in pre-commit perche' richiede servizi remoti,
   creare uno script/manual gate ripetibile e documentarlo nel piano
 
+## REPO GOVERNANCE MAPS RULE
+
+- le mappe generate di governance sono la bussola operativa anti-invenzione del
+  repo, non una seconda verita' di dominio
+- prima di usare o proporre un comando, verificare `docs/cli/COMMAND_MAP.md`
+- prima di nominare env var, config key, flag o path configurativo, verificare
+  `docs/variables/VARIABLE_MAP.md`
+- prima di descrivere un'operazione ordinata, verificare
+  `docs/workflows/WORKFLOW_MAP.md`
+- prima di leggere, indicizzare, cancellare o trattare come ricostruibile un
+  output/file/dato locale o remoto, verificare `docs/artifacts/ARTIFACT_MAP.md`
+- ogni claim trovato nelle mappe va confermato sulla fonte reale quando e'
+  critico: codice, package script, Makefile, hook, schema, DB, seed o servizio
+  remoto
+- se cambia una superficie coperta dalle mappe, rigenerare e verificare in
+  ordine: CLI -> variabili -> workflow -> artifact; il pre-commit blocca drift
+  dei registri generati non staged
+
 ## CONTRATTO OPERATIVO - VERSIONE SCHERZOSA MA VINCOLANTE
 
 - parola d'ordine: deterministico

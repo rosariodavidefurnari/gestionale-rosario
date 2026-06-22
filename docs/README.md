@@ -93,6 +93,17 @@ La governance operativa del repo espone anche mappe generate:
   `npm run governance:artifacts:check`
 - la sequenza di bootstrap resta CLI -> variabili -> workflow -> artifact
 
+Uso operativo:
+
+- le mappe servono a non inventare comandi, variabili, workflow o policy sugli
+  artefatti
+- non sostituiscono codice, DB, schema, seed, hook o servizi reali: per claim
+  critici la fonte reale va sempre verificata
+- prima di leggere, indicizzare, cancellare o trattare un output come
+  ricostruibile, controllare `docs/artifacts/ARTIFACT_MAP.md`
+- il pre-commit esegue `npm run governance:precommit` e blocca registri
+  generati aggiornati ma non staged
+
 ## Agent Orchestration Files
 
 Anche i file di orchestrazione agentica hanno una gerarchia esplicita:
