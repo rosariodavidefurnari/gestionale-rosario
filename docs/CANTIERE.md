@@ -301,9 +301,10 @@ Shippato e LIVE in sessioni precedenti (tutto su `main`, CI verde, Vercel):
   per il CODICE skill `code-rag-local` (collezioni `code_*`, tool
   `mcp__qdrant__*` es. `search_code`); per PROSA/DOCUMENTI skill `prose-rag-local`
   (collezioni `prose_*`). DeepWiki `:8001` (codice) e deepwiki-prose `:8002`
-  (prosa) sono DISMESSI dal 2026-06-21. Per QUESTO repo NON esiste ancora alcun
-  indice prosa dedicato (nessuna collezione `gestionale-docs` in Qdrant): la
-  prosa va indicizzata via `prose-rag-local` se serve. Disciplina corpus: codice
+  (prosa) sono DISMESSI dal 2026-06-21. Per QUESTO repo l'indice prosa dedicato
+  ESISTE (collezione `prose_gestionale_docs` in Qdrant, `bge-m3` 1024-dim);
+  reindex via `scripts/reindex_prose_rag_local.sh` (recipe `957c3025`).
+  Disciplina corpus: codice
   solo in `code_*`, prosa solo in `prose_*`, MAI incrociati. Validazione
   doc↔codice via skill `doc-code-validation` (usa i due motori come oracoli, non
   un terzo indice).
@@ -802,9 +803,9 @@ Motore corrente (CODICE) — skill `code-rag-local`:
   concludere review o dichiarare "fatto".
 
 Prosa/documenti (separato) — skill `prose-rag-local`: Qdrant (`:6333`) + Ollama
-`bge-m3`, collezioni `prose_*`. Per QUESTO repo NON esiste ancora un indice prosa
-dedicato (nessuna collezione `gestionale-docs` in Qdrant): la prosa va
-indicizzata via `prose-rag-local` se serve retrieval semantico sui docs.
+`bge-m3`, collezioni `prose_*`. Per QUESTO repo l'indice prosa dedicato ESISTE:
+collezione `prose_gestionale_docs` in Qdrant (`bge-m3` 1024-dim); reindex via
+`scripts/reindex_prose_rag_local.sh` (recipe `957c3025`).
 
 Query eseguite:
 
