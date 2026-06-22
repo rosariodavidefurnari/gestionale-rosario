@@ -86,6 +86,20 @@ the variable registry. Secret artifacts must not be readable, indexable, or logg
 - allowed_to_log: `false`
 - risk: External fiscal/business source material; operator approval required before moving or deleting.
 
+## generated-doc-quality-triage
+
+- kind: `derived`
+- path_patterns: `docs/doc-quality/MARKDOWNLINT_TRIAGE.md`
+- delete_policy: `safe_rebuild`
+- producers: `npm run docs:markdownlint:triage:write`
+- consumers: `documentation-lint-triage`
+- source_variables: `package.json`
+- validation: `npm run docs:markdownlint:triage:check`
+- allowed_to_read: `true`
+- allowed_to_index: `true`
+- allowed_to_log: `true`
+- risk: Generated L2 documentation lint triage; useful for prioritization, not a product truth source.
+
 ## generated-docs-and-public-registry
 
 - kind: `derived`

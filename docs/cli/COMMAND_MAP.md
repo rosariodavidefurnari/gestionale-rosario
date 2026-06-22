@@ -229,6 +229,28 @@ candidates until promoted through the repo governance docs.
 - destructive_level: `none`
 - reads: `docs/**, package-lock.json, package.json`
 
+### npm-script-docs-markdownlint-triage-check
+
+- command: `npm run docs:markdownlint:triage:check`
+- category: `quality`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.docs:markdownlint:triage:check = python3 ./scripts/markdownlint_triage.py --check`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `docs/**, package-lock.json, package.json`
+
+### npm-script-docs-markdownlint-triage-write
+
+- command: `npm run docs:markdownlint:triage:write`
+- category: `quality`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.docs:markdownlint:triage:write = python3 ./scripts/markdownlint_triage.py --write`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `docs/**, package-lock.json, package.json`
+
 ### npm-script-governance-artifacts-check
 
 - command: `npm run governance:artifacts:check`

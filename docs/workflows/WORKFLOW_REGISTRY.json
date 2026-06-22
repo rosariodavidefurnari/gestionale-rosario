@@ -58,6 +58,50 @@
       ]
     },
     {
+      "id": "documentation-lint-triage",
+      "name": "Documentation lint triage",
+      "intent": "Classify markdownlint findings into problem, review, and noise without turning existing style debt into a hard gate.",
+      "steps": [
+        "Run markdownlint across governance and documentation Markdown.",
+        "Classify each finding by deterministic rule severity.",
+        "Write a readable triage report.",
+        "Check that the committed triage report matches the current docs."
+      ],
+      "commands": [
+        "npm run docs:markdownlint:triage:write",
+        "npm run docs:markdownlint:triage:check",
+        "npm run docs:drift"
+      ],
+      "inputs": [
+        "package.json"
+      ],
+      "outputs": [
+        "docs/doc-quality/MARKDOWNLINT_TRIAGE.md"
+      ],
+      "validation": [
+        "npm run docs:markdownlint:triage:check",
+        "npm run docs:drift"
+      ],
+      "sensitivity": "internal",
+      "allowed_to_read": [
+        "tracked Markdown docs",
+        "agent governance docs"
+      ],
+      "allowed_to_index": true,
+      "allowed_to_log": true,
+      "gitignore_required": false,
+      "history_scan_required": false,
+      "rotation_required": false,
+      "owner": "repo governance",
+      "escalation": "Fix problem-severity findings before promoting markdownlint to a hard gate.",
+      "rollback": "Regenerate the report or revert the docs that changed the triage counts.",
+      "operator_checkpoint": false,
+      "source_evidence": [
+        "scripts/markdownlint_triage.py",
+        "docs/doc-quality/MARKDOWNLINT_TRIAGE.md"
+      ]
+    },
+    {
       "id": "frontend-quality-gate",
       "name": "Frontend quality gate",
       "intent": "Run local deterministic quality checks for frontend and governance-safe changes.",

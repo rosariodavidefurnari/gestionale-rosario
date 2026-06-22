@@ -147,6 +147,30 @@
       "allowed_to_log": false
     },
     {
+      "id": "generated-doc-quality-triage",
+      "path_patterns": [
+        "docs/doc-quality/MARKDOWNLINT_TRIAGE.md"
+      ],
+      "kind": "derived",
+      "producers": [
+        "npm run docs:markdownlint:triage:write"
+      ],
+      "consumers": [
+        "documentation-lint-triage"
+      ],
+      "source_variables": [
+        "package.json"
+      ],
+      "delete_policy": "safe_rebuild",
+      "risk": "Generated L2 documentation lint triage; useful for prioritization, not a product truth source.",
+      "validation": [
+        "npm run docs:markdownlint:triage:check"
+      ],
+      "allowed_to_read": true,
+      "allowed_to_index": true,
+      "allowed_to_log": true
+    },
+    {
       "id": "generated-docs-and-public-registry",
       "path_patterns": [
         "doc/dist/**",

@@ -1951,6 +1951,52 @@
       "avoid_reason": null
     },
     {
+      "id": "npm-script-docs-markdownlint-triage-check",
+      "command": "npm run docs:markdownlint:triage:check",
+      "category": "quality",
+      "entrypoint": "npm script",
+      "reads": [
+        "docs/**",
+        "package-lock.json",
+        "package.json"
+      ],
+      "writes": [],
+      "env": [],
+      "safe_to_run": true,
+      "owner": "repo",
+      "source": "package.json",
+      "status": "official",
+      "confidence": "high",
+      "source_evidence": "package.json:scripts.docs:markdownlint:triage:check = python3 ./scripts/markdownlint_triage.py --check",
+      "last_verified": "2026-06-22",
+      "destructive_level": "none",
+      "replacement": null,
+      "avoid_reason": null
+    },
+    {
+      "id": "npm-script-docs-markdownlint-triage-write",
+      "command": "npm run docs:markdownlint:triage:write",
+      "category": "quality",
+      "entrypoint": "npm script",
+      "reads": [
+        "docs/**",
+        "package-lock.json",
+        "package.json"
+      ],
+      "writes": [],
+      "env": [],
+      "safe_to_run": true,
+      "owner": "repo",
+      "source": "package.json",
+      "status": "official",
+      "confidence": "high",
+      "source_evidence": "package.json:scripts.docs:markdownlint:triage:write = python3 ./scripts/markdownlint_triage.py --write",
+      "last_verified": "2026-06-22",
+      "destructive_level": "none",
+      "replacement": null,
+      "avoid_reason": null
+    },
+    {
       "id": "npm-script-governance-artifacts-check",
       "command": "npm run governance:artifacts:check",
       "category": "governance",

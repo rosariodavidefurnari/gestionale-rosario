@@ -91,6 +91,9 @@ La governance operativa del repo espone anche mappe generate:
 - `docs/artifacts/ARTIFACT_MAP.md` e' generata da
   `npm run governance:artifacts:write` e verificata da
   `npm run governance:artifacts:check`
+- `docs/doc-quality/MARKDOWNLINT_TRIAGE.md` e' generata da
+  `npm run docs:markdownlint:triage:write` e verificata da
+  `npm run docs:markdownlint:triage:check`
 - la sequenza di bootstrap resta CLI -> variabili -> workflow -> artifact
 
 Uso operativo:
@@ -101,6 +104,8 @@ Uso operativo:
   critici la fonte reale va sempre verificata
 - prima di leggere, indicizzare, cancellare o trattare un output come
   ricostruibile, controllare `docs/artifacts/ARTIFACT_MAP.md`
+- per markdownlint, usare `docs/doc-quality/MARKDOWNLINT_TRIAGE.md` per
+  distinguere problemi da review debt e rumore stilistico
 - il pre-commit esegue `npm run governance:precommit` e blocca registri
   generati aggiornati ma non staged
 
@@ -191,6 +196,12 @@ registry e ogni input deve esistere nel variable registry.
 Mappa generata degli artefatti repo-locali, esterni, segreti e pericolosi.
 Valida producer/check contro il CLI registry, consumer contro il workflow
 registry e source variables contro il variable registry.
+
+### `docs/doc-quality/MARKDOWNLINT_TRIAGE.md`
+
+Report generato per classificare i finding markdownlint in `problem`, `review`
+e `noise`. Serve a prioritizzare la qualita' documentale senza trasformare il
+debito stilistico storico in gate prodotto.
 
 ### `docs/development-continuity-map.md`
 

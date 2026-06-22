@@ -43,6 +43,34 @@ Steps:
 3. Build docs.
 4. Publish only from the manual deploy workflow or explicit operator action.
 
+## Documentation lint triage
+
+- id: `documentation-lint-triage`
+- intent: Classify markdownlint findings into problem, review, and noise without turning existing style debt into a hard gate.
+- sensitivity: `internal`
+- owner: `repo governance`
+- operator_checkpoint: `false`
+- allowed_to_read: `tracked Markdown docs, agent governance docs`
+- allowed_to_index: `true`
+- allowed_to_log: `true`
+- gitignore_required: `false`
+- history_scan_required: `false`
+- rotation_required: `false`
+- commands: `npm run docs:markdownlint:triage:write, npm run docs:markdownlint:triage:check, npm run docs:drift`
+- inputs: `package.json`
+- outputs: `docs/doc-quality/MARKDOWNLINT_TRIAGE.md`
+- validation: `npm run docs:markdownlint:triage:check, npm run docs:drift`
+- escalation: Fix problem-severity findings before promoting markdownlint to a hard gate.
+- rollback: Regenerate the report or revert the docs that changed the triage counts.
+- source_evidence: `scripts/markdownlint_triage.py, docs/doc-quality/MARKDOWNLINT_TRIAGE.md`
+
+Steps:
+
+1. Run markdownlint across governance and documentation Markdown.
+2. Classify each finding by deterministic rule severity.
+3. Write a readable triage report.
+4. Check that the committed triage report matches the current docs.
+
 ## Frontend quality gate
 
 - id: `frontend-quality-gate`

@@ -109,6 +109,9 @@ Governance/RAG fix 2026-06-22:
 - regola d'uso: le mappe governance sono bussola anti-invenzione per comandi,
   variabili, workflow e artefatti; per claim critici vanno sempre confermate
   sulla fonte reale.
+- triage markdownlint aggiunto: `docs/doc-quality/MARKDOWNLINT_TRIAGE.md`
+  classifica i finding L2 in `problem`, `review` e `noise`; non e' un hard
+  gate finche' il debito stilistico storico non viene ridotto o configurato.
 
 ### Sessione 2026-06-20-sexies (IN CORSO, pre-commit, 0 codice applicato) — fix-minori → pivot
 

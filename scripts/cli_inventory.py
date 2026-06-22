@@ -23,6 +23,8 @@ OFFICIAL_NPM_SCRIPTS = {
     "typecheck",
     "continuity:check",
     "docs:drift",
+    "docs:markdownlint:triage:check",
+    "docs:markdownlint:triage:write",
     "rag:policy:check",
     "governance:cli:check",
     "governance:cli:write",
