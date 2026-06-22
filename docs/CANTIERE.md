@@ -83,37 +83,45 @@ Branch corrente:
 
 ## Obiettivo Persistente Da Perseguire
 
-**Gestire end-to-end il caso LIVE SRLS / Gustare Sicilia in modo
-deterministico, motivato e propagato solo dove serve.** Gli XML 2026 sono in
-`Fatture/2026/`: `FPR 1/26` e `FPR 2/26` sono intestate a `LIVE - SOCIETA' A
-RESPONSABILITA' LIMITATA SEMPLIFICATA`, mentre incassi, progetti e referente
-Diego restano sotto `ASSOCIAZIONE CULTURALE GUSTARE SICILIA`. La decisione di
-dominio e': Gustare resta il cliente/account operativo; LIVE diventa un profilo
-di fatturazione collegato a Gustare, non un cliente operativo duplicato.
+**Gestire end-to-end i crediti inesigibili, partendo da Aidone `FPA 1/23` da
+375 EUR, senza falsare cassa, fiscalita' o dashboard.** Decisione di dominio:
+introdurre una semantica write-off operativa su `payments.status = 'perso'` con
+`writeoff_date` e `writeoff_reason`; la fattura storica resta, l'incasso resta
+assente, il residuo operativo viene chiuso tramite `total_written_off`, senza
+marcare `ricevuto`, cancellare dati o creare spese/crediti finti.
 
 Spec attiva:
-`docs/superpowers/specs/2026-06-22-client-billing-profiles-design.md`.
-Piano persistente end-to-end:
-`docs/superpowers/plans/2026-06-22-live-gustare-billing-profiles-end-to-end.md`.
+`docs/superpowers/specs/2026-06-22-uncollectible-receivables-design.md`.
+
 Piano attivo:
-`docs/superpowers/plans/2026-06-22-client-billing-profiles-backend.md`.
+`docs/superpowers/plans/2026-06-22-uncollectible-receivables.md`.
 
-Sequenza obbligatoria:
+Review:
 
-1. **Backend contract.** Introdurre `client_billing_profiles`, collegare
-   `financial_documents.billing_profile_id`, esporre i campi nella summary view,
-   aggiornare health guard e preparare backfill 2026. Questa tranche stabilizza
-   il contratto dati e non deve ancora propagare UI/emissione.
-2. **Backfill controllato.** Solo dopo C1 read-only, dry-run transazionale,
-   report all'utente e conferma esplicita, applicare il backfill 2026. Non
-   cambiare `payments.amount`, `payments.status`, `payments.payment_date` o
-   `payments.payment_type`.
-3. **Integrazione applicativa.** Dopo backend verde e review, aprire una spec e
-   un piano separati per propagare il modello alle superfici necessarie:
-   gestione profili in UI cliente, scelta profilo in bozza fattura,
-   `invoice_emit`, XML, PDF, eventuale import/backfill, lista/show fatture,
-   mobile parity, dashboard solo se serve mostrare l'intestatario, AI/semantica
-   solo se il profilo viene esposto alla chat.
+- Spec review: PASS dopo v2. Fix integrati: `project_financials`, fallback
+  Fatture per Aidone senza FK, quote summary, AI/import surfaces e no FK
+  retroattivo per evitare re-settle import.
+- Piano review: PASS dopo v2. Fix integrato: `docs/CANTIERE.md` va aggiornato
+  prima del codice; UI richiede `impeccable` + browser reale desktop/mobile;
+  apply remoto solo dopo C1 read-only e dry-run rollback.
+
+Prossima azione:
+
+1. Commit documentale iniziale con spec, piano e Cantiere.
+2. Eseguire baseline read-only `npm run health:financial` e registrare "Da
+   incassare", Aidone, cassa 2023 e `pendingPaymentsTotal`.
+3. Scrivere il controllore RED `scripts/check-uncollectible-receivables.sql`.
+4. Solo dopo RED, implementare migration additiva, seed, types e helper stato.
+
+Gate aperti:
+
+- Nessun codice/schema/DB prima del commit documentale iniziale.
+- Money/fiscal TDD: controllore RED prima della migration.
+- C1 read-only + dry-run rollback prima di ogni apply remoto.
+- Se tocca UI: skill `impeccable`, browser reale desktop/mobile, click su
+  dropdown/sheet/modali, console senza errori bloccanti.
+- Se tocca `supabase/functions/**`: `git push` non deploya le Edge Functions;
+  serve deploy Supabase manuale.
 
 Regole operative non negoziabili:
 
