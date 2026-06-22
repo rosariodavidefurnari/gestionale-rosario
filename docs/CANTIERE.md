@@ -116,10 +116,9 @@ Baseline read-only prod 2026-06-22 (`npm run health:financial`):
 
 Prossima azione:
 
-1. Commit documentazione stato remoto.
-2. Push su `origin/main` per attivare deploy frontend Vercel.
-3. Verificare deploy frontend live e lasciare `docs/CANTIERE.md` coerente se il
-   deploy segnala problemi.
+1. Nessuna azione aperta sul rollout crediti inesigibili.
+2. Prossima chat: partire da nuove frizioni operative o dal prossimo item
+   roadmap, non riaprire Aidone salvo regressioni.
 
 Gate backend locale 2026-06-22:
 
@@ -193,13 +192,17 @@ Gate remoto 2026-06-22:
   write-off presente.
 - Edge Function: `npx supabase functions deploy invoice_import_confirm` ha
   deployato la funzione sul progetto `qvdmzhyzpyaveniirsmo`.
+- Frontend: push `origin/main` completato su commit
+  `e625c2ba5ff9dcb40d8554a760119392cd4db6b9`; Vercel deployment
+  `dpl_6TDpmRUvkhd6p4Q2SibeU3gW8ATB` production `READY`; alias
+  `https://gestionale-rosario.vercel.app` risponde `HTTP/2 200`.
 - Nota: `npx supabase migration list` post-apply e' stato interrotto per retry
   del pooler/temp role (`SUPABASE_DB_PASSWORD`), non usato come fonte; `db push`
   e health remote sono le fonti operative.
 
 Gate aperti:
 
-- Push `origin/main` e verifica deploy frontend Vercel.
+- Nessuno per il rollout crediti inesigibili.
 
 Regole operative non negoziabili:
 
