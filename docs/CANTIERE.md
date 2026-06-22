@@ -229,8 +229,18 @@ Integrazione applicativa billing profiles — spec/piano gate 2026-06-22:
   e `test-results/billing-profile-selector-mobile-dialog.png`. Fix incluso:
   niente UUID finto in query disabled, selector mobile troncata, tabella dentro
   scroll orizzontale del dialog.
-- Stop point: prossima tranche gestione profili in scheda Cliente; browser
-  desktop/mobile obbligatorio prima del commit UI relativo.
+- Task 5 gestione profili in scheda Cliente: IMPLEMENTATO e review UI/UX PASS
+  con Impeccable. `ClientShow` mostra gli intestatari fiscali collegati dentro
+  l'area Fatturazione, dopo i dati fiscali del cliente operativo; `CreateSheet`
+  e `EditSheet` permettono create/edit del resource `client_billing_profiles`
+  senza creare un cliente LIVE. Browser reale Chrome PASS desktop 1280x900 e
+  mobile 390x844; screenshot: `test-results/client-billing-profiles-desktop-section.png`,
+  `test-results/client-billing-profiles-desktop-sheet-settled.png`,
+  `test-results/client-billing-profiles-mobile.png`. Console errors bloccanti:
+  0. Review: dominio PASS, mobile PASS, RLS/provider path PASS, money/cash
+  invariant PASS.
+- Stop point: prossima tranche superfici Fatture list/show; serve RED test
+  prima dell'implementazione e poi review implementazione + commit dedicato.
 
 Governance/RAG fix 2026-06-22:
 

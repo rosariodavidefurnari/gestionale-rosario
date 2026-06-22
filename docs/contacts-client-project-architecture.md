@@ -6,6 +6,12 @@
 > supportare il ponte "Emetti la fattura del progetto" che parte da un servizio
 > del registro lavori. Solo comportamento di apertura del dialog; nessun
 > cambio al dominio clienti/referenti/progetti.
+>
+> Nota 2026-06-22 (profili fatturazione cliente): `ClientShow` gestisce
+> `client_billing_profiles` nell'area Fatturazione per intestatari fiscali
+> alternativi dello stesso account operativo. Questo non crea nuovi `clients`:
+> Gustare resta cliente operativo, Diego resta referente, LIVE SRLS resta solo
+> profilo fiscale collegato per le fatture che lo richiedono.
 
 **Stato del documento:** `canonical`
 **Scopo:** fonte primaria per il dominio referenti e le relazioni
@@ -14,7 +20,7 @@
 nel contesto AI.
 
 Data: 2026-03-01
-Ultimo aggiornamento: 2026-03-08
+Ultimo aggiornamento: 2026-06-22
 
 ## UI Update — Liste Clienti, Referenti e Progetti con Icone Colorate
 

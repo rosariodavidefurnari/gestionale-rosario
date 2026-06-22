@@ -1355,6 +1355,14 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/clients/ClientBillingProfilesSection.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/clients/ClientBillingProfileInputs.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/ai/invoiceImportDraftHelpers.ts",
           "type": "registry:component"
         },

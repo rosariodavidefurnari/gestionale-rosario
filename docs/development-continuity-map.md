@@ -8,7 +8,7 @@ prodotto.
 
 Last updated: 2026-06-22 (LIVE/Gustare billing profiles: backend contract
 `client_billing_profiles` + `financial_documents.billing_profile_id`, application
-recipient adapter started for UI/emission propagation)
+recipient adapter and UI management started for UI/emission propagation)
 
 ---
 
@@ -41,6 +41,11 @@ contatti.
   carica i profili del cliente operativo, mostra il selector solo se esistono,
   resta su cliente principale salvo profilo `is_default=true`, e passa lo stesso
   `selectedDraft` a validation, emit, XML e PDF.
+- `ClientShow` e' la superficie di gestione dei profili: la sezione
+  `ClientBillingProfilesSection` vive nell'area Fatturazione, dopo i dati
+  fiscali del cliente operativo, e usa il resource `client_billing_profiles`
+  via dataProvider con `CreateSheet`/`EditSheet`. Non creare LIVE come
+  `clients` e non duplicare progetti o referenti.
 - Ogni modifica a `supabase/functions/invoice_emit/**` richiede deploy Supabase
   manuale; `git push` aggiorna Vercel ma non le Edge Functions.
 - La propagazione applicativa deve continuare lungo spec/piano/review dedicati

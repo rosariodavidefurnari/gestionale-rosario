@@ -30,6 +30,7 @@ import { buildInvoiceDraftFromClient } from "../invoicing/buildInvoiceDraftFromC
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { CloudinaryImageField } from "../cloudinary/CloudinaryImageField";
 import { TagsListEdit } from "../tags/TagsListEdit";
+import { ClientBillingProfilesSection } from "./ClientBillingProfilesSection";
 
 export const ClientShow = () => (
   <ShowBase>
@@ -239,6 +240,8 @@ const ClientDetails = ({ record }: { record: Client }) => (
           value={line}
         />
       ))}
+      <Separator />
+      <ClientBillingProfilesSection client={record} />
     </div>
   </div>
 );

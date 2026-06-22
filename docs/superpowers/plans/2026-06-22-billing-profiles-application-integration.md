@@ -344,7 +344,7 @@ git commit -m "feat: select billing recipient in invoice draft"
 - Consumes: `client_billing_profiles` resource through existing dataProvider.
 - Produces: list/create/edit UI scoped to current client.
 
-- [ ] **Step 1: Inputs**
+- [x] **Step 1: Inputs**
 
 Use existing admin form inputs from their concrete paths:
 
@@ -353,21 +353,30 @@ Use existing admin form inputs from their concrete paths:
 - `BooleanInput` from `@/components/admin/boolean-input` for `is_default`;
 - hidden/default `client_id` from current record.
 
-- [ ] **Step 2: Section**
+- [x] **Step 2: Section**
 
 Use `useGetList<ClientBillingProfile>` filtered by current client. Display
 compact rows with label, billing name, VAT/CF, address, SDI/PEC. Use
 `CreateSheet` and `EditSheet` for mobile-compatible create/edit.
 
-- [ ] **Step 3: Mount in ClientShow**
+- [x] **Step 3: Mount in ClientShow**
 
 Place the section inside the Fatturazione card area, after base fiscal fields.
 Keep repeated cards shallow; do not nest a card inside a card.
 
-- [ ] **Step 4: Review and commit**
+- [x] **Step 4: Review and commit**
 
 Review dimensions: mobile sheet ergonomics, fiscal clarity, RLS/provider path,
 no client duplication.
+
+Review result 2026-06-22: PASS. `ClientShow` now shows
+`client_billing_profiles` under the existing Fatturazione area, using the
+existing dataProvider resource, `CreateSheet` and `EditSheet`. Browser Chrome
+verification passed on desktop 1280x900 and mobile 390x844; screenshots:
+`test-results/client-billing-profiles-desktop-section.png`,
+`test-results/client-billing-profiles-desktop-sheet-settled.png`,
+`test-results/client-billing-profiles-mobile.png`. Console errors: none
+blocking. No LIVE client duplication and no payments mutation.
 
 ```bash
 git add src/components/atomic-crm/clients/ClientBillingProfileInputs.tsx \
