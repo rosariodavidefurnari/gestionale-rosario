@@ -628,7 +628,7 @@ used only as a template source.
 - owner_command: `unknown`
 - source_file: `playwright.config.ts`
 - risk: build/runtime mode
-- evidence: `playwright.config.ts:18`
+- evidence: `playwright.config.ts:3, playwright.config.ts:21`
 
 ### env-sb-publishable-key
 

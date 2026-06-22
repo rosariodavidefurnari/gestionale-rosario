@@ -205,6 +205,10 @@ const ServiceHeader = ({ record }: { record: Service }) => {
         open={invoiceDraftOpen}
         onOpenChange={setInvoiceDraftOpen}
         draft={hasCollectableAmount ? invoiceDraft : null}
+        emptyStateContext={{
+          clientId: record.client_id ?? project?.client_id,
+          projectId: record.project_id,
+        }}
       />
     </div>
   );

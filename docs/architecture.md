@@ -37,7 +37,7 @@ di fotografo, videomaker e web developer. Single-user, interfaccia italiana.
 
 Stato del documento:
 
-- `canonical` — ultimo aggiornamento: 2026-06-17
+- `canonical` — ultimo aggiornamento: 2026-06-22
 - descrive la fotografia implementativa ad alto livello
 - le vecchie "sessioni" citate nel file sono indizi storici, non la fonte
   primaria della verita' operativa se entrano in conflitto con codice o
@@ -63,6 +63,15 @@ Stato del documento:
   carica i profili nel workspace AI, abbina LIVE tramite CF/P.IVA/nome fiscale
   prima dei fallback di creazione cliente, e valida `billingProfileId` in
   `invoice_import_confirm` senza persistere il profilo su `payments`.
+
+- 2026-06-22: Invoice draft recovery UX + browser tooling locale —
+  `InvoiceDraftDialog` non lascia piu' l'utente bloccato quando tutti i servizi
+  e le spese sono gia' marcati con `invoice_ref`: l'empty state mostra link
+  filtrati a Registro lavori, Spese e Fatture. I consumer Show passano il
+  contesto client/progetto anche quando il builder produce `draft=null`. La
+  header desktop evita overflow orizzontale facendo scorrere solo la nav moduli.
+  In locale Playwright usa Google Chrome di sistema (`channel: "chrome"`),
+  mentre in CI continua a usare il browser gestito da Playwright.
 
 - 2026-06-20: Imposta del SALDO su CASSA (LM035) — completa il saldo, card ESATTA `9.005,91 €`. Oltre agli acconti reali, l'imposta del saldo ora si deduce su CASSA (contributi INPS versati nel basis-year, via `sumInpsContributionsPaidInYear` sui F24) invece che su competenza. `buildFiscalModel` passa `basisContributiVersatiCassa` (INPS versato cassa anno-1) a `previousYearEstimate` (che già accetta `contributiVersatiCassa`, tocca SOLO l'imposta); `useDashboardData` fetcha obblighi + righe F24 dell'anno-1 e somma i contributi INPS (allowlist, esclude interessi, filtro `submission_date`). Builder condivisi e KPI INTATTI (`previousYearEstimate` alimenta SOLO lo schedule, verificato RAG :8001 + sorgente) → parità verde. Prod 2026: imposta 2025 dovuta `719,50 → 804,12` (reddito 19.464 − LM035 3.382,09 × 5%), imposta saldo `486,50 → 571,12`, totale card `~8.840 → 9.005,91` ESATTO. Controllore `fiscalModel.test.ts` (`cash imposta_saldo = 730`, falsificabile). Chiude il residuo imposta cassa-vs-competenza.
 
@@ -641,6 +650,12 @@ Tipo condiviso: `DraftPayment = Pick<Payment, "amount" | "payment_type" |
 Helper unificato: `hasInvoiceDraftCollectableAmount(draft)` — usato da tutte
 le pagine Show per decidere se mostrare il pulsante "Genera bozza fattura".
 Un draft non-null con `lineItems: []` non mostra il pulsante.
+
+Empty state operativo: quando il dialog viene aperto senza voci residue, mostra
+link filtrati a Registro lavori, Spese e Fatture per permettere all'utente di
+trovare i record con `invoice_ref` e i documenti gia' emessi. I consumer che
+possono passare `draft=null` devono fornire `emptyStateContext` con client e,
+se disponibile, progetto.
 
 Entry point UI:
 

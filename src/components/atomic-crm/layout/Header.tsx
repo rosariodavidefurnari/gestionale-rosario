@@ -38,10 +38,10 @@ const Header = () => {
       <nav className="grow">
         <header className="bg-secondary">
           <div className="px-4">
-            <div className="flex justify-between items-center flex-1">
+            <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
               <Link
                 to="/"
-                className="flex items-center gap-2 text-secondary-foreground no-underline"
+                className="flex shrink-0 items-center gap-2 text-secondary-foreground no-underline"
               >
                 <img
                   className="[.light_&]:hidden h-6"
@@ -56,8 +56,11 @@ const Header = () => {
                 <h1 className="text-xl font-semibold">{title}</h1>
               </Link>
 
-              <div>
-                <nav className="flex">
+              <div className="min-w-0 flex-1 overflow-x-auto overscroll-x-contain">
+                <nav
+                  className="flex min-w-max"
+                  aria-label="Navigazione principale"
+                >
                   <NavigationTab
                     label="Bacheca"
                     to="/"
@@ -78,7 +81,7 @@ const Header = () => {
                 </nav>
               </div>
 
-              <div className="flex items-center">
+              <div className="flex shrink-0 items-center">
                 <ThemeModeToggle />
                 <RefreshButton />
                 <UserMenu>

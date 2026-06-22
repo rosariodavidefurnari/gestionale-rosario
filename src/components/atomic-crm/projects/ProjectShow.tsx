@@ -187,6 +187,7 @@ const ProjectHeader = ({ record }: { record: Project }) => {
         open={invoiceDraftOpen}
         onOpenChange={setInvoiceDraftOpen}
         draft={hasCollectableAmount ? invoiceDraft : null}
+        emptyStateContext={{ clientId: record.client_id, projectId: record.id }}
       />
     </div>
   );

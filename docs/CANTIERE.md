@@ -267,9 +267,42 @@ Integrazione applicativa billing profiles — spec/piano gate 2026-06-22:
   dominio PASS, fiscalita'/cassa PASS, Edge validation PASS, UI/mobile PASS,
   governance/RAG PASS. Nota: `billingProfileId` serve solo a risolvere/validare
   il cliente operativo nell'import; non viene persistito su `payments`.
-- Stop point: prossima tranche Task 8, cioe' full gates, deploy manuale
-  `invoice_emit` + `invoice_import_confirm`, review finale e commit/deploy
-  verificati.
+- Task 8 friction fix: IMPLEMENTATO dopo browser review. L'empty state
+  `InvoiceDraftDialog` quando tutte le voci hanno gia' `invoice_ref` non e' piu'
+  un vicolo cieco: mostra link operativi filtrati a Registro lavori, Spese e
+  Fatture. I consumer `ClientShow`, `ProjectShow`, `ServiceShow` e `QuoteShow`
+  passano `emptyStateContext` per mantenere i link filtrati anche quando il
+  builder restituisce `draft=null`. RED/GREEN:
+  `npm run test -- src/components/atomic-crm/invoicing/InvoiceDraftDialog.test.tsx`
+  PASS 3 test. Browser reale Google Chrome PASS desktop 1280x900 e mobile
+  390x844: href filtrati per client, touch target >=44px, console/page errors
+  0, overflow 0. Screenshot:
+  `test-results/final-invoice-empty-state-links-desktop.png`,
+  `test-results/final-invoice-empty-state-links-mobile.png`.
+- Task 8 UI shell/tooling fix: IMPLEMENTATO. Il browser gate ha trovato
+  overflow orizzontale desktop causato dalla header (`docScrollWidth=1533` su
+  viewport 1280), non dal dialog. Fix: la nav desktop e' ora l'unica area
+  comprimibile/scorrevole, con logo e menu account fissi. Inoltre
+  `playwright.config.ts` usa Google Chrome di sistema in locale
+  (`channel: "chrome"`) e lascia il browser Playwright gestito in CI, evitando
+  il falso blocco ricorrente del cache `ms-playwright`. Verifica:
+  `chromium.launch({ channel: "chrome" })` apre Chrome `149.0.7827.116`.
+- Task 8 full gates: PASS. `npm run typecheck` PASS; `npm run lint` PASS;
+  `npm run health:financial` PASS (`LIVE operational client rows: 0`,
+  target docs 2/2, docs senza profilo LIVE 0, `pendingPaymentsTotal 2026:
+  €0.00`); focused Vitest PASS 11 file / 138 test incluse superfici recipient,
+  XML, validation, emit provider/Edge, Fatture list, import profile matching ed
+  empty state operativo.
+- Task 8 RAG/governance: PASS. `npm run rag:policy:check` PASS; code-RAG
+  `reindex_changes` su repo corrente: 1 file aggiunto, 9 modificati, 26 chunk;
+  poi incrementali post-test/formatter 0/1/2 e 0/2/3; query semantica su
+  empty-state recovery recupera `InvoiceDraftDialog` e i consumer; log Qdrant
+  `400` negli ultimi 10 minuti = 0. `docs:drift` PASS. Governance ha richiesto
+  rigenerazione variabili per `process.env.CI` in `playwright.config.ts`;
+  `VARIABLE_MAP/REGISTRY` aggiornati.
+- Stop point: review implementazione, commit sensato della tranche
+  UI/tooling/docs, poi deploy manuale `invoice_emit` + `invoice_import_confirm`,
+  push e verifica post-deploy.
 
 Governance/RAG fix 2026-06-22:
 

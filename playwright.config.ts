@@ -1,5 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
+const localChromeConfig = process.env.CI ? {} : { channel: "chrome" as const };
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: false,
@@ -8,6 +10,7 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL: "http://127.0.0.1:5173",
+    ...localChromeConfig,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },

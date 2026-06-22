@@ -1,7 +1,15 @@
 import { todayISODate } from "@/lib/dateTimezone";
-import { FileCode, FileDown, Send } from "lucide-react";
+import {
+  FileCode,
+  FileDown,
+  FileText,
+  ReceiptText,
+  Send,
+  Wrench,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useGetList, useNotify, useRefresh } from "ra-core";
+import { type Identifier, useGetList, useNotify, useRefresh } from "ra-core";
+import { Link } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -56,50 +64,156 @@ const formatAmount = (value: number) =>
     minimumFractionDigits: 2,
   });
 
+const buildFilteredListTarget = (
+  resource: string,
+  filter: Record<string, string>,
+) => ({
+  pathname: `/${resource}`,
+  search: Object.keys(filter).length
+    ? `filter=${JSON.stringify(filter)}`
+    : undefined,
+});
+
+type InvoiceDraftEmptyStateContext = {
+  clientId?: Identifier | null;
+  projectId?: Identifier | null;
+};
+
 const InvoiceDraftEmptyState = ({
   open,
   onOpenChange,
+  draft,
+  context,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="max-w-md">
-      <DialogHeader>
-        <DialogTitle className="text-lg font-bold text-[#2C3E50]">
-          Bozza fattura
-        </DialogTitle>
-        <DialogDescription>
-          Nessuna voce residua da fatturare per questo cliente.
-        </DialogDescription>
-      </DialogHeader>
-      <div className="rounded-lg border border-dashed border-[#2C3E50]/30 bg-[#E8EDF2]/40 p-4 text-sm text-[#2C3E50]">
-        Tutti i servizi e le spese collegate al cliente risultano già marcate
-        con un riferimento fattura. Se devi rigenerare una fattura già emessa,
-        rimuovi il riferimento <code>invoice_ref</code> dai record interessati e
-        riapri questa finestra.
-      </div>
-      <div className="flex justify-end pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => onOpenChange(false)}
-        >
-          Chiudi
-        </Button>
-      </div>
-    </DialogContent>
-  </Dialog>
-);
+  draft?: InvoiceDraftInput | null;
+  context?: InvoiceDraftEmptyStateContext;
+}) => {
+  const clientId =
+    draft?.client?.id != null
+      ? String(draft.client.id)
+      : context?.clientId != null
+        ? String(context.clientId)
+        : null;
+  const projectId =
+    draft?.source.kind === "project"
+      ? String(draft.source.id)
+      : context?.projectId != null
+        ? String(context.projectId)
+        : null;
+  const operationalFilter = projectId
+    ? { "project_id@eq": projectId }
+    : clientId
+      ? { "client_id@eq": clientId }
+      : {};
+  const invoiceFilter = clientId
+    ? { "client_id@eq": clientId, "direction@eq": "outbound" }
+    : { "direction@eq": "outbound" };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-bold text-[#2C3E50]">
+            Bozza fattura
+          </DialogTitle>
+          <DialogDescription>
+            Nessuna voce residua da fatturare per questo cliente.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="rounded-lg border border-dashed border-[#2C3E50]/30 bg-[#E8EDF2]/40 p-4 text-sm text-[#2C3E50]">
+          Tutti i servizi e le spese collegate al cliente risultano già marcate
+          con un riferimento fattura. Se devi rigenerare una fattura già emessa,
+          apri i record interessati e rimuovi il riferimento{" "}
+          <code>invoice_ref</code>.
+        </div>
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Button
+            asChild
+            type="button"
+            variant="secondary"
+            className="h-auto justify-start px-3 py-3 text-left whitespace-normal"
+          >
+            <Link
+              to={buildFilteredListTarget("services", operationalFilter)}
+              onClick={() => onOpenChange(false)}
+            >
+              <Wrench className="mr-2 size-4 shrink-0" />
+              <span>
+                <span className="block font-semibold">Registro lavori</span>
+                <span className="block text-xs font-normal text-muted-foreground">
+                  Controlla i servizi marcati.
+                </span>
+              </span>
+            </Link>
+          </Button>
+          <Button
+            asChild
+            type="button"
+            variant="secondary"
+            className="h-auto justify-start px-3 py-3 text-left whitespace-normal"
+          >
+            <Link
+              to={buildFilteredListTarget("expenses", operationalFilter)}
+              onClick={() => onOpenChange(false)}
+            >
+              <ReceiptText className="mr-2 size-4 shrink-0" />
+              <span>
+                <span className="block font-semibold">Spese</span>
+                <span className="block text-xs font-normal text-muted-foreground">
+                  Controlla spese fatturabili.
+                </span>
+              </span>
+            </Link>
+          </Button>
+          <Button
+            asChild
+            type="button"
+            variant="secondary"
+            className="h-auto justify-start px-3 py-3 text-left whitespace-normal"
+          >
+            <Link
+              to={buildFilteredListTarget(
+                "financial_documents_summary",
+                invoiceFilter,
+              )}
+              onClick={() => onOpenChange(false)}
+            >
+              <FileText className="mr-2 size-4 shrink-0" />
+              <span>
+                <span className="block font-semibold">Fatture</span>
+                <span className="block text-xs font-normal text-muted-foreground">
+                  Verifica documenti già emessi.
+                </span>
+              </span>
+            </Link>
+          </Button>
+        </div>
+        <div className="flex justify-end pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Chiudi
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export const InvoiceDraftDialog = ({
   open,
   onOpenChange,
   draft,
+  emptyStateContext,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   draft: InvoiceDraftInput | null;
+  emptyStateContext?: InvoiceDraftEmptyStateContext;
 }) => {
   const { businessProfile } = useConfigurationContext();
   const isMobile = useIsMobile();
@@ -157,7 +271,14 @@ export const InvoiceDraftDialog = ({
   }, [draftClientId, defaultBillingProfile?.id]);
 
   if (!draft || lineItems.length === 0) {
-    return <InvoiceDraftEmptyState open={open} onOpenChange={onOpenChange} />;
+    return (
+      <InvoiceDraftEmptyState
+        open={open}
+        onOpenChange={onOpenChange}
+        draft={draft}
+        context={emptyStateContext}
+      />
+    );
   }
 
   const selectedBillingProfile =

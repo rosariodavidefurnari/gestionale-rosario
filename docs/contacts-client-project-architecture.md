@@ -12,6 +12,12 @@
 > alternativi dello stesso account operativo. Questo non crea nuovi `clients`:
 > Gustare resta cliente operativo, Diego resta referente, LIVE SRLS resta solo
 > profilo fiscale collegato per le fatture che lo richiedono.
+>
+> Nota 2026-06-22 (empty state fattura operativo): i consumer
+> `ClientShow`/`ProjectShow`/`ServiceShow`/`QuoteShow` passano
+> `emptyStateContext` a `InvoiceDraftDialog`, cosi' quando il builder restituisce
+> `draft=null` l'utente vede link filtrati a lavori, spese e fatture invece di
+> un vicolo cieco.
 
 **Stato del documento:** `canonical`
 **Scopo:** fonte primaria per il dominio referenti e le relazioni

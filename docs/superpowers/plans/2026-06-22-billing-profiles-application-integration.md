@@ -556,12 +556,52 @@ git commit -m "feat: match invoice imports to billing profiles"
 - Modify: `docs/CANTIERE.md`
 - Modify: `docs/architecture.md`
 - Modify: `docs/development-continuity-map.md`
+- Modify: `src/components/atomic-crm/invoicing/InvoiceDraftDialog.tsx`
+- Create: `src/components/atomic-crm/invoicing/InvoiceDraftDialog.test.tsx`
+- Modify: `src/components/atomic-crm/{clients,projects,services,quotes}/*Show.tsx`
+- Modify: `src/components/atomic-crm/layout/Header.tsx`
+- Modify: `playwright.config.ts`
 
 **Interfaces:**
 - Consumes: all previous commits.
 - Produces: final recorded gate evidence and deploy note.
 
-- [ ] **Step 1: Run full gates**
+- [x] **Step 0: Fix browser-review friction**
+
+Finding from real browser review: the invoice draft empty state for a client
+with all services/expenses already marked by `invoice_ref` was a dead end. It
+explained the problem but exposed no operational path to the records that must
+be changed.
+
+Fix:
+
+- `InvoiceDraftDialog` empty state renders links to `services`, `expenses` and
+  `financial_documents_summary` with client/project filters.
+- `ClientShow`, `ProjectShow`, `ServiceShow` and `QuoteShow` pass
+  `emptyStateContext`, so links remain filtered even when the builder returns
+  `draft=null`.
+- The desktop header nav is the only horizontally scrollable header region,
+  closing the measured overflow found by the browser gate.
+- Local Playwright uses system Google Chrome (`channel: "chrome"`) and CI keeps
+  the managed Playwright browser.
+
+Evidence:
+
+```bash
+npm run test -- src/components/atomic-crm/invoicing/InvoiceDraftDialog.test.tsx
+npm run typecheck
+npm run lint
+```
+
+Expected: PASS.
+
+Browser evidence 2026-06-22: Google Chrome real browser PASS desktop 1280x900
+and mobile 390x844, href filters correct, touch targets >=44px, console/page
+errors 0, horizontal overflow 0. Screenshots:
+`test-results/final-invoice-empty-state-links-desktop.png`,
+`test-results/final-invoice-empty-state-links-mobile.png`.
+
+- [x] **Step 1: Run full gates**
 
 Run:
 
@@ -572,6 +612,7 @@ npm run health:financial
 npm run test -- src/components/atomic-crm/invoicing/invoiceBillingRecipient.test.ts \
   src/components/atomic-crm/invoicing/invoiceDraftXml.test.ts \
   src/components/atomic-crm/invoicing/invoiceBillingValidation.test.ts \
+  src/components/atomic-crm/invoicing/InvoiceDraftDialog.test.tsx \
   src/components/atomic-crm/invoicing/useEmitInvoice.test.ts \
   src/components/atomic-crm/providers/supabase/dataProviderInvoiceEmit.test.ts \
   supabase/functions/_shared/invoiceEmit.test.ts \
@@ -583,7 +624,19 @@ npm run test -- src/components/atomic-crm/invoicing/invoiceBillingRecipient.test
 
 Expected: PASS.
 
-- [ ] **Step 2: Browser desktop**
+GREEN 2026-06-22:
+`npm run typecheck` PASS; `npm run lint` PASS; `npm run health:financial` PASS
+(`LIVE operational client rows: 0`, `LIVE/Gustare target docs present: 2/2`,
+`LIVE/Gustare docs without LIVE profile: 0`, `pendingPaymentsTotal 2026:
+€0.00`); focused Vitest PASS 11 files / 138 tests. Expected stderr from
+provider error-path tests remains covered and non-blocking.
+RAG/governance: `npm run rag:policy:check` PASS; code-RAG incremental reindex
+complete (1 added, 9 modified, 26 chunks); Qdrant log `400` count = 0;
+semantic query finds `InvoiceDraftDialog` empty-state context and Show
+consumers; `docs:drift` PASS; governance variable maps regenerated for the new
+`process.env.CI` evidence in `playwright.config.ts`.
+
+- [x] **Step 2: Browser desktop**
 
 Start the app with the repo workflow. Verify:
 
@@ -593,10 +646,21 @@ Start the app with the repo workflow. Verify:
 - Fatture list/show display LIVE recipient for FPR 1/26 and FPR 2/26;
 - console has no errors.
 
-- [ ] **Step 3: Browser mobile**
+Evidence 2026-06-22: PASS on Google Chrome 1280x900 across client profile
+section, invoice draft selector, Fatture list/show, invoice import profile
+matching and empty-state recovery links. Empty-state screenshot:
+`test-results/final-invoice-empty-state-links-desktop.png`.
+
+- [x] **Step 3: Browser mobile**
 
 Repeat the same checks in a mobile viewport. Verify no overlapping labels,
 horizontal overflow or hidden critical recipient state.
+
+Evidence 2026-06-22: PASS on Google Chrome 390x844 across the same surfaces.
+Empty-state screenshot:
+`test-results/final-invoice-empty-state-links-mobile.png`. Latest mobile
+empty-state gate: console/page errors 0 and `docScrollWidth=390` on viewport
+390.
 
 - [ ] **Step 4: Deploy Edge Function**
 

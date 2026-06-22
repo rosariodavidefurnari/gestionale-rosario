@@ -146,6 +146,10 @@ const QuoteShowContent = () => {
         open={invoiceDraftOpen}
         onOpenChange={setInvoiceDraftOpen}
         draft={hasCollectable ? invoiceDraft : null}
+        emptyStateContext={{
+          clientId: record.client_id,
+          projectId: record.project_id,
+        }}
       />
     </div>
   );

@@ -1642,7 +1642,8 @@
       "risk": "build/runtime mode",
       "status": "verified",
       "source_evidence": [
-        "playwright.config.ts:18"
+        "playwright.config.ts:3",
+        "playwright.config.ts:21"
       ],
       "sensitive": false
     },

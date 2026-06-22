@@ -194,6 +194,7 @@ const ClientHeader = ({ record }: { record: Client }) => {
         open={invoiceDraftOpen}
         onOpenChange={setInvoiceDraftOpen}
         draft={invoiceDraft}
+        emptyStateContext={{ clientId: record.id }}
       />
     </div>
   );

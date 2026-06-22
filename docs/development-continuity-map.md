@@ -7,8 +7,8 @@ obbligatoria delle superfici collegate.
 prodotto.
 
 Last updated: 2026-06-22 (LIVE/Gustare billing profiles: backend contract,
-application emit/UI propagation, invoices surfaces and invoice import profile
-matching)
+application emit/UI propagation, invoices surfaces, invoice import profile
+matching, invoice empty-state recovery links)
 
 ---
 
@@ -41,6 +41,11 @@ contatti.
   carica i profili del cliente operativo, mostra il selector solo se esistono,
   resta su cliente principale salvo profilo `is_default=true`, e passa lo stesso
   `selectedDraft` a validation, emit, XML e PDF.
+- Quando non esistono voci residue da fatturare, `InvoiceDraftDialog` deve
+  restare operativo: mostra link filtrati a `services`, `expenses` e
+  `financial_documents_summary` invece di lasciare solo testo + chiusura. I
+  consumer Show devono passare `emptyStateContext` con client/progetto quando
+  possono inviare `draft=null`, altrimenti i link perdono il filtro corretto.
 - `ClientShow` e' la superficie di gestione dei profili: la sezione
   `ClientBillingProfilesSection` vive nell'area Fatturazione, dopo i dati
   fiscali del cliente operativo, e usa il resource `client_billing_profiles`
@@ -63,6 +68,10 @@ contatti.
   Supabase manuale; `git push` aggiorna Vercel ma non le Edge Functions.
 - La propagazione applicativa deve continuare lungo spec/piano/review dedicati
   e, per UI/UX, skill `impeccable` + browser reale desktop/mobile.
+- Browser/E2E locale: `playwright.config.ts` usa Google Chrome di sistema fuori
+  da CI (`channel: "chrome"`), mentre in CI resta sul browser Playwright gestito.
+  Non diagnosticare piu' il cache locale `ms-playwright` come blocco se Chrome
+  di sistema e' presente.
 - Money invariant: il backfill puo' collegare documenti e FK, ma non cambia
   `payments.amount`, `payments.status`, `payments.payment_date` o
   `payments.payment_type`.
@@ -1087,8 +1096,8 @@ ponte=2 (smoke). Spec/piano:
   oppure `lineItems.length === 0`, il dialog renderizza un empty state
   compatto con titolo, messaggio esplicativo ("Nessuna voce residua da
   fatturare per questo cliente" + istruzione per rigenerare una fattura già
-  emessa rimuovendo `invoice_ref`) e un bottone "Chiudi". Nessun download
-  PDF/XML disponibile in questo ramo.
+  emessa rimuovendo `invoice_ref`) e link operativi filtrati a Registro lavori,
+  Spese e Fatture. Nessun download PDF/XML disponibile in questo ramo.
 - Semplificato il `useEffect` di auto-apertura via querystring
   `?invoiceDraft=true`: non dipende più da `hasCollectableAmount`, apre il
   dialog anche sul ramo empty state.
