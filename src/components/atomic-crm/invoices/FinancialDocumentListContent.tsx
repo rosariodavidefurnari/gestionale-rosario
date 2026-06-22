@@ -25,6 +25,7 @@ import {
   documentTypeLabel,
   directionLabel,
   formatEur,
+  getFinancialDocumentBillingRecipientLabel,
   groupPaymentsByDocument,
   type DocumentCollectionState,
 } from "./financialDocumentHelpers";
@@ -33,6 +34,16 @@ const RESOURCE = "financial_documents_summary";
 
 const counterpartName = (doc: FinancialDocumentSummary): string =>
   doc.client_name ?? doc.supplier_name ?? "Non associata";
+
+const BillingRecipientLine = ({ doc }: { doc: FinancialDocumentSummary }) => {
+  const recipient = getFinancialDocumentBillingRecipientLabel(doc);
+  if (!recipient) return null;
+  return (
+    <span className="block text-xs text-muted-foreground break-words">
+      Intestatario: {recipient}
+    </span>
+  );
+};
 
 const DirectionBadge = ({
   direction,
@@ -255,7 +266,10 @@ const FinancialDocumentMobileCard = ({
     <span className="text-xs text-muted-foreground">
       {formatBusinessDate(doc.issue_date)}
     </span>
-    <span className="text-base font-bold">{counterpartName(doc)}</span>
+    <div className="min-w-0">
+      <span className="block text-base font-bold">{counterpartName(doc)}</span>
+      <BillingRecipientLine doc={doc} />
+    </div>
     <div className="flex items-center justify-between gap-2">
       {collectionState.tone === "neutral" ? (
         <span className="text-xs text-muted-foreground">Incasso —</span>
@@ -291,8 +305,11 @@ const FinancialDocumentRow = ({
       <TableCell className={cv("date", "text-sm text-muted-foreground")}>
         {formatBusinessDate(doc.issue_date)}
       </TableCell>
-      <TableCell className={cv("counterpart", "text-sm")}>
-        {counterpartName(doc)}
+      <TableCell className={cv("counterpart", "text-sm whitespace-normal")}>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="truncate">{counterpartName(doc)}</span>
+          <BillingRecipientLine doc={doc} />
+        </div>
       </TableCell>
       <TableCell className={cv("type", "hidden lg:table-cell text-sm")}>
         <TypeBadge type={doc.document_type} />

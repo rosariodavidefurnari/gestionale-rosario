@@ -239,8 +239,24 @@ Integrazione applicativa billing profiles — spec/piano gate 2026-06-22:
   `test-results/client-billing-profiles-mobile.png`. Console errors bloccanti:
   0. Review: dominio PASS, mobile PASS, RLS/provider path PASS, money/cash
   invariant PASS.
-- Stop point: prossima tranche superfici Fatture list/show; serve RED test
-  prima dell'implementazione e poi review implementazione + commit dedicato.
+- Task 6 superfici Fatture list/show: IMPLEMENTATO e review UI/UX PASS con
+  Impeccable. `FinancialDocumentListContent` mantiene la controparte operativa
+  come valore primario e aggiunge `Intestatario: ...` solo quando la summary view
+  espone `billing_profile_*`; `FinancialDocumentShow` distingue `Cliente
+  operativo` e `Intestatario fiscale` con label/nome legale e identificativi
+  disponibili. RED/GREEN:
+  `npm run test -- src/components/atomic-crm/invoices/FinancialDocumentListContent.test.tsx`
+  PASS 5 test; `npm run typecheck` PASS; `npm run lint` PASS. Browser reale
+  Chrome PASS desktop 1280x900 e mobile 390x844 su lista/show con fixture
+  locale `FPR BROWSER LIVE/26`; screenshot:
+  `test-results/invoices-billing-recipient-list-desktop.png`,
+  `test-results/invoices-billing-recipient-show-desktop.png`,
+  `test-results/invoices-billing-recipient-list-mobile.png`,
+  `test-results/invoices-billing-recipient-show-mobile.png`. Nessun cambio a
+  pagamenti, importi, export o filtri.
+- Stop point: prossima tranche import fatture/profile matching; serve RED test
+  su matching LIVE->Gustare e conferma mismatch client/profile prima
+  dell'implementazione.
 
 Governance/RAG fix 2026-06-22:
 

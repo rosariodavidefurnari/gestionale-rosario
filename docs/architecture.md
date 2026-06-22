@@ -56,7 +56,10 @@ Stato del documento:
   operativa dei profili vive in `ClientShow` sotto Fatturazione tramite
   `ClientBillingProfilesSection` e usa `CreateSheet`/`EditSheet` sul resource
   `client_billing_profiles`; la bozza fattura seleziona il profilo ma non
-  cambia cliente, progetti, referenti o incassi.
+  cambia cliente, progetti, referenti o incassi. Le superfici Fatture list/show
+  leggono `billing_profile_*` dalla summary view e mostrano il destinatario
+  fiscale come informazione secondaria, lasciando la controparte operativa come
+  fonte primaria per navigazione, filtri, export e incassi.
 
 - 2026-06-20: Imposta del SALDO su CASSA (LM035) — completa il saldo, card ESATTA `9.005,91 €`. Oltre agli acconti reali, l'imposta del saldo ora si deduce su CASSA (contributi INPS versati nel basis-year, via `sumInpsContributionsPaidInYear` sui F24) invece che su competenza. `buildFiscalModel` passa `basisContributiVersatiCassa` (INPS versato cassa anno-1) a `previousYearEstimate` (che già accetta `contributiVersatiCassa`, tocca SOLO l'imposta); `useDashboardData` fetcha obblighi + righe F24 dell'anno-1 e somma i contributi INPS (allowlist, esclude interessi, filtro `submission_date`). Builder condivisi e KPI INTATTI (`previousYearEstimate` alimenta SOLO lo schedule, verificato RAG :8001 + sorgente) → parità verde. Prod 2026: imposta 2025 dovuta `719,50 → 804,12` (reddito 19.464 − LM035 3.382,09 × 5%), imposta saldo `486,50 → 571,12`, totale card `~8.840 → 9.005,91` ESATTO. Controllore `fiscalModel.test.ts` (`cash imposta_saldo = 730`, falsificabile). Chiude il residuo imposta cassa-vs-competenza.
 

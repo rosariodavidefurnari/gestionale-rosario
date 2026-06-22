@@ -396,14 +396,14 @@ git commit -m "feat: manage client billing profiles"
 - Consumes: `FinancialDocumentSummary.billing_profile_*`.
 - Produces: visible fiscal recipient when profile exists.
 
-- [ ] **Step 1: RED list test**
+- [x] **Step 1: RED list test**
 
 Add a document fixture with `client_name=ASSOCIAZIONE CULTURALE GUSTARE
 SICILIA` and `billing_profile_name=LIVE - SOCIETA' A RESPONSABILITA' LIMITATA
 SEMPLIFICATA`. Assert the list renders both operational client and profile
 recipient.
 
-- [ ] **Step 2: Implement display**
+- [x] **Step 2: Implement display**
 
 Use concise copy:
 
@@ -411,11 +411,11 @@ Use concise copy:
 - secondary line only when profile exists: `Intestatario: LIVE SRLS` or billing
   profile name.
 
-- [ ] **Step 3: Show page**
+- [x] **Step 3: Show page**
 
 Add the same distinction to `FinancialDocumentShow`.
 
-- [ ] **Step 4: GREEN and commit**
+- [x] **Step 4: GREEN and commit**
 
 Run:
 
@@ -425,6 +425,22 @@ npm run typecheck
 ```
 
 Expected: PASS.
+
+GREEN 2026-06-22:
+`npm run test -- src/components/atomic-crm/invoices/FinancialDocumentListContent.test.tsx`
+PASS 5 tests; `npm run typecheck` PASS; `npm run lint` PASS; browser Chrome
+PASS desktop 1280x900 and mobile 390x844 for Fatture list/show using local
+fixture `FPR BROWSER LIVE/26`. Screenshots:
+`test-results/invoices-billing-recipient-list-desktop.png`,
+`test-results/invoices-billing-recipient-show-desktop.png`,
+`test-results/invoices-billing-recipient-list-mobile.png`,
+`test-results/invoices-billing-recipient-show-mobile.png`.
+
+Review result 2026-06-22: PASS. List keeps the operational counterpart as the
+primary row value and adds only a secondary `Intestatario: ...` line when
+`billing_profile_*` exists. Show labels the primary link as `Cliente operativo`
+and renders the fiscal recipient block with profile label/legal name and
+available fiscal identifiers. No payments, amounts, filters or exports changed.
 
 ```bash
 git add src/components/atomic-crm/invoices/FinancialDocumentListContent.tsx \

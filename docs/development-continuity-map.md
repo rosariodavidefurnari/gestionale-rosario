@@ -46,6 +46,11 @@ contatti.
   fiscali del cliente operativo, e usa il resource `client_billing_profiles`
   via dataProvider con `CreateSheet`/`EditSheet`. Non creare LIVE come
   `clients` e non duplicare progetti o referenti.
+- Le superfici Fatture list/show leggono `billing_profile_*` da
+  `financial_documents_summary`: la controparte primaria resta il cliente o
+  fornitore operativo, mentre il profilo viene mostrato come destinatario
+  fiscale secondario (`Intestatario` / `Intestatario fiscale`). Non usare questi
+  campi per ricalcolare incassi, filtri o export.
 - Ogni modifica a `supabase/functions/invoice_emit/**` richiede deploy Supabase
   manuale; `git push` aggiorna Vercel ma non le Edge Functions.
 - La propagazione applicativa deve continuare lungo spec/piano/review dedicati

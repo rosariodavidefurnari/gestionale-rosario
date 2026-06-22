@@ -32,6 +32,9 @@ import {
   documentTypeLabel,
   directionLabel,
   formatEur,
+  getFinancialDocumentBillingRecipientIdentityLines,
+  getFinancialDocumentBillingRecipientLabel,
+  getFinancialDocumentBillingRecipientLegalName,
 } from "./financialDocumentHelpers";
 import { canVoidInvoiceFromPayments } from "./invoiceVoidRules";
 import { useVoidInvoice } from "./useVoidInvoice";
@@ -116,6 +119,44 @@ const Counterpart = ({ record }: { record: FinancialDocumentSummary }) => {
   return <span className="text-sm">{name}</span>;
 };
 
+const BillingRecipientDetails = ({
+  record,
+}: {
+  record: FinancialDocumentSummary;
+}) => {
+  const label = getFinancialDocumentBillingRecipientLabel(record);
+  if (!label) return null;
+
+  const legalName = getFinancialDocumentBillingRecipientLegalName(record);
+  const identityLines =
+    getFinancialDocumentBillingRecipientIdentityLines(record);
+
+  return (
+    <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+      <div className="space-y-0.5">
+        <span className="text-xs text-muted-foreground uppercase tracking-wide">
+          Intestatario fiscale
+        </span>
+        <p className="text-sm font-semibold break-words">{label}</p>
+        {legalName && legalName !== label ? (
+          <p className="text-sm text-muted-foreground break-words">
+            {legalName}
+          </p>
+        ) : null}
+      </div>
+      {identityLines.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+          {identityLines.map((line) => (
+            <span key={line} className="text-xs text-muted-foreground">
+              {line}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 const FinancialDocumentShowContent = () => {
   const { record, isPending, error } =
     useShowContext<FinancialDocumentSummary>();
@@ -142,6 +183,8 @@ const FinancialDocumentShowContent = () => {
 
   const linkedPayments = payments ?? [];
   const canVoid = canVoidInvoiceFromPayments(record, linkedPayments);
+  const billingRecipientLabel =
+    getFinancialDocumentBillingRecipientLabel(record);
 
   const handleVoid = async () => {
     try {
@@ -226,9 +269,10 @@ const FinancialDocumentShowContent = () => {
           {/* Counterpart */}
           <div className="space-y-1">
             <h6 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Controparte
+              {billingRecipientLabel ? "Cliente operativo" : "Controparte"}
             </h6>
             <Counterpart record={record} />
+            <BillingRecipientDetails record={record} />
           </div>
 
           <Separator />

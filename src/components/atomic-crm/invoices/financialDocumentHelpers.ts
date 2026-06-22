@@ -85,6 +85,43 @@ export function directionLabel(
   return dir === "outbound" ? "Emessa" : "Ricevuta";
 }
 
+const cleanText = (value?: string | null): string => value?.trim() || "";
+
+export function getFinancialDocumentBillingRecipientLabel(
+  doc: FinancialDocumentSummary,
+): string | null {
+  return (
+    cleanText(doc.billing_profile_label) ||
+    cleanText(doc.billing_profile_name) ||
+    null
+  );
+}
+
+export function getFinancialDocumentBillingRecipientLegalName(
+  doc: FinancialDocumentSummary,
+): string | null {
+  return cleanText(doc.billing_profile_name) || null;
+}
+
+export function getFinancialDocumentBillingRecipientIdentityLines(
+  doc: FinancialDocumentSummary,
+): string[] {
+  return [
+    cleanText(doc.billing_profile_vat_number)
+      ? `P.IVA: ${cleanText(doc.billing_profile_vat_number)}`
+      : null,
+    cleanText(doc.billing_profile_fiscal_code)
+      ? `CF: ${cleanText(doc.billing_profile_fiscal_code)}`
+      : null,
+    cleanText(doc.billing_profile_sdi_code)
+      ? `Codice destinatario: ${cleanText(doc.billing_profile_sdi_code)}`
+      : null,
+    cleanText(doc.billing_profile_pec)
+      ? `PEC: ${cleanText(doc.billing_profile_pec)}`
+      : null,
+  ].filter((line): line is string => Boolean(line));
+}
+
 /**
  * Formats a number in Italian style with 2 decimal places:
  *   thousands separator = "."  (punto)

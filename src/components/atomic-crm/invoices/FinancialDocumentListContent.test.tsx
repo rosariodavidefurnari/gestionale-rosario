@@ -8,7 +8,7 @@
 // mobile assertion fails (the two surfaces are asserted independently).
 
 import "@/setupTests";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FinancialDocumentSummary } from "../types";
@@ -87,6 +87,16 @@ const baseDoc: Omit<FinancialDocumentSummary, "id" | "document_number"> = {
 const docs: FinancialDocumentSummary[] = [
   { ...baseDoc, id: "d1", document_number: "FPR 1/25" }, // has a received payment -> Incassata
   { ...baseDoc, id: "d2", document_number: "FPR 2/25" }, // no linked payment -> neutral "—"
+  {
+    ...baseDoc,
+    id: "d3",
+    client_name: "ASSOCIAZIONE CULTURALE GUSTARE SICILIA",
+    billing_profile_id: "profile-live",
+    billing_profile_label: "LIVE SRLS",
+    billing_profile_name:
+      "LIVE - SOCIETA' A RESPONSABILITA' LIMITATA SEMPLIFICATA",
+    document_number: "FPR 1/26",
+  },
 ];
 
 const payments = [
@@ -118,7 +128,11 @@ describe("FinancialDocumentListContent collection badge (Task 7b)", () => {
     // d1 paid -> Incassata badge (proves desktop row wiring)
     expect(screen.getByText("Incassata")).toBeInTheDocument();
     // d2 unpaid -> neutral em-dash cell (visible, not empty)
-    expect(screen.getByText("—")).toBeInTheDocument();
+    const neutralRow = screen.getByText("FPR 2/25").closest("tr");
+    expect(neutralRow).not.toBeNull();
+    expect(
+      within(neutralRow as HTMLElement).getByText("—"),
+    ).toBeInTheDocument();
   });
 
   it("mobile: card shows the same 'Incassata' badge (UI-7 parity) and a neutral label for the unpaid doc", () => {
@@ -129,7 +143,11 @@ describe("FinancialDocumentListContent collection badge (Task 7b)", () => {
     // d1 paid -> Incassata badge in the mobile card (proves mobile wiring)
     expect(screen.getByText("Incassata")).toBeInTheDocument();
     // d2 unpaid -> neutral mobile label
-    expect(screen.getByText("Incasso —")).toBeInTheDocument();
+    const neutralCard = screen.getByText("FPR 2/25").closest("a");
+    expect(neutralCard).not.toBeNull();
+    expect(
+      within(neutralCard as HTMLElement).getByText("Incasso —"),
+    ).toBeInTheDocument();
   });
 
   it("neutral when payments are still loading (undefined) -> no badge, no crash", async () => {
@@ -145,6 +163,40 @@ describe("FinancialDocumentListContent collection badge (Task 7b)", () => {
     const tbody = document.querySelector("tbody");
     const neutral = await screen.findAllByText("—");
     const inBody = neutral.filter((el) => tbody?.contains(el));
-    expect(inBody.length).toBe(2);
+    expect(inBody.length).toBe(3);
+  });
+
+  it("desktop: keeps the operational client and shows the fiscal billing recipient when a profile exists", () => {
+    mockIsMobile.mockReturnValue(false);
+
+    render(<FinancialDocumentListContent />);
+
+    const row = screen.getByText("FPR 1/26").closest("tr");
+    expect(row).not.toBeNull();
+    expect(
+      within(row as HTMLElement).getByText(
+        "ASSOCIAZIONE CULTURALE GUSTARE SICILIA",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(row as HTMLElement).getByText("Intestatario: LIVE SRLS"),
+    ).toBeInTheDocument();
+  });
+
+  it("mobile: keeps the same fiscal recipient distinction in the card", () => {
+    mockIsMobile.mockReturnValue(true);
+
+    render(<FinancialDocumentListContent />);
+
+    const card = screen.getByText("FPR 1/26").closest("a");
+    expect(card).not.toBeNull();
+    expect(
+      within(card as HTMLElement).getByText(
+        "ASSOCIAZIONE CULTURALE GUSTARE SICILIA",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(card as HTMLElement).getByText("Intestatario: LIVE SRLS"),
+    ).toBeInTheDocument();
   });
 });
