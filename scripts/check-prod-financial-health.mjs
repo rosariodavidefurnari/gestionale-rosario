@@ -62,8 +62,13 @@ const main = async () => {
   console.log(`# PROD financial/fiscal health — ${todayIso}\n`);
   const payments = await all(
     "payments",
-    "id,status,payment_date,amount,payment_type,project_id,financial_document_id",
+    "id,client_id,status,payment_date,amount,payment_type,invoice_ref,project_id,financial_document_id",
   );
+  const financialDocuments = await all(
+    "financial_documents",
+    "id,client_id,direction,document_type,document_number,issue_date,due_date,total_amount,taxable_amount,tax_amount,stamp_amount,currency_code,source_path",
+  );
+  const clients = await all("clients", "id,name");
 
   const ricNoDate = payments.filter(
     (p) => p.status === "ricevuto" && !p.payment_date,
@@ -106,6 +111,169 @@ const main = async () => {
   (multiReceived.length === 0 ? ok : fails).push(
     `BR2b doc >1 ricevuto collegato: ${multiReceived.length}`,
   );
+
+  const laurusTargets = [
+    {
+      document_number: "FPR 1/23",
+      issue_date: "2023-03-21",
+      due_date: "2023-03-21",
+      total_amount: 1872,
+      taxable_amount: 1872,
+      stamp_amount: null,
+      source_path: "Fatture/2023/IT01879020517A2023_bhiYr.xml",
+    },
+    {
+      document_number: "FPR 6/23",
+      issue_date: "2023-10-24",
+      due_date: "2023-11-24",
+      total_amount: 2498.08,
+      taxable_amount: 2498.08,
+      stamp_amount: 2,
+      source_path: "Fatture/2023/IT01879020517A2023_flFCj.xml",
+    },
+    {
+      document_number: "FPR 1/24",
+      issue_date: "2024-02-02",
+      due_date: "2024-02-29",
+      total_amount: 1750,
+      taxable_amount: 1750,
+      stamp_amount: null,
+      source_path: "Fatture/2024/IT01879020517A2024_aDUq8.xml",
+    },
+  ];
+  const laurusClients = clients.filter((c) => c.name === "LAURUS S.R.L.");
+  let laurusBackfillMissing = laurusTargets.length;
+  if (laurusClients.length === 1) {
+    const laurusId = laurusClients[0].id;
+    laurusBackfillMissing = laurusTargets.filter((target) => {
+      const doc = financialDocuments.find(
+        (d) =>
+          d.client_id === laurusId &&
+          d.direction === "outbound" &&
+          d.document_type === "customer_invoice" &&
+          d.document_number === target.document_number &&
+          d.issue_date === target.issue_date &&
+          d.due_date === target.due_date &&
+          num(d.total_amount) === target.total_amount &&
+          num(d.taxable_amount) === target.taxable_amount &&
+          d.tax_amount == null &&
+          (d.stamp_amount == null ? null : num(d.stamp_amount)) ===
+            target.stamp_amount &&
+          d.currency_code === "EUR" &&
+          d.source_path === target.source_path,
+      );
+      if (!doc) return true;
+      return !payments.some(
+        (p) =>
+          p.client_id === laurusId &&
+          p.status === "ricevuto" &&
+          p.invoice_ref === target.document_number &&
+          p.financial_document_id === doc.id,
+      );
+    }).length;
+  }
+  if (laurusClients.length !== 1) {
+    fails.push(`LAURUS backfill client count: ${laurusClients.length}`);
+  } else {
+    (laurusBackfillMissing === 0 ? ok : fails).push(
+      `LAURUS no-doc backfill missing/link gaps: ${laurusBackfillMissing}`,
+    );
+  }
+
+  try {
+    const billingProfiles = await all(
+      "client_billing_profiles",
+      "id,client_id,label,billing_name,vat_number,fiscal_code,billing_sdi_code",
+    );
+    const docsWithProfiles = await all(
+      "financial_documents",
+      "id,client_id,direction,document_type,document_number,issue_date,total_amount,source_path,billing_profile_id",
+    );
+    const gustareClients = clients.filter(
+      (c) => c.name === "ASSOCIAZIONE CULTURALE GUSTARE SICILIA",
+    );
+    const liveClients = clients.filter(
+      (c) =>
+        c.name === "LIVE - SOCIETA' A RESPONSABILITA' LIMITATA SEMPLIFICATA",
+    );
+
+    if (liveClients.length !== 0) {
+      fails.push(`LIVE operational client rows: ${liveClients.length}`);
+    } else {
+      ok.push("LIVE operational client rows: 0");
+    }
+
+    if (gustareClients.length !== 1) {
+      fails.push(`Gustare client count: ${gustareClients.length}`);
+    } else {
+      const gustareId = gustareClients[0].id;
+      const liveProfiles = billingProfiles.filter(
+        (p) =>
+          p.client_id === gustareId &&
+          p.billing_name ===
+            "LIVE - SOCIETA' A RESPONSABILITA' LIMITATA SEMPLIFICATA" &&
+          p.vat_number === "06256710879" &&
+          p.fiscal_code === "06256710879" &&
+          p.billing_sdi_code === "KRRH6B9",
+      );
+      const liveTargets = [
+        {
+          document_number: "FPR 1/26",
+          issue_date: "2026-03-23",
+          total_amount: 2745,
+          source_path: "Fatture/2026/IT01879020517A2026_bVF6w.xml",
+        },
+        {
+          document_number: "FPR 2/26",
+          issue_date: "2026-04-18",
+          total_amount: 2854.03,
+          source_path: "Fatture/2026/IT01879020517A2026_cBc8j.xml",
+        },
+      ];
+      const liveDocs = liveTargets
+        .map((target) =>
+          docsWithProfiles.find(
+            (d) =>
+              d.client_id === gustareId &&
+              d.direction === "outbound" &&
+              d.document_type === "customer_invoice" &&
+              d.document_number === target.document_number &&
+              d.issue_date === target.issue_date &&
+              num(d.total_amount) === target.total_amount &&
+              d.source_path === target.source_path,
+          ),
+        )
+        .filter(Boolean);
+
+      if (liveDocs.length === 0 && liveProfiles.length <= 1) {
+        ok.push(
+          `LIVE/Gustare billing profile pending: profiles=${liveProfiles.length}, docs=0`,
+        );
+      } else if (liveProfiles.length !== 1) {
+        fails.push(
+          `LIVE/Gustare billing profile count: ${liveProfiles.length}`,
+        );
+      } else {
+        const liveProfileId = liveProfiles[0].id;
+        const docsWithoutProfile = liveDocs.filter(
+          (d) => d.billing_profile_id !== liveProfileId,
+        );
+        const missingDocs = liveTargets.length - liveDocs.length;
+        (missingDocs === 0 ? ok : fails).push(
+          `LIVE/Gustare target docs present: ${liveDocs.length}/${liveTargets.length}`,
+        );
+        (docsWithoutProfile.length === 0 ? ok : fails).push(
+          `LIVE/Gustare docs without LIVE profile: ${docsWithoutProfile.length}`,
+        );
+      }
+    }
+  } catch (error) {
+    ok.push(
+      `LIVE/Gustare billing profile guard pending schema: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
 
   const ccp = await all(
     "client_commercial_position",

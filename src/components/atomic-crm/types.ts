@@ -78,6 +78,26 @@ export type Client = {
   updated_at: string;
 } & Pick<RaRecord, "id">;
 
+export type ClientBillingProfile = {
+  client_id: Identifier;
+  label: string;
+  billing_name: string;
+  vat_number?: string | null;
+  fiscal_code?: string | null;
+  billing_address_street?: string | null;
+  billing_address_number?: string | null;
+  billing_postal_code?: string | null;
+  billing_city?: string | null;
+  billing_province?: string | null;
+  billing_country?: string | null;
+  billing_sdi_code?: string | null;
+  billing_pec?: string | null;
+  is_default: boolean;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+} & Pick<RaRecord, "id">;
+
 export type ClientTask = {
   client_id?: Identifier | null;
   supplier_id?: Identifier | null;
@@ -211,6 +231,7 @@ export type Payment = {
 export type FinancialDocument = {
   client_id?: Identifier | null;
   supplier_id?: Identifier | null;
+  billing_profile_id?: Identifier | null;
   direction: "inbound" | "outbound";
   xml_document_code?: string | null;
   document_type:
@@ -236,8 +257,21 @@ export type FinancialDocument = {
 export type FinancialDocumentSummary = {
   client_id?: Identifier | null;
   supplier_id?: Identifier | null;
+  billing_profile_id?: Identifier | null;
   client_name?: string | null;
   supplier_name?: string | null;
+  billing_profile_label?: string | null;
+  billing_profile_name?: string | null;
+  billing_profile_vat_number?: string | null;
+  billing_profile_fiscal_code?: string | null;
+  billing_profile_address_street?: string | null;
+  billing_profile_address_number?: string | null;
+  billing_profile_postal_code?: string | null;
+  billing_profile_city?: string | null;
+  billing_profile_province?: string | null;
+  billing_profile_country?: string | null;
+  billing_profile_sdi_code?: string | null;
+  billing_profile_pec?: string | null;
   direction: "inbound" | "outbound";
   xml_document_code?: string | null;
   document_type:

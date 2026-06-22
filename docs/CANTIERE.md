@@ -1,7 +1,7 @@
 # Cantiere Gestionale Rosario
 
 Stato del documento: working
-Ultimo aggiornamento: 2026-06-17
+Ultimo aggiornamento: 2026-06-22
 
 ## Scopo
 
@@ -63,6 +63,14 @@ Regola pratica:
 - Ogni review e' un casello.
 - Niente "mi pare": serve fonte reale.
 - Se e' critico, il controllo nasce prima.
+- Ogni spec, piano e implementazione richiede review multidimensione prima del
+  gate successivo: dominio, DB/RLS, money/fiscalita', propagazione consumer,
+  test, governance/RAG, operativita' e rollback.
+- Ogni lavoro UI/UX richiede skill `impeccable`, preflight dichiarato, verifica
+  in browser reale desktop e mobile, e controllo console prima di considerarlo
+  chiudibile.
+- Procedere per commit sensati: unita' piccole, reviewate, con codice e docs
+  correlate nello stesso commit; niente commit misti con file fuori scope.
 
 ## Stato Corrente
 
@@ -73,11 +81,108 @@ Branch corrente:
   IMPORTANT-5 `a19f51f9`, QW2 `7d9a5f05`, FIX-3+4 `7c7ec1c1`. Lavorare in chat
   nuova: partire da QUI (autosufficiente).
 
-Obiettivo operativo attivo: **Task 7b — badge incasso lista Fatture: SHIPPED & LIVE**
-(`f7fade2f`, CI `Check` success sul fork, Vercel prod alias HTTP 200). Frontend-only, 747 unit +
-e2e + browser WF-17 verdi, review spec v2 (BLOCK→chiuso) + impl (PASS). 0 gate aperti. In coda:
-spec backfill 6 fatture no-doc (Bucket A pronto, B pending XML 2026), Fase 2, Scope C (gated).
-Vedi sessione 2026-06-20-sexies sotto.
+## Obiettivo Persistente Da Perseguire
+
+**Gestire end-to-end il caso LIVE SRLS / Gustare Sicilia in modo
+deterministico, motivato e propagato solo dove serve.** Gli XML 2026 sono in
+`Fatture/2026/`: `FPR 1/26` e `FPR 2/26` sono intestate a `LIVE - SOCIETA' A
+RESPONSABILITA' LIMITATA SEMPLIFICATA`, mentre incassi, progetti e referente
+Diego restano sotto `ASSOCIAZIONE CULTURALE GUSTARE SICILIA`. La decisione di
+dominio e': Gustare resta il cliente/account operativo; LIVE diventa un profilo
+di fatturazione collegato a Gustare, non un cliente operativo duplicato.
+
+Spec attiva:
+`docs/superpowers/specs/2026-06-22-client-billing-profiles-design.md`.
+Piano persistente end-to-end:
+`docs/superpowers/plans/2026-06-22-live-gustare-billing-profiles-end-to-end.md`.
+Piano attivo:
+`docs/superpowers/plans/2026-06-22-client-billing-profiles-backend.md`.
+
+Sequenza obbligatoria:
+
+1. **Backend contract.** Introdurre `client_billing_profiles`, collegare
+   `financial_documents.billing_profile_id`, esporre i campi nella summary view,
+   aggiornare health guard e preparare backfill 2026. Questa tranche stabilizza
+   il contratto dati e non deve ancora propagare UI/emissione.
+2. **Backfill controllato.** Solo dopo C1 read-only, dry-run transazionale,
+   report all'utente e conferma esplicita, applicare il backfill 2026. Non
+   cambiare `payments.amount`, `payments.status`, `payments.payment_date` o
+   `payments.payment_type`.
+3. **Integrazione applicativa.** Dopo backend verde e review, aprire una spec e
+   un piano separati per propagare il modello alle superfici necessarie:
+   gestione profili in UI cliente, scelta profilo in bozza fattura,
+   `invoice_emit`, XML, PDF, eventuale import/backfill, lista/show fatture,
+   mobile parity, dashboard solo se serve mostrare l'intestatario, AI/semantica
+   solo se il profilo viene esposto alla chat.
+
+Regole operative non negoziabili:
+
+- Prima di ogni modifica a codice, migration, script applicativo, DB locale o
+  remoto, commit, push o deploy: informare l'utente con file esatti, motivo,
+  impatto e gate previsti.
+- Ogni spec richiede review multidimensione prima del piano.
+- Ogni piano richiede review multidimensione prima dell'implementazione.
+- Ogni implementazione richiede review multidimensione prima dei gate finali e
+  prima del commit.
+- Le dimensioni minime della review sono: dominio, DB/FK/RLS, money/fiscalita',
+  propagazione consumer, desktop/mobile, AI/semantica se coinvolta, sicurezza,
+  test/controllori, governance/RAG, operativita', rollback e confini di commit.
+- Per soldi, fiscalita', fatture, pagamenti e backfill: TDD o controllore
+  ripetibile prima della modifica produttiva.
+- Usare code-RAG locale quando il lavoro e' cross-file, fiscale o puo' avere
+  superfici nascoste; ogni claim RAG va verificato sul sorgente reale.
+- Usare le mappe governance prima di proporre o usare comandi, variabili,
+  workflow o artefatti coperti dai registri.
+- Ogni fase UI/UX deve usare skill `impeccable`, caricare il contesto richiesto,
+  dichiarare `IMPECCABLE_PREFLIGHT`, e passare verifica in browser reale desktop
+  e browser reale mobile con console controllata.
+- Procedere per commit sensati: una unita' logica reviewata per commit, codice e
+  docs correlate nello stesso commit, nessun file fuori scope, nessun commit con
+  gate o review aperti.
+
+Backfill LAURUS no-doc: **APPLICATO su prod** (2026-06-22). Inseriti 3
+`financial_documents` storici LAURUS da XML reali (`FPR 1/23`, `FPR 6/23`,
+`FPR 1/24`) e collegati i 3 `payments` ricevuti esistenti via
+`payments.financial_document_id`; cassa invariata. Gate remoto: C1
+`OK_TO_APPLY` (3 mancanti / 3 pagamenti / €6120,08) → dry-run in transazione con
+rollback → APPLY → C3 `OK` (`docs_present=3`, `linked_payments=3`,
+`remaining_targets=0`, `docs_multi_payment=0`) → `health:financial` PASS
+(`LAURUS no-doc backfill missing/link gaps: 0`) → `smoke:ef-reminder-parity`
+PASS 9.005,91. Il backfill 2026 e' ora gated dalla spec billing profiles.
+
+Backfill 2026 LIVE/Gustare + LAURUS: **APPLICATO su prod** (2026-06-22 sera).
+Migration remota `20260622200209_client_billing_profiles.sql` applicata con
+`npx supabase db push --yes` dopo dry-run pulito. C1 read-only:
+`client_count_mismatches=0`, `live_operational_client_count=0`,
+`live_profile_count=0`, `ambiguous_docs=0`, `missing_docs=5`,
+`existing_docs=0`, `ambiguous_full_payments=0`, `linkable_full_payments=0`,
+`verdict=OK_TO_APPLY`. Dry-run APPLY dentro transazione con rollback: nessun
+errore, C1 rimasto invariato. APPLY remoto reale: eseguito senza errori. C3:
+`live_profile_count=1`, `docs_present=5`, `live_docs_without_profile=0`,
+`docs_with_multiple_received_payments=0`, `verdict=OK`. `health:financial` PASS:
+LIVE non esiste come cliente operativo, `FPR 1/26` e `FPR 2/26` sono documenti
+Gustare con profilo LIVE, cassa invariata (`Cassa incassata 2026: € 7689.23`,
+`pendingPaymentsTotal 2026: € 0.00`, `payments emit-linked: 28 doc`).
+
+Review retroattiva backend/backfill 2026-06-22:
+
+- Dominio: PASS. Gustare resta cliente operativo; LIVE e' profilo fatturazione,
+  non cliente; Diego/progetti/incassi restano sotto Gustare.
+- DB/FK/RLS: PASS dopo fix seed. La migration e' additiva; la view
+  `financial_documents_summary` mantiene client/supplier e aggiunge campi
+  billing profile; `client_billing_profiles` ha RLS autenticata. BLOCK trovato:
+  `supabase/seed_domain_data.sql` era stale rispetto al prod applicato; fix:
+  seed rigenerato dal dump remoto 2026-06-22 con `client_billing_profiles`.
+- Money/fiscalita': PASS. Backfill documenti/profili non modifica
+  `payments.amount`, `payments.status`, `payment_date` o `payment_type`; gli
+  importi incassati 2026 restano invariati.
+- Propagazione: FLAG non bloccante per backend. UI, invoice emit, XML/PDF,
+  import e mobile restano volutamente fuori dal commit backend e richiedono spec
+  + piano + review + browser desktop/mobile dedicati.
+- Governance/RAG: PASS. RAG locale usato/reindicizzato e mappe governance lette;
+  claim critici verificati su migration, SQL, seed e health reale.
+- Processo: FLAG. Review e commit sono stati iniziati tardi; correzione
+  obbligatoria: nessuna UI prima di review documentata, gate e commit sensati.
 
 Governance/RAG fix 2026-06-22:
 
@@ -112,6 +217,68 @@ Governance/RAG fix 2026-06-22:
 - triage markdownlint aggiunto: `docs/doc-quality/MARKDOWNLINT_TRIAGE.md`
   classifica i finding L2 in `problem`, `review` e `noise`; non e' un hard
   gate finche' il debito stilistico storico non viene ridotto o configurato.
+
+### Sessione 2026-06-22-ter (CHIUSA, prod apply) — backfill LAURUS no-doc da XML reali
+
+Scope eseguito: solo le 3 fatture storiche LAURUS con XML gia' presenti nel repo.
+Le fatture 2026 erano fuori scope in quel momento; ora gli XML sono presenti ma
+sono gated dal modello `client_billing_profiles`.
+
+- Spec aggiornata: `docs/superpowers/specs/2026-06-20-missing-invoices-backfill-design.md`
+  corretto `due_date` da `<DataScadenzaPagamento>` (non sempre `issue_date`:
+  FPR 6/23 scade 2023-11-24, FPR 1/24 scade 2024-02-29).
+- Piano: `docs/superpowers/plans/2026-06-22-missing-laurus-invoices-backfill.md`.
+- Controllori/versionati: `scripts/backfillMissingInvoicesDecider.ts` +
+  `scripts/backfillMissingInvoicesDecider.test.ts` (8 test, RED→GREEN) e
+  `scripts/backfill-missing-laurus-invoices.sql` (C1/APPLY/C3).
+- Prod read-only prima: 6 no-doc totali, di cui 3 LAURUS storiche e 3 2026
+  allora senza XML disponibile. C1 LAURUS: `missing_docs=3`, `existing_docs=0`,
+  `unlinked_payments=3`, `target_cash_sum=6120.08`, `verdict=OK_TO_APPLY`.
+- Dry-run: blocco APPLY eseguito dentro `begin; ... rollback;`, poi C1 rimasto
+  invariato (`OK_TO_APPLY`), quindi nessuna scrittura lasciata dalla prova.
+- Apply remoto: inseriti i 3 documenti e linkati i 3 incassi. C3:
+  `docs_present=3`, `linked_payments=3`, `remaining_targets=0`,
+  `docs_multi_payment=0`, `verdict=OK`.
+- Guardrail ricorrente: `scripts/check-prod-financial-health.mjs` ora controlla
+  che i 3 target LAURUS non regrediscano; `npm run health:financial` PASS con
+  `payments emit-linked: 28 doc` e `LAURUS no-doc backfill missing/link gaps: 0`.
+
+Prossima azione aggiornata: gli XML 2026 sono arrivati, ma non applicare il
+vecchio backfill finche' non e' gestito il profilo di fatturazione cliente.
+Seguire la spec billing profiles, poi rifare C1→dry-run→APPLY→C3 sul 2026.
+
+### Sessione 2026-06-22-quater (SPEC/PIANO, 0 codice) — LIVE come profilo fatturazione
+
+Trigger: l'utente segnala che LIVE SRLS e' "sempre lo stesso cliente in pratica",
+cioe' Gustare/Diego, ma alcune fatture sono state intestate a LIVE.
+
+Misura:
+
+- XML 2026 presenti: `FPR 1/26` e `FPR 2/26` intestate a LIVE, `FPR 3/26` e
+  `FPR 4/26` intestate LAURUS, `FPR 5/26` intestata Gustare.
+- Stato DB gia' misurato: nessun cliente LIVE; Diego Caltabiano referente
+  primario/amministrativo di Gustare; progetti 2026 sotto Gustare.
+- Codice: `Client` ha un solo profilo fiscale; `financial_documents` non salva
+  snapshot destinatario; XML usa direttamente `draft.client`.
+
+Decisione tecnica proposta:
+
+- `client_id` resta ancora operativa/commerciale.
+- Aggiungere backend-only `client_billing_profiles`.
+- Collegare le fatture a un profilo tramite
+  `financial_documents.billing_profile_id`.
+- Non creare LIVE come nuovo cliente operativo in questa fase.
+- V1 non modifica UI, emissione fattura, PDF/XML generator, dashboard, AI e
+  fiscal model per non propagare una semantica non ancora stabilizzata.
+- La fase successiva dovra' invece toccare le superfici necessarie, ma solo dopo
+  il contratto backend e con spec/piano/review dedicati.
+
+File creati:
+
+- `docs/superpowers/specs/2026-06-22-client-billing-profiles-design.md`
+- `docs/superpowers/plans/2026-06-22-client-billing-profiles-backend.md`
+
+Stop point: nessun codice o migration senza informare prima l'utente.
 
 ### Sessione 2026-06-20-sexies (IN CORSO, pre-commit, 0 codice applicato) — fix-minori → pivot
 
@@ -157,9 +324,9 @@ full-view + Map (pattern ClientList, NON `@in` malformato), `collectionState` in
 - Dettaglio: `docs/development-continuity-map.md` Update 2026-06-21.
 
 **SHIPPED:** commit `f7fade2f` (codice + docs + spec, UNICO WF-6), push `origin`, CI `Check`
-success sul fork, Vercel prod alias HTTP 200. **Prossima azione:** scegliere dalla coda — backfill
-6 fatture no-doc (Bucket A pronto / B pending XML 2026 da consegnare in `Fatture/2026/`), Fase 2,
-Scope C (gated).
+success sul fork, Vercel prod alias HTTP 200. Follow-up LAURUS no-doc chiuso il 2026-06-22
+(vedi sessione ter sopra). I no-doc 2026 sono ora gated dal modello
+`client_billing_profiles`, Fase 2, Scope C.
 
 ### Sessione 2026-06-20-quinquies (IMPL VERIFICATA, pre-commit) — Layer confronto Cassa vs Competenza data-fattura
 
