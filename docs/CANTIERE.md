@@ -184,6 +184,22 @@ Review retroattiva backend/backfill 2026-06-22:
 - Processo: FLAG. Review e commit sono stati iniziati tardi; correzione
   obbligatoria: nessuna UI prima di review documentata, gate e commit sensati.
 
+Integrazione applicativa billing profiles — spec/piano gate 2026-06-22:
+
+- Spec:
+  `docs/superpowers/specs/2026-06-22-billing-profiles-application-integration-design.md`.
+- Piano:
+  `docs/superpowers/plans/2026-06-22-billing-profiles-application-integration.md`.
+- Review spec: PASS dopo fix. RAG pre-review ha trovato una lacuna reale su
+  `InvoiceImportDraftBillingSection`, `_shared/invoiceImportConfirm.ts` e
+  `invoice_import_confirm/index.ts`; la spec e' stata corretta prima di
+  considerarla valida.
+- Review piano: PASS dopo fix. RAG piano ha trovato `dataProviderInvoiceEmit.test.ts`
+  non incluso e assenza di test provider import; il piano ora include il test
+  provider emit e crea `dataProviderInvoiceImport.test.ts`.
+- Stop point: nessuna implementazione UI/applicativa prima di eseguire il piano
+  task-by-task con review per task, commit per task e browser desktop/mobile.
+
 Governance/RAG fix 2026-06-22:
 
 - audit rifatto con code-RAG + prose-RAG separati; finding reale: il code-RAG
