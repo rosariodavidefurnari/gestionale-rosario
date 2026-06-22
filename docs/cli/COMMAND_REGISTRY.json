@@ -599,6 +599,72 @@
       "avoid_reason": null
     },
     {
+      "id": "npm-script-governance-test",
+      "command": "npm run governance:test",
+      "category": "test",
+      "entrypoint": "npm script",
+      "reads": [
+        "package-lock.json",
+        "package.json"
+      ],
+      "writes": [],
+      "env": [],
+      "safe_to_run": true,
+      "owner": "repo",
+      "source": "package.json",
+      "status": "candidate",
+      "confidence": "high",
+      "source_evidence": "package.json:scripts.governance:test = python3 ./scripts/governance_inventory_test.py",
+      "last_verified": "2026-06-22",
+      "destructive_level": "none",
+      "replacement": null,
+      "avoid_reason": null
+    },
+    {
+      "id": "npm-script-governance-variables-check",
+      "command": "npm run governance:variables:check",
+      "category": "governance",
+      "entrypoint": "npm script",
+      "reads": [
+        "package-lock.json",
+        "package.json"
+      ],
+      "writes": [],
+      "env": [],
+      "safe_to_run": true,
+      "owner": "repo",
+      "source": "package.json",
+      "status": "candidate",
+      "confidence": "high",
+      "source_evidence": "package.json:scripts.governance:variables:check = python3 ./scripts/variable_inventory.py --check",
+      "last_verified": "2026-06-22",
+      "destructive_level": "none",
+      "replacement": null,
+      "avoid_reason": null
+    },
+    {
+      "id": "npm-script-governance-variables-write",
+      "command": "npm run governance:variables:write",
+      "category": "governance",
+      "entrypoint": "npm script",
+      "reads": [
+        "package-lock.json",
+        "package.json"
+      ],
+      "writes": [],
+      "env": [],
+      "safe_to_run": true,
+      "owner": "repo",
+      "source": "package.json",
+      "status": "candidate",
+      "confidence": "high",
+      "source_evidence": "package.json:scripts.governance:variables:write = python3 ./scripts/variable_inventory.py --write",
+      "last_verified": "2026-06-22",
+      "destructive_level": "none",
+      "replacement": null,
+      "avoid_reason": null
+    },
+    {
       "id": "npm-script-lint-apply",
       "command": "npm run lint:apply",
       "category": "quality",

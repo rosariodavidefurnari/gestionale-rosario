@@ -82,6 +82,9 @@ La governance operativa del repo espone anche mappe generate:
 
 - `docs/cli/COMMAND_MAP.md` e' generata da `npm run governance:cli:write`
   e verificata da `npm run governance:cli:check`
+- `docs/variables/VARIABLE_MAP.md` e' generata da
+  `npm run governance:variables:write` e verificata da
+  `npm run governance:variables:check`
 - la sequenza di bootstrap resta CLI -> variabili -> workflow -> artifact
 
 ## Agent Orchestration Files
@@ -155,6 +158,11 @@ letto come fonte primaria.
 
 Mappa generata dei comandi repo-locali. Classifica entrypoint npm, Makefile e
 CI come `official`, `candidate`, `dangerous` o `legacy`.
+
+### `docs/variables/VARIABLE_MAP.md`
+
+Mappa generata di env vars, config keys, CLI flags e path di configurazione.
+Esclude `.env*` reali e usa solo sorgenti tracciate sicure.
 
 ### `docs/development-continuity-map.md`
 

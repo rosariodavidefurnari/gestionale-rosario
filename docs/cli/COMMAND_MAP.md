@@ -746,6 +746,39 @@ candidates until promoted through the repo governance docs.
 - safe_to_run: `true`
 - destructive_level: `none`
 
+### npm-script-governance-test
+
+- command: `npm run governance:test`
+- category: `test`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.governance:test = python3 ./scripts/governance_inventory_test.py`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
+### npm-script-governance-variables-check
+
+- command: `npm run governance:variables:check`
+- category: `governance`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.governance:variables:check = python3 ./scripts/variable_inventory.py --check`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
+### npm-script-governance-variables-write
+
+- command: `npm run governance:variables:write`
+- category: `governance`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.governance:variables:write = python3 ./scripts/variable_inventory.py --write`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
 ### npm-script-lint-apply
 
 - command: `npm run lint:apply`

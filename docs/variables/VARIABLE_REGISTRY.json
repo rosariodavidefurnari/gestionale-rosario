@@ -1,0 +1,1679 @@
+{
+  "schema_version": 1,
+  "generated_by": "scripts/variable_inventory.py",
+  "last_verified": "2026-06-22",
+  "sources": [
+    "tracked safe code/config files",
+    "docs/cli/COMMAND_REGISTRY.json",
+    "src/components/atomic-crm/root/ConfigurationContext.tsx"
+  ],
+  "variables": [
+    {
+      "id": "flag-check",
+      "name": "--check",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run governance:cli:check",
+      "owner_commands": [
+        "npm run governance:cli:check",
+        "npm run governance:variables:check",
+        "npm run prettier"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:check",
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:check",
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-config",
+      "name": "--config",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run prettier",
+      "owner_commands": [
+        "npm run prettier",
+        "npm run prettier:apply",
+        "make registry-gen"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier",
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier:apply",
+        "docs/cli/COMMAND_REGISTRY.json:Makefile:95"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-docs",
+      "name": "--docs",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run docs:drift",
+      "owner_commands": [
+        "npm run docs:drift"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.docs:drift"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-env",
+      "name": "--env",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run security:check:fiscal-backups:rest",
+      "owner_commands": [
+        "npm run security:check:fiscal-backups:rest"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.security:check:fiscal-backups:rest"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-fix",
+      "name": "--fix",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run lint:apply",
+      "owner_commands": [
+        "npm run lint:apply"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.lint:apply"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-force",
+      "name": "--force",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run dev",
+      "owner_commands": [
+        "npm run dev"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.dev"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-global",
+      "name": "--global",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "git config --global user.email support+actions@github.com",
+      "owner_commands": [
+        "git config --global user.email support+actions@github.com",
+        "git config --global user.name github-actions-bot"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:github-workflows-deploy-yml-deploy-42-git-config-global-user-email-support-actions-github-com",
+        "docs/cli/COMMAND_REGISTRY.json:github-workflows-deploy-yml-deploy-43-git-config-global-user-name-github-actions-bot"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-headed",
+      "name": "--headed",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run test:e2e:headed",
+      "owner_commands": [
+        "npm run test:e2e:headed"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.test:e2e:headed"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-linked",
+      "name": "--linked",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run security:check:cascade-protection",
+      "owner_commands": [
+        "npm run security:check:cascade-protection",
+        "npm run security:check:fiscal-backups"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.security:check:cascade-protection",
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.security:check:fiscal-backups"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-list-different",
+      "name": "--list-different",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run prettier:apply",
+      "owner_commands": [
+        "npm run prettier:apply"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier:apply"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-noemit",
+      "name": "--noEmit",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run typecheck",
+      "owner_commands": [
+        "npm run typecheck"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.typecheck"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-project-ref",
+      "name": "--project-ref",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npx supabase link --project-ref $SUPABASE_PROJECT_ID",
+      "owner_commands": [
+        "npx supabase link --project-ref $SUPABASE_PROJECT_ID"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:github-workflows-deploy-yml-deploy-99-npx-supabase-link-project-ref-supabase-project-id"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-remove",
+      "name": "--remove",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "make doc-deploy",
+      "owner_commands": [
+        "make doc-deploy",
+        "make registry-deploy"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:Makefile:85",
+        "docs/cli/COMMAND_REGISTRY.json:Makefile:91"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-repo",
+      "name": "--repo",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run docs:drift",
+      "owner_commands": [
+        "npm run docs:drift"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.docs:drift"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "flag-write",
+      "name": "--write",
+      "scope": "cli",
+      "type": "cli_flag",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run governance:cli:write",
+      "owner_commands": [
+        "npm run governance:cli:write",
+        "npm run governance:variables:write",
+        "npm run prettier:apply",
+        "make registry-gen"
+      ],
+      "source_file": "docs/cli/COMMAND_REGISTRY.json",
+      "risk": "command behavior modifier",
+      "status": "verified",
+      "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:write",
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:write",
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier:apply",
+        "docs/cli/COMMAND_REGISTRY.json:Makefile:95"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "config-aiconfig",
+      "name": "aiConfig",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.aiConfig",
+      "required": false,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "AI model/provider behavior",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:28",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:192"
+      ],
+      "sensitive": false,
+      "value_type": "AIConfig"
+    },
+    {
+      "id": "config-businessprofile",
+      "name": "businessProfile",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.businessProfile",
+      "required": false,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "personal/business identity including IBAN and tax identity",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:30",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:194"
+      ],
+      "sensitive": true,
+      "value_type": "BusinessProfile"
+    },
+    {
+      "id": "config-darkmodelogo",
+      "name": "darkModeLogo",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.darkModeLogo",
+      "required": true,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "UI/runtime configuration",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:23",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:189"
+      ],
+      "sensitive": false,
+      "value_type": "string"
+    },
+    {
+      "id": "config-disableemailpasswordauthentication",
+      "name": "disableEmailPasswordAuthentication",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.disableEmailPasswordAuthentication",
+      "required": false,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "authentication behavior",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:26",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:197"
+      ],
+      "sensitive": false,
+      "value_type": "boolean"
+    },
+    {
+      "id": "config-fiscalconfig",
+      "name": "fiscalConfig",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.fiscalConfig",
+      "required": false,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "financial/fiscal semantics",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:27",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:191"
+      ],
+      "sensitive": false,
+      "value_type": "FiscalConfig"
+    },
+    {
+      "id": "config-googleworkplacedomain",
+      "name": "googleWorkplaceDomain",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.googleWorkplaceDomain",
+      "required": false,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "authentication behavior",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:25",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:196"
+      ],
+      "sensitive": false,
+      "value_type": "string"
+    },
+    {
+      "id": "config-lightmodelogo",
+      "name": "lightModeLogo",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.lightModeLogo",
+      "required": true,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "UI/runtime configuration",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:24",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:190"
+      ],
+      "sensitive": false,
+      "value_type": "string"
+    },
+    {
+      "id": "config-notestatuses",
+      "name": "noteStatuses",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.noteStatuses",
+      "required": true,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "UI/runtime configuration",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:18",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:184"
+      ],
+      "sensitive": false,
+      "value_type": "NoteStatus[]"
+    },
+    {
+      "id": "config-operationalconfig",
+      "name": "operationalConfig",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.operationalConfig",
+      "required": false,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "operational defaults",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:29",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:193"
+      ],
+      "sensitive": false,
+      "value_type": "OperationalConfig"
+    },
+    {
+      "id": "config-quoteservicetypes",
+      "name": "quoteServiceTypes",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.quoteServiceTypes",
+      "required": true,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "UI/runtime configuration",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:20",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:186"
+      ],
+      "sensitive": false,
+      "value_type": "LabeledValue[]"
+    },
+    {
+      "id": "config-servicetypechoices",
+      "name": "serviceTypeChoices",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.serviceTypeChoices",
+      "required": true,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "UI/runtime configuration",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:21",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:187"
+      ],
+      "sensitive": false,
+      "value_type": "LabeledValue[]"
+    },
+    {
+      "id": "config-tasktypes",
+      "name": "taskTypes",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.taskTypes",
+      "required": true,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "UI/runtime configuration",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:19",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:185"
+      ],
+      "sensitive": false,
+      "value_type": "LabeledValue[]"
+    },
+    {
+      "id": "config-title",
+      "name": "title",
+      "scope": "app_configuration",
+      "type": "config_key",
+      "default": "defaultConfiguration.title",
+      "required": true,
+      "owner_command": "runtime settings table / ConfigurationContext",
+      "source_file": "src/components/atomic-crm/root/ConfigurationContext.tsx",
+      "risk": "UI/runtime configuration",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/ConfigurationContext.tsx:22",
+        "src/components/atomic-crm/root/defaultConfiguration.ts:188"
+      ],
+      "sensitive": false,
+      "value_type": "string"
+    },
+    {
+      "id": "path-contextignore",
+      "name": ".contextignore",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": false,
+      "owner_command": "repo governance",
+      "source_file": ".contextignore",
+      "risk": "code-RAG corpus policy",
+      "status": "verified",
+      "source_evidence": [
+        ".contextignore"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "path-github-workflows-check-yml",
+      "name": ".github/workflows/check.yml",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": false,
+      "owner_command": "repo governance",
+      "source_file": ".github/workflows/check.yml",
+      "risk": "CI check workflow",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/check.yml"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "path-github-workflows-deploy-yml",
+      "name": ".github/workflows/deploy.yml",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": false,
+      "owner_command": "repo governance",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "manual deploy workflow",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "path-github-workflows-keep-alive-yml",
+      "name": ".github/workflows/keep-alive.yml",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": false,
+      "owner_command": "repo governance",
+      "source_file": ".github/workflows/keep-alive.yml",
+      "risk": "Supabase keep-alive workflow",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/keep-alive.yml"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "path-husky-pre-commit",
+      "name": ".husky/pre-commit",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": false,
+      "owner_command": "repo governance",
+      "source_file": ".husky/pre-commit",
+      "risk": "pre-commit guard order",
+      "status": "verified",
+      "source_evidence": [
+        ".husky/pre-commit"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "path-prettierignore",
+      "name": ".prettierignore",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": false,
+      "owner_command": "repo governance",
+      "source_file": ".prettierignore",
+      "risk": "formatter exclusion policy",
+      "status": "verified",
+      "source_evidence": [
+        ".prettierignore"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "path-makefile",
+      "name": "Makefile",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": true,
+      "owner_command": "repo governance",
+      "source_file": "Makefile",
+      "risk": "operator command aliases",
+      "status": "verified",
+      "source_evidence": [
+        "Makefile"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "path-package-json",
+      "name": "package.json",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": true,
+      "owner_command": "repo governance",
+      "source_file": "package.json",
+      "risk": "npm scripts and package toolchain",
+      "status": "verified",
+      "source_evidence": [
+        "package.json"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "path-playwright-config-ts",
+      "name": "playwright.config.ts",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": false,
+      "owner_command": "repo governance",
+      "source_file": "playwright.config.ts",
+      "risk": "E2E runner configuration",
+      "status": "verified",
+      "source_evidence": [
+        "playwright.config.ts"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "path-supabase-config-toml",
+      "name": "supabase/config.toml",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": false,
+      "owner_command": "repo governance",
+      "source_file": "supabase/config.toml",
+      "risk": "local Supabase configuration",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/config.toml"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "path-supabase-functions-env-example",
+      "name": "supabase/functions/.env.example",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": false,
+      "owner_command": "repo governance",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "Edge Functions local secret template",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "path-vite-config-ts",
+      "name": "vite.config.ts",
+      "scope": "repo_configuration",
+      "type": "config_path",
+      "default": null,
+      "required": true,
+      "owner_command": "repo governance",
+      "source_file": "vite.config.ts",
+      "risk": "Vite build/runtime configuration",
+      "status": "verified",
+      "source_evidence": [
+        "vite.config.ts"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-force-javascript-actions-to-node24",
+      "name": "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24",
+      "scope": "ci",
+      "type": "env",
+      "default": "true",
+      "required": false,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/check.yml",
+      "risk": "behavioral input",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/check.yml:18",
+        ".github/workflows/deploy.yml:14"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-github-step-summary",
+      "name": "GITHUB_STEP_SUMMARY",
+      "scope": "ci",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "behavioral input",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:118",
+        ".github/workflows/deploy.yml:122",
+        ".github/workflows/deploy.yml:126",
+        ".github/workflows/deploy.yml:130",
+        ".github/workflows/deploy.yml:134",
+        ".github/workflows/deploy.yml:138",
+        ".github/workflows/deploy.yml:142",
+        ".github/workflows/deploy.yml:146",
+        ".github/workflows/deploy.yml:150"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-github-token",
+      "name": "GITHUB_TOKEN",
+      "scope": "ci",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:27",
+        ".github/workflows/deploy.yml:41"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-http-status",
+      "name": "HTTP_STATUS",
+      "scope": "ci",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "github workflow keep-alive",
+      "source_file": ".github/workflows/keep-alive.yml",
+      "risk": "behavioral input",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/keep-alive.yml:23",
+        ".github/workflows/keep-alive.yml:27",
+        ".github/workflows/keep-alive.yml:30"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-is-supabase-configured",
+      "name": "IS_SUPABASE_CONFIGURED",
+      "scope": "ci",
+      "type": "env",
+      "default": "<github secret>",
+      "required": false,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "behavioral input",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:71",
+        ".github/workflows/deploy.yml:97",
+        ".github/workflows/deploy.yml:101",
+        ".github/workflows/deploy.yml:112"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-postmark-webhook-authorized-ips",
+      "name": "POSTMARK_WEBHOOK_AUTHORIZED_IPS",
+      "scope": "ci",
+      "type": "env",
+      "default": "<github secret>",
+      "required": false,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:75",
+        ".github/workflows/deploy.yml:110"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-postmark-webhook-password",
+      "name": "POSTMARK_WEBHOOK_PASSWORD",
+      "scope": "ci",
+      "type": "env",
+      "default": "<github secret>",
+      "required": false,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:74",
+        ".github/workflows/deploy.yml:109"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-postmark-webhook-user",
+      "name": "POSTMARK_WEBHOOK_USER",
+      "scope": "ci",
+      "type": "env",
+      "default": "<github secret>",
+      "required": false,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "notification delivery",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:73",
+        ".github/workflows/deploy.yml:108"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-production-remote",
+      "name": "PRODUCTION_REMOTE",
+      "scope": "ci",
+      "type": "env",
+      "default": "<github secret>",
+      "required": false,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "behavioral input",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:27"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-supabase-access-token",
+      "name": "SUPABASE_ACCESS_TOKEN",
+      "scope": "ci",
+      "type": "env",
+      "default": "<github secret>",
+      "required": true,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:66"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-supabase-db-password",
+      "name": "SUPABASE_DB_PASSWORD",
+      "scope": "ci",
+      "type": "env",
+      "default": "<github secret>",
+      "required": true,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:67"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-supabase-key",
+      "name": "SUPABASE_KEY",
+      "scope": "ci",
+      "type": "env",
+      "default": "<github secret>",
+      "required": false,
+      "owner_command": "github workflow keep-alive",
+      "source_file": ".github/workflows/keep-alive.yml",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/keep-alive.yml:16",
+        ".github/workflows/keep-alive.yml:20",
+        ".github/workflows/keep-alive.yml:21"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-supabase-project-id",
+      "name": "SUPABASE_PROJECT_ID",
+      "scope": "ci",
+      "type": "env",
+      "default": "<github secret>",
+      "required": true,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "Supabase auth/database routing",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:68",
+        ".github/workflows/deploy.yml:99"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-callmebot-apikey",
+      "name": "CALLMEBOT_APIKEY",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/_shared/internalNotifications.ts",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/_shared/internalNotifications.ts:29"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-callmebot-phone",
+      "name": "CALLMEBOT_PHONE",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/_shared/internalNotifications.ts",
+      "risk": "notification delivery",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/_shared/internalNotifications.ts:28"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-cron-shared-secret",
+      "name": "CRON_SHARED_SECRET",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": true,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:15",
+        "supabase/functions/_shared/cronAuth.ts:53"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-gemini-api-key",
+      "name": "GEMINI_API_KEY",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:18",
+        "supabase/functions/invoice_import_extract/index.ts:17"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-google-api-key",
+      "name": "GOOGLE_API_KEY",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:19",
+        "supabase/functions/invoice_import_extract/index.ts:17"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-google-calendar-client-email",
+      "name": "GOOGLE_CALENDAR_CLIENT_EMAIL",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "Google provider integration",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:30",
+        "supabase/functions/_shared/googleCalendarAuth.ts:20"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-google-calendar-id",
+      "name": "GOOGLE_CALENDAR_ID",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "Google provider integration",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:32",
+        "supabase/functions/google_calendar_sync/index.ts:11"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-google-calendar-private-key",
+      "name": "GOOGLE_CALENDAR_PRIVATE_KEY",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:31",
+        "supabase/functions/_shared/googleCalendarAuth.ts:22"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-google-maps-api-key",
+      "name": "GOOGLE_MAPS_API_KEY",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:21",
+        "supabase/functions/travel_location_suggest/index.ts:12",
+        "supabase/functions/travel_route_estimate/index.ts:12",
+        "supabase/functions/unified_crm_answer/index.ts:38"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-openai-api-key",
+      "name": "OPENAI_API_KEY",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:17",
+        "supabase/functions/annual_operations_answer/index.ts:22",
+        "supabase/functions/annual_operations_summary/index.ts:18",
+        "supabase/functions/historical_analytics_answer/index.ts:18",
+        "supabase/functions/historical_analytics_summary/index.ts:17",
+        "supabase/functions/historical_cash_inflow_answer/index.ts:18",
+        "supabase/functions/historical_cash_inflow_summary/index.ts:17",
+        "supabase/functions/unified_crm_answer/index.ts:37"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-sb-jwt-issuer",
+      "name": "SB_JWT_ISSUER",
+      "scope": "edge_function",
+      "type": "env",
+      "default": "http://127.0.0.1:55321/auth/v1",
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "Supabase auth/database routing",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:7",
+        "supabase/functions/_shared/authentication.ts:7"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-sb-secret-key",
+      "name": "SB_SECRET_KEY",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": true,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:9",
+        "supabase/functions/_shared/supabaseAdmin.ts:6"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-smtp-from-name",
+      "name": "SMTP_FROM_NAME",
+      "scope": "edge_function",
+      "type": "env",
+      "default": "Rosario Furnari",
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "notification delivery",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:27",
+        "supabase/functions/_shared/internalNotifications.ts:15",
+        "supabase/functions/payment_reminder_send/index.ts:18",
+        "supabase/functions/quote_status_email_send/index.ts:17",
+        "supabase/functions/workflow_notify/index.ts:22"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-smtp-host",
+      "name": "SMTP_HOST",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "notification delivery",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:23",
+        "supabase/functions/_shared/internalNotifications.ts:11",
+        "supabase/functions/payment_reminder_send/index.ts:14",
+        "supabase/functions/quote_status_email_send/index.ts:13",
+        "supabase/functions/workflow_notify/index.ts:18"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-smtp-pass",
+      "name": "SMTP_PASS",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "notification delivery",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:26",
+        "supabase/functions/_shared/internalNotifications.ts:14",
+        "supabase/functions/payment_reminder_send/index.ts:17",
+        "supabase/functions/quote_status_email_send/index.ts:16",
+        "supabase/functions/workflow_notify/index.ts:21"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-smtp-port",
+      "name": "SMTP_PORT",
+      "scope": "edge_function",
+      "type": "env",
+      "default": "587",
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "notification delivery",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:24",
+        "supabase/functions/_shared/internalNotifications.ts:12",
+        "supabase/functions/payment_reminder_send/index.ts:15",
+        "supabase/functions/quote_status_email_send/index.ts:14",
+        "supabase/functions/workflow_notify/index.ts:19"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-smtp-user",
+      "name": "SMTP_USER",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "notification delivery",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:25",
+        "supabase/functions/_shared/internalNotifications.ts:13",
+        "supabase/functions/payment_reminder_send/index.ts:16",
+        "supabase/functions/quote_status_email_send/index.ts:15",
+        "supabase/functions/workflow_notify/index.ts:20"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-supabase-anon-key",
+      "name": "SUPABASE_ANON_KEY",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:6",
+        "supabase/functions/_shared/authentication.ts:9"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-supabase-db-url",
+      "name": "SUPABASE_DB_URL",
+      "scope": "edge_function",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "make remote-deploy-supabase",
+      "source_file": "supabase/functions/.env.example",
+      "risk": "Supabase auth/database routing",
+      "status": "verified",
+      "source_evidence": [
+        "supabase/functions/.env.example:10",
+        "supabase/functions/_shared/db.ts:257"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-build-sourcemap",
+      "name": "BUILD_SOURCEMAP",
+      "scope": "frontend_build",
+      "type": "env",
+      "default": "== \"true\";",
+      "required": false,
+      "owner_command": "npm run dev / npm run build",
+      "source_file": "vite.config.ts",
+      "risk": "build/runtime mode",
+      "status": "verified",
+      "source_evidence": [
+        "vite.config.ts:10"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-bundle-analyze",
+      "name": "BUNDLE_ANALYZE",
+      "scope": "frontend_build",
+      "type": "env",
+      "default": "== \"true\";",
+      "required": false,
+      "owner_command": "npm run dev / npm run build",
+      "source_file": "vite.config.ts",
+      "risk": "build/runtime mode",
+      "status": "verified",
+      "source_evidence": [
+        "vite.config.ts:9"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-node-env",
+      "name": "NODE_ENV",
+      "scope": "frontend_build",
+      "type": "env",
+      "default": "== \"development\", ...rest } = props;",
+      "required": false,
+      "owner_command": "npm run dev / npm run build",
+      "source_file": "src/components/admin/admin.tsx",
+      "risk": "build/runtime mode",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/admin/admin.tsx:45",
+        "src/components/admin/edit-guesser.tsx:58",
+        "src/components/admin/list-guesser.tsx:97",
+        "src/components/admin/reference-input.tsx:30",
+        "src/components/admin/show-guesser.tsx:51",
+        "src/components/atomic-crm/root/CRM.tsx:75",
+        "src/components/supabase/set-password-page.tsx:38",
+        "vite.config.ts:203",
+        "vite.config.ts:226"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-vite-cloudinary-api-key",
+      "name": "VITE_CLOUDINARY_API_KEY",
+      "scope": "frontend_build",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run dev / npm run build",
+      "source_file": "src/lib/cloudinary/cloudinaryConfig.ts",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        "src/lib/cloudinary/cloudinaryConfig.ts:6"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-vite-cloudinary-cloud-name",
+      "name": "VITE_CLOUDINARY_CLOUD_NAME",
+      "scope": "frontend_build",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run dev / npm run build",
+      "source_file": "src/lib/cloudinary/cloudinaryConfig.ts",
+      "risk": "behavioral input",
+      "status": "verified",
+      "source_evidence": [
+        "src/lib/cloudinary/cloudinaryConfig.ts:4"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-vite-disable-email-password-authentication",
+      "name": "VITE_DISABLE_EMAIL_PASSWORD_AUTHENTICATION",
+      "scope": "frontend_build",
+      "type": "env",
+      "default": "<configured secret>",
+      "required": false,
+      "owner_command": "npm run dev / npm run build",
+      "source_file": "src/components/atomic-crm/root/CRM.tsx",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        "src/components/atomic-crm/root/CRM.tsx:68"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-vite-google-workplace-domain",
+      "name": "VITE_GOOGLE_WORKPLACE_DOMAIN",
+      "scope": "frontend_build",
+      "type": "env",
+      "default": "<github secret>",
+      "required": false,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "behavioral input",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:76",
+        "src/components/atomic-crm/root/CRM.tsx:66"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-vite-inbound-email",
+      "name": "VITE_INBOUND_EMAIL",
+      "scope": "frontend_build",
+      "type": "env",
+      "default": "<github variable>",
+      "required": false,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "behavioral input",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:72",
+        "vite.config.ts:234",
+        "vite.config.ts:235"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-vite-sb-publishable-key",
+      "name": "VITE_SB_PUBLISHABLE_KEY",
+      "scope": "frontend_build",
+      "type": "env",
+      "default": "<configured secret>",
+      "required": true,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/check.yml",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/check.yml:84",
+        ".github/workflows/deploy.yml:70",
+        "src/components/atomic-crm/providers/supabase/dataProvider.ts:42",
+        "src/components/atomic-crm/providers/supabase/dataProvider.ts:50",
+        "src/components/atomic-crm/providers/supabase/supabase.ts:6",
+        "tests/e2e/invoice-void-ui.smoke.spec.ts:24",
+        "tests/e2e/invoice-void.smoke.spec.ts:25",
+        "vite.config.ts:231",
+        "vite.config.ts:232"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-vite-supabase-url",
+      "name": "VITE_SUPABASE_URL",
+      "scope": "frontend_build",
+      "type": "env",
+      "default": "http://localhost:54321",
+      "required": true,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/check.yml",
+      "risk": "Supabase auth/database routing",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/check.yml:83",
+        ".github/workflows/deploy.yml:69",
+        "src/components/atomic-crm/providers/supabase/dataProvider.ts:39",
+        "src/components/atomic-crm/providers/supabase/dataProvider.ts:49",
+        "src/components/atomic-crm/providers/supabase/supabase.ts:5",
+        "tests/e2e/invoice-void-ui.smoke.spec.ts:22",
+        "tests/e2e/invoice-void.smoke.spec.ts:23",
+        "vite.config.ts:226",
+        "vite.config.ts:228",
+        "vite.config.ts:229"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-health-env-file",
+      "name": "HEALTH_ENV_FILE",
+      "scope": "operator_script",
+      "type": "env",
+      "default": ".env.production",
+      "required": false,
+      "owner_command": "npm run smoke:ef-reminder-parity",
+      "source_file": "scripts/check-prod-financial-health.mjs",
+      "risk": "operator smoke target",
+      "status": "verified",
+      "source_evidence": [
+        "scripts/check-prod-financial-health.mjs:21",
+        "scripts/prod-smoke-cash-vs-competence.ts:22",
+        "scripts/prod-smoke-ef-reminder-parity.ts:37"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-smoke-target",
+      "name": "SMOKE_TARGET",
+      "scope": "operator_script",
+      "type": "env",
+      "default": "remote",
+      "required": false,
+      "owner_command": "unknown",
+      "source_file": "scripts/auth-smoke-user.mjs",
+      "risk": "behavioral input",
+      "status": "verified",
+      "source_evidence": [
+        "scripts/auth-smoke-user.mjs:80"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-supabase-project-ref",
+      "name": "SUPABASE_PROJECT_REF",
+      "scope": "operator_script",
+      "type": "env",
+      "default": "qvdmzhyzpyaveniirsmo",
+      "required": false,
+      "owner_command": "npm run smoke:ef-reminder-parity",
+      "source_file": "scripts/check-prod-financial-health.mjs",
+      "risk": "Supabase auth/database routing",
+      "status": "verified",
+      "source_evidence": [
+        "scripts/check-prod-financial-health.mjs:20",
+        "scripts/prod-smoke-cash-vs-competence.ts:21",
+        "scripts/prod-smoke-ef-reminder-parity.ts:36"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-today-iso",
+      "name": "TODAY_ISO",
+      "scope": "operator_script",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run smoke:ef-reminder-parity",
+      "source_file": "scripts/prod-smoke-ef-reminder-parity.ts",
+      "risk": "operator smoke target",
+      "status": "verified",
+      "source_evidence": [
+        "scripts/prod-smoke-ef-reminder-parity.ts:70"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-ts",
+      "name": "TS",
+      "scope": "operator_script",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "npm run health:financial",
+      "source_file": "scripts/check-prod-financial-health.mjs",
+      "risk": "operator smoke target",
+      "status": "verified",
+      "source_evidence": [
+        "scripts/check-prod-financial-health.mjs:48"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-ci",
+      "name": "CI",
+      "scope": "repo",
+      "type": "env",
+      "default": null,
+      "required": false,
+      "owner_command": "unknown",
+      "source_file": "playwright.config.ts",
+      "risk": "build/runtime mode",
+      "status": "verified",
+      "source_evidence": [
+        "playwright.config.ts:18"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-sb-publishable-key",
+      "name": "SB_PUBLISHABLE_KEY",
+      "scope": "shared",
+      "type": "env",
+      "default": "<github secret>",
+      "required": true,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:70",
+        "supabase/functions/.env.example:8",
+        "supabase/functions/_shared/authentication.ts:9"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-supabase-url",
+      "name": "SUPABASE_URL",
+      "scope": "shared",
+      "type": "env",
+      "default": "<github secret>",
+      "required": true,
+      "owner_command": "github workflow deploy",
+      "source_file": ".github/workflows/deploy.yml",
+      "risk": "Supabase auth/database routing",
+      "status": "verified",
+      "source_evidence": [
+        ".github/workflows/deploy.yml:69",
+        ".github/workflows/keep-alive.yml:15",
+        ".github/workflows/keep-alive.yml:19",
+        "supabase/functions/.env.example:5",
+        "supabase/functions/_shared/authentication.ts:7",
+        "supabase/functions/_shared/authentication.ts:12",
+        "supabase/functions/_shared/authentication.ts:68",
+        "supabase/functions/_shared/supabaseAdmin.ts:5"
+      ],
+      "sensitive": true
+    },
+    {
+      "id": "env-local-supabase-admin-email",
+      "name": "LOCAL_SUPABASE_ADMIN_EMAIL",
+      "scope": "test",
+      "type": "env",
+      "default": "admin@gestionale.local",
+      "required": false,
+      "owner_command": "npm run test:e2e",
+      "source_file": "tests/e2e/support/auth.ts",
+      "risk": "behavioral input",
+      "status": "verified",
+      "source_evidence": [
+        "tests/e2e/support/auth.ts:5",
+        "tests/e2e/support/test-data-controller.ts:12"
+      ],
+      "sensitive": false
+    },
+    {
+      "id": "env-local-supabase-admin-password",
+      "name": "LOCAL_SUPABASE_ADMIN_PASSWORD",
+      "scope": "test",
+      "type": "env",
+      "default": "<configured secret>",
+      "required": false,
+      "owner_command": "npm run test:e2e",
+      "source_file": "tests/e2e/support/auth.ts",
+      "risk": "secret or credential; never log real values",
+      "status": "verified",
+      "source_evidence": [
+        "tests/e2e/support/auth.ts:7",
+        "tests/e2e/support/test-data-controller.ts:14"
+      ],
+      "sensitive": true
+    }
+  ]
+}

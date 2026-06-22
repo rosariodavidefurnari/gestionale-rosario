@@ -12,6 +12,7 @@ docs/_site/
 docs/.jekyll-metadata
 docs/.jekyll-cache
 docs/cli/COMMAND_REGISTRY.json
+docs/variables/VARIABLE_REGISTRY.json
 packages/react-admin/docs
 examples/**/static
 examples/**/dist
