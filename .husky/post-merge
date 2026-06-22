@@ -1,0 +1,7 @@
+HOOK="/Volumes/SSD ESTERNO/rag-stack/rag_git_hook.sh"
+[ -x "$HOOK" ] || exit 0
+REPO="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+# Refresh the local code-RAG in the background after a merge/pull (non-blocking).
+# .git/hooks/* is bypassed here because core.hooksPath points at .husky/_.
+RAG_REPO="$REPO" "$HOOK" post-merge "$@" </dev/null >/dev/null 2>&1 &
+exit 0
