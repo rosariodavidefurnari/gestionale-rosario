@@ -32,6 +32,10 @@ SAFE_EXACT_PATHS = {
     "vite.config.ts",
 }
 
+EXCLUDED_EXACT_PATHS = {
+    "scripts/governance_inventory_test.py",
+}
+
 SAFE_PREFIXES = (
     ".github/workflows/",
     "app/src/",
@@ -154,6 +158,8 @@ def is_secret_path(rel_path: str) -> bool:
 
 
 def is_safe_source(rel_path: str) -> bool:
+    if rel_path in EXCLUDED_EXACT_PATHS:
+        return False
     if is_secret_path(rel_path):
         return False
     if rel_path in SAFE_EXACT_PATHS:
