@@ -460,13 +460,18 @@ export const buildInvoiceImportConfirmNotes = ({
     .join("\n");
 };
 
-export type EmittedExpectedPayment = { id: string };
+export type EmittedExpectedPayment = { id: string; status?: string | null };
 
 export type EmittedReconciliationDecision =
   | {
       action: "settle";
       paymentIdToSettle: string;
       settleFromRecordIndex: number;
+      skipRecordIndexes: number[];
+    }
+  | {
+      action: "skip_written_off";
+      paymentIdToSkip: string;
       skipRecordIndexes: number[];
     }
   | { action: "create" }
@@ -488,6 +493,8 @@ export type EmittedReconciliationDecision =
  *   payments without `financial_document_id` are never matched here).
  * - exactly 1 -> SETTLE it and skip creating ALL N records. Re-settling an
  *   already-`ricevuto` payment is idempotent (no duplicate).
+ * - exactly 1 already `perso` -> SKIP, preserving the write-off and avoiding a
+ *   duplicate pending row.
  * - >1 -> AMBIGUOUS: do NOT guess, the caller must raise an explicit error.
  */
 export const decideEmittedPaymentReconciliation = ({
@@ -503,6 +510,13 @@ export const decideEmittedPaymentReconciliation = ({
   }
   if (matches.length > 1) {
     return { action: "ambiguous", matchCount: matches.length };
+  }
+  if (matches[0].status === "perso") {
+    return {
+      action: "skip_written_off",
+      paymentIdToSkip: matches[0].id,
+      skipRecordIndexes: recordsForInvoiceRef.map((_, index) => index),
+    };
   }
 
   return {

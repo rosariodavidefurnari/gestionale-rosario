@@ -4,13 +4,15 @@ import { useGetList } from "ra-core";
 import { Badge } from "@/components/ui/badge";
 
 import type { Payment } from "../types";
+import { openReceivablePaymentStatusInFilter } from "./paymentTypes";
 
 export const PaymentOverdueBadge = () => {
   const { total, isPending } = useGetList<Payment>("payments", {
     pagination: { page: 1, perPage: 1 },
     sort: { field: "payment_date", order: "ASC" },
     filter: {
-      "status@neq": "ricevuto",
+      "status@in": openReceivablePaymentStatusInFilter,
+      "payment_type@neq": "rimborso",
       "payment_date@lt": toISODate(new Date()),
     },
   });

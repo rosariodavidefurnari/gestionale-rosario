@@ -116,10 +116,11 @@ Baseline read-only prod 2026-06-22 (`npm run health:financial`):
 
 Prossima azione:
 
-1. Eseguire review multidimensione del backend locale.
-2. Commit backend DB/types/seed/health/docs se la review passa.
-3. Proseguire con dashboard/scaduti/fatture/AI/quote prima della UI.
-4. Applicare remoto solo dopo C1 read-only, dry-run rollback e review.
+1. Review multidimensione finale del tranche propagazione.
+2. Commit propagazione dashboard/scaduti/fatture/AI/quote/UI/docs se review e
+   guardrail passano.
+3. Applicare remoto solo dopo C1 read-only, dry-run rollback e review; includere
+   deploy Supabase per `invoice_import_confirm`.
 
 Gate backend locale 2026-06-22:
 
@@ -135,14 +136,51 @@ Gate backend locale 2026-06-22:
   `total_paid=0`, `total_written_off=375`, `balance_due=0`.
 - Da incassare locale: 6.756,37 EUR; cassa 2023 locale: 6.273,26 EUR.
 
+Gate propagazione locale 2026-06-22:
+
+- `payments` espone helper unico per stati aperti
+  `in_attesa|scaduto`; `perso` richiede `writeoff_date` e `writeoff_reason`.
+- Dashboard annuale, scadenzario, badge scaduti e AI snapshot usano stati aperti
+  espliciti, non `status !== ricevuto`.
+- Payment show/edit/list distinguono `Credito perso`: niente "Registra
+  pagamento" o sollecito su `perso`; il form mostra data/motivo obbligatori.
+- Quote payments summary espone `writtenOffTotal` separato; il residuo si chiude
+  senza aumentare il ricevuto.
+- `invoice_void` rifiuta `perso` con motivo dedicato `credito_perso`.
+- `invoice_import_confirm` legge lo status dell'incasso atteso app-emesso e, se
+  e' `perso`, salta il re-import senza settlare ne' duplicare.
+- Test mirati verdi: dashboard/deadline, dashboard annuale, AI read context,
+  PaymentOverdueBadge, quote payments, quick payment, invoice void e invoice
+  import confirm. `npm run typecheck` verde.
+- UI browser verde: `npx playwright test
+  tests/e2e/uncollectible-receivables-ui.smoke.spec.ts` passa su Chrome reale
+  desktop 1440x1000 e mobile 390x844; il test apre dettaglio pagamento Aidone,
+  edit pagamento, dropdown stato e dashboard.
+
+Review multidimensione propagazione 2026-06-22: PASS.
+
+- Dominio: `perso` e' chiusura operativa del credito, non incasso e non spesa.
+- DB/RLS: nessuna nuova tabella o policy in questo tranche; vincoli e view sono
+  nel commit backend gia' verde.
+- Money/fiscalita': cash/fiscal restano agganciati a `status='ricevuto'`;
+  `perso` viene escluso da pending/overdue/solleciti e non entra in cassa.
+- Propagazione consumer: dashboard, scadenzario, badge pagamenti, dettaglio/edit
+  pagamenti, quote summary, AI snapshot, invoice void e import confirm coperti.
+- Desktop/mobile: smoke Playwright su Chrome reale verde con dropdown stato
+  aperto in entrambi i viewport.
+- AI/semantica: snapshot AI usa stati aperti espliciti; nessuna somma pending su
+  credito perso.
+- Test/guardrail: unit mirati, typecheck, lint, docs drift, governance
+  precommit, diff-check, health locale ed E2E browser verdi.
+- Operativita'/rollback: remoto resta chiuso finche' non passano C1 read-only e
+  dry-run rollback; `invoice_import_confirm` richiede deploy Supabase separato.
+
 Gate aperti:
 
 - Money/fiscal TDD: controllore RED prima della migration.
 - C1 read-only + dry-run rollback prima di ogni apply remoto.
-- Se tocca UI: skill `impeccable`, browser reale desktop/mobile, click su
-  dropdown/sheet/modali, console senza errori bloccanti.
 - Se tocca `supabase/functions/**`: `git push` non deploya le Edge Functions;
-  serve deploy Supabase manuale.
+  serve deploy Supabase manuale per `invoice_import_confirm`.
 
 Regole operative non negoziabili:
 

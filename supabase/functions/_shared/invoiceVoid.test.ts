@@ -34,6 +34,14 @@ describe("canVoidEmittedInvoice", () => {
     expect((r as { reason: string }).reason).toBe("incassata");
   });
 
+  it("refuses when any linked payment is perso (operational write-off)", () => {
+    const r = canVoidEmittedInvoice(outboundInvoice, [
+      { id: "p1", status: "perso" },
+    ]);
+    expect(r.ok).toBe(false);
+    expect((r as { reason: string }).reason).toBe("credito_perso");
+  });
+
   it("refuses when there are no linked payments (historical/imported doc)", () => {
     const r = canVoidEmittedInvoice(outboundInvoice, []);
     expect(r.ok).toBe(false);
@@ -67,6 +75,7 @@ describe("canVoidEmittedInvoice", () => {
 describe("voidReasonMessage", () => {
   it("maps known reasons to Italian messages", () => {
     expect(voidReasonMessage("incassata")).toMatch(/incassata/i);
+    expect(voidReasonMessage("credito_perso")).toMatch(/Credito/i);
     expect(voidReasonMessage("non_app_emessa")).toMatch(/non e' stata emessa/i);
     expect(voidReasonMessage("qualcosa")).toMatch(/non consentito/i);
   });

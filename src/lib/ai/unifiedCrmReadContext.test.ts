@@ -153,6 +153,19 @@ describe("unifiedCrmReadContext", () => {
           payment_date: dateWithOffset(-2),
           created_at: "2026-02-10T10:00:00.000Z",
         },
+        {
+          id: "payment-written-off",
+          client_id: "client-1",
+          quote_id: "quote-1",
+          project_id: "project-1",
+          payment_type: "saldo",
+          amount: 375,
+          status: "perso",
+          payment_date: dateWithOffset(-10),
+          writeoff_date: "2026-06-22",
+          writeoff_reason: "Credito perso",
+          created_at: "2026-02-05T10:00:00.000Z",
+        },
       ],
       expenses: [
         {
@@ -250,8 +263,8 @@ describe("unifiedCrmReadContext", () => {
     expect(context.snapshot.openQuotes[0]?.clientName).toBe(
       "MARIO ROSSI STUDIO",
     );
-    expect(context.snapshot.openQuotes[0]?.linkedPaymentsTotal).toBe(1550);
-    expect(context.snapshot.openQuotes[0]?.remainingAmount).toBe(650);
+    expect(context.snapshot.openQuotes[0]?.linkedPaymentsTotal).toBe(1925);
+    expect(context.snapshot.openQuotes[0]?.remainingAmount).toBe(275);
     expect(context.snapshot.pendingPayments[0]?.quoteId).toBe("quote-1");
     expect(context.snapshot.pendingPayments[0]?.projectId).toBe("project-1");
     expect(context.snapshot.pendingPayments[0]?.isTaxable).toBe(true);

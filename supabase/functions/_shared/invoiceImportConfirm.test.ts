@@ -40,6 +40,33 @@ describe("invoiceImportConfirm", () => {
     );
   });
 
+  it("does not accept perso from automatic invoice import drafts", () => {
+    const result = validateInvoiceImportConfirmPayload({
+      draft: {
+        model: "gemini-2.5-pro",
+        generatedAt: "2026-03-01T10:00:00.000Z",
+        summary: "Bozza pronta",
+        warnings: [],
+        records: [
+          {
+            sourceFileNames: ["fattura-1.pdf"],
+            resource: "payments",
+            confidence: "high",
+            documentType: "customer_invoice",
+            amount: 900,
+            documentDate: "2026-02-20",
+            dueDate: "2026-03-10",
+            clientId: "client-1",
+            paymentStatus: "perso",
+          },
+        ],
+      },
+    });
+
+    expect(result.error).toBeNull();
+    expect(result.data?.draft.records[0]?.paymentStatus).toBe("in_attesa");
+  });
+
   it("prefers due date for pending payments", () => {
     expect(
       getInvoiceImportConfirmPaymentDate({
@@ -171,9 +198,21 @@ describe("decideEmittedPaymentReconciliation", () => {
     // returned, so a second re-import re-settles it instead of creating a dup.
     const decision = decideEmittedPaymentReconciliation({
       recordsForInvoiceRef: [{ line: 1 }],
-      emittedPayments: [{ id: "pay-emit-1" }],
+      emittedPayments: [{ id: "pay-emit-1", status: "ricevuto" }],
     });
     expect(decision.action).toBe("settle");
+  });
+
+  it("skips when the only emitted match is already written off", () => {
+    const decision = decideEmittedPaymentReconciliation({
+      recordsForInvoiceRef: [{ line: 1 }, { line: 2 }],
+      emittedPayments: [{ id: "pay-emit-1", status: "perso" }],
+    });
+    expect(decision).toEqual({
+      action: "skip_written_off",
+      paymentIdToSkip: "pay-emit-1",
+      skipRecordIndexes: [0, 1],
+    });
   });
 
   it("creates (historical path) when there is no emitted payment", () => {

@@ -1,6 +1,7 @@
 import { toBusinessISODate } from "@/lib/dateTimezone";
 
 import type { ClientTask, Payment } from "../types";
+import { isOpenReceivablePaymentStatus } from "../payments/paymentTypes";
 
 const compareDateValues = (left?: string | null, right?: string | null) => {
   const leftIso = left ? toBusinessISODate(left) : null;
@@ -21,6 +22,9 @@ export const getOverduePaymentsForDeadlineTracker = ({
 }) =>
   payments
     .filter((payment) => {
+      if (!isOpenReceivablePaymentStatus(payment.status)) {
+        return false;
+      }
       if (!payment.payment_date) {
         return payment.status === "scaduto";
       }
@@ -48,7 +52,11 @@ export const getDueSoonPaymentsForDeadlineTracker = ({
 }) =>
   payments
     .filter((payment) => {
-      if (payment.status !== "in_attesa" || !payment.payment_date) {
+      if (
+        !isOpenReceivablePaymentStatus(payment.status) ||
+        payment.status !== "in_attesa" ||
+        !payment.payment_date
+      ) {
         return false;
       }
       const paymentDateIso = toBusinessISODate(payment.payment_date);

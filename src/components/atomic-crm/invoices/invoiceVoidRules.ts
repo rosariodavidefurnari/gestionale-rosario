@@ -8,7 +8,8 @@ import type { FinancialDocumentSummary, Payment } from "../types";
  *
  * Voidable = outbound customer invoice emitted by the app (>=1 linked payment)
  * whose payments are ALL still uncollected (in_attesa / scaduto, cash-neutral).
- * Any `ricevuto` (real cash) -> not voidable from here.
+ * Any `ricevuto` (real cash) or `perso` (operational write-off) -> not
+ * voidable from here.
  */
 export const canVoidInvoiceFromPayments = (
   doc: Pick<FinancialDocumentSummary, "direction" | "document_type">,

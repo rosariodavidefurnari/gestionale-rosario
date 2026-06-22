@@ -10,6 +10,7 @@ export type CanVoidResult = { ok: true } | { ok: false; reason: string };
 // "expected, not collected" — excluded from the cash basis in fiscalModel).
 const COLLECTED = new Set(["ricevuto"]);
 const VOIDABLE_PENDING = new Set(["in_attesa", "scaduto"]);
+const WRITTEN_OFF = new Set(["perso"]);
 
 /**
  * A void is allowed only for an app-emitted customer invoice whose linked
@@ -18,7 +19,8 @@ const VOIDABLE_PENDING = new Set(["in_attesa", "scaduto"]);
  * - non outbound/customer_invoice -> non_supportata
  * - 0 linked payments (historical/imported, no financial_document_id) -> non_app_emessa
  * - any payment ricevuto -> incassata (refuse: would delete real cash)
- * - any payment with an unexpected status -> stato_inatteso
+ * - any payment perso -> credito_perso (closed operationally, not voidable)
+ * - any other unexpected status -> stato_inatteso
  */
 export const canVoidEmittedInvoice = (
   doc: VoidableDoc,
@@ -36,6 +38,9 @@ export const canVoidEmittedInvoice = (
   if (linkedPayments.some((p) => COLLECTED.has(p.status))) {
     return { ok: false, reason: "incassata" };
   }
+  if (linkedPayments.some((p) => WRITTEN_OFF.has(p.status))) {
+    return { ok: false, reason: "credito_perso" };
+  }
   if (linkedPayments.some((p) => !VOIDABLE_PENDING.has(p.status))) {
     return { ok: false, reason: "stato_inatteso" };
   }
@@ -49,5 +54,7 @@ export const voidReasonMessage = (reason: string): string =>
       "Questa fattura non e' stata emessa dall'app: non e' annullabile da qui.",
     non_supportata:
       "Solo le fatture cliente emesse dall'app sono annullabili da qui.",
+    credito_perso:
+      "Credito gia' dichiarato perso: non annullare l'emissione da qui.",
     stato_inatteso: "Stato incasso non gestito: intervenire manualmente.",
   })[reason] ?? "Annullamento non consentito.";

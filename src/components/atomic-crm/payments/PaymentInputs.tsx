@@ -28,6 +28,7 @@ import {
   paymentMethodChoices,
   paymentTypeLabels,
   paymentStatusChoices,
+  requiresPaymentWriteOffMetadata,
 } from "./paymentTypes";
 import {
   buildQuoteSearchFilter,
@@ -249,6 +250,7 @@ const PaymentDetailInputs = () => (
       validate={required()}
       helperText={false}
     />
+    <PaymentWriteOffInputs />
     <ExpectedPaymentOrphanHint />
     <TextInput source="notes" label="Note" multiline helperText={false} />
     <CloudinaryUploadInput
@@ -259,6 +261,68 @@ const PaymentDetailInputs = () => (
     />
   </div>
 );
+
+const validateRequiredForWriteOff = (
+  value: string | null | undefined,
+  allValues: Record<string, unknown>,
+) => {
+  if (
+    requiresPaymentWriteOffMetadata(String(allValues.status ?? "")) &&
+    !String(value ?? "").trim()
+  ) {
+    return "Obbligatorio per un credito perso";
+  }
+};
+
+const PaymentWriteOffInputs = () => {
+  const status = useWatch({ name: "status" });
+  const writeoffDate = useWatch({ name: "writeoff_date" });
+  const writeoffReason = useWatch({ name: "writeoff_reason" });
+  const { setValue } = useFormContext();
+  const isWriteOff = requiresPaymentWriteOffMetadata(String(status ?? ""));
+
+  useEffect(() => {
+    if (isWriteOff) return;
+    if (writeoffDate != null && writeoffDate !== "") {
+      setValue("writeoff_date", null, {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
+    }
+    if (String(writeoffReason ?? "").trim() !== "") {
+      setValue("writeoff_reason", null, {
+        shouldDirty: true,
+        shouldValidate: false,
+      });
+    }
+  }, [isWriteOff, setValue, writeoffDate, writeoffReason]);
+
+  if (!isWriteOff) return null;
+
+  return (
+    <div className="rounded-md border bg-muted/30 px-3 py-3 space-y-3">
+      <div>
+        <p className="text-sm font-medium">Chiusura credito perso</p>
+        <p className="text-xs text-muted-foreground">
+          Questi dati chiudono il residuo operativo senza registrare cassa.
+        </p>
+      </div>
+      <DateInput
+        source="writeoff_date"
+        label="Data chiusura credito"
+        validate={validateRequiredForWriteOff}
+        helperText={false}
+      />
+      <TextInput
+        source="writeoff_reason"
+        label="Motivo"
+        multiline
+        validate={validateRequiredForWriteOff}
+        helperText={false}
+      />
+    </div>
+  );
+};
 
 const formatCurrency = (value: number) =>
   value.toLocaleString("it-IT", {

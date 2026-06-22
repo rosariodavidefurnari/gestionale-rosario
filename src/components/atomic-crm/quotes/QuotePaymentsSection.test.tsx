@@ -52,6 +52,18 @@ describe("QuotePaymentsSection", () => {
           payment_date: "2026-03-10",
           created_at: "2026-02-21",
         },
+        {
+          id: 3,
+          client_id: 3,
+          quote_id: 12,
+          payment_type: "saldo",
+          amount: 100,
+          status: "perso",
+          payment_date: "2026-03-15",
+          writeoff_date: "2026-06-22",
+          writeoff_reason: "Credito perso",
+          created_at: "2026-02-22",
+        },
       ],
       isPending: false,
       error: null,
@@ -64,8 +76,10 @@ describe("QuotePaymentsSection", () => {
     expect(screen.getByText("Ancora da collegare")).toBeInTheDocument();
     expect(screen.getByText("1 pagamento ricevuto")).toBeInTheDocument();
     expect(screen.getByText("1 pagamento in attesa")).toBeInTheDocument();
+    expect(screen.getAllByText("Credito perso")).toHaveLength(2);
+    expect(screen.getByText("1 credito chiuso")).toBeInTheDocument();
     expect(screen.getByText("Acconto")).toBeInTheDocument();
-    expect(screen.getByText("Saldo")).toBeInTheDocument();
+    expect(screen.getAllByText("Saldo")).toHaveLength(2);
   });
 
   it("renders the empty state when no linked payments exist", () => {

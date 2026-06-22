@@ -80,7 +80,7 @@ export const QuotePaymentsSection = ({
   );
 
   return (
-    <div className="sm:mx-4 rounded-lg border border-l-[3px] border-l-[#2C3E50] p-3 sm:p-4 space-y-4">
+    <div className="sm:mx-4 rounded-lg border p-3 sm:p-4 space-y-4">
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-[#2C3E50]">
@@ -134,7 +134,13 @@ const QuotePaymentsLoadedState = ({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-3">
+      <div
+        className={
+          summary.writtenOffTotal > 0
+            ? "grid gap-3 md:grid-cols-2 xl:grid-cols-4"
+            : "grid gap-3 md:grid-cols-3"
+        }
+      >
         <MetricCard
           label="Ricevuto"
           value={formatCurrency(summary.receivedTotal)}
@@ -149,6 +155,18 @@ const QuotePaymentsLoadedState = ({
           value={formatCurrency(openRegisteredTotal)}
           subtitle={getOpenRegisteredSubtitle(summary)}
         />
+        {summary.writtenOffTotal > 0 ? (
+          <MetricCard
+            label="Credito perso"
+            value={formatCurrency(summary.writtenOffTotal)}
+            subtitle={formatCountLabel(
+              summary.writtenOffCount,
+              "credito chiuso",
+              "crediti chiusi",
+            )}
+            tone="muted"
+          />
+        ) : null}
         <MetricCard
           label={getRemainingLabel(summary.remainingAmount)}
           value={formatCurrency(Math.abs(summary.remainingAmount))}
@@ -205,14 +223,16 @@ const MetricCard = ({
   label: string;
   value: string;
   subtitle: string;
-  tone?: "default" | "success" | "warning";
+  tone?: "default" | "success" | "warning" | "muted";
 }) => {
   const valueClassName =
     tone === "success"
       ? "text-green-700 dark:text-green-300"
       : tone === "warning"
         ? "text-amber-700 dark:text-amber-300"
-        : "";
+        : tone === "muted"
+          ? "text-slate-700 dark:text-slate-300"
+          : "";
 
   return (
     <div className="rounded-lg border bg-card px-4 py-3">

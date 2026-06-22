@@ -42,6 +42,9 @@ describe("decideQuickPaymentTarget", () => {
     expect(
       decideQuickPaymentTarget([exp("p1", { status: "ricevuto" })], draft()),
     ).toEqual({ action: "create" });
+    expect(
+      decideQuickPaymentTarget([exp("p1", { status: "perso" })], draft()),
+    ).toEqual({ action: "create" });
   });
 
   it("is ambiguous (ask which invoice) when >1 emit-linked expected payment", () => {

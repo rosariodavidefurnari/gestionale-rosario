@@ -24,6 +24,10 @@ describe("canVoidInvoiceFromPayments", () => {
     ).toBe(false);
   });
 
+  it("false when any payment is perso", () => {
+    expect(canVoidInvoiceFromPayments(outbound, [pay("perso")])).toBe(false);
+  });
+
   // BR2 C4: documents WHY the historical scaduto FPA 1/23 is excluded from the
   // backfill. A doc with a single linked scaduto payment IS void-eligible (the
   // void gate has no app-emitted/provenance discriminator), so linking it would

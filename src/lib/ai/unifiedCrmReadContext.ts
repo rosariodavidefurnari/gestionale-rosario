@@ -1,5 +1,8 @@
 import { expenseTypeLabels } from "@/components/atomic-crm/expenses/expenseTypes";
-import { paymentStatusLabels } from "@/components/atomic-crm/payments/paymentTypes";
+import {
+  isOpenReceivablePaymentStatus,
+  paymentStatusLabels,
+} from "@/components/atomic-crm/payments/paymentTypes";
 import { projectStatusLabels } from "@/components/atomic-crm/projects/projectTypes";
 import { buildQuotePaymentsSummary } from "@/components/atomic-crm/quotes/quotePaymentsSummary";
 import { quoteStatusLabels } from "@/components/atomic-crm/quotes/quotesTypes";
@@ -278,7 +281,11 @@ export const buildUnifiedCrmReadContext = ({
   const nextWeekIso = addDaysToISODate(todayIso, 7);
 
   const pendingPayments = payments
-    .filter((payment) => payment.status !== "ricevuto" && payment.payment_type !== "rimborso")
+    .filter(
+      (payment) =>
+        isOpenReceivablePaymentStatus(payment.status) &&
+        payment.payment_type !== "rimborso",
+    )
     .sort((left, right) =>
       compareBusinessDateValues(
         left.payment_date ?? left.created_at,

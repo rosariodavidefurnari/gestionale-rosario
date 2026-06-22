@@ -10,20 +10,23 @@ describe("buildQuotePaymentsSummary", () => {
         { amount: 200, payment_type: "acconto", status: "ricevuto" },
         { amount: 300, payment_type: "saldo", status: "in_attesa" },
         { amount: 100, payment_type: "parziale", status: "scaduto" },
+        { amount: 75, payment_type: "saldo", status: "perso" },
         { amount: 50, payment_type: "rimborso", status: "ricevuto" },
       ],
     });
 
     expect(summary).toEqual({
-      paymentsCount: 4,
+      paymentsCount: 5,
       receivedCount: 2,
       pendingCount: 1,
       overdueCount: 1,
+      writtenOffCount: 1,
       receivedTotal: 150,
       pendingTotal: 300,
       overdueTotal: 100,
-      linkedTotal: 550,
-      remainingAmount: 450,
+      writtenOffTotal: 75,
+      linkedTotal: 625,
+      remainingAmount: 375,
     });
   });
 
@@ -38,9 +41,11 @@ describe("buildQuotePaymentsSummary", () => {
       receivedCount: 0,
       pendingCount: 0,
       overdueCount: 0,
+      writtenOffCount: 0,
       receivedTotal: 0,
       pendingTotal: 0,
       overdueTotal: 0,
+      writtenOffTotal: 0,
       linkedTotal: 0,
       remainingAmount: 750,
     });

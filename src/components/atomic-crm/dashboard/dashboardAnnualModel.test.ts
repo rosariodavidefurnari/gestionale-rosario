@@ -330,6 +330,16 @@ describe("buildDashboardModel annual semantics", () => {
         status: "ricevuto",
         payment_date: "2025-06-10T00:00:00.000Z",
       }),
+      basePayment({
+        id: 4,
+        client_id: 2,
+        project_id: 1,
+        amount: 375,
+        status: "perso",
+        payment_date: "2025-04-01T00:00:00.000Z",
+        writeoff_date: "2026-06-22",
+        writeoff_reason: "Credito perso",
+      }),
     ];
 
     const model = buildDashboardModel({
@@ -590,6 +600,14 @@ describe("buildDashboardModel annual semantics", () => {
           amount: 500,
           status: "in_attesa",
           payment_date: "2026-03-25T00:00:00.000Z",
+        }),
+        basePayment({
+          id: 4,
+          amount: 375,
+          status: "perso",
+          payment_date: "2026-03-20T00:00:00.000Z",
+          writeoff_date: "2026-06-22",
+          writeoff_reason: "Credito perso",
         }),
         // Beyond 30-day horizon
         basePayment({

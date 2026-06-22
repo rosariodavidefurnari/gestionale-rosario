@@ -83,6 +83,7 @@ export const paymentStatusLabels: Record<string, string> = {
 export type PaymentStatus = (typeof paymentStatusChoices)[number]["id"];
 
 export const openReceivablePaymentStatuses = ["in_attesa", "scaduto"] as const;
+export const openReceivablePaymentStatusInFilter = "(in_attesa,scaduto)";
 export const cashNeutralPaymentStatuses = [
   "in_attesa",
   "scaduto",
@@ -101,6 +102,10 @@ export const isOpenReceivablePaymentStatus = (
 
 export const isWrittenOffPaymentStatus = (status: string | null | undefined) =>
   status === "perso";
+
+export const requiresPaymentWriteOffMetadata = (
+  status: string | null | undefined,
+) => isWrittenOffPaymentStatus(status);
 
 export const isCashNeutralPaymentStatus = (status: string | null | undefined) =>
   cashNeutralPaymentStatuses.includes(

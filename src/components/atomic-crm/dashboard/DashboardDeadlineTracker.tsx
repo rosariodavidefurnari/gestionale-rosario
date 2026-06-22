@@ -5,6 +5,7 @@ import { useCreatePath, useGetList, useNotify, useUpdate } from "ra-core";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import type { Client, ClientTask, Payment } from "../types";
+import { openReceivablePaymentStatusInFilter } from "../payments/paymentTypes";
 import { DashboardDeadlineTrackerContent } from "./DashboardDeadlineTrackerContent";
 import { type DashboardAlerts } from "./dashboardModel";
 import { buildDashboardDeadlineTrackerComputed } from "./dashboardDeadlineTrackerModel";
@@ -28,7 +29,7 @@ const useDeadlineTrackerCollections = () => {
       pagination: LARGE_PAGE,
       sort: { field: "payment_date", order: "ASC" },
       filter: {
-        "status@neq": "ricevuto",
+        "status@in": openReceivablePaymentStatusInFilter,
         "payment_type@neq": "rimborso",
       },
     });

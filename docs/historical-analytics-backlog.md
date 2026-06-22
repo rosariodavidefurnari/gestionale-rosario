@@ -131,9 +131,11 @@ sottraggono `total_written_off`. Aidone `FPA 1/23` non deve piu' alimentare il
 residuo operativo dopo l'apply remoto, ma resta esclusa da cassa e fiscalita'
 perche' `total_paid` continua a leggere solo `status='ricevuto'`.
 
-Follow-up UI/analytics ancora aperti: dashboard scaduti/solleciti, badge
-fatture, Payment show/edit/list/mobile e AI pending devono usare
-`in_attesa|scaduto` come stati aperti, non `status !== ricevuto`.
+Propagazione locale completata: dashboard scaduti/solleciti, badge scaduti,
+Payment show/edit/list, quote payments summary, AI pending, invoice void e
+invoice import confirm usano `in_attesa|scaduto` come stati aperti, non
+`status !== ricevuto`. Restano aperti: browser reale desktop/mobile e apply
+remoto con deploy Supabase di `invoice_import_confirm`.
 
 ## Update 2026-06-19 — IMPORTANT-5: descrizione AI `quick_payment` (DONE)
 

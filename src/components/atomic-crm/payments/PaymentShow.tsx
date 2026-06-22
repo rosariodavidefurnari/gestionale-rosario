@@ -26,7 +26,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 import type { Payment } from "../types";
 import { PaymentStatusBadge } from "./PaymentListContent";
-import { paymentTypeLabels } from "./paymentTypes";
+import {
+  isOpenReceivablePaymentStatus,
+  isWrittenOffPaymentStatus,
+  paymentTypeLabels,
+} from "./paymentTypes";
 import { ErrorMessage } from "../misc/ErrorMessage";
 import { MobileBackButton } from "../misc/MobileBackButton";
 import { SendPaymentReminderDialog } from "./SendPaymentReminderDialog";
@@ -45,11 +49,11 @@ export const PaymentShow = () => (
 
 const PaymentActions = ({
   record,
-  notReceived,
+  canRegisterPayment,
   canSendReminder,
 }: {
   record: Payment;
-  notReceived: boolean;
+  canRegisterPayment: boolean;
   canSendReminder: boolean;
 }) => {
   const resource = useResourceContext();
@@ -63,7 +67,7 @@ const PaymentActions = ({
 
   return (
     <div className="flex flex-wrap gap-2">
-      {notReceived && (
+      {canRegisterPayment && (
         <Link className={buttonVariants({ variant: "default" })} to={editLink}>
           <CheckCircle />
           Registra pagamento
@@ -133,8 +137,10 @@ const PaymentShowContent = () => {
     quote,
   });
 
-  const notReceived = record.status !== "ricevuto";
-  const canSendReminder = notReceived && record.payment_type !== "rimborso";
+  const canRegisterPayment = isOpenReceivablePaymentStatus(record.status);
+  const canSendReminder =
+    canRegisterPayment && record.payment_type !== "rimborso";
+  const isWrittenOff = isWrittenOffPaymentStatus(record.status);
 
   return (
     <div className="mt-4 mb-28 md:mb-2 flex flex-col md:flex-row gap-4 md:gap-8 px-4 md:px-0">
@@ -201,10 +207,38 @@ const PaymentShowContent = () => {
               </div>
               <PaymentActions
                 record={record}
-                notReceived={notReceived}
+                canRegisterPayment={canRegisterPayment}
                 canSendReminder={canSendReminder}
               />
             </div>
+            {isWrittenOff && (
+              <>
+                <Separator className="my-4" />
+                <div className="rounded-md border bg-muted/30 px-3 py-3 text-sm">
+                  <h6 className="font-semibold text-muted-foreground uppercase tracking-wide">
+                    Credito perso
+                  </h6>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        Data chiusura
+                      </p>
+                      <p className="font-medium">
+                        {record.writeoff_date
+                          ? formatBusinessDate(record.writeoff_date)
+                          : "Non indicata"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Motivo</p>
+                      <p className="font-medium whitespace-pre-wrap">
+                        {record.writeoff_reason || "Non indicato"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
             {record.notes && (
               <>
                 <Separator className="my-4" />

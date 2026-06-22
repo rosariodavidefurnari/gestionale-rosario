@@ -57,6 +57,10 @@ describe("DashboardDeadlineTracker helpers", () => {
           status: "in_attesa",
           payment_date: "2026-03-10T12:00:00.000Z",
         }),
+        buildPayment("payment-written-off", {
+          status: "perso",
+          payment_date: "2026-02-10T12:00:00.000Z",
+        }),
       ],
     });
 
@@ -85,6 +89,10 @@ describe("DashboardDeadlineTracker helpers", () => {
         }),
         buildPayment("payment-scaduto", {
           status: "scaduto",
+          payment_date: "2026-03-04T12:00:00.000Z",
+        }),
+        buildPayment("payment-written-off", {
+          status: "perso",
           payment_date: "2026-03-04T12:00:00.000Z",
         }),
       ],

@@ -5,7 +5,9 @@ import {
   isCollectedPaymentStatus,
   isOpenReceivablePaymentStatus,
   isWrittenOffPaymentStatus,
+  openReceivablePaymentStatusInFilter,
   paymentStatusLabels,
+  requiresPaymentWriteOffMetadata,
 } from "./paymentTypes";
 
 describe("payment status semantics", () => {
@@ -18,12 +20,18 @@ describe("payment status semantics", () => {
     expect(isOpenReceivablePaymentStatus("scaduto")).toBe(true);
 
     expect(isWrittenOffPaymentStatus("perso")).toBe(true);
+    expect(requiresPaymentWriteOffMetadata("perso")).toBe(true);
     expect(isOpenReceivablePaymentStatus("perso")).toBe(false);
     expect(isCollectedPaymentStatus("perso")).toBe(false);
+    expect(requiresPaymentWriteOffMetadata("scaduto")).toBe(false);
 
     expect(isCashNeutralPaymentStatus("in_attesa")).toBe(true);
     expect(isCashNeutralPaymentStatus("scaduto")).toBe(true);
     expect(isCashNeutralPaymentStatus("perso")).toBe(true);
+  });
+
+  it("exports the deterministic PostgREST filter for open receivables", () => {
+    expect(openReceivablePaymentStatusInFilter).toBe("(in_attesa,scaduto)");
   });
 
   it("labels written-off receivables as operational credit loss", () => {

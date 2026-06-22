@@ -341,7 +341,7 @@ const confirmInvoiceImportDraft = async ({
         // SECOND re-import re-settles it (idempotent) instead of duplicating it.
         const emitted = await trx
           .selectFrom("payments")
-          .select(["id"])
+          .select(["id", "status"])
           .where("client_id", "=", group.clientId)
           .where("invoice_ref", "=", group.invoiceRef)
           .where("financial_document_id", "is not", null)
@@ -407,6 +407,15 @@ const confirmInvoiceImportDraft = async ({
                 amount: record.amount,
               });
             }
+            continue;
+          }
+          if (reconcile && reconcile.decision.action === "skip_written_off") {
+            skipped.push({
+              resource: "payments",
+              reason: `Fattura ${record.invoiceRef} gia' dichiarata credito perso: riga import ignorata`,
+              description: record.description,
+              amount: record.amount,
+            });
             continue;
           }
 

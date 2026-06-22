@@ -248,6 +248,12 @@ operativo ma non entra in `totalPaid`, `pendingPaymentsTotal` o cassa.
 Caso guida locale: Aidone `FPA 1/23` passa a `payments.status='perso'`,
 `total_written_off=375`, `balance_due=0`, `cash_2023=6273.26`.
 
+Propagazione AI/UI locale: `unifiedCrmReadContext` e `dashboardModel` usano
+stati aperti espliciti (`in_attesa|scaduto`) per pending/overdue; `perso` non
+entra in `pendingPaymentsAmount`. Il quote summary espone il credito perso come
+chiusura operativa separata dal ricevuto. `invoice_import_confirm` deve essere
+deployata come Edge Function dopo l'apply remoto DB.
+
 ## Update 2026-06-19 — IMPORTANT-5: descrizione AI `quick_payment` allineata (DONE)
 
 Dopo FIX-3 l'incasso rapido SALDA l'incasso atteso collegato (riconciliazione)

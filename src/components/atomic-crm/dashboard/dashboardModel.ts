@@ -25,6 +25,7 @@ import { quoteStatusLabels } from "../quotes/quotesTypes";
 import { buildFiscalModel, getExpenseAmount } from "./fiscalModel";
 import type { FiscalDeclaration } from "./fiscalRealityTypes";
 import { getCategoryLabel } from "./dashboardFormatters";
+import { isOpenReceivablePaymentStatus } from "../payments/paymentTypes";
 
 // Re-export types and formatters so existing consumer imports keep working.
 export type {
@@ -310,7 +311,8 @@ export const buildDashboardModel = ({
   // Exclude refunds from pending alerts (refunds are outgoing, not incoming)
   const pendingPayments = yearPayments.filter(
     (payment) =>
-      payment.status !== "ricevuto" && payment.payment_type !== "rimborso",
+      isOpenReceivablePaymentStatus(payment.status) &&
+      payment.payment_type !== "rimborso",
   );
   const pendingPaymentsTotal = pendingPayments.reduce(
     (sum, payment) => sum + toNumber(payment.amount),

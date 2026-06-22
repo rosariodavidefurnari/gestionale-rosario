@@ -39,7 +39,8 @@ describe("PaymentOverdueBadge", () => {
       "payments",
       expect.objectContaining({
         filter: expect.objectContaining({
-          "status@neq": "ricevuto",
+          "status@in": "(in_attesa,scaduto)",
+          "payment_type@neq": "rimborso",
           "payment_date@lt": "2026-03-10",
         }),
       }),

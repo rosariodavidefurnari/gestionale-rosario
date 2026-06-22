@@ -10,9 +10,11 @@ export type QuotePaymentSummary = {
   receivedCount: number;
   pendingCount: number;
   overdueCount: number;
+  writtenOffCount: number;
   receivedTotal: number;
   pendingTotal: number;
   overdueTotal: number;
+  writtenOffTotal: number;
   linkedTotal: number;
   remainingAmount: number;
 };
@@ -45,6 +47,9 @@ export const buildQuotePaymentsSummary = ({
       } else if (payment.status === "scaduto") {
         acc.overdueCount += 1;
         acc.overdueTotal += amount;
+      } else if (payment.status === "perso") {
+        acc.writtenOffCount += 1;
+        acc.writtenOffTotal += amount;
       }
 
       return acc;
@@ -54,9 +59,11 @@ export const buildQuotePaymentsSummary = ({
       receivedCount: 0,
       pendingCount: 0,
       overdueCount: 0,
+      writtenOffCount: 0,
       receivedTotal: 0,
       pendingTotal: 0,
       overdueTotal: 0,
+      writtenOffTotal: 0,
       linkedTotal: 0,
       remainingAmount: quoteAmount,
     },

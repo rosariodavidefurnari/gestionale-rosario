@@ -221,6 +221,22 @@ locale verde:
 Nota operativa: il comando `health:uncollectible` e' remoto/read-only e resta
 RED finche' la migration non viene applicata al remoto con C1/dry-run/apply.
 
+Propagazione locale completata nello stesso ciclo:
+
+- helper pagamento: stati aperti = `in_attesa|scaduto`; `perso` richiede
+  metadata write-off;
+- dashboard/scadenzario/badge scaduti/AI snapshot leggono solo stati aperti,
+  non `status !== ricevuto`;
+- Payment show/edit/list mostrano `Credito perso`, data e motivo, senza CTA di
+  incasso o sollecito;
+- quote payments summary separa `writtenOffTotal` da ricevuto e da scaduto;
+- `invoice_void` rifiuta `perso` con motivo `credito_perso`;
+- `invoice_import_confirm` non risettla e non duplica un pagamento app-emesso
+  gia' `perso`.
+
+Nota deploy: questo tranche tocca `supabase/functions/invoice_import_confirm`,
+quindi il remoto richiede deploy Supabase della Edge Function oltre a commit/push.
+
 ---
 
 ## Riconciliazione incasso atteso (FIX-3+4) — branch `fix/expected-payment-reconciliation`

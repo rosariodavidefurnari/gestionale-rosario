@@ -12,7 +12,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { LucideIcon } from "lucide-react";
-import { Wallet, CheckCircle, Clock, AlertCircle, Euro } from "lucide-react";
+import {
+  Wallet,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  Euro,
+  CircleOff,
+} from "lucide-react";
 import { formatBusinessDate } from "@/lib/dateTimezone";
 import { cn } from "@/lib/utils";
 
@@ -332,6 +339,11 @@ const statusConfig: Record<
     icon: AlertCircle,
     color: "text-red-700",
     bg: "bg-red-50 border-red-200",
+  },
+  perso: {
+    icon: CircleOff,
+    color: "text-slate-700",
+    bg: "bg-slate-50 border-slate-200",
   },
 };
 
