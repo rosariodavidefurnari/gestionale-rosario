@@ -105,17 +105,38 @@ Review:
   prima del codice; UI richiede `impeccable` + browser reale desktop/mobile;
   apply remoto solo dopo C1 read-only e dry-run rollback.
 
+Baseline read-only prod 2026-06-22 (`npm run health:financial`):
+
+- RESULT: PASS.
+- Da incassare: 7.131,37 EUR su 3 clienti.
+- Aidone contribuisce ancora per 375,00 EUR.
+- Cassa incassata 2023: 6.273,26 EUR.
+- `pendingPaymentsTotal 2026`: 0,00 EUR.
+- Cassa 2026: 7.689,23 EUR.
+
 Prossima azione:
 
-1. Commit documentale iniziale con spec, piano e Cantiere.
-2. Eseguire baseline read-only `npm run health:financial` e registrare "Da
-   incassare", Aidone, cassa 2023 e `pendingPaymentsTotal`.
-3. Scrivere il controllore RED `scripts/check-uncollectible-receivables.sql`.
-4. Solo dopo RED, implementare migration additiva, seed, types e helper stato.
+1. Eseguire review multidimensione del backend locale.
+2. Commit backend DB/types/seed/health/docs se la review passa.
+3. Proseguire con dashboard/scaduti/fatture/AI/quote prima della UI.
+4. Applicare remoto solo dopo C1 read-only, dry-run rollback e review.
+
+Gate backend locale 2026-06-22:
+
+- RED remoto pre-migration: `npm run health:uncollectible` fallisce su
+  `writeoff_*`, CHECK, `total_written_off` e Aidone ancora `scaduto`.
+- GREEN locale: `make supabase-reset-database` passa con
+  `psql -v ON_ERROR_STOP=1`.
+- GREEN locale: `npx supabase db query -f
+  scripts/check-uncollectible-receivables.sql`.
+- Aidone locale: payment `perso`, `writeoff_date=2026-06-22`,
+  `financial_document_id=NULL`.
+- Aidone locale: client `total_written_off=375`, `balance_due=0`; progetto 2023
+  `total_paid=0`, `total_written_off=375`, `balance_due=0`.
+- Da incassare locale: 6.756,37 EUR; cassa 2023 locale: 6.273,26 EUR.
 
 Gate aperti:
 
-- Nessun codice/schema/DB prima del commit documentale iniziale.
 - Money/fiscal TDD: controllore RED prima della migration.
 - C1 read-only + dry-run rollback prima di ogni apply remoto.
 - Se tocca UI: skill `impeccable`, browser reale desktop/mobile, click su

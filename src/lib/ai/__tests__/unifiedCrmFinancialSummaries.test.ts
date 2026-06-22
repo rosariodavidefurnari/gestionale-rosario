@@ -26,6 +26,7 @@ describe("mapProjectFinancialRows", () => {
         total_expenses: 300,
         total_owed: 2800,
         total_paid: 1000,
+        total_written_off: 0,
         balance_due: 1800,
       },
     ];
@@ -35,6 +36,7 @@ describe("mapProjectFinancialRows", () => {
     expect(entry!.totalFees).toBe(2500);
     expect(entry!.totalExpenses).toBe(300);
     expect(entry!.totalPaid).toBe(1000);
+    expect(entry!.totalWrittenOff).toBe(0);
     expect(entry!.balanceDue).toBe(1800);
   });
 });
@@ -49,6 +51,7 @@ describe("mapClientCommercialPositions", () => {
         total_expenses: 600,
         total_owed: 5600,
         total_paid: 3000,
+        total_written_off: 0,
         balance_due: 2600,
         projects_count: 3,
       },
@@ -57,6 +60,7 @@ describe("mapClientCommercialPositions", () => {
     const result = mapClientCommercialPositions(rows, uninvoiced);
     expect(result[0].totalFees).toBe(5000);
     expect(result[0].totalExpenses).toBe(600);
+    expect(result[0].totalWrittenOff).toBe(0);
     expect(result[0].balanceDue).toBe(2600);
     expect(result[0].hasUninvoicedServices).toBe(true);
   });
@@ -70,6 +74,7 @@ describe("mapClientCommercialPositions", () => {
         total_expenses: 0,
         total_owed: 1000,
         total_paid: 1000,
+        total_written_off: 0,
         balance_due: 0,
         projects_count: 1,
       },

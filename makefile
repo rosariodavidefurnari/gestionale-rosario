@@ -20,7 +20,7 @@ supabase-reset-database: ## reset schema, load production domain seed, bootstrap
 	npx supabase db reset
 	@sleep 3
 	@echo "Loading production domain seed..."
-	psql postgresql://postgres:postgres@127.0.0.1:55322/postgres < supabase/seed_domain_data.sql
+	psql -v ON_ERROR_STOP=1 postgresql://postgres:postgres@127.0.0.1:55322/postgres < supabase/seed_domain_data.sql
 	npm run local:admin:bootstrap
 
 start-app: ## start the app locally

@@ -33,6 +33,7 @@ export type ProjectFinancialSummary = {
   totalFees: number;
   totalExpenses: number;
   totalPaid: number;
+  totalWrittenOff: number;
   balanceDue: number;
 };
 
@@ -46,6 +47,7 @@ export const mapProjectFinancialRows = (
       totalFees: row.total_fees,
       totalExpenses: row.total_expenses,
       totalPaid: row.total_paid,
+      totalWrittenOff: row.total_written_off,
       balanceDue: row.balance_due,
     });
   }
@@ -64,6 +66,7 @@ export const mapClientCommercialPositions = (
     totalFees: row.total_fees,
     totalExpenses: row.total_expenses,
     totalPaid: row.total_paid,
+    totalWrittenOff: row.total_written_off,
     balanceDue: row.balance_due,
     hasUninvoicedServices:
       (uninvoicedCountByClient.get(row.client_id) ?? 0) > 0,

@@ -901,7 +901,7 @@ Nota di continuita':
 | quotes | Preventivi + pipeline Kanban | auth.uid() IS NOT NULL | cliente/progetto, tipo servizio, range evento, importo, stato, `quote_items`, note |
 | workflows | Automazioni trigger-based | auth.uid() IS NOT NULL | nome, trigger (resource/event/conditions JSONB), actions JSONB, is_active, timestamps |
 | workflow_executions | Log esecuzioni workflow | auth.uid() IS NOT NULL | FK workflow, trigger info, status, result JSONB, error, timestamp |
-| payments | Tracking pagamenti | auth.uid() IS NOT NULL | cliente/progetto/preventivo, data, tipo, importo, metodo, `invoice_ref`, stato, note |
+| payments | Tracking pagamenti | auth.uid() IS NOT NULL | cliente/progetto/preventivo, data, tipo, importo, metodo, `invoice_ref`, stato (`ricevuto`, `in_attesa`, `scaduto`, `perso`), `writeoff_date`/`writeoff_reason` per crediti persi, note |
 | suppliers | Anagrafica fornitori | auth.uid() IS NOT NULL | name, vat_number, fiscal_code, phone, email, address, billing_name/address/city/province/zip/country, note, timestamps |
 | expenses | Spese e km | auth.uid() IS NOT NULL | cliente/progetto, data, tipo spesa (`spostamento_km`, `pedaggio_autostradale`, `vitto_alloggio`, `acquisto_materiale`, `abbonamento_software`, `noleggio`, `credito_ricevuto`, `altro`), km/importo, markup, descrizione, `invoice_ref`, `source_service_id` (FK→services, auto-create trigger), `supplier_id` (FK→suppliers, nullable) |
 | client_tasks | Promemoria (opzionalmente legati a un cliente) | auth.uid() IS NOT NULL | testo, tipo, data scadenza, `all_day`, completamento, FK cliente opzionale |
@@ -964,8 +964,8 @@ acconto_ricevuto → in_lavorazione → completato → saldato → rifiutato / p
 
 | View | Scopo |
 |------|-------|
-| project_financials | Riepilogo finanziario per progetto: fees, km, expenses, total_owed (fees + expenses), total_paid (da payments con status=ricevuto), balance_due. Single source: sempre tabella `payments`, nessun dual-path. Include `client_id` e `client_name`. `security_invoker = on`. Tipo TypeScript: `ProjectFinancialRow` in `types.ts`. |
-| client_commercial_position | Posizione commerciale aggregata per cliente: total_fees, total_expenses, total_owed, total_paid, balance_due, projects_count. Applica Record Precedence Rules (project's client_id prevails). Include servizi/spese/pagamenti senza progetto. `security_invoker = on`. Tipo TypeScript: `ClientCommercialPosition` in `types.ts`. |
+| project_financials | Riepilogo finanziario per progetto: fees, km, expenses, total_owed (fees + expenses), total_paid (solo payments `status='ricevuto'`), total_written_off (solo credits `status='perso'`), balance_due = total_owed - total_paid - total_written_off. Single source: sempre tabella `payments`, nessun dual-path. Include `client_id` e `client_name`. `security_invoker = on`. Tipo TypeScript: `ProjectFinancialRow` in `types.ts`. |
+| client_commercial_position | Posizione commerciale aggregata per cliente: total_fees, total_expenses, total_owed, total_paid, total_written_off, balance_due, projects_count. Applica Record Precedence Rules (project's client_id prevails). Include servizi/spese/pagamenti/write-off senza progetto. `perso` chiude solo il residuo operativo e non aumenta cassa/fiscalita'. `security_invoker = on`. Tipo TypeScript: `ClientCommercialPosition` in `types.ts`. |
 | monthly_revenue | Fatturato mensile per categoria (fees - discount) |
 | fiscal_f24_payment_lines_enriched | JOIN di payment lines con submission_date per evitare fetch broad + join in-memory lato client. `security_invoker = on`. |
 | analytics_* | Base storica/AI per Storico e consumer analytics (`analytics_business_clock`, `analytics_history_meta`, `analytics_yearly_competence_revenue`, `analytics_yearly_competence_revenue_by_category`, `analytics_client_lifetime_competence_revenue`, `analytics_yearly_cash_inflow`) |

@@ -40,6 +40,7 @@ OFFICIAL_NPM_SCRIPTS = {
     "security:check:fiscal-backups:rest",
     "security:check:cascade-protection",
     "health:financial",
+    "health:uncollectible",
     "smoke:ef-reminder-parity",
     "smoke:cash-vs-competence",
     "local:admin:bootstrap",

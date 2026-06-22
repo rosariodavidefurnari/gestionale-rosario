@@ -261,12 +261,14 @@ WORKFLOW_DEFINITIONS: list[dict[str, Any]] = [
         "intent": "Run read-only production financial and fiscal smoke checks with explicit env inputs.",
         "steps": [
             "Run the production financial invariant check.",
+            "Run the uncollectible receivables write-off invariant check.",
             "Run fiscal reminder parity smoke.",
             "Run cash-vs-competence smoke.",
             "Inspect exact failures before modifying financial code or data.",
         ],
         "commands": [
             "npm run health:financial",
+            "npm run health:uncollectible",
             "npm run smoke:ef-reminder-parity",
             "npm run smoke:cash-vs-competence",
         ],
@@ -274,6 +276,7 @@ WORKFLOW_DEFINITIONS: list[dict[str, Any]] = [
         "outputs": ["console report only"],
         "validation": [
             "npm run health:financial",
+            "npm run health:uncollectible",
             "npm run smoke:ef-reminder-parity",
             "npm run smoke:cash-vs-competence",
         ],
@@ -290,6 +293,7 @@ WORKFLOW_DEFINITIONS: list[dict[str, Any]] = [
         "operator_checkpoint": True,
         "source_evidence": [
             "scripts/check-prod-financial-health.mjs",
+            "scripts/check-uncollectible-receivables.sql",
             "scripts/prod-smoke-ef-reminder-parity.ts",
             "scripts/prod-smoke-cash-vs-competence.ts",
         ],

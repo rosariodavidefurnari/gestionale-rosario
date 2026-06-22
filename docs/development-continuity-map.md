@@ -193,6 +193,36 @@ cassa-aware già esistente (`20260401094930`), SYSTEM-FIRST: nessun ricalcolo.
 
 ---
 
+## Update 2026-06-22 — Crediti inesigibili / Aidone FPA 1/23 backend
+
+`payments.status` include ora `perso` come write-off operativo: non e' cassa,
+non e' fiscalita', non e' spesa finta. I metadata obbligatori sono
+`writeoff_date` e `writeoff_reason`; `rimborso` non puo' essere `perso`.
+
+La migration `20260622223000_uncollectible_payment_status.sql` aggiorna le view
+canoniche:
+
+- `project_financials.total_written_off`;
+- `client_commercial_position.total_written_off`;
+- `balance_due = total_owed - total_paid - total_written_off`.
+
+Il rebuild locale carica Aidone `FPA 1/23` gia' come `perso` dal seed. Gate
+locale verde:
+
+- `make supabase-reset-database` con `psql -v ON_ERROR_STOP=1`;
+- `npx supabase db query -f scripts/check-uncollectible-receivables.sql`;
+- Aidone client: `total_paid=1700`, `total_written_off=375`,
+  `balance_due=0`;
+- progetto Aidone 2023: `total_paid=0`, `total_written_off=375`,
+  `balance_due=0`;
+- Da incassare locale: `6756.37`;
+- cassa 2023 locale: `6273.26`.
+
+Nota operativa: il comando `health:uncollectible` e' remoto/read-only e resta
+RED finche' la migration non viene applicata al remoto con C1/dry-run/apply.
+
+---
+
 ## Riconciliazione incasso atteso (FIX-3+4) — branch `fix/expected-payment-reconciliation`
 
 Chiude il doppio conteggio in `pendingPaymentsTotal` ("Da incassare",

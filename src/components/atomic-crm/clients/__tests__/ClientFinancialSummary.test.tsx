@@ -7,6 +7,7 @@ const mapViewRowToDisplay = (row: ClientCommercialPosition) => ({
   totalExpenses: row.total_expenses,
   totalOwed: row.total_owed,
   totalPaid: row.total_paid,
+  totalWrittenOff: row.total_written_off,
   balanceDue: row.balance_due,
 });
 
@@ -19,6 +20,7 @@ describe("ClientFinancialSummary view consumption", () => {
       total_expenses: 200,
       total_owed: 1200,
       total_paid: 500,
+      total_written_off: 0,
       balance_due: 700,
       projects_count: 2,
     };
@@ -27,6 +29,7 @@ describe("ClientFinancialSummary view consumption", () => {
     expect(display.totalExpenses).toBe(200);
     expect(display.totalOwed).toBe(1200);
     expect(display.totalPaid).toBe(500);
+    expect(display.totalWrittenOff).toBe(0);
     expect(display.balanceDue).toBe(700);
   });
 
@@ -38,6 +41,7 @@ describe("ClientFinancialSummary view consumption", () => {
       total_expenses: 0,
       total_owed: 0,
       total_paid: 0,
+      total_written_off: 0,
       balance_due: 0,
       projects_count: 0,
     };
@@ -54,6 +58,7 @@ describe("ClientFinancialSummary view consumption", () => {
       total_expenses: 0,
       total_owed: 500,
       total_paid: 700,
+      total_written_off: 0,
       balance_due: -200,
       projects_count: 1,
     };

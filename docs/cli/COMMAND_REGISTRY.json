@@ -2239,6 +2239,28 @@
       "avoid_reason": null
     },
     {
+      "id": "npm-script-health-uncollectible",
+      "command": "npm run health:uncollectible",
+      "category": "maintenance",
+      "entrypoint": "npm script",
+      "reads": [
+        "package-lock.json",
+        "package.json"
+      ],
+      "writes": [],
+      "env": [],
+      "safe_to_run": true,
+      "owner": "repo",
+      "source": "package.json",
+      "status": "official",
+      "confidence": "high",
+      "source_evidence": "package.json:scripts.health:uncollectible = npx supabase db query --linked -f scripts/check-uncollectible-receivables.sql",
+      "last_verified": "2026-06-22",
+      "destructive_level": "none",
+      "replacement": null,
+      "avoid_reason": null
+    },
+    {
       "id": "npm-script-lint",
       "command": "npm run lint",
       "category": "quality",

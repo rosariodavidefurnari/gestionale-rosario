@@ -372,6 +372,17 @@ candidates until promoted through the repo governance docs.
 - destructive_level: `none`
 - reads: `package-lock.json, package.json`
 
+### npm-script-health-uncollectible
+
+- command: `npm run health:uncollectible`
+- category: `maintenance`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.health:uncollectible = npx supabase db query --linked -f scripts/check-uncollectible-receivables.sql`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
 ### npm-script-lint
 
 - command: `npm run lint`

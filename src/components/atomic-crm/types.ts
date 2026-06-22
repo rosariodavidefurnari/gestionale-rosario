@@ -220,7 +220,9 @@ export type Payment = {
   amount: number;
   method?: "bonifico" | "contanti" | "paypal" | "altro" | null;
   invoice_ref?: string;
-  status: "ricevuto" | "in_attesa" | "scaduto";
+  status: "ricevuto" | "in_attesa" | "scaduto" | "perso";
+  writeoff_date?: string | null;
+  writeoff_reason?: string | null;
   financial_document_id?: Identifier | null;
   proof_url?: string | null;
   notes?: string;
@@ -561,6 +563,7 @@ export type ProjectFinancialRow = {
   total_expenses: number;
   total_owed: number;
   total_paid: number;
+  total_written_off: number;
   balance_due: number;
 };
 
@@ -571,6 +574,7 @@ export type ClientCommercialPosition = {
   total_expenses: number;
   total_owed: number;
   total_paid: number;
+  total_written_off: number;
   balance_due: number;
   projects_count: number;
 };

@@ -58,12 +58,29 @@ const all = async (table, sel) => {
   return data || [];
 };
 
+const openReceivableStatuses = new Set(["in_attesa", "scaduto"]);
+
 const main = async () => {
   console.log(`# PROD financial/fiscal health — ${todayIso}\n`);
-  const payments = await all(
-    "payments",
-    "id,client_id,status,payment_date,amount,payment_type,invoice_ref,project_id,financial_document_id",
-  );
+  let paymentsHaveWriteOffMetadata = true;
+  let payments = [];
+  try {
+    payments = await all(
+      "payments",
+      "id,client_id,status,payment_date,amount,payment_type,invoice_ref,project_id,financial_document_id,writeoff_date,writeoff_reason",
+    );
+  } catch (error) {
+    paymentsHaveWriteOffMetadata = false;
+    ok.push(
+      `write-off payment columns pending schema: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+    payments = await all(
+      "payments",
+      "id,client_id,status,payment_date,amount,payment_type,invoice_ref,project_id,financial_document_id",
+    );
+  }
   const financialDocuments = await all(
     "financial_documents",
     "id,client_id,direction,document_type,document_number,issue_date,due_date,total_amount,taxable_amount,tax_amount,stamp_amount,currency_code,source_path",
@@ -275,15 +292,69 @@ const main = async () => {
     );
   }
 
-  const ccp = await all(
-    "client_commercial_position",
-    "client_name,balance_due",
-  );
+  let ccpHasWriteOff = true;
+  let ccp = [];
+  try {
+    ccp = await all(
+      "client_commercial_position",
+      "client_name,balance_due,total_written_off",
+    );
+  } catch (error) {
+    ccpHasWriteOff = false;
+    ok.push(
+      `write-off guard pending schema: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+    ccp = await all("client_commercial_position", "client_name,balance_due");
+  }
   const daIncassare = ccp.reduce(
     (s, r) => s + Math.max(0, num(r.balance_due)),
     0,
   );
   const openClients = ccp.filter((r) => num(r.balance_due) > 0);
+  const writtenOffFromView = ccp.reduce(
+    (s, r) => s + num(r.total_written_off),
+    0,
+  );
+  const writtenOffPayments = payments.filter((p) => p.status === "perso");
+  const writtenOffPaymentTotal = writtenOffPayments.reduce(
+    (s, p) => s + num(p.amount),
+    0,
+  );
+  if (writtenOffPayments.length > 0) {
+    if (!paymentsHaveWriteOffMetadata) {
+      fails.push(
+        `write-off payments present but payments.writeoff_date/writeoff_reason are unavailable`,
+      );
+    }
+    if (!ccpHasWriteOff) {
+      fails.push(
+        `write-off payments present but client_commercial_position.total_written_off is unavailable`,
+      );
+    }
+    const missingWriteOffMetadata = writtenOffPayments.filter(
+      (p) => !p.writeoff_date || !String(p.writeoff_reason ?? "").trim(),
+    );
+    (missingWriteOffMetadata.length === 0 ? ok : fails).push(
+      `write-off metadata missing: ${missingWriteOffMetadata.length}`,
+    );
+    const writtenOffRefunds = writtenOffPayments.filter(
+      (p) => p.payment_type === "rimborso",
+    );
+    (writtenOffRefunds.length === 0 ? ok : fails).push(
+      `write-off rimborso rows: ${writtenOffRefunds.length}`,
+    );
+    const aidoneWriteOff = writtenOffPayments.find(
+      (p) =>
+        p.invoice_ref === "FPA 1/23" &&
+        num(p.amount) === 375 &&
+        p.financial_document_id == null,
+    );
+    (aidoneWriteOff ? ok : fails).push(
+      `Aidone FPA 1/23 write-off present: ${aidoneWriteOff ? "yes" : "no"}`,
+    );
+  }
 
   const cassaByYear = {};
   for (const p of payments.filter(
@@ -295,7 +366,7 @@ const main = async () => {
   const pendingCur = payments
     .filter(
       (p) =>
-        p.status !== "ricevuto" &&
+        openReceivableStatuses.has(p.status) &&
         p.payment_type !== "rimborso" &&
         (p.payment_date || "").slice(0, 4) === curYear,
     )
@@ -345,6 +416,9 @@ const main = async () => {
     .sort()
     .forEach(([y, v]) => console.log(`  - ${y}: € ${v.toFixed(2)}`));
   console.log(`pendingPaymentsTotal ${curYear}: € ${pendingCur.toFixed(2)}`);
+  console.log(
+    `Crediti persi: € ${writtenOffFromView.toFixed(2)} da view, € ${writtenOffPaymentTotal.toFixed(2)} da payments`,
+  );
   console.log(
     `payments emit-linked: ${linkedCount} doc, obblighi 30g: ${obl30Count}`,
   );

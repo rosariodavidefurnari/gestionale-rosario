@@ -124,6 +124,17 @@ fonte canonica cassa-aware (no seconda verità). AI annuale allineata
 `development-continuity-map.md` + handoff. Coda residua: QW3 (mobile
 scadenzario+cassa), BR2 (riconciliazione pagamenti/allocazioni), bollo €2.
 
+## Update 2026-06-22 — Crediti persi nel residuo operativo (BACKEND DONE)
+
+`client_commercial_position.balance_due` e `project_financials.balance_due`
+sottraggono `total_written_off`. Aidone `FPA 1/23` non deve piu' alimentare il
+residuo operativo dopo l'apply remoto, ma resta esclusa da cassa e fiscalita'
+perche' `total_paid` continua a leggere solo `status='ricevuto'`.
+
+Follow-up UI/analytics ancora aperti: dashboard scaduti/solleciti, badge
+fatture, Payment show/edit/list/mobile e AI pending devono usare
+`in_attesa|scaduto` come stati aperti, non `status !== ricevuto`.
+
 ## Update 2026-06-19 — IMPORTANT-5: descrizione AI `quick_payment` (DONE)
 
 Descrizione capability `quick_payment_dialog` + `project_quick_payment` in

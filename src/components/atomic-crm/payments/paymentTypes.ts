@@ -65,13 +65,47 @@ export const paymentStatusChoices = [
     name: "Scaduto",
     description: "Pagamento atteso oltre la data prevista.",
   },
+  {
+    id: "perso",
+    name: "Credito perso",
+    description:
+      "Credito dichiarato non incassabile: non e' cassa, chiude solo il residuo operativo.",
+  },
 ] as const;
 
 export const paymentStatusLabels: Record<string, string> = {
   ricevuto: "Ricevuto",
   in_attesa: "In attesa",
   scaduto: "Scaduto",
+  perso: "Credito perso",
 };
+
+export type PaymentStatus = (typeof paymentStatusChoices)[number]["id"];
+
+export const openReceivablePaymentStatuses = ["in_attesa", "scaduto"] as const;
+export const cashNeutralPaymentStatuses = [
+  "in_attesa",
+  "scaduto",
+  "perso",
+] as const;
+
+export const isCollectedPaymentStatus = (status: string | null | undefined) =>
+  status === "ricevuto";
+
+export const isOpenReceivablePaymentStatus = (
+  status: string | null | undefined,
+) =>
+  openReceivablePaymentStatuses.includes(
+    status as (typeof openReceivablePaymentStatuses)[number],
+  );
+
+export const isWrittenOffPaymentStatus = (status: string | null | undefined) =>
+  status === "perso";
+
+export const isCashNeutralPaymentStatus = (status: string | null | undefined) =>
+  cashNeutralPaymentStatuses.includes(
+    status as (typeof cashNeutralPaymentStatuses)[number],
+  );
 
 export const paymentTypeLabels: Record<string, string> = {
   acconto: "Acconto",

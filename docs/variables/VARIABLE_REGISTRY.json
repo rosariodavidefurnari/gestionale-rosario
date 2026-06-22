@@ -185,8 +185,9 @@
       "type": "cli_flag",
       "default": null,
       "required": false,
-      "owner_command": "npm run security:check:cascade-protection",
+      "owner_command": "npm run health:uncollectible",
       "owner_commands": [
+        "npm run health:uncollectible",
         "npm run security:check:cascade-protection",
         "npm run security:check:fiscal-backups"
       ],
@@ -194,6 +195,7 @@
       "risk": "command behavior modifier",
       "status": "verified",
       "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.health:uncollectible",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.security:check:cascade-protection",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.security:check:fiscal-backups"
       ],

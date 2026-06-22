@@ -979,11 +979,11 @@ used only as a template source.
 - required: `false`
 - sensitive: `false`
 - status: `verified`
-- owner_command: `npm run security:check:cascade-protection`
+- owner_command: `npm run health:uncollectible`
 - source_file: `docs/cli/COMMAND_REGISTRY.json`
 - risk: command behavior modifier
-- evidence: `docs/cli/COMMAND_REGISTRY.json:package.json:scripts.security:check:cascade-protection, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.security:check:fiscal-backups`
-- owner_commands: `npm run security:check:cascade-protection, npm run security:check:fiscal-backups`
+- evidence: `docs/cli/COMMAND_REGISTRY.json:package.json:scripts.health:uncollectible, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.security:check:cascade-protection, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.security:check:fiscal-backups`
+- owner_commands: `npm run health:uncollectible, npm run security:check:cascade-protection, npm run security:check:fiscal-backups`
 
 ### flag-list-different
 

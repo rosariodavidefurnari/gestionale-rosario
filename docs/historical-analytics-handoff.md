@@ -238,6 +238,16 @@ per id, `.value`), cambia solo la label. La fonte del metric è la STESSA della 
 **frontend-only, NESSUN deploy EF**. Controllore B2 falsificabile:
 `dataProviderAnalyticsContext.test.ts`.
 
+## Update 2026-06-22 — Write-off operativo e AI financial summaries
+
+Le view canoniche espongono `total_written_off` su `project_financials` e
+`client_commercial_position`. I mapper AI in `unifiedCrmFinancialSummaries.ts`
+propagano `totalWrittenOff` senza ricalcolo: il credito perso chiude il residuo
+operativo ma non entra in `totalPaid`, `pendingPaymentsTotal` o cassa.
+
+Caso guida locale: Aidone `FPA 1/23` passa a `payments.status='perso'`,
+`total_written_off=375`, `balance_due=0`, `cash_2023=6273.26`.
+
 ## Update 2026-06-19 — IMPORTANT-5: descrizione AI `quick_payment` allineata (DONE)
 
 Dopo FIX-3 l'incasso rapido SALDA l'incasso atteso collegato (riconciliazione)

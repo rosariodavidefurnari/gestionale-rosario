@@ -255,20 +255,21 @@ Steps:
 - gitignore_required: `true`
 - history_scan_required: `true`
 - rotation_required: `false`
-- commands: `npm run health:financial, npm run smoke:ef-reminder-parity, npm run smoke:cash-vs-competence`
+- commands: `npm run health:financial, npm run health:uncollectible, npm run smoke:ef-reminder-parity, npm run smoke:cash-vs-competence`
 - inputs: `HEALTH_ENV_FILE, SUPABASE_PROJECT_REF, TODAY_ISO, TS`
 - outputs: `console report only`
-- validation: `npm run health:financial, npm run smoke:ef-reminder-parity, npm run smoke:cash-vs-competence`
+- validation: `npm run health:financial, npm run health:uncollectible, npm run smoke:ef-reminder-parity, npm run smoke:cash-vs-competence`
 - escalation: Stop on any mismatch and gather DB/query evidence before changing money or fiscal logic.
 - rollback: Read-only workflow; no rollback expected.
-- source_evidence: `scripts/check-prod-financial-health.mjs, scripts/prod-smoke-ef-reminder-parity.ts, scripts/prod-smoke-cash-vs-competence.ts`
+- source_evidence: `scripts/check-prod-financial-health.mjs, scripts/check-uncollectible-receivables.sql, scripts/prod-smoke-ef-reminder-parity.ts, scripts/prod-smoke-cash-vs-competence.ts`
 
 Steps:
 
 1. Run the production financial invariant check.
-2. Run fiscal reminder parity smoke.
-3. Run cash-vs-competence smoke.
-4. Inspect exact failures before modifying financial code or data.
+2. Run the uncollectible receivables write-off invariant check.
+3. Run fiscal reminder parity smoke.
+4. Run cash-vs-competence smoke.
+5. Inspect exact failures before modifying financial code or data.
 
 ## Remote Supabase deploy
 
