@@ -1292,7 +1292,7 @@ tags
 | `misc/formatDateRange.ts` | `formatDateRange(start, end, allDay)` e `formatDateLong(start, end, allDay)` — formattazione date coerente con supporto range e all_day |
 | `misc/ErrorMessage.tsx` | Componente errore riutilizzabile con AlertCircle |
 | `misc/CreateSheet.tsx` | Sheet mobile per creazione record |
-| `misc/FormToolbar.tsx` | Toolbar form con Save/Delete |
+| `layout/FormToolbar.tsx` | Toolbar form con Save/Delete |
 
 ### Utility data/timezone (lib/)
 

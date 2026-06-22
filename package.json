@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
     "continuity:check": "node ./scripts/check-continuity.mjs",
+    "docs:drift": "python3 ./scripts/doc-drift-test.py --repo . --docs 'docs/**/*.md' --docs 'AGENTS.md' --docs 'CLAUDE.md' --docs '.claude/rules/*.md'",
     "security:check:fiscal-backups": "npx supabase db query --linked -f scripts/check-fiscal-backup-rls.sql",
     "security:check:fiscal-backups:rest": "node scripts/check-fiscal-backup-rest-anon.mjs --env .env.production",
     "security:check:cascade-protection": "npx supabase db query --linked -f scripts/check-cascade-protection.sql",

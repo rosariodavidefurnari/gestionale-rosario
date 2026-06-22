@@ -35,10 +35,8 @@ Claude Code ha una directory di memoria persistente tra sessioni.
 Dopo il rituale di inizio sessione:
 
 1. Leggere `memory/MEMORY.md` (caricato automaticamente nel contesto)
-2. Se il task tocca un'area specifica, leggere i file tematici collegati:
-   - `memory/architecture-modules.md` — dettagli architetturali per modulo
-   - `memory/refactoring-patterns.md` — pattern di split e refactoring
-   - `memory/local-truth-patterns.md` — rebuild locale e riconciliazione
+2. Se il task tocca un'area specifica, leggere i file tematici elencati
+   nell'indice `memory/MEMORY.md` (es. `memory/e2e-test-guide.md` per i test E2E)
 3. NON ripetere lavoro gia' fatto: la memoria contiene decisioni, pattern e
    stato dei task in corso
 

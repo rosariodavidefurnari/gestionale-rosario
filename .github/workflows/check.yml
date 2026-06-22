@@ -52,6 +52,13 @@ jobs:
             - name: 💅 Prettier (blocking)
               run: npm run prettier
 
+            # Blocking gate: doc<->code link drift. Parses markdown-link paths in
+            # docs/ + governance files and fails if any cited file/path no longer
+            # exists (e.g. a moved/renamed source file). Stdlib-only python3,
+            # preinstalled on ubuntu-latest. Catches structural drift, not prose.
+            - name: 📑 Docs drift (blocking)
+              run: npm run docs:drift
+
     test:
         name: 🔎 Test
         runs-on: ubuntu-latest

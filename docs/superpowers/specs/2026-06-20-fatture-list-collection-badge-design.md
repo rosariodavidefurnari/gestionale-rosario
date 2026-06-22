@@ -26,7 +26,7 @@ ha il badge, la lista no). Frizione quotidiana: "quali fatture ho ancora da inca
 risposta a colpo d'occhio.
 
 Lo Show già risolve via `deriveDocumentCollectionState(payments)`
-([financialDocumentHelpers.ts:144-161](../../src/components/atomic-crm/invoices/financialDocumentHelpers.ts)),
+([financialDocumentHelpers.ts:144-161](../../../src/components/atomic-crm/invoices/financialDocumentHelpers.ts)),
 derivando dai `payments` collegati al documento (`financial_document_id`). Manca solo la
 proiezione in lista.
 

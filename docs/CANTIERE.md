@@ -42,8 +42,8 @@ Ordine minimo di lettura per ogni nuova chat:
 3. `docs/CANTIERE.md`
 4. roadmap/spec/piano attivi linkati qui sotto
 5. documenti canonici collegati al lavoro corrente
-6. DeepWiki/RAG se il lavoro e' cross-file, rischioso o puo' avere superfici
-   nascoste
+6. code-RAG locale (skill `code-rag-local`, Qdrant) se il lavoro e' cross-file,
+   rischioso o puo' avere superfici nascoste
 
 Regola pratica:
 
@@ -158,7 +158,8 @@ commercialista (competenza per `issue_date` via FK BR2). Coerente col FLIP in
   Mobile-browser non eseguito (MCP chromium-1223 assente, glance no-resize) → coperto dal
   parity test (componente reale MobileDashboard).
 - **SHIPPED**: commit `d1210726`, push `origin`, CI `Check` success, Vercel prod alias HTTP 200.
-  TODO post-merge: rigenerare RAG :8001 sullo snapshot (richiesta utente standing). Follow-up
+  TODO post-merge: reindicizzare il code-RAG (skill `code-rag-local`, Qdrant) sullo snapshot
+  (richiesta utente standing; il code-RAG DeepWiki `:8001` e' DISMESSO dal 2026-06-21). Follow-up
   v2: entry manuale ricavo dichiarato Fabio (colonna Δ reale); esposizione AI/headless (BR3).
 
 Coda residua (dopo questo): Fase 2 (verità remoto/locale/XML), Scope C (gated), minori
@@ -296,10 +297,16 @@ Shippato e LIVE in sessioni precedenti (tutto su `main`, CI verde, Vercel):
 - **Gate spec→codice = decisione UTENTE** per ogni lavoro non banale: creare
   spec, review spec, piano, review piano, MA NON scrivere codice finché l'utente
   non dà il via esplicito. (Imposto su /payments/create, vale come default.)
-- **RAG combinati, entrambi**: code RAG :8001 (codice) + prose RAG :8002
-  (docs/prosa, indice `gestionale-docs` GIA' COSTRUITO — corpus
-  `~/deepwiki-prose-corpus/gestionale-docs`, re-embed dopo modifiche docs).
-  Disciplina corpus: codice solo in :8001, prosa solo in :8002, MAI incrociati.
+- **RAG combinati, due motori su Qdrant `:6333` + Ollama `bge-m3` (1024-dim)**:
+  per il CODICE skill `code-rag-local` (collezioni `code_*`, tool
+  `mcp__qdrant__*` es. `search_code`); per PROSA/DOCUMENTI skill `prose-rag-local`
+  (collezioni `prose_*`). DeepWiki `:8001` (codice) e deepwiki-prose `:8002`
+  (prosa) sono DISMESSI dal 2026-06-21. Per QUESTO repo NON esiste ancora alcun
+  indice prosa dedicato (nessuna collezione `gestionale-docs` in Qdrant): la
+  prosa va indicizzata via `prose-rag-local` se serve. Disciplina corpus: codice
+  solo in `code_*`, prosa solo in `prose_*`, MAI incrociati. Validazione
+  doc↔codice via skill `doc-code-validation` (usa i due motori come oracoli, non
+  un terzo indice).
 - **Review non risparmiate**: multi-superficie + multi-competenza + trasversali,
   ognuna con RAG + verifica sorgente reale; impl review mutation-tested.
 - **E2E/browser (WF-19)**: creare dati demo deterministici + cleanup sistematico
@@ -768,33 +775,36 @@ Artefatti storici (cicli chiusi):
 - spec/piano Fase 2:
   da creare prima di modificare dati, schema o flussi fiscali.
 
-## RAG / DeepWiki
+## RAG / Code-RAG
 
-Stato DeepWiki (rigenerato 2026-06-20 sessione fix-minori):
+> **MIGRAZIONE 2026-06-21**: i motori DeepWiki sono DISMESSI — code-RAG `:8001`
+> e deepwiki-prose `:8002`. Due motori, entrambi su Qdrant (`:6333`) + Ollama
+> `bge-m3` (1024-dim), mai blendare i corpora: per il CODICE skill
+> `code-rag-local` (collezioni `code_*`, tool `mcp__qdrant__*`); per
+> PROSA/DOCUMENTI skill `prose-rag-local` (collezioni `prose_*`). Validazione
+> doc↔codice via skill `doc-code-validation` (oracoli i due sopra, non un terzo
+> indice). I riferimenti a `:8001`/`:8002` nelle sessioni datate qui sotto sono
+> record storici (RAG usato in quella data), NON istruzioni correnti.
 
-- API locale attiva su `http://localhost:8001`
-- indice operativo corrente:
-  `/root/.adalflow/databases/rosariodavidefurnari_gestionale-rosario.pkl`
-  (96MB, 2026-06-20 18:53)
-- repo_url da usare nelle query RAG (path CONTAINER, type `local`):
-  `/root/.adalflow/repos/rosariodavidefurnari_gestionale-rosario`
-- snapshot indicizzato:
-  `fde4d2a7802fc888f09b1101faed90b1c81b4daa` (allineato a working HEAD;
-  include BR2 backfill, cash-vs-competence card/helper, gate selected-year)
-- corpus code-only creato da `included_dirs = src, supabase, scripts, tests`
-  con `model: "gemini-2.5-pro"`.
-- validazione indice (post re-embed):
-  - top-dir corpus: `src 621, supabase 84, tests 31, scripts 4` (+ `doc 2`
-    per match path-component `doc/src`, innocuo; nessun `docs/`/`.planning`/`.claude`);
-  - log embed: 0 `429`/`embedding size mismatch`, 0 `Giving up`, 0 `Filtered out`;
-  - query di validazione grounded sul codice NUOVO
-    (`cashVsCompetenceReconciliation.ts`, esiste solo da `d1210726`).
-- nota: il vecchio indice `gestionale-rosario-current-20260614.pkl` (snapshot
-  `39b3e463`) resta su disco ma e' SUPERATO; usare il clone canonico
-  `rosariodavidefurnari_gestionale-rosario` (origin = GitHub fork).
-- conclusione: RAG operativo sullo snapshot corrente; resta supporto, non fonte
-  di verita'. Ogni file o claim suggerito dal RAG va verificato sul sorgente
-  reale prima di implementare, concludere review o dichiarare "fatto".
+Motore corrente (CODICE) — skill `code-rag-local`:
+
+- Qdrant (`:6333`) + Ollama `bge-m3` (1024-dim), chunking AST tree-sitter
+- tool: `mcp__qdrant__*` (es. `search_code`, `index_codebase`, `reindex_changes`)
+- runtime sotto Node 22 (nvm), NON Node 25 di sistema
+- corpus CODE-ONLY di default (`.md`/`.markdown` esclusi dal server patchato →
+  niente drift doc↔codice; segreti `.env` gia' esclusi)
+- dopo ogni (re)index verificare 0 embed rifiutati
+  (`docker logs qdrant --since 10m | grep -c ' 400 '` deve essere 0)
+- index/reindex + troubleshooting (dimension mismatch, embed abortiti,
+  Qdrant/Ollama/SSD down) → seguire lo skill `code-rag-local`
+- conclusione: il code-RAG resta supporto, non fonte di verita'. Ogni file o
+  claim suggerito dal RAG va verificato sul sorgente reale prima di implementare,
+  concludere review o dichiarare "fatto".
+
+Prosa/documenti (separato) — skill `prose-rag-local`: Qdrant (`:6333`) + Ollama
+`bge-m3`, collezioni `prose_*`. Per QUESTO repo NON esiste ancora un indice prosa
+dedicato (nessuna collezione `gestionale-docs` in Qdrant): la prosa va
+indicizzata via `prose-rag-local` se serve retrieval semantico sui docs.
 
 Query eseguite:
 
@@ -889,8 +899,8 @@ Azioni applicate dopo review:
 
 Non procedere con DB remoto se:
 
-- DeepWiki/RAG non e' stato usato per plan/review di lavori cross-file o ad alto
-  rischio;
+- il code-RAG locale (skill `code-rag-local`, Qdrant) non e' stato usato per
+  plan/review di lavori cross-file o ad alto rischio;
 - qualcuno propone `npx supabase db push` senza prima verificare lo stato
   migration via MCP o CLI;
 - non esiste un controllo RED prima della fix;

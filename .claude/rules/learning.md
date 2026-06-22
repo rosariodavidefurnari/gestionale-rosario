@@ -84,6 +84,7 @@
 | **Workflow** | WF-19 | E2E/browser/smoke → crea dati demo deterministici + cleanup sistematico (try/finally, 0 leftover) |
 | **Workflow** | WF-20 | Assert valuta/numero formattato → grouping-agnostico (Node small-ICU vs browser) |
 | **Workflow** | WF-21 | E2E "tool rotto" → MCP browser ≠ Playwright del progetto, NON deferire |
+| **Workflow** | WF-22 | Migrazione infra (RAG/porta/skill) → audit SEMANTICO doc governance, non solo L3 path-drift |
 | **Backend**  | BE-9  | EF Calendar timed → usa timestamp service |
 
 ---
@@ -365,8 +366,8 @@ presenta come reali / "Da dichiarazione" / promemoria / switch "anno dichiarato"
 Deno `_shared/`): obbligo reale SSE ha F24 pagato OPPURE `declaration_id` punta a
 dichiarazione DEPOSITATA (`total_substitute_tax + total_inps > 0`). `source` NON
 discrimina (i reali sono `manual` anche loro). La sola PRESENZA di una riga != "anno
-dichiarato dal commercialista". Fare lo sweep dei lettori col RAG :8001 prima di
-dichiarare fatto.
+dichiarato dal commercialista". Fare lo sweep dei lettori col code-RAG locale
+(skill `code-rag-local`, Qdrant) prima di dichiarare fatto.
 **Perché**: il 2026-06-19 sei proiezioni hand-inserite (metodo "aliquota effettiva"
 rigettato, `declaration_id` NULL o legato a dichiarazione 2025 a totali ZERO, 0 F24)
 si spacciavano per "Da dichiarazione" e gonfiavano la card scadenze a un falso
@@ -772,9 +773,11 @@ guard esplicito server-side.
 schema, RLS, migration, fiscalita, fatture, pagamenti, spese, dashboard, AI, o
 qualunque cosa cross-file/ad alto rischio
 **Fare**:
-1. interrogare ATTIVAMENTE il RAG DeepWiki locale PRIMA di spec/piano/review
-   (curl `http://localhost:8001/chat/completions/stream`, `model: gemini-2.5-pro`,
-   `repo_url` = snapshot corrente), poi verificare OGNI claim sul sorgente reale;
+1. interrogare ATTIVAMENTE il code-RAG locale PRIMA di spec/piano/review
+   (skill `code-rag-local`: Qdrant via `mcp__qdrant__search_code`; il code-RAG
+   DeepWiki `:8001` e il motore prosa `deepwiki-prose` `:8002` sono DISMESSI
+   dal 2026-06-21, la prosa ora vive su skill `prose-rag-local`, Qdrant
+   `:6333`, collezioni `prose_*`), poi verificare OGNI claim sul sorgente reale;
 2. fare le review MULTI-SUPERFICIE e MULTI-COMPETENZA con piu' revisori
    specializzati (DB/Postgres, dominio fiscale forfettario, frontend/superfici +
    mobile parity, provider/backend/Edge, TDD/controllori), e OGNI revisore deve
@@ -906,6 +909,12 @@ gira in ~7s e valida desktop+mobile INPS 650,71 / imposta 92,26 / accantona
 61,91 dal seed deterministico (cassa 3200 -> reddito 2496 -> formula reale).
 Deferire un controllore per un tool sbagliato-diagnosticato viola EXECUTABLE
 GUARDRAILS e MONEY/FISCAL TDD.
+
+### WF-22: migrazione infra (RAG/porta/skill/tool) -> audit SEMANTICO dei doc governance, non solo L3 path-drift
+
+**Quando**: un motore/porta/skill/tool locale cambia o viene dismesso (es. code-RAG DeepWiki `:8001` + `deepwiki-prose` `:8002` -> Qdrant `:6333`, skill `code-rag-local`/`prose-rag-local`) e devo validare che i doc di governance siano allineati
+**Fare**: il drift_test L3 (`npm run docs:drift`) becca solo drift STRUTTURALE (path/link a file spostati), NON un motore/porta/skill MORTO citato come CORRENTE nella prosa. Serve un audit SEMANTICO: 1) ground-truth LIVE (`docker ps`, porte via `lsof/nc`, `curl :6333/collections`, `ls ~/.claude/skills`, routing in global `~/.claude/CLAUDE.md`); 2) grep le superfici ATTIVE (hook iniettato in `.claude/settings.json`, sezioni dottrina `AGENTS.md`, trigger auto-loaded `learning.md`, blocco dottrina `CANTIERE.md`) per il termine morto; 3) FIXARE solo le superfici ATTIVE verso la dottrina canonica, LASCIARE i log storici datati (riscriverli falsifica la storia). La superficie piu' insidiosa e' l'hook `UserPromptSubmit` di `settings.json`: iniettato a OGNI turno, ti ri-insegna il fatto morto.
+**Perche'**: il 2026-06-22 il gate L3 passava verde mentre `settings.json` (ogni turno), `AGENTS.md` e `learning.md` WF-15 dicevano ancora "la prosa resta su deepwiki-prose :8002" — motore DISMESSO dal 2026-06-21, porta `:8002` chiusa, nessuna skill deepwiki. L3 non lo vede perche' non e' un path rotto ma una frase di prosa fattualmente falsa. Il link gate e' necessario ma non sufficiente: l'infra-drift semantico richiede ground-truth live + grep mirato sulle superfici attive.
 
 ---
 

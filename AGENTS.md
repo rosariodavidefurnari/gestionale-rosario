@@ -44,8 +44,9 @@
   prima del piano
 - dopo la spec, creare un piano operativo separato; solo dopo si puo' eseguire
 - prima della review della spec e prima della review del piano, interrogare
-  DeepWiki/RAG quando l'attivita' e' cross-file, rischiosa o puo' avere
-  superfici nascoste; poi verificare ogni claim sul sorgente reale
+  il code-RAG locale (skill `code-rag-local`, Qdrant) quando l'attivita' e'
+  cross-file, rischiosa o puo' avere superfici nascoste; poi verificare ogni
+  claim sul sorgente reale
 - dopo aver creato la spec, fare una review della spec prima di considerarla
   pronta
 - dopo aver creato il piano, fare una review del piano prima di implementare
@@ -73,7 +74,7 @@
   - prossima azione
   - spec/piano attivo
   - esito review
-  - esito RAG/DeepWiki
+  - esito code-RAG
   - controllore/test richiesto
   - stop point o rischio bloccante
 - se `CANTIERE.md` contraddice codice, DB o documenti canonici, vince la fonte
@@ -130,10 +131,25 @@
 - la roadmap indica la direzione, ma spec, piano, test e review decidono i
   passi
 
-## LOCAL DEEPWIKI / SEMANTIC CODE SEARCH
+## LOCAL SEMANTIC CODE SEARCH (CODE-RAG)
 
-DeepWiki locale e' uno strumento obbligatorio per ricerca semantica sul codice,
-non una seconda documentazione del progetto.
+> AGGIORNAMENTO 2026-06-21: il code-RAG DeepWiki locale (`:8001`) e'
+> DISMESSO. La ricerca semantica sul CODICE ora usa il code-RAG locale
+> Qdrant via skill `code-rag-local` (collezioni `code_*`). La prosa/documenti
+> vivono su un motore separato ma sullo stesso stack: skill `prose-rag-local`,
+> Qdrant (`:6333`) + Ollama `bge-m3`, collezioni `prose_*`. Due motori, mai
+> blendare i corpora.
+
+Il code-RAG locale e' uno strumento obbligatorio per ricerca semantica sul
+codice, non una seconda documentazione del progetto.
+
+Motore corrente (CODICE):
+
+- skill `code-rag-local`: Qdrant (`:6333`) + Ollama `bge-m3` (1024-dim),
+  chunking AST tree-sitter, tool `mcp__qdrant__*` (es. `search_code`)
+- runtime sotto Node 22 (nvm), NON Node 25 di sistema
+- per indicizzare/reindicizzare e per il troubleshooting (dimension mismatch,
+  embed abortiti, Qdrant/Ollama/SSD down) seguire lo skill `code-rag-local`
 
 Usarlo prima di lavori cross-file o ad alto rischio quando serve trovare
 superfici che una ricerca testuale puo' non vedere:
@@ -149,23 +165,26 @@ superfici che una ricerca testuale puo' non vedere:
 
 Regola corpus:
 
-- il RAG/wiki DeepWiki di progetto deve indicizzare CODE ONLY
+- il corpus code-RAG deve indicizzare CODE ONLY
 - includere normalmente `src`, `supabase`, `scripts`, `tests`
 - NON inserire `docs/`, `AGENTS.md`, `CLAUDE.md`, `.claude/`, planning notes,
-  decision log, handoff, backlog o altra prosa nel corpus RAG
+  decision log, handoff, backlog o altra prosa nel corpus code-RAG (il server
+  e' gia' patchato per escludere `.md`/`.markdown` di default)
 - la documentazione puo' driftare rispetto al codice; quindi per intent,
   decisioni, vincoli e continuita' leggere i documenti direttamente dal repo,
   non tramite ricerca semantica blended
 
 Disciplina:
 
-- ogni query/rebuild DeepWiki deve usare `model: "gemini-2.5-pro"`
-- prima di fidarsi del RAG, verificare staleness dello snapshot rispetto al
-  working tree; modifiche locali non indicizzate vanno lette dal sorgente reale
+- dopo ogni (re)index verificare che gli embed non siano stati rifiutati
+  (controllo `400` nei log Qdrant) — un index parziale silente e' inaffidabile
+- prima di fidarsi del RAG, verificare staleness dell'indice rispetto al
+  working tree; codice appena editato va reindicizzato o letto dal sorgente
 - ogni file o claim suggerito dal RAG va verificato sul codice reale prima di
   implementare, concludere una review o dichiarare "fatto"
-- se serve una ricerca semantica sui documenti, creare un indice docs-only
-  separato; mai mischiare codice e documentazione nello stesso corpus
+- se serve una ricerca semantica sui DOCUMENTI, usare il motore prosa
+  separato (skill `prose-rag-local`, Qdrant `:6333`, collezioni `prose_*`);
+  mai mischiare codice e documentazione nello stesso corpus
 
 ## BOUNDARY WITH PRODUCT AI
 
@@ -612,7 +631,7 @@ src/
 │   │   ├── invoicing/      # Internal invoice draft (no DB write)
 │   │   ├── layout/         # App layout components
 │   │   ├── login/          # Authentication pages
-│   │   ├── misc/           # Shared utilities (CreateSheet, FormToolbar, formatDateRange)
+│   │   ├── misc/           # Shared utilities (CreateSheet, ErrorMessage, formatDateRange)
 │   │   ├── payments/       # Payment tracking
 │   │   ├── projects/       # Projects
 │   │   ├── providers/      # Data providers (Supabase runtime modules)
