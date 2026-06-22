@@ -10,16 +10,16 @@ import {
 import { todayISODate } from "@/lib/dateTimezone";
 
 import {
-  formatClientBillingAddress,
-  getClientBillingDisplayName,
-} from "../clients/clientBilling";
-import type { Client } from "../types";
-import {
   computeInvoiceDraftTotals,
   getInvoiceDraftLineTotal,
   normalizeInvoiceDraftLineItems,
   type InvoiceDraftInput,
 } from "./invoiceDraftTypes";
+import {
+  formatInvoiceBillingRecipientAddress,
+  getInvoiceBillingRecipient,
+  getInvoiceBillingRecipientIdentityLines,
+} from "./invoiceBillingRecipient";
 
 export type InvoiceDraftIssuer = {
   name: string;
@@ -250,16 +250,6 @@ const fmt = (v: number) =>
     minimumFractionDigits: 2,
   });
 
-const clientFiscalLines = (client: Client) =>
-  [
-    client.vat_number ? `P.IVA ${client.vat_number}` : null,
-    client.fiscal_code ? `C.F.: ${client.fiscal_code}` : null,
-    client.billing_sdi_code
-      ? `Codice destinatario: ${client.billing_sdi_code}`
-      : null,
-    client.billing_pec ? `PEC: ${client.billing_pec}` : null,
-  ].filter((l): l is string => Boolean(l));
-
 const STAMP_DUTY_DESC =
   "Imposta di bollo assolta in modo virtuale ai sensi dell'art. 15 del D.P.R. 642/1972 e del DM 17/06/2014";
 
@@ -273,9 +263,12 @@ const InvoiceDraftPdfDocument = ({
 }) => {
   const lines = normalizeInvoiceDraftLineItems(draft.lineItems);
   const totals = computeInvoiceDraftTotals(lines);
-  const clientName =
-    getClientBillingDisplayName(draft.client) ?? draft.client.name;
-  const clientAddr = formatClientBillingAddress(draft.client);
+  const recipient = getInvoiceBillingRecipient({
+    client: draft.client,
+    billingProfile: draft.billingProfile ?? null,
+  });
+  const clientName = recipient.name;
+  const clientAddr = formatInvoiceBillingRecipientAddress(recipient);
   const hasStamp = totals.stampDuty > 0;
 
   return (
@@ -369,11 +362,13 @@ const InvoiceDraftPdfDocument = ({
               {clientAddr ? (
                 <Text style={styles.infoText}>{clientAddr}</Text>
               ) : null}
-              {clientFiscalLines(draft.client).map((line) => (
-                <Text key={line} style={styles.infoText}>
-                  {line}
-                </Text>
-              ))}
+              {getInvoiceBillingRecipientIdentityLines(recipient).map(
+                (line) => (
+                  <Text key={line} style={styles.infoText}>
+                    {line}
+                  </Text>
+                ),
+              )}
             </View>
           </View>
 

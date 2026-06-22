@@ -1,4 +1,5 @@
-import type { BusinessProfile, Client } from "../types";
+import type { BusinessProfile, Client, ClientBillingProfile } from "../types";
+import { getInvoiceBillingRecipient } from "./invoiceBillingRecipient";
 
 /**
  * Validate that issuer (BusinessProfile) and client carry every field the
@@ -9,9 +10,10 @@ import type { BusinessProfile, Client } from "../types";
  * mandatory tags built in `invoiceDraftXml.ts`:
  * - issuer: name (Denominazione), vatNumber (IdCodice), addressStreet
  *   (Indirizzo), addressPostalCode (CAP), addressCity (Comune).
- * - client: name|billing_name (Denominazione); vat_number|fiscal_code (fiscal
- *   identity); billing_address_street + billing_postal_code + billing_city
- *   (Sede minimum required by `buildClientSede`).
+ * - recipient: selected client billing profile, or main client fallback:
+ *   name|billing_name (Denominazione); vat_number|fiscal_code (fiscal identity);
+ *   billing_address_street + billing_postal_code + billing_city (Sede minimum
+ *   required by the XML builder).
  */
 export type InvoiceBillingValidation = {
   ok: boolean;
@@ -22,13 +24,16 @@ const isBlank = (value: unknown): boolean =>
   value === undefined || value === null || String(value).trim().length === 0;
 
 export const isInvoiceBillingComplete = ({
+  billingProfile,
   client,
   issuer,
 }: {
+  billingProfile?: ClientBillingProfile | null;
   client: Client;
   issuer: BusinessProfile;
 }): InvoiceBillingValidation => {
   const missing: string[] = [];
+  const recipient = getInvoiceBillingRecipient({ client, billingProfile });
 
   // Issuer (emittente)
   if (isBlank(issuer?.name)) missing.push("Nome/denominazione emittente");
@@ -37,17 +42,17 @@ export const isInvoiceBillingComplete = ({
   if (isBlank(issuer?.addressPostalCode)) missing.push("CAP emittente");
   if (isBlank(issuer?.addressCity)) missing.push("Citta' emittente");
 
-  // Client (cliente)
-  if (isBlank(client?.billing_name) && isBlank(client?.name)) {
+  // Recipient (client or selected fiscal billing profile)
+  if (isBlank(recipient.name)) {
     missing.push("Nome/denominazione cliente");
   }
-  if (isBlank(client?.vat_number) && isBlank(client?.fiscal_code)) {
+  if (isBlank(recipient.vat_number) && isBlank(recipient.fiscal_code)) {
     missing.push("P.IVA o codice fiscale cliente");
   }
   if (
-    isBlank(client?.billing_address_street) ||
-    isBlank(client?.billing_postal_code) ||
-    isBlank(client?.billing_city)
+    isBlank(recipient.billing_address_street) ||
+    isBlank(recipient.billing_postal_code) ||
+    isBlank(recipient.billing_city)
   ) {
     missing.push("Indirizzo cliente (via, CAP, citta')");
   }

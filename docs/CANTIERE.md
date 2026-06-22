@@ -203,8 +203,16 @@ Integrazione applicativa billing profiles — spec/piano gate 2026-06-22:
   PASS 2 test; `npm run typecheck` PASS; `git diff --check` PASS. Scope:
   helper puro `invoiceBillingRecipient.ts` + `InvoiceDraftInput.billingProfile`,
   zero UI, zero DB, zero cash.
-- Stop point: nessuna implementazione UI/applicativa prima di eseguire il piano
-  task-by-task con review per task, commit per task e browser desktop/mobile.
+- Task 2 XML/PDF/validation: IMPLEMENTATO e review PASS. RED:
+  `invoiceDraftXml.test.ts` falliva per `CessionarioCommittente` ancora sul
+  cliente operativo e `invoiceBillingValidation.test.ts` falliva per profilo
+  ignorato. GREEN:
+  `npm run test -- src/components/atomic-crm/invoicing/invoiceDraftXml.test.ts src/components/atomic-crm/invoicing/invoiceBillingValidation.test.ts`
+  PASS 71 test; `npm run typecheck` PASS; `npm run lint` PASS;
+  `git diff --check` PASS. Scope: stesso recipient adapter per XML, PDF e
+  validation; nessun cambio a payments/importi/cassa e nessun redesign.
+- Stop point: nessuna UI di selezione profili prima dei task provider/emit e
+  della review dedicata; browser desktop/mobile obbligatorio prima del commit UI.
 
 Governance/RAG fix 2026-06-22:
 

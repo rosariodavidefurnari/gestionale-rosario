@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import type { BusinessProfile, Client } from "../types";
+import type { BusinessProfile, Client, ClientBillingProfile } from "../types";
 import { isInvoiceBillingComplete } from "./invoiceBillingValidation";
 
 const completeIssuer = (): BusinessProfile => ({
@@ -33,6 +33,27 @@ const completeClient = (): Client =>
     billing_postal_code: "95100",
     billing_city: "Catania",
   }) as unknown as Client;
+
+const completeLiveProfile = (): ClientBillingProfile => ({
+  id: "profile-live",
+  client_id: "c1",
+  label: "LIVE SRLS",
+  billing_name: "LIVE - SOCIETA' A RESPONSABILITA' LIMITATA SEMPLIFICATA",
+  vat_number: "06256710879",
+  fiscal_code: "06256710879",
+  billing_address_street: "VIA 4 NOVEMBRE",
+  billing_address_number: "64",
+  billing_postal_code: "95031",
+  billing_city: "ADRANO",
+  billing_province: "CT",
+  billing_country: "IT",
+  billing_sdi_code: "KRRH6B9",
+  billing_pec: null,
+  is_default: false,
+  notes: null,
+  created_at: "2026-01-01",
+  updated_at: "2026-01-01",
+});
 
 describe("isInvoiceBillingComplete", () => {
   it("ok when issuer and client carry every mandatory XML field", () => {
@@ -92,5 +113,25 @@ describe("isInvoiceBillingComplete", () => {
     const r = isInvoiceBillingComplete({ client, issuer: completeIssuer() });
     expect(r.ok).toBe(false);
     expect(r.missing.join(" ")).toMatch(/indirizzo cliente/i);
+  });
+
+  it("uses the selected billing profile when the operational client is fiscally incomplete", () => {
+    const operationalClient = {
+      ...completeClient(),
+      vat_number: undefined,
+      fiscal_code: undefined,
+      billing_address_street: undefined,
+      billing_postal_code: undefined,
+      billing_city: undefined,
+    } as unknown as Client;
+
+    const r = isInvoiceBillingComplete({
+      client: operationalClient,
+      billingProfile: completeLiveProfile(),
+      issuer: completeIssuer(),
+    });
+
+    expect(r.ok).toBe(true);
+    expect(r.missing).toEqual([]);
   });
 });

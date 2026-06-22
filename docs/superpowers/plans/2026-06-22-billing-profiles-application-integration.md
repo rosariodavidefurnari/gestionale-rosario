@@ -99,7 +99,7 @@ Functions, Kysely, existing browser verification workflow.
   - `formatInvoiceBillingRecipientAddress(recipient)`
   - `getInvoiceBillingRecipientIdentityLines(recipient)`
 
-- [ ] **Step 1: Write RED tests**
+- [x] **Step 1: Write RED tests**
 
 Test main client fallback and LIVE profile override:
 
@@ -109,7 +109,7 @@ npm run test -- src/components/atomic-crm/invoicing/invoiceBillingRecipient.test
 
 Expected: FAIL because the file does not exist.
 
-- [ ] **Step 2: Implement adapter**
+- [x] **Step 2: Implement adapter**
 
 Use the existing `clientBilling.ts` normalization style. A profile recipient must
 return:
@@ -120,7 +120,7 @@ return:
 - `profileId` set to profile id;
 - `operationalClientId` set to draft client id.
 
-- [ ] **Step 3: GREEN**
+- [x] **Step 3: GREEN**
 
 Run:
 
@@ -131,11 +131,11 @@ npm run typecheck
 
 Expected: PASS.
 
-- [ ] **Step 4: Review**
+- [x] **Step 4: Review**
 
 Review dimensions: domain, XML/PDF consistency, TypeScript shape, no UI yet.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/atomic-crm/invoicing/invoiceBillingRecipient.ts \
@@ -157,7 +157,7 @@ git commit -m "feat: add invoice billing recipient adapter"
 - Consumes: `getInvoiceBillingRecipient`.
 - Produces: XML/PDF/validation based on the same recipient.
 
-- [ ] **Step 1: RED XML test**
+- [x] **Step 1: RED XML test**
 
 Add a LIVE profile fixture to `invoiceDraftXml.test.ts` and assert:
 
@@ -175,23 +175,23 @@ npm run test -- src/components/atomic-crm/invoicing/invoiceDraftXml.test.ts
 
 Expected: FAIL before implementation.
 
-- [ ] **Step 2: Update implementation**
+- [x] **Step 2: Update implementation**
 
 `invoiceDraftXml.ts` must call `getInvoiceBillingRecipient({ client:
 draft.client, billingProfile: draft.billingProfile ?? null })` once and use the
 result for transmission code, anagrafica and sede.
 
-- [ ] **Step 3: PDF parity**
+- [x] **Step 3: PDF parity**
 
 Update `invoiceDraftPdf.tsx` to display recipient name/address/identity lines
 from the same helper. Keep visual structure unchanged.
 
-- [ ] **Step 4: Validation parity**
+- [x] **Step 4: Validation parity**
 
 Update validation tests so a client missing fiscal fields can pass when the
 selected billing profile is complete.
 
-- [ ] **Step 5: GREEN**
+- [x] **Step 5: GREEN**
 
 Run:
 
@@ -203,7 +203,7 @@ npm run typecheck
 
 Expected: PASS.
 
-- [ ] **Step 6: Review and commit**
+- [x] **Step 6: Review and commit**
 
 Review dimensions: fiscal XML, PDF parity, no cash mutation, no visual redesign.
 

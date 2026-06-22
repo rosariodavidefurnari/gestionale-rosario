@@ -30,6 +30,9 @@ contatti.
   cliente operativo (`operationalClientId`) e destinatario fiscale opzionale
   (`profileId`). `InvoiceDraftInput.billingProfile` e' opzionale: le superfici
   che non selezionano un profilo restano sul cliente principale.
+- XML FatturaPA, PDF bozza e validation fatturazione devono leggere lo stesso
+  `InvoiceBillingRecipient`, cosi' il destinatario fiscale visualizzato e quello
+  emesso non divergono.
 - La propagazione applicativa deve continuare lungo spec/piano/review dedicati
   e, per UI/UX, skill `impeccable` + browser reale desktop/mobile.
 - Money invariant: il backfill puo' collegare documenti e FK, ma non cambia

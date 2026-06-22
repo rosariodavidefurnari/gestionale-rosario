@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { BusinessProfile, Client } from "../types";
+import type { BusinessProfile, Client, ClientBillingProfile } from "../types";
 import type { InvoiceDraftInput } from "./invoiceDraftTypes";
 import {
   buildInvoiceDraftXml,
@@ -46,6 +46,27 @@ const testClient: Client = {
   tags: [],
   created_at: "2025-01-01",
   updated_at: "2025-01-01",
+};
+
+const liveBillingProfile: ClientBillingProfile = {
+  id: "profile-live",
+  client_id: testClient.id,
+  label: "LIVE SRLS",
+  billing_name: "LIVE - SOCIETA' A RESPONSABILITA' LIMITATA SEMPLIFICATA",
+  vat_number: "06256710879",
+  fiscal_code: "06256710879",
+  billing_address_street: "VIA 4 NOVEMBRE",
+  billing_address_number: "64",
+  billing_postal_code: "95031",
+  billing_city: "ADRANO",
+  billing_province: "CT",
+  billing_country: "IT",
+  billing_sdi_code: "KRRH6B9",
+  billing_pec: null,
+  is_default: false,
+  notes: null,
+  created_at: "2026-01-01",
+  updated_at: "2026-01-01",
 };
 
 const testDraft: InvoiceDraftInput = {
@@ -454,6 +475,32 @@ describe("buildInvoiceDraftXml", () => {
       const idFiscale = getTag(cessionario, "IdFiscaleIVA")!;
       expect(getTag(idFiscale, "IdPaese")).toBe("IT");
       expect(getTag(idFiscale, "IdCodice")).toBe("12345678901");
+    });
+  });
+
+  describe("Client billing profile recipient", () => {
+    it("uses the selected profile for CessionarioCommittente and transmission recipient", () => {
+      const xmlLive = buildInvoiceDraftXml({
+        draft: { ...testDraft, billingProfile: liveBillingProfile },
+        issuer: testIssuer,
+        invoiceNumber: "FPR 1/26",
+      });
+      const cessionario = getTag(xmlLive, "CessionarioCommittente")!;
+      const idFiscale = getTag(cessionario, "IdFiscaleIVA")!;
+      const sede = getTag(cessionario, "Sede")!;
+
+      expect(getTag(xmlLive, "CodiceDestinatario")).toBe("KRRH6B9");
+      expect(getTag(idFiscale, "IdCodice")).toBe("06256710879");
+      expect(getTag(cessionario, "CodiceFiscale")).toBe("06256710879");
+      expect(getTag(cessionario, "Denominazione")).toBe(
+        "LIVE - SOCIETA&apos; A RESPONSABILITA&apos; LIMITATA SEMPLIFICATA",
+      );
+      expect(getTag(sede, "Indirizzo")).toBe("VIA 4 NOVEMBRE");
+      expect(getTag(sede, "NumeroCivico")).toBe("64");
+      expect(getTag(sede, "CAP")).toBe("95031");
+      expect(getTag(sede, "Comune")).toBe("ADRANO");
+      expect(getTag(sede, "Provincia")).toBe("CT");
+      expect(getTag(sede, "Nazione")).toBe("IT");
     });
   });
 });

@@ -1,5 +1,9 @@
 import { todayISODate } from "@/lib/dateTimezone";
-import type { BusinessProfile, Client } from "../types";
+import type { BusinessProfile } from "../types";
+import {
+  getInvoiceBillingRecipient,
+  type InvoiceBillingRecipient,
+} from "./invoiceBillingRecipient";
 import {
   normalizeInvoiceDraftLineItems,
   type InvoiceDraftInput,
@@ -181,15 +185,15 @@ const tag = (name: string, value: string | number) =>
 const optTag = (name: string, value: string | number | undefined | null) =>
   value != null && String(value).trim() !== "" ? tag(name, value) : "";
 
-// ── Client billing address for XML ──────────────────────────────────
+// ── Recipient billing address for XML ───────────────────────────────
 
-const buildClientSede = (client: Client): string => {
-  const street = client.billing_address_street ?? "";
-  const number = client.billing_address_number ?? "";
-  const cap = client.billing_postal_code ?? "";
-  const city = client.billing_city ?? "";
-  const prov = client.billing_province ?? "";
-  const country = client.billing_country ?? "IT";
+const buildRecipientSede = (recipient: InvoiceBillingRecipient): string => {
+  const street = recipient.billing_address_street ?? "";
+  const number = recipient.billing_address_number ?? "";
+  const cap = recipient.billing_postal_code ?? "";
+  const city = recipient.billing_city ?? "";
+  const prov = recipient.billing_province ?? "";
+  const country = recipient.billing_country ?? "IT";
 
   // Minimum required: street + CAP + city + country
   if (!street || !cap || !city) return "";
@@ -244,9 +248,11 @@ export const buildInvoiceDraftXml = ({
     totalAmount: round2(taxableAmount + stampDuty),
   };
 
-  const clientName =
-    draft.client.billing_name ?? draft.client.name ?? "Cliente";
-  const clientCodiceDestinatario = draft.client.billing_sdi_code ?? "0000000";
+  const recipient = getInvoiceBillingRecipient({
+    client: draft.client,
+    billingProfile: draft.billingProfile ?? null,
+  });
+  const recipientCodiceDestinatario = recipient.billing_sdi_code ?? "0000000";
 
   // ── Header ─────────────────────────────────────────────────────
 
@@ -258,9 +264,9 @@ export const buildInvoiceDraftXml = ({
     "</IdTrasmittente>",
     tag("ProgressivoInvio", progressivoInvio),
     tag("FormatoTrasmissione", "FPR12"),
-    tag("CodiceDestinatario", clientCodiceDestinatario),
-    clientCodiceDestinatario === "0000000" && draft.client.billing_pec
-      ? tag("PECDestinatario", draft.client.billing_pec)
+    tag("CodiceDestinatario", recipientCodiceDestinatario),
+    recipientCodiceDestinatario === "0000000" && recipient.billing_pec
+      ? tag("PECDestinatario", recipient.billing_pec)
       : "",
     "</DatiTrasmissione>",
   ].join("\n");
@@ -293,30 +299,30 @@ export const buildInvoiceDraftXml = ({
     "</CedentePrestatore>",
   ].join("\n");
 
-  // Client anagrafica: prefer IdFiscaleIVA if vat_number, else CodiceFiscale
-  const clientAnagrafici = [
+  // Recipient anagrafica: prefer IdFiscaleIVA if vat_number, else CodiceFiscale
+  const recipientAnagrafici = [
     "<DatiAnagrafici>",
-    draft.client.vat_number
+    recipient.vat_number
       ? [
           "<IdFiscaleIVA>",
           tag("IdPaese", "IT"),
-          tag("IdCodice", draft.client.vat_number),
+          tag("IdCodice", recipient.vat_number),
           "</IdFiscaleIVA>",
         ].join("\n")
       : "",
-    optTag("CodiceFiscale", draft.client.fiscal_code),
+    optTag("CodiceFiscale", recipient.fiscal_code),
     "<Anagrafica>",
-    tag("Denominazione", clientName),
+    tag("Denominazione", recipient.name),
     "</Anagrafica>",
     "</DatiAnagrafici>",
   ].join("\n");
 
-  const clientSede = buildClientSede(draft.client);
+  const recipientSede = buildRecipientSede(recipient);
 
   const cessionarioCommittente = [
     "<CessionarioCommittente>",
-    clientAnagrafici,
-    clientSede,
+    recipientAnagrafici,
+    recipientSede,
     "</CessionarioCommittente>",
   ].join("\n");
 
