@@ -1,6 +1,6 @@
 # Documentation Map
 
-Last updated: 2026-06-14
+Last updated: 2026-06-22
 
 ## Purpose
 
@@ -88,6 +88,9 @@ La governance operativa del repo espone anche mappe generate:
 - `docs/workflows/WORKFLOW_MAP.md` e' generata da
   `npm run governance:workflows:write` e verificata da
   `npm run governance:workflows:check`
+- `docs/artifacts/ARTIFACT_MAP.md` e' generata da
+  `npm run governance:artifacts:write` e verificata da
+  `npm run governance:artifacts:check`
 - la sequenza di bootstrap resta CLI -> variabili -> workflow -> artifact
 
 ## Agent Orchestration Files
@@ -171,6 +174,12 @@ Esclude `.env*` reali e usa solo sorgenti tracciate sicure.
 
 Mappa generata dei workflow operativi. Ogni comando deve esistere nel CLI
 registry e ogni input deve esistere nel variable registry.
+
+### `docs/artifacts/ARTIFACT_MAP.md`
+
+Mappa generata degli artefatti repo-locali, esterni, segreti e pericolosi.
+Valida producer/check contro il CLI registry, consumer contro il workflow
+registry e source variables contro il variable registry.
 
 ### `docs/development-continuity-map.md`
 

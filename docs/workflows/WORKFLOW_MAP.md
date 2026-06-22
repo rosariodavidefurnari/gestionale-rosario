@@ -85,10 +85,10 @@ Steps:
 - gitignore_required: `false`
 - history_scan_required: `false`
 - rotation_required: `false`
-- commands: `npm run governance:cli:write, npm run governance:variables:write, npm run governance:workflows:write, npm run governance:test`
+- commands: `npm run governance:cli:write, npm run governance:variables:write, npm run governance:workflows:write, npm run governance:artifacts:write, npm run governance:test`
 - inputs: `package.json, Makefile, .husky/pre-commit`
-- outputs: `docs/cli/COMMAND_REGISTRY.json, docs/cli/COMMAND_MAP.md, docs/variables/VARIABLE_REGISTRY.json, docs/variables/VARIABLE_MAP.md, docs/workflows/WORKFLOW_REGISTRY.json, docs/workflows/WORKFLOW_MAP.md`
-- validation: `npm run governance:cli:check, npm run governance:variables:check, npm run governance:workflows:check, npm run governance:test`
+- outputs: `docs/cli/COMMAND_REGISTRY.json, docs/cli/COMMAND_MAP.md, docs/variables/VARIABLE_REGISTRY.json, docs/variables/VARIABLE_MAP.md, docs/workflows/WORKFLOW_REGISTRY.json, docs/workflows/WORKFLOW_MAP.md, docs/artifacts/ARTIFACT_REGISTRY.json, docs/artifacts/ARTIFACT_MAP.md`
+- validation: `npm run governance:cli:check, npm run governance:variables:check, npm run governance:workflows:check, npm run governance:artifacts:check, npm run governance:test`
 - escalation: Stop and inspect generated diffs if any check reports stale output.
 - rollback: Re-run the generators from a clean tree or restore the generated registry files before commit.
 - source_evidence: `docs/CANTIERE.md, package.json`
@@ -98,7 +98,8 @@ Steps:
 1. Regenerate the CLI registry after package, Makefile, workflow, or hook command changes.
 2. Regenerate the variable registry after env, config, or command flag changes.
 3. Regenerate the workflow registry after adding or changing ordered operator workflows.
-4. Run the governance generator tests.
+4. Regenerate the artifact registry after artifact producer, consumer, or delete policy changes.
+5. Run the governance generator tests.
 
 ## Local development stack
 
@@ -127,6 +128,35 @@ Steps:
 2. Start local Supabase and bootstrap the local admin.
 3. Start the Vite dev server.
 4. Stop Supabase when the session is complete.
+
+## Local domain database reset
+
+- id: `local-domain-database-reset`
+- intent: Reset the local Supabase schema, load the production-domain seed, and bootstrap the local admin.
+- sensitivity: `internal`
+- owner: `local operator`
+- operator_checkpoint: `true`
+- allowed_to_read: `supabase/seed_domain_data.sql, tracked migrations`
+- allowed_to_index: `false`
+- allowed_to_log: `true`
+- gitignore_required: `true`
+- history_scan_required: `false`
+- rotation_required: `false`
+- commands: `make supabase-reset-database`
+- inputs: `LOCAL_SUPABASE_ADMIN_EMAIL, LOCAL_SUPABASE_ADMIN_PASSWORD`
+- outputs: `local Supabase database`
+- validation: `npm run test:e2e`
+- escalation: Do not run if local DB state contains unexported work; capture or discard it explicitly first.
+- rollback: Local reset is destructive; restore only from versioned seed or a known backup.
+- source_evidence: `Makefile, supabase/seed_domain_data.sql`
+
+Steps:
+
+1. Confirm no unsaved local database work is needed.
+2. Reset the local Supabase database.
+3. Load supabase/seed_domain_data.sql.
+4. Bootstrap the local admin user.
+5. Run focused local checks before continuing feature work.
 
 ## Local E2E smoke
 
@@ -168,10 +198,10 @@ Steps:
 - gitignore_required: `false`
 - history_scan_required: `false`
 - rotation_required: `false`
-- commands: `npm run registry:gen, git add registry.json, npm exec lint-staged, npm run continuity:check, npm run docs:drift, node scripts/check-learning-integrity.mjs`
+- commands: `npm run registry:gen, git add registry.json, npm exec lint-staged, npm run continuity:check, npm run docs:drift, npm run governance:precommit, node scripts/check-learning-integrity.mjs`
 - inputs: `.husky/pre-commit, package.json`
 - outputs: `registry.json, git index`
-- validation: `npm run continuity:check, npm run docs:drift`
+- validation: `npm run continuity:check, npm run docs:drift, npm run governance:precommit`
 - escalation: Fix the failing companion docs, generated registry, or learning rule before committing.
 - rollback: Unstage hook-generated files if the commit is intentionally aborted.
 - source_evidence: `.husky/pre-commit`
@@ -181,7 +211,8 @@ Steps:
 1. Generate the shadcn registry and stage registry.json.
 2. Run lint-staged on staged files.
 3. Run continuity and documentation drift checks.
-4. Run learning integrity only when learning rules are staged.
+4. Run governance registry checks and require generated governance outputs to be staged.
+5. Run learning integrity only when learning rules are staged.
 
 ## Production financial health
 

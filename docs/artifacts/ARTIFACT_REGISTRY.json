@@ -1,0 +1,463 @@
+{
+  "schema_version": 1,
+  "generated_by": "scripts/artifact_inventory.py",
+  "last_verified": "2026-06-22",
+  "sources": [
+    "docs/cli/COMMAND_REGISTRY.json",
+    "docs/variables/VARIABLE_REGISTRY.json",
+    "docs/workflows/WORKFLOW_REGISTRY.json",
+    ".gitignore",
+    "scripts/artifact_inventory.py"
+  ],
+  "artifacts": [
+    {
+      "id": "cache-node-dependencies",
+      "path_patterns": [
+        "node_modules/**",
+        "supabase/functions/node_modules/**"
+      ],
+      "kind": "cache",
+      "producers": [
+        "make install",
+        "npm ci"
+      ],
+      "consumers": [
+        "frontend-quality-gate",
+        "local-development-stack",
+        "local-e2e-smoke",
+        "docs-registry-publish"
+      ],
+      "source_variables": [
+        "package.json"
+      ],
+      "delete_policy": "safe_rebuild",
+      "risk": "Rebuildable dependency cache; never inspect as source truth.",
+      "validation": [
+        "npm run governance:cli:check"
+      ],
+      "allowed_to_read": false,
+      "allowed_to_index": false,
+      "allowed_to_log": false
+    },
+    {
+      "id": "cache-test-and-browser-output",
+      "path_patterns": [
+        "test-results/**",
+        "playwright-report/**",
+        ".playwright-mcp/**",
+        ".browser-sessions/**",
+        "coverage/**"
+      ],
+      "kind": "cache",
+      "producers": [
+        "npm run test:e2e"
+      ],
+      "consumers": [
+        "local-e2e-smoke"
+      ],
+      "source_variables": [
+        "LOCAL_SUPABASE_ADMIN_EMAIL",
+        "LOCAL_SUPABASE_ADMIN_PASSWORD"
+      ],
+      "delete_policy": "safe_rebuild",
+      "risk": "Rebuildable test/browser output; useful only for immediate debugging.",
+      "validation": [
+        "npm run test:e2e"
+      ],
+      "allowed_to_read": true,
+      "allowed_to_index": false,
+      "allowed_to_log": true
+    },
+    {
+      "id": "dangerous-local-supabase-state",
+      "path_patterns": [
+        "local Supabase database",
+        "supabase/.branches/**",
+        "supabase/.temp/**"
+      ],
+      "kind": "dangerous",
+      "producers": [
+        "make start-supabase",
+        "make supabase-reset-database"
+      ],
+      "consumers": [
+        "local-development-stack",
+        "local-domain-database-reset",
+        "local-e2e-smoke"
+      ],
+      "source_variables": [
+        "LOCAL_SUPABASE_ADMIN_EMAIL",
+        "LOCAL_SUPABASE_ADMIN_PASSWORD"
+      ],
+      "delete_policy": "operator_review",
+      "risk": "Local database/runtime state can hide unexported work; reset only with explicit intent.",
+      "validation": [
+        "npm run test:e2e"
+      ],
+      "allowed_to_read": false,
+      "allowed_to_index": false,
+      "allowed_to_log": false
+    },
+    {
+      "id": "dangerous-remote-supabase-state",
+      "path_patterns": [
+        "remote Supabase database",
+        "remote Supabase Edge Functions"
+      ],
+      "kind": "dangerous",
+      "producers": [
+        "make remote-deploy-supabase"
+      ],
+      "consumers": [
+        "remote-supabase-deploy",
+        "production-financial-health"
+      ],
+      "source_variables": [
+        "SUPABASE_ACCESS_TOKEN",
+        "SUPABASE_DB_PASSWORD",
+        "SUPABASE_PROJECT_ID",
+        "SUPABASE_URL",
+        "SB_PUBLISHABLE_KEY"
+      ],
+      "delete_policy": "never_delete",
+      "risk": "Production database/functions; no reset or destructive repair without a dedicated plan.",
+      "validation": [
+        "npm run health:financial"
+      ],
+      "allowed_to_read": false,
+      "allowed_to_index": false,
+      "allowed_to_log": false
+    },
+    {
+      "id": "external-fiscal-source-files",
+      "path_patterns": [
+        "Fatture/**",
+        "*.numbers",
+        "*.pdf"
+      ],
+      "kind": "external",
+      "producers": [],
+      "consumers": [],
+      "source_variables": [],
+      "delete_policy": "never_delete",
+      "risk": "External fiscal/business source material; operator approval required before moving or deleting.",
+      "validation": [],
+      "allowed_to_read": false,
+      "allowed_to_index": false,
+      "allowed_to_log": false
+    },
+    {
+      "id": "generated-docs-and-public-registry",
+      "path_patterns": [
+        "doc/dist/**",
+        "public/r/**"
+      ],
+      "kind": "derived",
+      "producers": [
+        "make doc-build",
+        "make registry-build"
+      ],
+      "consumers": [
+        "docs-registry-publish"
+      ],
+      "source_variables": [
+        "GITHUB_TOKEN",
+        "GITHUB_REPOSITORY"
+      ],
+      "delete_policy": "safe_rebuild",
+      "risk": "Publishable docs and public registry artifacts.",
+      "validation": [
+        "make doc-build",
+        "make registry-build"
+      ],
+      "allowed_to_read": true,
+      "allowed_to_index": false,
+      "allowed_to_log": true
+    },
+    {
+      "id": "generated-frontend-build",
+      "path_patterns": [
+        "dist/**",
+        "build/**"
+      ],
+      "kind": "derived",
+      "producers": [
+        "npm run build"
+      ],
+      "consumers": [
+        "frontend-quality-gate"
+      ],
+      "source_variables": [
+        "VITE_SUPABASE_URL",
+        "VITE_SB_PUBLISHABLE_KEY",
+        "VITE_INBOUND_EMAIL"
+      ],
+      "delete_policy": "safe_rebuild",
+      "risk": "Production frontend bundle output.",
+      "validation": [
+        "npm run build"
+      ],
+      "allowed_to_read": true,
+      "allowed_to_index": false,
+      "allowed_to_log": true
+    },
+    {
+      "id": "generated-governance-registries",
+      "path_patterns": [
+        "docs/cli/COMMAND_REGISTRY.json",
+        "docs/cli/COMMAND_MAP.md",
+        "docs/variables/VARIABLE_REGISTRY.json",
+        "docs/variables/VARIABLE_MAP.md",
+        "docs/workflows/WORKFLOW_REGISTRY.json",
+        "docs/workflows/WORKFLOW_MAP.md",
+        "docs/artifacts/ARTIFACT_REGISTRY.json",
+        "docs/artifacts/ARTIFACT_MAP.md"
+      ],
+      "kind": "derived",
+      "producers": [
+        "npm run governance:cli:write",
+        "npm run governance:variables:write",
+        "npm run governance:workflows:write",
+        "npm run governance:artifacts:write"
+      ],
+      "consumers": [
+        "governance-registry-refresh",
+        "pre-commit-continuity-guard"
+      ],
+      "source_variables": [
+        "package.json",
+        "Makefile",
+        ".husky/pre-commit"
+      ],
+      "delete_policy": "safe_rebuild",
+      "risk": "Generated governance truth; stale files mislead future agents.",
+      "validation": [
+        "npm run governance:cli:check",
+        "npm run governance:variables:check",
+        "npm run governance:workflows:check",
+        "npm run governance:artifacts:check"
+      ],
+      "allowed_to_read": true,
+      "allowed_to_index": false,
+      "allowed_to_log": true
+    },
+    {
+      "id": "generated-shadcn-registry",
+      "path_patterns": [
+        "registry.json"
+      ],
+      "kind": "derived",
+      "producers": [
+        "npm run registry:gen"
+      ],
+      "consumers": [
+        "pre-commit-continuity-guard",
+        "docs-registry-publish"
+      ],
+      "source_variables": [
+        "package.json"
+      ],
+      "delete_policy": "safe_rebuild",
+      "risk": "Generated component registry must match source components.",
+      "validation": [
+        "npm run registry:gen"
+      ],
+      "allowed_to_read": true,
+      "allowed_to_index": true,
+      "allowed_to_log": true
+    },
+    {
+      "id": "secret-env-files",
+      "path_patterns": [
+        ".env",
+        ".env.*",
+        "supabase/functions/.env",
+        "Chiavi Google Calendar/**"
+      ],
+      "kind": "secret",
+      "producers": [],
+      "consumers": [
+        "local-development-stack",
+        "production-financial-health",
+        "remote-supabase-deploy",
+        "docs-registry-publish"
+      ],
+      "source_variables": [
+        "SUPABASE_URL",
+        "SUPABASE_PROJECT_REF",
+        "HEALTH_ENV_FILE",
+        "GITHUB_TOKEN",
+        "SUPABASE_ACCESS_TOKEN",
+        "SUPABASE_DB_PASSWORD",
+        "SB_SECRET_KEY",
+        "VITE_SUPABASE_URL",
+        "VITE_SB_PUBLISHABLE_KEY"
+      ],
+      "delete_policy": "never_commit",
+      "risk": "Local and remote credentials; values must never be logged, indexed, or committed.",
+      "validation": [
+        "npm run governance:variables:check"
+      ],
+      "allowed_to_read": false,
+      "allowed_to_index": false,
+      "allowed_to_log": false
+    },
+    {
+      "id": "source-frontend-app",
+      "path_patterns": [
+        "src/**",
+        "app/src/**"
+      ],
+      "kind": "source",
+      "producers": [],
+      "consumers": [
+        "frontend-quality-gate",
+        "local-development-stack",
+        "local-e2e-smoke"
+      ],
+      "source_variables": [
+        "package.json",
+        "VITE_SUPABASE_URL",
+        "VITE_SB_PUBLISHABLE_KEY",
+        "VITE_CLOUDINARY_CLOUD_NAME",
+        "VITE_CLOUDINARY_API_KEY",
+        "VITE_GOOGLE_WORKPLACE_DOMAIN",
+        "VITE_DISABLE_EMAIL_PASSWORD_AUTHENTICATION"
+      ],
+      "delete_policy": "never_delete",
+      "risk": "Product source and mutable UI framework source.",
+      "validation": [
+        "npm run typecheck",
+        "npm run lint",
+        "npm run test"
+      ],
+      "allowed_to_read": true,
+      "allowed_to_index": true,
+      "allowed_to_log": true
+    },
+    {
+      "id": "source-governance-generators",
+      "path_patterns": [
+        "scripts/*_inventory.py",
+        "scripts/governance_inventory_test.py",
+        "scripts/governance_pre_commit.py"
+      ],
+      "kind": "source",
+      "producers": [],
+      "consumers": [
+        "governance-registry-refresh",
+        "pre-commit-continuity-guard"
+      ],
+      "source_variables": [
+        "package.json",
+        "Makefile",
+        ".husky/pre-commit"
+      ],
+      "delete_policy": "never_delete",
+      "risk": "Governance map generation and drift-check logic.",
+      "validation": [
+        "npm run governance:test"
+      ],
+      "allowed_to_read": true,
+      "allowed_to_index": true,
+      "allowed_to_log": true
+    },
+    {
+      "id": "source-supabase-functions",
+      "path_patterns": [
+        "supabase/functions/**",
+        "!supabase/functions/.env",
+        "!supabase/functions/node_modules/**"
+      ],
+      "kind": "source",
+      "producers": [],
+      "consumers": [
+        "remote-supabase-deploy",
+        "production-financial-health"
+      ],
+      "source_variables": [
+        "SUPABASE_URL",
+        "SB_SECRET_KEY",
+        "SB_PUBLISHABLE_KEY",
+        "SUPABASE_ANON_KEY",
+        "CRON_SHARED_SECRET",
+        "OPENAI_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "GOOGLE_MAPS_API_KEY",
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "SMTP_USER",
+        "SMTP_PASS",
+        "SMTP_FROM_NAME",
+        "CALLMEBOT_PHONE",
+        "CALLMEBOT_APIKEY",
+        "GOOGLE_CALENDAR_CLIENT_EMAIL",
+        "GOOGLE_CALENDAR_PRIVATE_KEY",
+        "GOOGLE_CALENDAR_ID"
+      ],
+      "delete_policy": "never_delete",
+      "risk": "Remote Edge Function behavior and provider integrations.",
+      "validation": [
+        "npm run governance:variables:check",
+        "npm run health:financial"
+      ],
+      "allowed_to_read": true,
+      "allowed_to_index": true,
+      "allowed_to_log": true
+    },
+    {
+      "id": "source-supabase-migrations",
+      "path_patterns": [
+        "supabase/migrations/**",
+        "supabase/seed.sql",
+        "supabase/seed_domain_data.sql"
+      ],
+      "kind": "source",
+      "producers": [],
+      "consumers": [
+        "remote-supabase-deploy",
+        "local-domain-database-reset"
+      ],
+      "source_variables": [
+        "SUPABASE_PROJECT_ID",
+        "SUPABASE_DB_PASSWORD"
+      ],
+      "delete_policy": "never_delete",
+      "risk": "Database schema, seed, fiscal, and financial domain state.",
+      "validation": [
+        "npm run health:financial"
+      ],
+      "allowed_to_read": true,
+      "allowed_to_index": true,
+      "allowed_to_log": true
+    },
+    {
+      "id": "source-tests",
+      "path_patterns": [
+        "tests/**",
+        "**/*.test.ts",
+        "**/*.spec.tsx"
+      ],
+      "kind": "source",
+      "producers": [],
+      "consumers": [
+        "frontend-quality-gate",
+        "local-e2e-smoke"
+      ],
+      "source_variables": [
+        "LOCAL_SUPABASE_ADMIN_EMAIL",
+        "LOCAL_SUPABASE_ADMIN_PASSWORD"
+      ],
+      "delete_policy": "never_delete",
+      "risk": "Regression coverage and deterministic local data controllers.",
+      "validation": [
+        "npm run test",
+        "npm run test:e2e"
+      ],
+      "allowed_to_read": true,
+      "allowed_to_index": true,
+      "allowed_to_log": true
+    }
+  ]
+}

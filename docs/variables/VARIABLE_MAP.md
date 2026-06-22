@@ -875,11 +875,11 @@ used only as a template source.
 - required: `false`
 - sensitive: `false`
 - status: `verified`
-- owner_command: `npm run governance:cli:check`
+- owner_command: `npm run governance:artifacts:check`
 - source_file: `docs/cli/COMMAND_REGISTRY.json`
 - risk: command behavior modifier
-- evidence: `docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:check, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:check, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:workflows:check, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier`
-- owner_commands: `npm run governance:cli:check, npm run governance:variables:check, npm run governance:workflows:check, npm run prettier`
+- evidence: `docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:artifacts:check, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:check, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:precommit, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:check, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:workflows:check, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier`
+- owner_commands: `npm run governance:artifacts:check, npm run governance:cli:check, npm run governance:precommit, npm run governance:variables:check`
 
 ### flag-config
 
@@ -1057,11 +1057,11 @@ used only as a template source.
 - required: `false`
 - sensitive: `false`
 - status: `verified`
-- owner_command: `npm run governance:cli:write`
+- owner_command: `npm run governance:artifacts:write`
 - source_file: `docs/cli/COMMAND_REGISTRY.json`
 - risk: command behavior modifier
-- evidence: `docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:write, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:write, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:workflows:write, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier:apply, docs/cli/COMMAND_REGISTRY.json:Makefile:95`
-- owner_commands: `npm run governance:cli:write, npm run governance:variables:write, npm run governance:workflows:write, npm run prettier:apply`
+- evidence: `docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:artifacts:write, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:write, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:write, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:workflows:write, docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier:apply, docs/cli/COMMAND_REGISTRY.json:Makefile:95`
+- owner_commands: `npm run governance:artifacts:write, npm run governance:cli:write, npm run governance:variables:write, npm run governance:workflows:write`
 
 ## Config Paths
 

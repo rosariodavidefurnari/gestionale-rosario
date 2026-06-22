@@ -110,12 +110,14 @@
         "Regenerate the CLI registry after package, Makefile, workflow, or hook command changes.",
         "Regenerate the variable registry after env, config, or command flag changes.",
         "Regenerate the workflow registry after adding or changing ordered operator workflows.",
+        "Regenerate the artifact registry after artifact producer, consumer, or delete policy changes.",
         "Run the governance generator tests."
       ],
       "commands": [
         "npm run governance:cli:write",
         "npm run governance:variables:write",
         "npm run governance:workflows:write",
+        "npm run governance:artifacts:write",
         "npm run governance:test"
       ],
       "inputs": [
@@ -129,12 +131,15 @@
         "docs/variables/VARIABLE_REGISTRY.json",
         "docs/variables/VARIABLE_MAP.md",
         "docs/workflows/WORKFLOW_REGISTRY.json",
-        "docs/workflows/WORKFLOW_MAP.md"
+        "docs/workflows/WORKFLOW_MAP.md",
+        "docs/artifacts/ARTIFACT_REGISTRY.json",
+        "docs/artifacts/ARTIFACT_MAP.md"
       ],
       "validation": [
         "npm run governance:cli:check",
         "npm run governance:variables:check",
         "npm run governance:workflows:check",
+        "npm run governance:artifacts:check",
         "npm run governance:test"
       ],
       "sensitivity": "internal",
@@ -207,6 +212,49 @@
       ]
     },
     {
+      "id": "local-domain-database-reset",
+      "name": "Local domain database reset",
+      "intent": "Reset the local Supabase schema, load the production-domain seed, and bootstrap the local admin.",
+      "steps": [
+        "Confirm no unsaved local database work is needed.",
+        "Reset the local Supabase database.",
+        "Load supabase/seed_domain_data.sql.",
+        "Bootstrap the local admin user.",
+        "Run focused local checks before continuing feature work."
+      ],
+      "commands": [
+        "make supabase-reset-database"
+      ],
+      "inputs": [
+        "LOCAL_SUPABASE_ADMIN_EMAIL",
+        "LOCAL_SUPABASE_ADMIN_PASSWORD"
+      ],
+      "outputs": [
+        "local Supabase database"
+      ],
+      "validation": [
+        "npm run test:e2e"
+      ],
+      "sensitivity": "internal",
+      "allowed_to_read": [
+        "supabase/seed_domain_data.sql",
+        "tracked migrations"
+      ],
+      "allowed_to_index": false,
+      "allowed_to_log": true,
+      "gitignore_required": true,
+      "history_scan_required": false,
+      "rotation_required": false,
+      "owner": "local operator",
+      "escalation": "Do not run if local DB state contains unexported work; capture or discard it explicitly first.",
+      "rollback": "Local reset is destructive; restore only from versioned seed or a known backup.",
+      "operator_checkpoint": true,
+      "source_evidence": [
+        "Makefile",
+        "supabase/seed_domain_data.sql"
+      ]
+    },
+    {
       "id": "local-e2e-smoke",
       "name": "Local E2E smoke",
       "intent": "Run Playwright smoke tests against the deterministic local Supabase stack.",
@@ -261,6 +309,7 @@
         "Generate the shadcn registry and stage registry.json.",
         "Run lint-staged on staged files.",
         "Run continuity and documentation drift checks.",
+        "Run governance registry checks and require generated governance outputs to be staged.",
         "Run learning integrity only when learning rules are staged."
       ],
       "commands": [
@@ -269,6 +318,7 @@
         "npm exec lint-staged",
         "npm run continuity:check",
         "npm run docs:drift",
+        "npm run governance:precommit",
         "node scripts/check-learning-integrity.mjs"
       ],
       "inputs": [
@@ -281,7 +331,8 @@
       ],
       "validation": [
         "npm run continuity:check",
-        "npm run docs:drift"
+        "npm run docs:drift",
+        "npm run governance:precommit"
       ],
       "sensitivity": "internal",
       "allowed_to_read": [

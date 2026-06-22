@@ -229,6 +229,28 @@ candidates until promoted through the repo governance docs.
 - destructive_level: `none`
 - reads: `docs/**, package-lock.json, package.json`
 
+### npm-script-governance-artifacts-check
+
+- command: `npm run governance:artifacts:check`
+- category: `governance`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.governance:artifacts:check = python3 ./scripts/artifact_inventory.py --check`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
+### npm-script-governance-artifacts-write
+
+- command: `npm run governance:artifacts:write`
+- category: `governance`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.governance:artifacts:write = python3 ./scripts/artifact_inventory.py --write`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
 ### npm-script-governance-cli-check
 
 - command: `npm run governance:cli:check`
@@ -247,6 +269,17 @@ candidates until promoted through the repo governance docs.
 - entrypoint: `npm script`
 - source: `package.json`
 - evidence: `package.json:scripts.governance:cli:write = python3 ./scripts/cli_inventory.py --write`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
+### npm-script-governance-precommit
+
+- command: `npm run governance:precommit`
+- category: `governance`
+- entrypoint: `npm script`
+- source: `package.json`
+- evidence: `package.json:scripts.governance:precommit = python3 ./scripts/governance_pre_commit.py --check`
 - safe_to_run: `true`
 - destructive_level: `none`
 - reads: `package-lock.json, package.json`
@@ -554,13 +587,24 @@ candidates until promoted through the repo governance docs.
 - destructive_level: `none`
 - reads: `docs/**, package-lock.json, package.json`
 
-### git-hook-pre-commit-7-node-scripts-check-learning-integrity-mjs
+### git-hook-pre-commit-6-npm-run-governance-precommit
+
+- command: `npm run governance:precommit`
+- category: `governance`
+- entrypoint: `git hook`
+- source: `.husky/pre-commit`
+- evidence: `.husky/pre-commit:6`
+- safe_to_run: `true`
+- destructive_level: `none`
+- reads: `package-lock.json, package.json`
+
+### git-hook-pre-commit-8-node-scripts-check-learning-integrity-mjs
 
 - command: `node scripts/check-learning-integrity.mjs`
 - category: `maintenance`
 - entrypoint: `git hook`
 - source: `.husky/pre-commit`
-- evidence: `.husky/pre-commit:7`
+- evidence: `.husky/pre-commit:8`
 - safe_to_run: `true`
 - destructive_level: `none`
 

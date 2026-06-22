@@ -15,9 +15,11 @@
       "type": "cli_flag",
       "default": null,
       "required": false,
-      "owner_command": "npm run governance:cli:check",
+      "owner_command": "npm run governance:artifacts:check",
       "owner_commands": [
+        "npm run governance:artifacts:check",
         "npm run governance:cli:check",
+        "npm run governance:precommit",
         "npm run governance:variables:check",
         "npm run governance:workflows:check",
         "npm run prettier"
@@ -26,7 +28,9 @@
       "risk": "command behavior modifier",
       "status": "verified",
       "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:artifacts:check",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:check",
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:precommit",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:check",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:workflows:check",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.prettier"
@@ -297,8 +301,9 @@
       "type": "cli_flag",
       "default": null,
       "required": false,
-      "owner_command": "npm run governance:cli:write",
+      "owner_command": "npm run governance:artifacts:write",
       "owner_commands": [
+        "npm run governance:artifacts:write",
         "npm run governance:cli:write",
         "npm run governance:variables:write",
         "npm run governance:workflows:write",
@@ -309,6 +314,7 @@
       "risk": "command behavior modifier",
       "status": "verified",
       "source_evidence": [
+        "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:artifacts:write",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:cli:write",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:variables:write",
         "docs/cli/COMMAND_REGISTRY.json:package.json:scripts.governance:workflows:write",

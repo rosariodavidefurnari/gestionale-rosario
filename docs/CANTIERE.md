@@ -98,8 +98,15 @@ Governance/RAG fix 2026-06-22:
   `docs/workflows/WORKFLOW_REGISTRY.json` + `docs/workflows/WORKFLOW_MAP.md`,
   e `npm run governance:workflows:check` valida ogni comando contro il CLI
   registry e ogni input contro il variable registry;
-- prossimo step governance: artifact registry; installare hook aggiuntivi solo
-  dopo che i quattro check esistono e passano nell'ordine canonico.
+- governance artifact avviata: `scripts/artifact_inventory.py` genera
+  `docs/artifacts/ARTIFACT_REGISTRY.json` + `docs/artifacts/ARTIFACT_MAP.md`,
+  e `npm run governance:artifacts:check` valida producer/check contro il CLI
+  registry, consumer contro il workflow registry, source variables contro il
+  variable registry e policy dei secret;
+- prossimo step governance: valutare inserimento hook solo dopo che
+  `governance:cli:check`, `governance:variables:check`,
+  `governance:workflows:check`, `governance:artifacts:check` e
+  `governance:test` passano nell'ordine canonico.
 
 ### Sessione 2026-06-20-sexies (IN CORSO, pre-commit, 0 codice applicato) — fix-minori → pivot
 
