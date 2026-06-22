@@ -662,7 +662,7 @@ Empty-state screenshot:
 empty-state gate: console/page errors 0 and `docScrollWidth=390` on viewport
 390.
 
-- [ ] **Step 4: Deploy Edge Function**
+- [x] **Step 4: Deploy Edge Function**
 
 Because `supabase/functions/invoice_emit/**` and
 `supabase/functions/invoice_import_confirm/**` changed, deploy manually after
@@ -674,6 +674,12 @@ npx supabase functions deploy invoice_import_confirm
 ```
 
 Expected: deploy succeeds on the linked project.
+
+DEPLOY 2026-06-22: PASS on project `qvdmzhyzpyaveniirsmo`.
+`invoice_emit` deployed successfully and is ACTIVE version 5,
+`updated_at=2026-06-22 19:54:27 UTC`; `invoice_import_confirm` deployed
+successfully and is ACTIVE version 17, `updated_at=2026-06-22 19:54:41 UTC`.
+Post-deploy `npm run health:financial` PASS.
 
 - [ ] **Step 5: Final review and commit docs**
 

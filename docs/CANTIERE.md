@@ -300,9 +300,14 @@ Integrazione applicativa billing profiles — spec/piano gate 2026-06-22:
   `400` negli ultimi 10 minuti = 0. `docs:drift` PASS. Governance ha richiesto
   rigenerazione variabili per `process.env.CI` in `playwright.config.ts`;
   `VARIABLE_MAP/REGISTRY` aggiornati.
-- Stop point: review implementazione, commit sensato della tranche
-  UI/tooling/docs, poi deploy manuale `invoice_emit` + `invoice_import_confirm`,
-  push e verifica post-deploy.
+- Task 8 deploy Edge Functions: COMPLETATO su progetto Supabase
+  `qvdmzhyzpyaveniirsmo`. `invoice_emit` deploy OK, ACTIVE versione 5,
+  `updated_at=2026-06-22 19:54:27 UTC`; `invoice_import_confirm` deploy OK,
+  ACTIVE versione 17, `updated_at=2026-06-22 19:54:41 UTC`. Post-deploy
+  `npm run health:financial` PASS con LIVE non cliente operativo, target docs
+  2/2 e docs senza profilo LIVE 0.
+- Stop point: commit docs evidenza deploy, push su `origin/main`, verifica
+  deploy frontend Vercel e stato finale.
 
 Governance/RAG fix 2026-06-22:
 
