@@ -88,8 +88,12 @@ Governance/RAG fix 2026-06-22:
   smoke query vietata su `.claude/**` verde;
 - fix infra applicato su Qdrant MCP locale: estensioni `.mjs`/`.cjs` incluse nel
   code-RAG, cosi' i guardrail in `scripts/*.mjs` sono recuperabili;
-- controllo non ancora installato nel pre-commit: prossimo step governance,
-  dopo review della hook order CLI/variabili/workflow/artifact.
+- governance CLI avviata: `scripts/cli_inventory.py` genera
+  `docs/cli/COMMAND_REGISTRY.json` + `docs/cli/COMMAND_MAP.md`, e
+  `npm run governance:cli:check` verifica il drift;
+- prossimo step governance: variable registry, poi workflow registry, poi
+  artifact registry; installare hook aggiuntivi solo dopo che i quattro check
+  esistono e passano nell'ordine canonico.
 
 ### Sessione 2026-06-20-sexies (IN CORSO, pre-commit, 0 codice applicato) — fix-minori → pivot
 

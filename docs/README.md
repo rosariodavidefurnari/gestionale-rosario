@@ -78,6 +78,12 @@ Questo hook verifica che le modifiche su codice prodotto, schema, AI,
 document-import e configurazione condivisa si portino dietro almeno i documenti
 o le superfici companion minime richieste.
 
+La governance operativa del repo espone anche mappe generate:
+
+- `docs/cli/COMMAND_MAP.md` e' generata da `npm run governance:cli:write`
+  e verificata da `npm run governance:cli:check`
+- la sequenza di bootstrap resta CLI -> variabili -> workflow -> artifact
+
 ## Agent Orchestration Files
 
 Anche i file di orchestrazione agentica hanno una gerarchia esplicita:
@@ -144,6 +150,11 @@ letto come fonte primaria.
 11. `Gestionale_Rosario_Furnari_Specifica.md`
 
 ## Canonical
+
+### `docs/cli/COMMAND_MAP.md`
+
+Mappa generata dei comandi repo-locali. Classifica entrypoint npm, Makefile e
+CI come `official`, `candidate`, `dangerous` o `legacy`.
 
 ### `docs/development-continuity-map.md`
 
