@@ -1,11 +1,25 @@
 # Spec — Backfill fatture mancanti (no-doc payments → financial_documents)
 
-Stato: `draft` — in attesa review multi-superficie e gate spec→codice utente.
+Stato: `partial-applied` — Bucket A LAURUS applicato su prod il 2026-06-22;
+Bucket B 2026 XML arrivati in `Fatture/2026/`, ma bloccati finche' non viene
+gestito l'intestatario fiscale per-documento.
 Data: 2026-06-20
 Autore: agente (sessione fix-minori → missing-invoices)
 Relazione: segue BR2 (`2026-06-20-br2-payments-financial-documents-reconciliation-design.md`),
 che ha collegato i 25 payment con doc esistente. Questa spec affronta i **6 payment
 SENZA financial_document** (no-doc) emersi come follow-up di BR2.
+
+Update 2026-06-22: applicata solo la parte con fonte completa (3 LAURUS storiche).
+Verifica remota: C1 `OK_TO_APPLY` → dry-run transazionale con rollback → APPLY →
+C3 `OK` (`docs_present=3`, `linked_payments=3`, `remaining_targets=0`) →
+`npm run health:financial` PASS con guardrail `LAURUS no-doc backfill missing/link gaps: 0`.
+
+Update 2026-06-22 sera: gli XML 2026 sono presenti. `FPR 1/26` e `FPR 2/26`
+sono intestate a `LIVE - SOCIETA' A RESPONSABILITA' LIMITATA SEMPLIFICATA`,
+mentre incassi e progetti sono sotto `ASSOCIAZIONE CULTURALE GUSTARE SICILIA`.
+Quindi il backfill 2026 non deve partire con il vecchio modello "client fiscale
+= client operativo". Prima serve la spec dedicata
+`docs/superpowers/specs/2026-06-22-client-billing-profiles-design.md`.
 
 ---
 
@@ -41,24 +55,29 @@ data-fattura, non una correzione monetaria.
 
 ### 1.2 Decomposizione per fonte (decide la fattibilità)
 
-`Fatture/` nel repo copre **solo 2023/2024/2025** (nessun 2026).
+`Fatture/` nel repo copre **solo 2023/2024/2025** (nessun 2026 al
+2026-06-22).
 
-- **Bucket A — 3 storiche LAURUS** con XML in repo → backfill deterministico ORA:
+- **Bucket A — 3 storiche LAURUS** con XML in repo → backfill deterministico
+  **APPLICATO su prod il 2026-06-22**:
 
-  | ref | XML source | issue_date | total | imponibile | bollo | cross-year? |
-  |---|---|---|---|---|---|---|
-  | FPR 1/23 | `Fatture/2023/IT01879020517A2023_bhiYr.xml` | 2023-03-21 | 1872,00 | 1872,00 | — | no (2023→2023) |
-  | FPR 6/23 | `Fatture/2023/IT01879020517A2023_flFCj.xml` | 2023-10-24 | 2498,08 | 2498,08 | 2,00 | no (2023→2023) |
-  | FPR 1/24 | `Fatture/2024/IT01879020517A2024_aDUq8.xml` | 2024-02-02 | 1750,00 | 1750,00 | — | no (2024→2024) |
+  | ref | XML source | issue_date | due_date | total | imponibile | bollo | cross-year? |
+  |---|---|---|---|---|---|---|---|
+  | FPR 1/23 | `Fatture/2023/IT01879020517A2023_bhiYr.xml` | 2023-03-21 | 2023-03-21 | 1872,00 | 1872,00 | — | no (2023→2023) |
+  | FPR 6/23 | `Fatture/2023/IT01879020517A2023_flFCj.xml` | 2023-10-24 | 2023-11-24 | 2498,08 | 2498,08 | 2,00 | no (2023→2023) |
+  | FPR 1/24 | `Fatture/2024/IT01879020517A2024_aDUq8.xml` | 2024-02-02 | 2024-02-29 | 1750,00 | 1750,00 | — | no (2024→2024) |
 
   Per tutte: `ImportoPagamento == ImportoTotaleDocumento` (nessun +25%), `Natura N2.2`,
   `Imposta 0.00`, cliente `LAURUS S.R.L.`. Verificato sull'XML reale.
 
-- **Bucket B — 3 del 2026** (GUSTARE FPR 1/26, FPR 2/26 *parziale*, LAURUS FPR 3/26):
-  **nessun XML nel repo**. L'utente fornirà gli XML Aruba (→ `Fatture/2026/`). Stesso
-  meccanismo di A; si innesta quando arriva la fonte. FPR 2/26 è `parziale` → il
-  `total_amount` del documento (totale fattura) sarà ≥ del payment 2.852,03: serve l'XML
-  per il totale reale, NON si deriva dal payment.
+- **Bucket B — 2026**: gli XML Aruba sono ora presenti in `Fatture/2026/`,
+  ma il backfill e' bloccato da un problema di modello: `FPR 1/26` e
+  `FPR 2/26` sono intestate a LIVE SRLS mentre incassi/progetti sono sotto
+  Gustare. Prima del backfill serve il modello backend per profili di
+  fatturazione cliente definito in
+  `2026-06-22-client-billing-profiles-design.md`. FPR 2/26 e
+  FPR 5/26 confermano che il `total_amount` del documento viene dall'XML, NON
+  dal payment.
 
 ### 1.3 Bucket C — 2 "no-payment" Aidone: NON è un problema
 
@@ -96,8 +115,9 @@ backfill. (Vedi §6 per il finding sistemico collegato.)
 ## 3. Non-obiettivi (espliciti)
 
 - **NON** modificare `payments.amount`/`status`/`payment_date` (cassa già corretta).
-- **NON** creare documenti **senza XML** (Bucket B aspetta la fonte; vietato derivare il
-  `total_amount` dal payment, specie per la `parziale` FPR 2/26).
+- **NON** creare documenti **senza XML**: per il 2026 la fonte ora esiste, ma
+  resta vietato derivare il `total_amount` dal payment, specie per documenti
+  parziali o con bollo.
 - **NON** toccare Aidone (Bucket C corretto) — al più, follow-up cosmetico opzionale:
   valorizzare `related_document_number` su FPA 2/25 → FPA 1/25 (clarity), fuori da questa spec.
 - **NON** risolvere il finding sistemico settlement (`financial_document_cash_allocations`
@@ -138,7 +158,9 @@ Ogni nuovo `financial_documents` row:
 - `total_amount` = `<ImportoTotaleDocumento>`; `taxable_amount` = `<ImponibileImporto>`;
 - `tax_amount=NULL` (forfettario N2.2, imposta 0);
 - `stamp_amount` = `<ImportoBollo>` se presente, altrimenti `NULL`;
-- `due_date = issue_date` (convenzione storici);
+- `due_date` = `<DataScadenzaPagamento>` se presente, altrimenti `issue_date`
+  (verificato su XML reali: FPR 6/23 scade 2023-11-24, FPR 1/24 scade
+  2024-02-29; non forzare la scadenza alla data fattura);
 - `source_path` = path XML relativo repo (es. `Fatture/2023/IT01879020517A2023_bhiYr.xml`).
   Valorizzarlo è anche corretto rispetto al futuro void-hardening U5-B: `source_path`
   non-NULL = documento storico/importato, NON app-emesso → non void-eligibile come emesso.
@@ -197,7 +219,7 @@ all'utente.**
 | client_id sbagliato | usato il client del payment, mai inventato |
 | match ambiguo (>1) | fail-closed, skip + report |
 | shift cassa cross-year (DB-13) | A e B stesso-anno issue↔payment (verificato/da-verificare) |
-| Bucket B senza fonte | non eseguibile finché XML 2026 non in repo (esplicito) |
+| Bucket B con destinatario divergente | non eseguibile finche' non esiste modello `client_billing_profiles` + `billing_profile_id` |
 | doc creato ma non visibile come "incassato" | atteso: §6 settlement è separato; il doc compare comunque nel ledger |
 
 ---
@@ -241,10 +263,11 @@ gate `npm run health:financial` + pure decider testabile `decidePaymentInvoiceBa
 1. Review multi-superficie di questa spec (DB/Postgres, dominio fiscale forfettario,
    frontend/Fatture view + mobile parity, provider/Edge, TDD/controllori), ognuna con RAG
    :8001 (snapshot `fde4d2a7`) + verifica sorgente.
-2. **Attendere gli XML 2026** (Bucket B) in `Fatture/2026/`, poi finalizzare le 3 righe B
-   (issue_date/total/imponibile/bollo dall'XML, come per A).
-3. Eseguire **A+B insieme** in un solo ciclo piano→review-piano→apply (evita due backfill,
-   un solo review/apply, valore coerente). Se l'utente vuole A subito, è isolabile.
+2. Implementare o approvare prima il modello `client_billing_profiles` +
+   `financial_documents.billing_profile_id`, perche' due XML 2026 sono
+   intestati a LIVE ma appartengono operativamente a Gustare.
+3. Eseguire il backfill 2026 in un ciclo separato C1→dry-run→APPLY→C3 dopo il
+   modello billing profiles.
 4. Gate spec→codice: **nessuno script applicato su prod** senza via esplicito dell'utente.
 5. Aggiornare docs canonici + CANTIERE + learning (eventuale nuovo trigger su
    backfill-da-XML) nello stesso commit del controllore.
@@ -254,5 +277,7 @@ gate `npm run health:financial` + pure decider testabile `decidePaymentInvoiceBa
 ## 11. Domande aperte / decisioni utente
 
 - [ ] Priorità del finding sistemico settlement (§6): spec separata ora o più avanti?
-- [ ] Eseguire A subito o attendere B e fare A+B insieme (raccomandato)?
+- [x] Eseguire A subito o attendere B e fare A+B insieme? Decisione 2026-06-22:
+  A subito applicato; B ora ha XML ma resta bloccato dal modello billing
+  profiles.
 - [ ] Follow-up cosmetico Aidone (`related_document_number` su FPA 2/25): farlo o ignorarlo?
