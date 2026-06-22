@@ -74,6 +74,7 @@ describe("invoiceImport", () => {
               billing_city: null,
             },
           ],
+          billingProfiles: [],
           contacts: [],
           projects: [
             { id: "project-b", name: "Progetto B", client_id: "client-b" },
@@ -108,6 +109,7 @@ describe("invoiceImport", () => {
               billing_city: null,
             },
           ],
+          billingProfiles: [],
           contacts: [],
           projects: [],
         },
@@ -206,6 +208,7 @@ describe("invoiceImport", () => {
               billing_city: "Adrano",
             },
           ],
+          billingProfiles: [],
           contacts: [],
           projects: [],
         },
@@ -246,6 +249,7 @@ describe("invoiceImport", () => {
               billing_city: "Adrano",
             },
           ],
+          billingProfiles: [],
           contacts: [],
           projects: [
             {
@@ -294,6 +298,7 @@ describe("invoiceImport", () => {
               billing_city: "Adrano",
             },
           ],
+          billingProfiles: [],
           contacts: [
             {
               id: "contact-diego",
@@ -306,5 +311,75 @@ describe("invoiceImport", () => {
         },
       ).records[0]?.clientId,
     ).toBe("client-gs");
+  });
+
+  it("matches a fiscal billing profile while keeping the operational client from the project", () => {
+    const record = applyInvoiceImportWorkspaceHints(
+      {
+        model: "gemini-2.5-pro",
+        generatedAt: "2026-03-01T12:00:00.000Z",
+        summary: "Bozza",
+        warnings: [],
+        records: [
+          {
+            id: "draft-1",
+            sourceFileNames: ["fpr-live.xml"],
+            resource: "payments",
+            confidence: "high",
+            documentType: "customer_invoice",
+            counterpartyName: "Diego Caltabiano",
+            billingName:
+              "LIVE - SOCIETA' A RESPONSABILITA' LIMITATA SEMPLIFICATA",
+            vatNumber: "IT06256710879",
+            fiscalCode: "06256710879",
+            amount: 1220,
+            documentDate: "2026-02-20",
+            projectId: "project-gs",
+          },
+        ],
+      },
+      {
+        clients: [
+          {
+            id: "client-gs",
+            name: "ASSOCIAZIONE CULTURALE GUSTARE SICILIA",
+            email: null,
+            billing_name: null,
+            vat_number: null,
+            fiscal_code: "05416820875",
+            billing_city: "Adrano",
+          },
+        ],
+        billingProfiles: [
+          {
+            id: "profile-live",
+            client_id: "client-gs",
+            label: "LIVE SRLS",
+            billing_name:
+              "LIVE - SOCIETA' A RESPONSABILITA' LIMITATA SEMPLIFICATA",
+            vat_number: "06256710879",
+            fiscal_code: "06256710879",
+          },
+        ],
+        contacts: [
+          {
+            id: "contact-diego",
+            client_id: "client-gs",
+            first_name: "Diego",
+            last_name: "Caltabiano",
+          },
+        ],
+        projects: [
+          {
+            id: "project-gs",
+            name: "Gustare Sicilia",
+            client_id: "client-gs",
+          },
+        ],
+      },
+    ).records[0];
+
+    expect(record?.clientId).toBe("client-gs");
+    expect(record?.billingProfileId).toBe("profile-live");
   });
 });

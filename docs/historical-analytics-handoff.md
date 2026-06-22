@@ -6,7 +6,22 @@ lavoro senza riaprire decisioni gia prese.
 **Quando NON usarlo da solo:** per dedurre architettura canonica o stato
 prodotto senza incrociarlo con `docs/README.md` e i documenti `canonical`.
 
-Last updated: 2026-06-20 (f) (Layer confronto Cassa vs Competenza data-fattura: card read-only di riconciliazione col commercialista, NO flip della base legale, riusa FK BR2)
+Last updated: 2026-06-22 (LIVE/Gustare billing profiles: invoice import matches billing profiles without creating LIVE client)
+
+## Update 2026-06-22 — Invoice import rispetta i profili fatturazione cliente
+
+L'import fatture del launcher AI ora riceve `client_billing_profiles` nel
+workspace provider e abbina un record LIVE tramite CF/P.IVA/nome fiscale prima
+dei fallback che potrebbero creare un cliente. Il draft porta
+`billingProfileId` e mostra nella sezione Anagrafica fiscale una riga compatta
+`Profilo fatturazione collegato`, lasciando editabili i dati fiscali estratti.
+La conferma server `invoice_import_confirm` normalizza e valida
+`billingProfileId`: il profilo deve esistere e appartenere al client operativo.
+Non viene aggiunta nessuna colonna profilo su `payments`; il profilo import e'
+solo risoluzione/validazione/audit finche' una futura spec non importerà
+direttamente `financial_documents`. Controllori: 21 test focused su import
+matching, provider workspace e confirm validation; browser desktop/mobile
+verificato con workspace locale reale e risposta Edge intercettata.
 
 ## Update 2026-06-20 (f) — Layer confronto Cassa vs Competenza data-fattura (riconciliazione commercialista)
 

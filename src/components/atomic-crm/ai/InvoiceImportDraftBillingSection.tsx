@@ -1,20 +1,39 @@
 import { Input } from "@/components/ui/input";
-import type { InvoiceImportRecordDraft } from "@/lib/ai/invoiceImport";
+import type {
+  InvoiceImportRecordDraft,
+  InvoiceImportWorkspaceBillingProfile,
+} from "@/lib/ai/invoiceImport";
 import { hasBillingProfileDraft } from "./invoiceImportDraftHelpers";
 import { CollapsibleSection, Field } from "./InvoiceImportDraftPrimitives";
 
 export const InvoiceImportDraftBillingSection = ({
   record,
+  billingProfile,
   onChange,
 }: {
   record: InvoiceImportRecordDraft;
+  billingProfile?: InvoiceImportWorkspaceBillingProfile | null;
   onChange: (patch: Partial<InvoiceImportRecordDraft>) => void;
 }) => (
   <CollapsibleSection
     title="Anagrafica fiscale"
     color="violet"
-    defaultOpen={hasBillingProfileDraft(record)}
+    defaultOpen={hasBillingProfileDraft(record) || !!billingProfile}
   >
+    {billingProfile ? (
+      <div className="md:col-span-2 rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-sm">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-violet-800">
+          Profilo fatturazione collegato
+        </span>
+        <span className="font-semibold text-violet-950">
+          {billingProfile.label}
+        </span>
+        <span className="block text-violet-900">
+          {billingProfile.billing_name}
+        </span>
+      </div>
+    ) : null}
+
     <Field label="Denominazione fiscale">
       <Input
         value={record.billingName ?? ""}

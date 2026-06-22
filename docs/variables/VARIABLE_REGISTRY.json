@@ -1354,7 +1354,7 @@
       "status": "verified",
       "source_evidence": [
         "supabase/functions/.env.example:10",
-        "supabase/functions/_shared/db.ts:258"
+        "supabase/functions/_shared/db.ts:264"
       ],
       "sensitive": false
     },

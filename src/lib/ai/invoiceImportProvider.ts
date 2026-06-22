@@ -1,6 +1,7 @@
 import type { Identifier } from "ra-core";
 
 import type {
+  ClientBillingProfile,
   Contact,
   Expense,
   Payment,
@@ -27,14 +28,27 @@ type CreateFn = <T>(
 
 export const buildInvoiceImportWorkspace = ({
   clients,
+  billingProfiles,
   contacts,
   projects,
 }: {
   clients: InvoiceImportWorkspaceClient[];
+  billingProfiles: Array<
+    Pick<
+      ClientBillingProfile,
+      | "id"
+      | "client_id"
+      | "label"
+      | "billing_name"
+      | "vat_number"
+      | "fiscal_code"
+    >
+  >;
   contacts: Array<Pick<Contact, "id" | "client_id" | "first_name" | "last_name">>;
   projects: Array<Pick<Project, "id" | "name" | "client_id">>;
 }): InvoiceImportWorkspace => ({
   clients,
+  billingProfiles,
   contacts,
   projects,
 });

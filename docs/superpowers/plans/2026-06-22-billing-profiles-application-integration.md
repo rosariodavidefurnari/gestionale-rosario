@@ -468,7 +468,7 @@ git commit -m "feat: show fiscal recipient on invoices"
   it is not persisted on `payments`, because that table has no billing profile
   column.
 
-- [ ] **Step 1: RED test**
+- [x] **Step 1: RED test**
 
 Add a test where record billing name/VAT/CF match LIVE profile while
 counterparty or project context points to Gustare. Expected:
@@ -484,7 +484,7 @@ coerente`.
 Add a provider test proving `getInvoiceImportWorkspace()` fetches
 `client_billing_profiles` and includes them in the workspace.
 
-- [ ] **Step 2: Implement workspace profiles**
+- [x] **Step 2: Implement workspace profiles**
 
 Extend workspace with profiles:
 
@@ -503,7 +503,7 @@ In `InvoiceImportDraftBillingSection`, show a compact read-only line for the
 matched profile label/name when `billingProfileId` is present. Keep existing
 fiscal fields editable.
 
-- [ ] **Step 3: GREEN and commit**
+- [x] **Step 3: GREEN and commit**
 
 Run:
 
@@ -516,6 +516,25 @@ npm run typecheck
 
 Expected: PASS.
 
+GREEN 2026-06-22:
+`npm run test -- src/lib/ai/invoiceImport.test.ts src/components/atomic-crm/providers/supabase/dataProviderInvoiceImport.test.ts supabase/functions/_shared/invoiceImportConfirm.test.ts`
+PASS 21 test; `npm run typecheck` PASS; `npm run lint` PASS. Browser reale
+Chrome PASS desktop 1280x900 e mobile 390x844 sulla vista Importa fatture con
+estrazione LIVE intercettata e workspace locale reale: profilo `LIVE SRLS`
+visibile nella sezione Anagrafica fiscale, cliente operativo mantenuto, nessun
+fallback `Crea cliente`, nessun errore console nella pagina fresca mobile e
+nessun overflow (`docScrollWidth=390` su viewport 390). Screenshot:
+`test-results/invoice-import-billing-profile-desktop-profile.png` e
+`test-results/invoice-import-billing-profile-mobile-clean.png`.
+
+Review result 2026-06-22: PASS. Il matching profilo avviene prima dei fallback
+che potrebbero creare un cliente; `billingProfileId` e' validato in UI e nella
+Edge Function `invoice_import_confirm`, ma non viene persistito su `payments`
+perche' non esiste una colonna profilo su quella tabella. Nessun cambio a cassa,
+importi, date pagamento o stati pagamento. Nota deploy: questa tranche tocca
+`supabase/functions/invoice_import_confirm/**`, quindi serve deploy manuale nel
+Task 8 insieme a `invoice_emit`.
+
 ```bash
 git add src/lib/ai/invoiceImport.ts \
   src/lib/ai/invoiceImport.test.ts \
@@ -524,7 +543,10 @@ git add src/lib/ai/invoiceImport.ts \
   src/components/atomic-crm/providers/supabase/dataProviderInvoiceImport.test.ts \
   supabase/functions/_shared/invoiceImportConfirm.ts \
   supabase/functions/_shared/invoiceImportConfirm.test.ts \
-  supabase/functions/invoice_import_confirm/index.ts
+  supabase/functions/invoice_import_confirm/index.ts \
+  docs/CANTIERE.md docs/architecture.md docs/development-continuity-map.md \
+  docs/historical-analytics-handoff.md docs/historical-analytics-backlog.md \
+  docs/superpowers/plans/2026-06-22-billing-profiles-application-integration.md
 git commit -m "feat: match invoice imports to billing profiles"
 ```
 

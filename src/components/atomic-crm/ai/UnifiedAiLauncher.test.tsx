@@ -320,6 +320,7 @@ describe("UnifiedAiLauncher", () => {
           email: "mario@example.com",
         },
       ],
+      billingProfiles: [],
       contacts: [],
       projects: [
         {

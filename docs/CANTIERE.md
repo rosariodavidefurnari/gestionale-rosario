@@ -254,9 +254,22 @@ Integrazione applicativa billing profiles — spec/piano gate 2026-06-22:
   `test-results/invoices-billing-recipient-list-mobile.png`,
   `test-results/invoices-billing-recipient-show-mobile.png`. Nessun cambio a
   pagamenti, importi, export o filtri.
-- Stop point: prossima tranche import fatture/profile matching; serve RED test
-  su matching LIVE->Gustare e conferma mismatch client/profile prima
-  dell'implementazione.
+- Task 7 import fatture/profile matching: IMPLEMENTATO e review PASS. RED:
+  matching LIVE profile assente in `applyInvoiceImportWorkspaceHints`, provider
+  import senza `client_billing_profiles`, conferma server senza validazione
+  profilo/cliente. GREEN:
+  `npm run test -- src/lib/ai/invoiceImport.test.ts src/components/atomic-crm/providers/supabase/dataProviderInvoiceImport.test.ts supabase/functions/_shared/invoiceImportConfirm.test.ts`
+  PASS 21 test; `npm run typecheck` PASS; `npm run lint` PASS. Browser reale
+  Chrome PASS desktop 1280x900 e mobile 390x844 su Importa fatture con
+  estrazione LIVE intercettata e workspace locale reale; screenshot:
+  `test-results/invoice-import-billing-profile-desktop-profile.png`,
+  `test-results/invoice-import-billing-profile-mobile-clean.png`. Review:
+  dominio PASS, fiscalita'/cassa PASS, Edge validation PASS, UI/mobile PASS,
+  governance/RAG PASS. Nota: `billingProfileId` serve solo a risolvere/validare
+  il cliente operativo nell'import; non viene persistito su `payments`.
+- Stop point: prossima tranche Task 8, cioe' full gates, deploy manuale
+  `invoice_emit` + `invoice_import_confirm`, review finale e commit/deploy
+  verificati.
 
 Governance/RAG fix 2026-06-22:
 

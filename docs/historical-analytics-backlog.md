@@ -6,7 +6,17 @@
 incrociarlo con `docs/README.md`, `docs/architecture.md` e i documenti
 `canonical`.
 
-Last updated: 2026-06-20 (saldo scadenzario sui ACCONTI REALI SHIPPED, card ~8.840; + guardrail obblighi certificati)
+Last updated: 2026-06-22 (LIVE/Gustare billing profiles: invoice import profile matching shipped)
+
+## Update 2026-06-22 — Billing profiles nell'import fatture (DONE)
+
+DONE — il flusso AI import fatture ora abbina intestatari LIVE-like ai
+`client_billing_profiles` invece di spingere verso la creazione di un cliente
+operativo duplicato. Il provider include i profili nel workspace; il matching
+usa CF, P.IVA normalizzata e nome fiscale; la UI mostra il profilo collegato nel
+draft; `invoice_import_confirm` rifiuta profilo inesistente o appartenente a un
+altro client. Fuori scope confermato: nessuna persistenza profilo su `payments`
+e nessuna esposizione alla chat CRM generale.
 
 ## Update 2026-06-20 (b) — Saldo da ACCONTI REALI: SHIPPED (card ~8.840)
 

@@ -6,9 +6,9 @@ obbligatoria delle superfici collegate.
 **Quando usarlo:** ogni volta che una modifica tocca comportamento reale del
 prodotto.
 
-Last updated: 2026-06-22 (LIVE/Gustare billing profiles: backend contract
-`client_billing_profiles` + `financial_documents.billing_profile_id`, application
-recipient adapter and UI management started for UI/emission propagation)
+Last updated: 2026-06-22 (LIVE/Gustare billing profiles: backend contract,
+application emit/UI propagation, invoices surfaces and invoice import profile
+matching)
 
 ---
 
@@ -51,8 +51,16 @@ contatti.
   fornitore operativo, mentre il profilo viene mostrato come destinatario
   fiscale secondario (`Intestatario` / `Intestatario fiscale`). Non usare questi
   campi per ricalcolare incassi, filtri o export.
+- L'import fatture legge `client_billing_profiles` nel workspace AI. Il matching
+  profilo avviene per CF, P.IVA normalizzata o nome fiscale prima dei fallback
+  che potrebbero creare un cliente; un record LIVE deve diventare cliente
+  operativo collegato al profilo + `billingProfileId`, non un nuovo cliente LIVE.
+  La Edge Function `invoice_import_confirm` valida che il profilo esista e
+  appartenga al client operativo. Non aggiungere una FK profilo a `payments`
+  senza nuova spec: oggi il profilo import e' solo risoluzione/validazione/audit.
 - Ogni modifica a `supabase/functions/invoice_emit/**` richiede deploy Supabase
-  manuale; `git push` aggiorna Vercel ma non le Edge Functions.
+  manuale. Anche `supabase/functions/invoice_import_confirm/**` richiede deploy
+  Supabase manuale; `git push` aggiorna Vercel ma non le Edge Functions.
 - La propagazione applicativa deve continuare lungo spec/piano/review dedicati
   e, per UI/UX, skill `impeccable` + browser reale desktop/mobile.
 - Money invariant: il backfill puo' collegare documenti e FK, ma non cambia

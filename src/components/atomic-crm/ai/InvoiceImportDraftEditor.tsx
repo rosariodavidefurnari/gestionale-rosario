@@ -45,6 +45,12 @@ export const InvoiceImportDraftEditor = ({
           record,
           workspace,
         );
+        const billingProfile = record.billingProfileId
+          ? (workspace.billingProfiles.find(
+              (profile) =>
+                String(profile.id) === String(record.billingProfileId),
+            ) ?? null)
+          : null;
 
         return (
           <div
@@ -184,11 +190,22 @@ export const InvoiceImportDraftEditor = ({
                           project.id === record.projectId &&
                           String(project.client_id) === String(nextClientId),
                       );
+                    const hasMatchingBillingProfile =
+                      !record.billingProfileId ||
+                      workspace.billingProfiles.some(
+                        (profile) =>
+                          String(profile.id) ===
+                            String(record.billingProfileId) &&
+                          String(profile.client_id) === String(nextClientId),
+                      );
 
                     onChange(index, {
                       clientId: nextClientId,
                       projectId: hasMatchingProject
                         ? (record.projectId ?? null)
+                        : null,
+                      billingProfileId: hasMatchingBillingProfile
+                        ? (record.billingProfileId ?? null)
                         : null,
                     });
                   }}
@@ -215,6 +232,18 @@ export const InvoiceImportDraftEditor = ({
                       projectId: nextProject?.id ?? null,
                       clientId:
                         nextProject?.client_id ?? record.clientId ?? null,
+                      billingProfileId:
+                        !record.billingProfileId ||
+                        !nextProject?.client_id ||
+                        workspace.billingProfiles.some(
+                          (profile) =>
+                            String(profile.id) ===
+                              String(record.billingProfileId) &&
+                            String(profile.client_id) ===
+                              String(nextProject.client_id),
+                        )
+                          ? (record.billingProfileId ?? null)
+                          : null,
                     });
                   }}
                 >
@@ -274,6 +303,7 @@ export const InvoiceImportDraftEditor = ({
             {/* ── Anagrafica fiscale ── */}
             <InvoiceImportDraftBillingSection
               record={record}
+              billingProfile={billingProfile}
               onChange={(patch) => onChange(index, patch)}
             />
 

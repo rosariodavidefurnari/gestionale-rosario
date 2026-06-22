@@ -1,4 +1,9 @@
-import type { Client, Contact, Project } from "../../types";
+import type {
+  Client,
+  ClientBillingProfile,
+  Contact,
+  Project,
+} from "../../types";
 import type {
   GenerateInvoiceImportDraftRequest,
   InvoiceImportConfirmation,
@@ -22,24 +27,36 @@ export const buildInvoiceImportProviderMethods = (deps: {
 }) => {
   const getInvoiceImportWorkspaceFromResources =
     async (): Promise<InvoiceImportWorkspace> => {
-      const [clientsResponse, contactsResponse, projectsResponse] =
-        await Promise.all([
-          deps.baseDataProvider.getList<Client>("clients", {
+      const [
+        clientsResponse,
+        billingProfilesResponse,
+        contactsResponse,
+        projectsResponse,
+      ] = await Promise.all([
+        deps.baseDataProvider.getList<Client>("clients", {
+          pagination: LARGE_PAGE,
+          sort: { field: "name", order: "ASC" },
+          filter: {},
+        }),
+        deps.baseDataProvider.getList<ClientBillingProfile>(
+          "client_billing_profiles",
+          {
             pagination: LARGE_PAGE,
-            sort: { field: "name", order: "ASC" },
+            sort: { field: "label", order: "ASC" },
             filter: {},
-          }),
-          deps.baseDataProvider.getList<Contact>("contacts", {
-            pagination: LARGE_PAGE,
-            sort: { field: "updated_at", order: "DESC" },
-            filter: {},
-          }),
-          deps.baseDataProvider.getList<Project>("projects", {
-            pagination: LARGE_PAGE,
-            sort: { field: "name", order: "ASC" },
-            filter: {},
-          }),
-        ]);
+          },
+        ),
+        deps.baseDataProvider.getList<Contact>("contacts", {
+          pagination: LARGE_PAGE,
+          sort: { field: "updated_at", order: "DESC" },
+          filter: {},
+        }),
+        deps.baseDataProvider.getList<Project>("projects", {
+          pagination: LARGE_PAGE,
+          sort: { field: "name", order: "ASC" },
+          filter: {},
+        }),
+      ]);
 
       return buildInvoiceImportWorkspace({
         clients: clientsResponse.data.map((client) => ({
@@ -50,6 +67,14 @@ export const buildInvoiceImportProviderMethods = (deps: {
           vat_number: client.vat_number ?? null,
           fiscal_code: client.fiscal_code ?? null,
           billing_city: client.billing_city ?? null,
+        })),
+        billingProfiles: billingProfilesResponse.data.map((profile) => ({
+          id: profile.id,
+          client_id: profile.client_id,
+          label: profile.label,
+          billing_name: profile.billing_name,
+          vat_number: profile.vat_number ?? null,
+          fiscal_code: profile.fiscal_code ?? null,
         })),
         contacts: contactsResponse.data.map((contact) => ({
           id: contact.id,

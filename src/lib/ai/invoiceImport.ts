@@ -2,6 +2,7 @@ import type { Identifier } from "ra-core";
 
 import type {
   Client,
+  ClientBillingProfile,
   Contact,
   Expense,
   Payment,
@@ -26,6 +27,16 @@ export type InvoiceImportWorkspaceContact = Pick<
   "id" | "client_id" | "first_name" | "last_name"
 >;
 
+export type InvoiceImportWorkspaceBillingProfile = Pick<
+  ClientBillingProfile,
+  | "id"
+  | "client_id"
+  | "label"
+  | "billing_name"
+  | "vat_number"
+  | "fiscal_code"
+>;
+
 export type InvoiceImportFileHandle = {
   path: string;
   name: string;
@@ -35,6 +46,7 @@ export type InvoiceImportFileHandle = {
 
 export type InvoiceImportWorkspace = {
   clients: InvoiceImportWorkspaceClient[];
+  billingProfiles: InvoiceImportWorkspaceBillingProfile[];
   contacts: InvoiceImportWorkspaceContact[];
   projects: Array<Pick<Project, "id" | "name" | "client_id">>;
 };
@@ -68,6 +80,7 @@ export type InvoiceImportRecordDraft = {
   dueDate?: string | null;
   notes?: string | null;
   clientId?: Identifier | null;
+  billingProfileId?: Identifier | null;
   projectId?: Identifier | null;
   paymentType?: Payment["payment_type"] | null;
   paymentMethod?: Payment["method"] | null;
@@ -195,6 +208,7 @@ export const normalizeInvoiceImportRecord = (
     confidence: record.confidence ?? "medium",
     documentType: record.documentType ?? "unknown",
     amount: normalizedAmount,
+    billingProfileId: record.billingProfileId ?? null,
     billingName: normalizeOptionalString(record.billingName),
     vatNumber: normalizeOptionalString(record.vatNumber),
     fiscalCode: normalizeOptionalString(record.fiscalCode),
@@ -268,6 +282,21 @@ export const getInvoiceImportRecordValidationErrors = (
 
     if (normalized.clientId && !matchedClient) {
       errors.push("cliente valido");
+    }
+  }
+
+  if (workspace && normalized.billingProfileId) {
+    const matchedBillingProfile = workspace.billingProfiles.find(
+      (profile) => String(profile.id) === String(normalized.billingProfileId),
+    );
+
+    if (!matchedBillingProfile) {
+      errors.push("profilo fatturazione valido");
+    } else if (
+      normalized.clientId &&
+      String(matchedBillingProfile.client_id) !== String(normalized.clientId)
+    ) {
+      errors.push("profilo fatturazione coerente");
     }
   }
 
@@ -377,6 +406,56 @@ const resolveClientIdFromIdentifiers = (
   return null;
 };
 
+const resolveBillingProfileFromRecord = (
+  record: InvoiceImportRecordDraft,
+  workspace: InvoiceImportWorkspace,
+) => {
+  const comparableFiscalCode = normalizeIdentifierComparable(record.fiscalCode);
+  if (comparableFiscalCode) {
+    const matches = workspace.billingProfiles.filter(
+      (profile) =>
+        normalizeIdentifierComparable(profile.fiscal_code) ===
+        comparableFiscalCode,
+    );
+
+    if (matches.length === 1) {
+      return matches[0] ?? null;
+    }
+  }
+
+  const comparableVatNumber = normalizeVatComparable(record.vatNumber);
+  if (comparableVatNumber) {
+    const matches = workspace.billingProfiles.filter(
+      (profile) =>
+        normalizeVatComparable(profile.vat_number) === comparableVatNumber,
+    );
+
+    if (matches.length === 1) {
+      return matches[0] ?? null;
+    }
+  }
+
+  const comparableBillingName = normalizeNameComparable(record.billingName);
+  if (comparableBillingName) {
+    const matches = workspace.billingProfiles.filter((profile) => {
+      const comparableProfileName = normalizeNameComparable(
+        profile.billing_name,
+      );
+      const comparableProfileLabel = normalizeNameComparable(profile.label);
+      return (
+        comparableProfileName === comparableBillingName ||
+        comparableProfileLabel === comparableBillingName
+      );
+    });
+
+    if (matches.length === 1) {
+      return matches[0] ?? null;
+    }
+  }
+
+  return null;
+};
+
 const resolveClientIdFromBillingName = (
   record: InvoiceImportRecordDraft,
   workspace: InvoiceImportWorkspace,
@@ -473,6 +552,15 @@ export const applyInvoiceImportWorkspaceHints = (
     const hasValidClient =
       record.clientId != null &&
       workspace.clients.some((client) => String(client.id) === String(record.clientId));
+    const explicitBillingProfile =
+      record.billingProfileId != null
+        ? (workspace.billingProfiles.find(
+            (profile) =>
+              String(profile.id) === String(record.billingProfileId),
+          ) ?? null)
+        : null;
+    const matchedBillingProfile =
+      explicitBillingProfile ?? resolveBillingProfileFromRecord(record, workspace);
     const matchedProject =
       record.projectId != null
         ? workspace.projects.find(
@@ -483,13 +571,19 @@ export const applyInvoiceImportWorkspaceHints = (
     const nextClientId =
       (hasValidClient ? record.clientId : null) ??
       (matchedProject && !hasValidClient ? matchedProject.client_id : null) ??
+      (!hasValidClient ? (matchedBillingProfile?.client_id ?? null) : null) ??
       resolveClientIdFromIdentifiers(record, workspace) ??
       resolveClientIdFromBillingName(record, workspace) ??
       resolveClientIdFromLinkedContact(record, workspace) ??
       resolveClientIdFromCounterpartyName(record, workspace) ??
       (hasValidClient ? record.clientId : null);
+    const nextBillingProfileId =
+      matchedBillingProfile?.id ?? record.billingProfileId ?? null;
 
-    if (String(nextClientId ?? "") === String(record.clientId ?? "")) {
+    if (
+      String(nextClientId ?? "") === String(record.clientId ?? "") &&
+      String(nextBillingProfileId ?? "") === String(record.billingProfileId ?? "")
+    ) {
       return record;
     }
 
@@ -498,6 +592,7 @@ export const applyInvoiceImportWorkspaceHints = (
     return {
       ...record,
       clientId: nextClientId,
+      billingProfileId: nextBillingProfileId,
     };
   });
 

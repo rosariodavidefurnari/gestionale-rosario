@@ -30,12 +30,16 @@ class InvoiceImportConfirmError extends Error {
 const getWorkspace = async (
   trx: any,
 ): Promise<InvoiceImportConfirmWorkspace> => {
-  const [clients, projects] = await Promise.all([
+  const [clients, billingProfiles, projects] = await Promise.all([
     trx.selectFrom("clients").select(["id"]).execute(),
+    trx
+      .selectFrom("client_billing_profiles")
+      .select(["id", "client_id"])
+      .execute(),
     trx.selectFrom("projects").select(["id", "client_id"]).execute(),
   ]);
 
-  return { clients, projects };
+  return { clients, billingProfiles, projects };
 };
 
 const ensureRecordIsConfirmable = ({

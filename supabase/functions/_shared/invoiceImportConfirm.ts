@@ -95,6 +95,7 @@ export type InvoiceImportConfirmRecord = {
   dueDate?: string | null;
   notes?: string | null;
   clientId?: string | null;
+  billingProfileId?: string | null;
   projectId?: string | null;
   paymentType?:
     | "acconto"
@@ -151,6 +152,7 @@ export type InvoiceImportConfirmPayload = {
 export type InvoiceImportConfirmWorkspace = {
   clients: Array<{ id: string }>;
   projects: Array<{ id: string; client_id: string | null }>;
+  billingProfiles: Array<{ id: string; client_id: string }>;
 };
 
 export const normalizeInvoiceImportConfirmRecord = (
@@ -215,6 +217,9 @@ export const normalizeInvoiceImportConfirmRecord = (
     dueDate: normalizeOptionalString(normalizedRecord.dueDate),
     notes: normalizeOptionalString(normalizedRecord.notes),
     clientId: normalizeOptionalString(normalizedRecord.clientId),
+    billingProfileId: normalizeOptionalString(
+      normalizedRecord.billingProfileId,
+    ),
     projectId: normalizeOptionalString(normalizedRecord.projectId),
     paymentType:
       (normalizeOptionalEnum(normalizedRecord.paymentType, paymentTypes) as
@@ -363,6 +368,21 @@ export const getInvoiceImportConfirmValidationErrors = (
 
     if (!matchedClient) {
       errors.push("cliente valido");
+    }
+  }
+
+  if (workspace && record.billingProfileId) {
+    const matchedBillingProfile = workspace.billingProfiles.find(
+      (profile) => profile.id === record.billingProfileId,
+    );
+
+    if (!matchedBillingProfile) {
+      errors.push("profilo fatturazione valido");
+    } else if (
+      record.clientId &&
+      matchedBillingProfile.client_id !== record.clientId
+    ) {
+      errors.push("profilo fatturazione coerente");
     }
   }
 

@@ -82,6 +82,11 @@ interface ClientsTable {
   fiscal_code: string | null;
 }
 
+interface ClientBillingProfilesTable {
+  id: Generated<string>;
+  client_id: string;
+}
+
 interface ProjectsTable {
   id: Generated<string>;
   client_id: string | null;
@@ -158,6 +163,7 @@ interface Database {
   contact_notes: ContactNotesTable;
   deals: DealsTable;
   clients: ClientsTable;
+  client_billing_profiles: ClientBillingProfilesTable;
   projects: ProjectsTable;
   payments: PaymentsTable;
   expenses: ExpensesTable;

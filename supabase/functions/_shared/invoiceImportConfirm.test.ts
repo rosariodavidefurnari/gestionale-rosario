@@ -78,9 +78,36 @@ describe("invoiceImportConfirm", () => {
         {
           clients: [{ id: "client-a" }],
           projects: [{ id: "project-b", client_id: "client-b" }],
+          billingProfiles: [],
         },
       ),
     ).toContain("cliente/progetto coerenti");
+  });
+
+  it("flags billing profile/client mismatches on confirm", () => {
+    expect(
+      getInvoiceImportConfirmValidationErrors(
+        {
+          id: "draft-1",
+          sourceFileNames: ["fattura.pdf"],
+          resource: "payments",
+          confidence: "medium",
+          documentType: "customer_invoice",
+          amount: 800,
+          documentDate: "2026-02-20",
+          clientId: "client-other",
+          billingProfileId: "profile-live",
+          paymentType: "saldo",
+          paymentMethod: "bonifico",
+          paymentStatus: "in_attesa",
+        },
+        {
+          clients: [{ id: "client-other" }, { id: "client-gs" }],
+          projects: [],
+          billingProfiles: [{ id: "profile-live", client_id: "client-gs" }],
+        },
+      ),
+    ).toContain("profilo fatturazione coerente");
   });
 
   it("builds audit notes with file and model metadata", () => {
