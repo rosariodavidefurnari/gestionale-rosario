@@ -116,11 +116,10 @@ Baseline read-only prod 2026-06-22 (`npm run health:financial`):
 
 Prossima azione:
 
-1. Review multidimensione finale del tranche propagazione.
-2. Commit propagazione dashboard/scaduti/fatture/AI/quote/UI/docs se review e
-   guardrail passano.
-3. Applicare remoto solo dopo C1 read-only, dry-run rollback e review; includere
-   deploy Supabase per `invoice_import_confirm`.
+1. Commit documentazione stato remoto.
+2. Push su `origin/main` per attivare deploy frontend Vercel.
+3. Verificare deploy frontend live e lasciare `docs/CANTIERE.md` coerente se il
+   deploy segnala problemi.
 
 Gate backend locale 2026-06-22:
 
@@ -175,12 +174,32 @@ Review multidimensione propagazione 2026-06-22: PASS.
 - Operativita'/rollback: remoto resta chiuso finche' non passano C1 read-only e
   dry-run rollback; `invoice_import_confirm` richiede deploy Supabase separato.
 
+Gate remoto 2026-06-22:
+
+- RED remoto pre-apply confermato: `npm run health:uncollectible` falliva per
+  colonne `writeoff_*`, CHECK mancanti, Aidone ancora `scaduto` e view senza
+  `total_written_off`.
+- Dry-run rollback remoto: eseguito file temporaneo derivato da
+  `20260622223000_uncollectible_payment_status.sql` con `BEGIN` singolo e
+  `ROLLBACK`; nessun errore SQL.
+- Rollback confermato: `npm run health:uncollectible` restava RED dopo il
+  dry-run.
+- APPLY remoto: `npx supabase db push --yes` ha applicato
+  `20260622223000_uncollectible_payment_status.sql`.
+- C3 remoto: `npm run health:uncollectible` PASS.
+- Health finanziaria remota: `npm run health:financial` PASS; Da incassare =
+  6.756,37 EUR su 2 clienti, cassa 2023 = 6.273,26 EUR, cassa 2026 =
+  7.689,23 EUR, crediti persi = 375,00 EUR da view e payments, Aidone FPA 1/23
+  write-off presente.
+- Edge Function: `npx supabase functions deploy invoice_import_confirm` ha
+  deployato la funzione sul progetto `qvdmzhyzpyaveniirsmo`.
+- Nota: `npx supabase migration list` post-apply e' stato interrotto per retry
+  del pooler/temp role (`SUPABASE_DB_PASSWORD`), non usato come fonte; `db push`
+  e health remote sono le fonti operative.
+
 Gate aperti:
 
-- Money/fiscal TDD: controllore RED prima della migration.
-- C1 read-only + dry-run rollback prima di ogni apply remoto.
-- Se tocca `supabase/functions/**`: `git push` non deploya le Edge Functions;
-  serve deploy Supabase manuale per `invoice_import_confirm`.
+- Push `origin/main` e verifica deploy frontend Vercel.
 
 Regole operative non negoziabili:
 
