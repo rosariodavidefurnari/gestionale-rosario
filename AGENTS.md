@@ -170,6 +170,10 @@ Regola corpus:
 - NON inserire `docs/`, `AGENTS.md`, `CLAUDE.md`, `.claude/`, planning notes,
   decision log, handoff, backlog o altra prosa nel corpus code-RAG (il server
   e' gia' patchato per escludere `.md`/`.markdown` di default)
+- la policy repo-locale di esclusione vive in `.contextignore`; deve escludere
+  prosa, governance agentica e materiali privati dal code-RAG
+- verificare la policy statica con `npm run rag:policy:check` prima di
+  reindicizzare o dichiarare sana la copertura RAG
 - la documentazione puo' driftare rispetto al codice; quindi per intent,
   decisioni, vincoli e continuita' leggere i documenti direttamente dal repo,
   non tramite ricerca semantica blended

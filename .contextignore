@@ -1,0 +1,23 @@
+# Code-RAG corpus policy for gestionale-rosario.
+# The code index is for implementation surfaces only. Prose and agent
+# governance live in the separate prose-RAG corpus.
+
+# Project prose and governance
+docs/**
+doc/**
+AGENTS.md
+CLAUDE.md
+README.md
+Gestionale_Rosario_Furnari_Specifica.md
+
+# Agent/runtime prose and local planning
+.claude/**
+.codex/**
+.agents/**
+.planning/**
+
+# Private local source/reference material
+Fatture/**
+Chiavi Google Calendar/**
+*.numbers
+*.pdf

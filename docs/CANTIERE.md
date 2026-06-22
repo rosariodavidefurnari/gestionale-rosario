@@ -79,6 +79,18 @@ e2e + browser WF-17 verdi, review spec v2 (BLOCK→chiuso) + impl (PASS). 0 gate
 spec backfill 6 fatture no-doc (Bucket A pronto, B pending XML 2026), Fase 2, Scope C (gated).
 Vedi sessione 2026-06-20-sexies sotto.
 
+Governance/RAG fix 2026-06-22:
+
+- audit rifatto con code-RAG + prose-RAG separati; finding reale: il code-RAG
+  recuperava `.claude/settings.json` nonostante la policy code-only;
+- fix applicato: `.contextignore` versionata come policy repo-locale di corpus,
+  `npm run rag:policy:check` come guardrail statico, full reindex code-RAG e
+  smoke query vietata su `.claude/**` verde;
+- fix infra applicato su Qdrant MCP locale: estensioni `.mjs`/`.cjs` incluse nel
+  code-RAG, cosi' i guardrail in `scripts/*.mjs` sono recuperabili;
+- controllo non ancora installato nel pre-commit: prossimo step governance,
+  dopo review della hook order CLI/variabili/workflow/artifact.
+
 ### Sessione 2026-06-20-sexies (IN CORSO, pre-commit, 0 codice applicato) — fix-minori → pivot
 
 Partita da "fix fiscali minori" (AQUACHETA +25%, bollo €2). Esito misura prod deterministica:
