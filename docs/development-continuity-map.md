@@ -37,6 +37,10 @@ contatti.
   opzionale del documento fiscale (`financial_documents.billing_profile_id`):
   payments, absorb del saldo atteso, service/expense marking e importi restano
   invariati.
+- `InvoiceDraftDialog` e' la superficie di scelta dell'intestatario in bozza:
+  carica i profili del cliente operativo, mostra il selector solo se esistono,
+  resta su cliente principale salvo profilo `is_default=true`, e passa lo stesso
+  `selectedDraft` a validation, emit, XML e PDF.
 - Ogni modifica a `supabase/functions/invoice_emit/**` richiede deploy Supabase
   manuale; `git push` aggiorna Vercel ma non le Edge Functions.
 - La propagazione applicativa deve continuare lungo spec/piano/review dedicati

@@ -1,7 +1,7 @@
 import { todayISODate } from "@/lib/dateTimezone";
 import { FileCode, FileDown, Send } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useNotify, useRefresh } from "ra-core";
+import { useEffect, useMemo, useState } from "react";
+import { useGetList, useNotify, useRefresh } from "ra-core";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,16 +11,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+import type { ClientBillingProfile } from "../types";
 import {
   computeInvoiceDraftAmounts,
   computeInvoiceDraftTotals,
@@ -33,10 +41,13 @@ import { getInvoiceEmitGate, useEmitInvoice } from "./useEmitInvoice";
 import { downloadInvoiceDraftPdf } from "./invoiceDraftPdf";
 import { downloadInvoiceDraftXml } from "./invoiceDraftXml";
 import {
-  formatClientBillingAddress,
-  getClientBillingDisplayName,
-} from "../clients/clientBilling";
+  formatInvoiceBillingRecipientAddress,
+  getInvoiceBillingRecipient,
+  getInvoiceBillingRecipientIdentityLines,
+} from "./invoiceBillingRecipient";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+
+const MAIN_CLIENT_RECIPIENT = "__client__";
 
 const formatAmount = (value: number) =>
   value.toLocaleString("it-IT", {
@@ -97,6 +108,20 @@ export const InvoiceDraftDialog = ({
   const { emit, isEmitting } = useEmitInvoice();
   const [isDownloading, setIsDownloading] = useState(false);
   const [documentNumber, setDocumentNumber] = useState("");
+  const [selectedBillingProfileId, setSelectedBillingProfileId] = useState(
+    MAIN_CLIENT_RECIPIENT,
+  );
+  const draftClientId =
+    draft?.client?.id != null ? String(draft.client.id) : "";
+  const { data: rawBillingProfiles = [] } = useGetList<ClientBillingProfile>(
+    "client_billing_profiles",
+    {
+      pagination: { page: 1, perPage: 50 },
+      sort: { field: "is_default", order: "DESC" },
+      filter: draftClientId ? { "client_id@eq": draftClientId } : {},
+    },
+    { enabled: !!draftClientId },
+  );
 
   const lineItems = useMemo(
     () => normalizeInvoiceDraftLineItems(draft?.lineItems ?? []),
@@ -110,18 +135,52 @@ export const InvoiceDraftDialog = ({
     () => computeInvoiceDraftAmounts(lineItems),
     [lineItems],
   );
+  const billingProfiles = useMemo(
+    () =>
+      [...rawBillingProfiles].sort((a, b) => {
+        if (a.is_default !== b.is_default) return a.is_default ? -1 : 1;
+        return a.label.localeCompare(b.label, "it");
+      }),
+    [rawBillingProfiles],
+  );
+  const defaultBillingProfile = useMemo(
+    () => billingProfiles.find((profile) => profile.is_default) ?? null,
+    [billingProfiles],
+  );
+
+  useEffect(() => {
+    setSelectedBillingProfileId(
+      defaultBillingProfile
+        ? String(defaultBillingProfile.id)
+        : MAIN_CLIENT_RECIPIENT,
+    );
+  }, [draftClientId, defaultBillingProfile?.id]);
 
   if (!draft || lineItems.length === 0) {
     return <InvoiceDraftEmptyState open={open} onOpenChange={onOpenChange} />;
   }
 
-  const clientName =
-    getClientBillingDisplayName(draft.client) ?? draft.client.name;
-  const clientAddress = formatClientBillingAddress(draft.client);
+  const selectedBillingProfile =
+    billingProfiles.find(
+      (profile) => String(profile.id) === selectedBillingProfileId,
+    ) ?? null;
+  const selectedDraft: InvoiceDraftInput = {
+    ...draft,
+    billingProfile: selectedBillingProfile,
+  };
+  const recipient = getInvoiceBillingRecipient({
+    client: selectedDraft.client,
+    billingProfile: selectedDraft.billingProfile,
+  });
+  const clientName = recipient.name;
+  const clientAddress = formatInvoiceBillingRecipientAddress(recipient);
+  const recipientIdentityLines =
+    getInvoiceBillingRecipientIdentityLines(recipient);
 
   // Emit gate (spec v2 F6/F11/F12): pure decision extracted to useEmitInvoice.
   const billing = isInvoiceBillingComplete({
-    client: draft.client,
+    client: selectedDraft.client,
+    billingProfile: selectedDraft.billingProfile,
     issuer: businessProfile,
   });
   const trimmedNumber = documentNumber.trim();
@@ -134,14 +193,14 @@ export const InvoiceDraftDialog = ({
 
   const handleEmit = async () => {
     try {
-      const outcome = await emit(draft, {
+      const outcome = await emit(selectedDraft, {
         documentNumber: trimmedNumber,
-        issueDate: draft.invoiceDate ?? todayISODate(),
+        issueDate: selectedDraft.invoiceDate ?? todayISODate(),
       });
       if (outcome.status === "cancelled") return;
 
       downloadInvoiceDraftXml({
-        draft,
+        draft: selectedDraft,
         issuer: businessProfile,
         invoiceNumber: trimmedNumber,
       });
@@ -176,6 +235,41 @@ export const InvoiceDraftDialog = ({
         BOZZA - NON VALIDA AI FINI FISCALI
       </div>
 
+      {billingProfiles.length > 0 ? (
+        <div className="rounded-lg border border-[#456B6B]/30 bg-white px-3 py-3 text-sm">
+          <Label
+            htmlFor="invoice-billing-recipient"
+            className="text-xs font-bold uppercase tracking-wider text-[#456B6B]"
+          >
+            Intestatario fattura
+          </Label>
+          <Select
+            value={selectedBillingProfileId}
+            onValueChange={setSelectedBillingProfileId}
+          >
+            <SelectTrigger
+              id="invoice-billing-recipient"
+              className="mt-2 h-9 w-full min-w-0 bg-white *:data-[slot=select-value]:truncate"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="max-w-[calc(100vw-2rem)]">
+              <SelectItem value={MAIN_CLIENT_RECIPIENT}>
+                Cliente principale
+              </SelectItem>
+              {billingProfiles.map((profile) => (
+                <SelectItem key={profile.id} value={String(profile.id)}>
+                  {profile.label} · {profile.billing_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Cliente operativo: {draft.client.name}
+          </p>
+        </div>
+      ) : null}
+
       <div className="grid gap-3 md:grid-cols-2 text-sm">
         <div className="rounded-lg border border-l-[3px] border-l-[#2C3E50] bg-white px-3 py-3">
           <p className="text-xs font-bold uppercase tracking-wider text-[#2C3E50]">
@@ -202,33 +296,28 @@ export const InvoiceDraftDialog = ({
           <p className="text-xs font-bold uppercase tracking-wider text-[#456B6B]">
             Cliente
           </p>
+          {recipient.profileId ? (
+            <p className="text-xs font-bold text-[#456B6B]">
+              {recipient.label}
+            </p>
+          ) : null}
           <p className="font-medium">{clientName}</p>
           {clientAddress ? (
             <p className="text-xs text-muted-foreground">{clientAddress}</p>
           ) : null}
-          {draft.client.vat_number ? (
-            <p className="text-xs text-muted-foreground">
-              P.IVA: {draft.client.vat_number}
+          {recipientIdentityLines.map((line) => (
+            <p key={line} className="text-xs text-muted-foreground">
+              {line}
             </p>
-          ) : null}
-          {draft.client.fiscal_code ? (
-            <p className="text-xs text-muted-foreground">
-              C.F.: {draft.client.fiscal_code}
-            </p>
-          ) : null}
-          {draft.client.billing_sdi_code ? (
-            <p className="text-xs text-muted-foreground">
-              Cod. dest.: {draft.client.billing_sdi_code}
-            </p>
-          ) : null}
+          ))}
         </div>
       </div>
 
       <p className="text-xs font-bold uppercase tracking-wider text-[#2C3E50]">
         Prodotti e servizi
       </p>
-      <div className="rounded-lg border overflow-hidden">
-        <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 border-b bg-[#E8EDF2] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#2C3E50]">
+      <div className="rounded-lg border overflow-x-auto">
+        <div className="grid min-w-[640px] grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 border-b bg-[#E8EDF2] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#2C3E50]">
           <span className="w-8 text-center">Nr</span>
           <span>Descrizione</span>
           <span className="text-right">Q.tà</span>
@@ -240,7 +329,7 @@ export const InvoiceDraftDialog = ({
         {lineItems.map((lineItem, index) => (
           <div
             key={`${lineItem.description}-${index}`}
-            className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 border-b px-3 py-2 text-sm last:border-b-0"
+            className="grid min-w-[640px] grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 border-b px-3 py-2 text-sm last:border-b-0"
           >
             <span className="w-8 text-center text-muted-foreground">
               {index + 1}
@@ -259,7 +348,7 @@ export const InvoiceDraftDialog = ({
           </div>
         ))}
         {totals.stampDuty > 0 ? (
-          <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 border-b px-3 py-2 text-sm last:border-b-0">
+          <div className="grid min-w-[640px] grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 border-b px-3 py-2 text-sm last:border-b-0">
             <span className="w-8 text-center text-muted-foreground">
               {lineItems.length + 1}
             </span>
@@ -398,7 +487,7 @@ export const InvoiceDraftDialog = ({
                 setIsDownloading(true);
                 try {
                   await downloadInvoiceDraftPdf({
-                    draft,
+                    draft: selectedDraft,
                     issuer: businessProfile,
                   });
                 } finally {
@@ -415,7 +504,7 @@ export const InvoiceDraftDialog = ({
               disabled={!trimmedNumber}
               onClick={() => {
                 downloadInvoiceDraftXml({
-                  draft,
+                  draft: selectedDraft,
                   issuer: businessProfile,
                   invoiceNumber: trimmedNumber,
                 });
@@ -464,7 +553,7 @@ export const InvoiceDraftDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-[calc(100vw-2rem)] overflow-y-auto sm:!max-w-5xl">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold text-[#2C3E50]">
             Bozza fattura

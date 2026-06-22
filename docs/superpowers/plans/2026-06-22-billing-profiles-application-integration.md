@@ -298,7 +298,7 @@ git commit -m "feat: persist billing profile on invoice emit"
 - Consumes: `client_billing_profiles` via `useGetList<ClientBillingProfile>`.
 - Produces: `draftWithBillingProfile` used by validation, emit, PDF and XML.
 
-- [ ] **Step 1: Add UI state**
+- [x] **Step 1: Add UI state**
 
 Fetch profiles with filter `{ "client_id@eq": String(draft.client.id) }` and
 sort by `is_default DESC, label ASC`. Compute initial selected id:
@@ -306,7 +306,7 @@ sort by `is_default DESC, label ASC`. Compute initial selected id:
 - default profile id if present;
 - `"__client__"` otherwise.
 
-- [ ] **Step 2: Add selector**
+- [x] **Step 2: Add selector**
 
 Render only when profiles exist. Use existing shadcn `Select` components:
 
@@ -314,7 +314,7 @@ Render only when profiles exist. Use existing shadcn `Select` components:
 - option 1: `Cliente principale`;
 - profile options: `profile.label` + `profile.billing_name`.
 
-- [ ] **Step 3: Use selected draft**
+- [x] **Step 3: Use selected draft**
 
 All calls in the dialog must use the selected draft:
 
@@ -323,7 +323,7 @@ All calls in the dialog must use the selected draft:
 - `downloadInvoiceDraftXml`;
 - `downloadInvoiceDraftPdf`.
 
-- [ ] **Step 4: Review and commit**
+- [x] **Step 4: Review and commit**
 
 Review dimensions: Impeccable product UI, mobile layout, fiscal clarity, no
 auto-select LIVE unless default.

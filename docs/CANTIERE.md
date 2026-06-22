@@ -220,8 +220,17 @@ Integrazione applicativa billing profiles — spec/piano gate 2026-06-22:
   payload opzionale + FK documento; idempotenza, absorb incasso e importi
   invariati. Nota deploy: `supabase/functions/invoice_emit` toccata, quindi
   serve deploy Supabase manuale dopo commit/push finale.
-- Stop point: prossima tranche UI selector con review dedicata; browser
-  desktop/mobile obbligatorio prima del commit UI.
+- Task 4 selector bozza fattura: IMPLEMENTATO e review UI/UX PASS con
+  Impeccable. `InvoiceDraftDialog` carica `client_billing_profiles`, mostra
+  `Intestatario fattura` solo se esistono profili, mantiene default sul cliente
+  principale se nessun profilo e' `is_default`, e usa `selectedDraft` per
+  validation, emit, PDF e XML. Browser reale Chrome PASS desktop 1280x900 e
+  mobile 390x844; screenshot: `test-results/billing-profile-selector-desktop-dialog.png`
+  e `test-results/billing-profile-selector-mobile-dialog.png`. Fix incluso:
+  niente UUID finto in query disabled, selector mobile troncata, tabella dentro
+  scroll orizzontale del dialog.
+- Stop point: prossima tranche gestione profili in scheda Cliente; browser
+  desktop/mobile obbligatorio prima del commit UI relativo.
 
 Governance/RAG fix 2026-06-22:
 
